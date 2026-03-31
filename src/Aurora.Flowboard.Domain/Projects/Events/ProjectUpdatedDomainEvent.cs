@@ -1,0 +1,6 @@
+namespace Aurora.Flowboard.Domain.Projects.Events;
+
+public sealed class ProjectUpdatedDomainEvent(Guid projectId) : DomainEvent
+{
+    public Guid ProjectId { get; init; } = projectId;
+}

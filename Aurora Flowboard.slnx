@@ -1,8 +1,10 @@
 <Solution>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
+    <File Path="CLAUDE.md" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
+    <File Path="prd.md" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Aurora.Flowboard.Domain/Aurora.Flowboard.Domain.csproj" Id="aea0812f-164a-4827-9ef1-af2c3ad6b13e" />
