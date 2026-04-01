@@ -8,8 +8,6 @@ public sealed class ProjectMember
     public ProjectRole Role { get; private set; }
     public DateTime JoinedOnUtc { get; private set; }
 
-    public Project Project { get; private set; } = null!;
-
     private ProjectMember() { } // EF Core
 
     private ProjectMember(Guid id, Guid projectId, Guid userId, ProjectRole role, DateTime joinedOnUtc)
