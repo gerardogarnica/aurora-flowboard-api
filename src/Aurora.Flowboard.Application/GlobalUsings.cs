@@ -1,3 +1,5 @@
+global using Aurora.Flowboard.Application.Abstractions.Messaging;
+global using Aurora.Flowboard.Application.Abstractions.Validations;
 global using Aurora.Flowboard.Domain.Abstractions;
 global using Aurora.Flowboard.Domain.Flows;
 global using Aurora.Flowboard.Domain.Projects;
