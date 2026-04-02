@@ -7,6 +7,7 @@
     <File Path="prd.md" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/Aurora.Flowboard.Application/Aurora.Flowboard.Application.csproj" Id="66158506-055e-4cba-aba9-05643458ce54" />
     <Project Path="src/Aurora.Flowboard.Domain/Aurora.Flowboard.Domain.csproj" Id="aea0812f-164a-4827-9ef1-af2c3ad6b13e" />
   </Folder>
   <Folder Name="/test/" />
