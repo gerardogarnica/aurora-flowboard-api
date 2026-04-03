@@ -1,7 +1,7 @@
 namespace Aurora.Flowboard.Application.Abstractions.Authentication;
 
 public sealed record TokenRequest(
-    string UserId,
+    Guid UserId,
     string Email,
     string FirstName,
     string LastName,

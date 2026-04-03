@@ -24,12 +24,12 @@ internal static class LoggingBehavior
             {
                 if (logger.IsEnabled(LogLevel.Information))
                 {
-                    logger.LogInformation("Request processed successfully: {Name} {@Response}", typeof(TResponse).Name, result);
+                    logger.LogInformation("Request processed successfully: {Name} {@Response}", typeof(TCommand).Name, result);
                 }
             }
             else
             {
-                logger.LogError("Request processed with errors: {Name} {@Response}", typeof(TResponse).Name, result);
+                logger.LogError("Request processed with errors: {Name} {@Response}", typeof(TCommand).Name, result);
             }
 
             return result;

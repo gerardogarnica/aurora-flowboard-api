@@ -46,7 +46,9 @@ internal static class ValidationBehavior
         TCommand command,
         IEnumerable<IValidator<TCommand>> validators)
     {
-        if (!validators.Any())
+        IValidator<TCommand>[] validatorArray = [.. validators];
+
+        if (validatorArray.Length == 0)
         {
             return [];
         }
@@ -54,7 +56,7 @@ internal static class ValidationBehavior
         var context = new ValidationContext<TCommand>(command);
 
         ValidationResult[] results = await Task.WhenAll(
-            validators.Select(v => v.ValidateAsync(context)));
+            validatorArray.Select(v => v.ValidateAsync(context)));
 
         ValidationFailure[] failures = [.. results
             .Where(x => !x.IsValid)

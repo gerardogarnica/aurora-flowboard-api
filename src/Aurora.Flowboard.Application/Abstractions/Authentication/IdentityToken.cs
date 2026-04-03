@@ -2,6 +2,6 @@ namespace Aurora.Flowboard.Application.Abstractions.Authentication;
 
 public sealed record IdentityToken(
     string AccessToken,
-    DateTime AccessTokenExpiresOn,
+    DateTimeOffset AccessTokenExpiresOn,
     string RefreshToken,
-    DateTime RefreshTokenExpiresOn);
+    DateTimeOffset RefreshTokenExpiresOn);
