@@ -1,4 +1,4 @@
-namespace Aurora.Flowboard.Application.Projects.RemoveProjectMember;
+namespace Aurora.Flowboard.Application.Projects.RemoveMember;
 
 public sealed record RemoveProjectMemberCommand(
     Guid ProjectId,

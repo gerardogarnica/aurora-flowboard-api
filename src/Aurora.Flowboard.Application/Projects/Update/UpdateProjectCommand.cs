@@ -1,4 +1,4 @@
-namespace Aurora.Flowboard.Application.Projects.UpdateProject;
+namespace Aurora.Flowboard.Application.Projects.Update;
 
 public sealed record UpdateProjectCommand(
     Guid Id,

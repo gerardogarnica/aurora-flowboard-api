@@ -1,4 +1,4 @@
-namespace Aurora.Flowboard.Application.Projects.CreateProject;
+namespace Aurora.Flowboard.Application.Projects.Create;
 
 internal sealed class CreateProjectValidator : AbstractValidator<CreateProjectCommand>
 {

@@ -1,4 +1,4 @@
-namespace Aurora.Flowboard.Application.Projects.AddProjectMember;
+namespace Aurora.Flowboard.Application.Projects.AddMember;
 
 public sealed record AddProjectMemberCommand(
     Guid ProjectId,

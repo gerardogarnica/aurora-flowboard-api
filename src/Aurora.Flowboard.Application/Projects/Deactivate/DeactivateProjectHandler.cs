@@ -1,4 +1,4 @@
-namespace Aurora.Flowboard.Application.Projects.DeactivateProject;
+namespace Aurora.Flowboard.Application.Projects.Deactivate;
 
 internal sealed class DeactivateProjectHandler(
     IApplicationDbContext dbContext,

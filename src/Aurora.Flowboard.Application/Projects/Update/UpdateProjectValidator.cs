@@ -1,4 +1,4 @@
-namespace Aurora.Flowboard.Application.Projects.UpdateProject;
+namespace Aurora.Flowboard.Application.Projects.Update;
 
 internal sealed class UpdateProjectValidator : AbstractValidator<UpdateProjectCommand>
 {

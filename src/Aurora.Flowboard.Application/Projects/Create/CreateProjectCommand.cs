@@ -1,4 +1,4 @@
-namespace Aurora.Flowboard.Application.Projects.CreateProject;
+namespace Aurora.Flowboard.Application.Projects.Create;
 
 public sealed record CreateProjectCommand(
     string Name,

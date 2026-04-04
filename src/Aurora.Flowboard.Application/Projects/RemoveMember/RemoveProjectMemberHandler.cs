@@ -1,4 +1,4 @@
-namespace Aurora.Flowboard.Application.Projects.RemoveProjectMember;
+namespace Aurora.Flowboard.Application.Projects.RemoveMember;
 
 internal sealed class RemoveProjectMemberHandler(
     IApplicationDbContext dbContext,
