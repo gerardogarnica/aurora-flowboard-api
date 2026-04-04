@@ -15,7 +15,7 @@ internal sealed class UpdateProjectValidator : AbstractValidator<UpdateProjectCo
             .MaximumLength(500);
 
         RuleFor(x => x.EstimatedCompletionDate)
-            .GreaterThanOrEqualTo(dateTimeProvider.Today)
+            .GreaterThanOrEqualTo(_ => dateTimeProvider.Today)
             .When(x => x.EstimatedCompletionDate.HasValue);
     }
 }

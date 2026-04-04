@@ -12,7 +12,7 @@ internal sealed class CreateProjectValidator : AbstractValidator<CreateProjectCo
             .MaximumLength(500);
 
         RuleFor(x => x.EstimatedCompletionDate)
-            .GreaterThanOrEqualTo(dateTimeProvider.Today)
+            .GreaterThanOrEqualTo(_ => dateTimeProvider.Today)
             .When(x => x.EstimatedCompletionDate.HasValue);
     }
 }
