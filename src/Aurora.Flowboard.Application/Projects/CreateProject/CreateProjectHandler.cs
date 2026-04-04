@@ -1,0 +1,30 @@
+namespace Aurora.Flowboard.Application.Projects.CreateProject;
+
+internal sealed class CreateProjectHandler(
+    IApplicationDbContext dbContext,
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<CreateProjectCommand, Guid>
+{
+    public async Task<Result<Guid>> Handle(
+        CreateProjectCommand command,
+        CancellationToken cancellationToken)
+    {
+        Result<Project> result = Project.Create(
+            command.Name,
+            command.Description,
+            command.EstimatedCompletionDate,
+            dateTimeProvider.UtcNow);
+
+        if (!result.IsSuccessful)
+        {
+            return Result.Fail<Guid>(result.Error);
+        }
+
+        Project project = result.Value;
+
+        dbContext.Projects.Add(project);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return project.Id;
+    }
+}
