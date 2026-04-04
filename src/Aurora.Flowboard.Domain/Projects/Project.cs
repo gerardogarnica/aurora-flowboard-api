@@ -68,6 +68,11 @@ public sealed class Project : BaseEntity
         DateOnly? estimatedCompletionDate,
         DateTime updatedOnUtc)
     {
+        if (!IsActive)
+        {
+            return Result.Fail(ProjectErrors.Deactivated);
+        }
+
         if (string.IsNullOrWhiteSpace(name))
         {
             return Result.Fail(ProjectErrors.NameRequired);
@@ -105,6 +110,11 @@ public sealed class Project : BaseEntity
 
     public Result AddMember(User user, ProjectRole role, DateTime joinedOnUtc)
     {
+        if (!IsActive)
+        {
+            return Result.Fail(ProjectErrors.Deactivated);
+        }
+
         if (_members.Any(m => m.UserId == user.Id))
         {
             return Result.Fail(ProjectErrors.MemberAlreadyExists);
@@ -120,6 +130,11 @@ public sealed class Project : BaseEntity
 
     public Result RemoveMember(User user, DateTime updatedOnUtc)
     {
+        if (!IsActive)
+        {
+            return Result.Fail(ProjectErrors.Deactivated);
+        }
+
         var member = _members.FirstOrDefault(m => m.UserId == user.Id);
 
         if (member is null)

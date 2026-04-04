@@ -18,6 +18,10 @@ public static class ProjectErrors
         "Project.AlreadyDeactivated",
         "The project is already deactivated");
 
+    public static readonly BaseError Deactivated = BaseError.Validation(
+        "Project.Deactivated",
+        "Cannot perform this operation on a deactivated project");
+
     public static readonly BaseError MemberAlreadyExists = BaseError.Conflict(
         "Project.MemberAlreadyExists",
         "The user is already a member of this project");
