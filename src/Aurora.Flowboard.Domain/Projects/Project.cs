@@ -115,6 +115,11 @@ public sealed class Project : BaseEntity
             return Result.Fail(ProjectErrors.Deactivated);
         }
 
+        if (!user.IsActive)
+        {
+            return Result.Fail(UserErrors.Inactive);
+        }
+
         if (_members.Any(m => m.UserId == user.Id))
         {
             return Result.Fail(ProjectErrors.MemberAlreadyExists);
@@ -128,14 +133,14 @@ public sealed class Project : BaseEntity
         return Result.Ok();
     }
 
-    public Result RemoveMember(User user, DateTime updatedOnUtc)
+    public Result RemoveMember(Guid userId, DateTime updatedOnUtc)
     {
         if (!IsActive)
         {
             return Result.Fail(ProjectErrors.Deactivated);
         }
 
-        var member = _members.FirstOrDefault(m => m.UserId == user.Id);
+        var member = _members.FirstOrDefault(m => m.UserId == userId);
 
         if (member is null)
         {
@@ -145,7 +150,7 @@ public sealed class Project : BaseEntity
         _members.Remove(member);
         UpdatedOnUtc = updatedOnUtc;
 
-        AddDomainEvent(new ProjectMemberRemovedDomainEvent(Id, user.Id));
+        AddDomainEvent(new ProjectMemberRemovedDomainEvent(Id, userId));
 
         return Result.Ok();
     }

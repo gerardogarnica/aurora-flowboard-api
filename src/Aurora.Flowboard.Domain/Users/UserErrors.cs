@@ -22,6 +22,10 @@ public static class UserErrors
         "User.AlreadyDeactivated",
         "The user is already deactivated");
 
+    public static readonly BaseError Inactive = BaseError.Validation(
+        "User.Inactive",
+        "Cannot perform this operation on an inactive user");
+
     public static readonly BaseError EmailAlreadyInUse = BaseError.Conflict(
         "User.EmailAlreadyInUse",
         "A user with this email address already exists");

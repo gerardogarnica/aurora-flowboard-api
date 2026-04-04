@@ -18,16 +18,16 @@ internal sealed class RemoveProjectMemberHandler(
             return Result.Fail(ProjectErrors.NotFound);
         }
 
-        User? user = await dbContext
+        bool userExists = await dbContext
             .Users
-            .SingleOrDefaultAsync(u => u.Id == command.UserId, cancellationToken);
+            .AnyAsync(u => u.Id == command.UserId, cancellationToken);
 
-        if (user is null)
+        if (!userExists)
         {
             return Result.Fail(UserErrors.NotFound);
         }
 
-        Result result = project.RemoveMember(user, dateTimeProvider.UtcNow);
+        Result result = project.RemoveMember(command.UserId, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {
