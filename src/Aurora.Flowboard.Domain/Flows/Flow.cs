@@ -56,6 +56,11 @@ public sealed class Flow : BaseEntity
             return Result.Fail<Flow>(FlowErrors.NameTooLong);
         }
 
+        if (!project.IsActive)
+        {
+            return Result.Fail<Flow>(ProjectErrors.Deactivated);
+        }
+
         var flow = new Flow(
             Guid.NewGuid(),
             name.Trim(),
@@ -71,6 +76,11 @@ public sealed class Flow : BaseEntity
 
     public Result Update(string name, string? description, DateTime updatedOnUtc)
     {
+        if (!IsActive)
+        {
+            return Result.Fail(FlowErrors.Deactivated);
+        }
+
         if (string.IsNullOrWhiteSpace(name))
         {
             return Result.Fail(FlowErrors.NameRequired);
@@ -105,6 +115,11 @@ public sealed class Flow : BaseEntity
 
     public Result AddState(string name, int sortOrder, bool isTerminal)
     {
+        if (!IsActive)
+        {
+            return Result.Fail(FlowErrors.Deactivated);
+        }
+
         if (_states.Any(s => s.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase)))
         {
             return Result.Fail(FlowErrors.DuplicateStateName);
@@ -126,6 +141,11 @@ public sealed class Flow : BaseEntity
 
     public Result RemoveState(Guid stateId)
     {
+        if (!IsActive)
+        {
+            return Result.Fail(FlowErrors.Deactivated);
+        }
+
         var state = _states.FirstOrDefault(s => s.Id == stateId);
 
         if (state is null)
@@ -141,6 +161,11 @@ public sealed class Flow : BaseEntity
 
     public Result AddTransition(FlowState fromState, FlowState toState, ProjectRole allowedRole)
     {
+        if (!IsActive)
+        {
+            return Result.Fail(FlowErrors.Deactivated);
+        }
+
         if (!_states.Any(s => s.Id == fromState.Id))
         {
             return Result.Fail(FlowErrors.TransitionFromStateNotFound);
@@ -166,6 +191,11 @@ public sealed class Flow : BaseEntity
 
     public Result RemoveTransition(Guid transitionId)
     {
+        if (!IsActive)
+        {
+            return Result.Fail(FlowErrors.Deactivated);
+        }
+
         var transition = _transitions.FirstOrDefault(t => t.Id == transitionId);
 
         if (transition is null)

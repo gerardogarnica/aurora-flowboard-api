@@ -18,6 +18,10 @@ public static class FlowErrors
         "Flow.AlreadyDeactivated",
         "The flow is already deactivated");
 
+    public static readonly BaseError Deactivated = BaseError.Validation(
+        "Flow.Deactivated",
+        "Cannot perform this operation on a deactivated flow");
+
     public static readonly BaseError StateNameRequired = BaseError.Validation(
         "Flow.StateNameRequired",
         "Flow state name is required");
