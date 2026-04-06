@@ -75,6 +75,11 @@ public sealed class WorkItem : BaseEntity
         DateOnly? estimatedCompletionDate,
         DateTime createdOnUtc)
     {
+        if (!createdBy.IsActive)
+        {
+            return Result.Fail<WorkItem>(UserErrors.Inactive);
+        }
+
         if (string.IsNullOrWhiteSpace(title))
         {
             return Result.Fail<WorkItem>(WorkItemErrors.TitleRequired);
@@ -113,6 +118,11 @@ public sealed class WorkItem : BaseEntity
         User changedBy,
         DateTime updatedOnUtc)
     {
+        if (!changedBy.IsActive)
+        {
+            return Result.Fail(UserErrors.Inactive);
+        }
+
         if (string.IsNullOrWhiteSpace(title))
         {
             return Result.Fail(WorkItemErrors.TitleRequired);
@@ -137,6 +147,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result Deactivate(User changedBy, DateTime updatedOnUtc)
     {
+        if (!changedBy.IsActive)
+        {
+            return Result.Fail(UserErrors.Inactive);
+        }
+
         if (!IsActive)
         {
             return Result.Fail(WorkItemErrors.AlreadyDeactivated);
@@ -152,6 +167,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result Move(FlowState toState, User changedBy, string? reason, DateTime changedOnUtc)
     {
+        if (!changedBy.IsActive)
+        {
+            return Result.Fail(UserErrors.Inactive);
+        }
+
         Guid? fromStateId = FlowStateId;
 
         _stateHistory.Add(StateTransitionHistory.Create(
@@ -179,6 +199,16 @@ public sealed class WorkItem : BaseEntity
 
     public Result Assign(User assignee, User changedBy, DateTime updatedOnUtc)
     {
+        if (!assignee.IsActive)
+        {
+            return Result.Fail(UserErrors.Inactive);
+        }
+
+        if (!changedBy.IsActive)
+        {
+            return Result.Fail(UserErrors.Inactive);
+        }
+
         AssigneeId = assignee.Id;
         UpdatedOnUtc = updatedOnUtc;
 
@@ -191,6 +221,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result Unassign(User changedBy, DateTime updatedOnUtc)
     {
+        if (!changedBy.IsActive)
+        {
+            return Result.Fail(UserErrors.Inactive);
+        }
+
         AssigneeId = null;
         UpdatedOnUtc = updatedOnUtc;
 
@@ -203,6 +238,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result AddComment(User author, string content, DateTime createdOnUtc)
     {
+        if (!author.IsActive)
+        {
+            return Result.Fail(UserErrors.Inactive);
+        }
+
         Result<Comment> commentResult = Comment.Create(this, author, content, createdOnUtc);
 
         if (!commentResult.IsSuccessful)
@@ -244,6 +284,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result LogTime(User user, decimal hours, string? description, DateTime loggedOnUtc, DateTime createdOnUtc)
     {
+        if (!user.IsActive)
+        {
+            return Result.Fail(UserErrors.Inactive);
+        }
+
         Result<TimeEntry> entryResult = TimeEntry.Create(this, user, hours, description, loggedOnUtc, createdOnUtc);
 
         if (!entryResult.IsSuccessful)
