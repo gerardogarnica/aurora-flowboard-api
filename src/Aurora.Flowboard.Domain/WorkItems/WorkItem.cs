@@ -118,6 +118,11 @@ public sealed class WorkItem : BaseEntity
         User changedBy,
         DateTime updatedOnUtc)
     {
+        if (!IsActive)
+        {
+            return Result.Fail(WorkItemErrors.Deactivated);
+        }
+
         if (!changedBy.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);
@@ -167,6 +172,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result Move(FlowState toState, User changedBy, string? reason, DateTime changedOnUtc)
     {
+        if (!IsActive)
+        {
+            return Result.Fail(WorkItemErrors.Deactivated);
+        }
+
         if (!changedBy.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);
@@ -199,6 +209,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result Assign(User assignee, User changedBy, DateTime updatedOnUtc)
     {
+        if (!IsActive)
+        {
+            return Result.Fail(WorkItemErrors.Deactivated);
+        }
+
         if (!assignee.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);
@@ -221,6 +236,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result Unassign(User changedBy, DateTime updatedOnUtc)
     {
+        if (!IsActive)
+        {
+            return Result.Fail(WorkItemErrors.Deactivated);
+        }
+
         if (!changedBy.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);
@@ -238,6 +258,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result AddComment(User author, string content, DateTime createdOnUtc)
     {
+        if (!IsActive)
+        {
+            return Result.Fail(WorkItemErrors.Deactivated);
+        }
+
         if (!author.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);
@@ -260,6 +285,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result UpdateComment(Guid commentId, string content, DateTime updatedOnUtc)
     {
+        if (!IsActive)
+        {
+            return Result.Fail(WorkItemErrors.Deactivated);
+        }
+
         var comment = _comments.FirstOrDefault(c => c.Id == commentId && !c.IsDeleted);
 
         if (comment is null)
@@ -272,6 +302,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result RemoveComment(Guid commentId, DateTime updatedOnUtc)
     {
+        if (!IsActive)
+        {
+            return Result.Fail(WorkItemErrors.Deactivated);
+        }
+
         var comment = _comments.FirstOrDefault(c => c.Id == commentId && !c.IsDeleted);
 
         if (comment is null)
@@ -284,6 +319,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result LogTime(User user, decimal hours, string? description, DateTime loggedOnUtc, DateTime createdOnUtc)
     {
+        if (!IsActive)
+        {
+            return Result.Fail(WorkItemErrors.Deactivated);
+        }
+
         if (!user.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);

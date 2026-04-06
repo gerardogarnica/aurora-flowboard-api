@@ -18,6 +18,14 @@ public static class WorkItemErrors
         "WorkItem.AlreadyDeactivated",
         "The work item is already deactivated");
 
+    public static readonly BaseError Deactivated = BaseError.Validation(
+        "WorkItem.Deactivated",
+        "Cannot perform this operation on a deactivated work item");
+
+    public static readonly BaseError AssigneeNotFound = BaseError.NotFound(
+        "WorkItem.AssigneeNotFound",
+        "The assignee user was not found");
+
     public static readonly BaseError CommentNotFound = BaseError.NotFound(
         "WorkItem.CommentNotFound",
         "The comment with the specified identifier was not found");
