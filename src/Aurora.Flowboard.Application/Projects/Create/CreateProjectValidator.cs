@@ -14,5 +14,15 @@ internal sealed class CreateProjectValidator : AbstractValidator<CreateProjectCo
         RuleFor(x => x.EstimatedCompletionDate)
             .GreaterThanOrEqualTo(_ => dateTimeProvider.Today)
             .When(x => x.EstimatedCompletionDate.HasValue);
+
+        RuleFor(x => x.Members)
+            .NotNull();
+
+        RuleForEach(x => x.Members)
+            .ChildRules(member =>
+            {
+                member.RuleFor(m => m.UserId).NotEmpty();
+                member.RuleFor(m => m.Role).IsInEnum();
+            });
     }
 }

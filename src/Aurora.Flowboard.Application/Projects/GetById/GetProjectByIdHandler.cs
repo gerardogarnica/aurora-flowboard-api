@@ -23,7 +23,7 @@ internal sealed class GetProjectByIdHandler(
             project.Name,
             project.Description,
             project.EstimatedCompletionDate,
-            project.IsActive,
+            project.Status,
             project.CreatedOnUtc,
             project.UpdatedOnUtc,
             [.. project.Members.Select(m => new ProjectMemberResponse(m.UserId, m.Role, m.JoinedOnUtc))]);

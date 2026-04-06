@@ -5,7 +5,7 @@ public sealed record ProjectResponse(
     string Name,
     string? Description,
     DateOnly? EstimatedCompletionDate,
-    bool IsActive,
+    ProjectStatus Status,
     DateTime CreatedOnUtc,
     DateTime? UpdatedOnUtc,
     IReadOnlyCollection<ProjectMemberResponse> Members);

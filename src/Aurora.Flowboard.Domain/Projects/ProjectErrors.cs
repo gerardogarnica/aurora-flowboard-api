@@ -14,13 +14,13 @@ public static class ProjectErrors
         "Project.NameTooLong",
         "Project name cannot exceed 100 characters");
 
-    public static readonly BaseError AlreadyDeactivated = BaseError.Validation(
-        "Project.AlreadyDeactivated",
-        "The project is already deactivated");
+    public static readonly BaseError InvalidStatusTransition = BaseError.Validation(
+        "Project.InvalidStatusTransition",
+        "The requested status transition is not allowed");
 
-    public static readonly BaseError Deactivated = BaseError.Validation(
-        "Project.Deactivated",
-        "Cannot perform this operation on a deactivated project");
+    public static readonly BaseError OperationNotAllowedInCurrentStatus = BaseError.Validation(
+        "Project.OperationNotAllowedInCurrentStatus",
+        "This operation is not allowed in the project's current status");
 
     public static readonly BaseError MemberAlreadyExists = BaseError.Conflict(
         "Project.MemberAlreadyExists",

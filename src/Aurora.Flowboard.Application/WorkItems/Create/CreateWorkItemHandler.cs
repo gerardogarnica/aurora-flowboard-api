@@ -18,11 +18,6 @@ internal sealed class CreateWorkItemHandler(
             return Result.Fail<Guid>(ProjectErrors.NotFound);
         }
 
-        if (!project.IsActive)
-        {
-            return Result.Fail<Guid>(ProjectErrors.Deactivated);
-        }
-
         FlowState? flowState = await dbContext
             .FlowStates
             .AsNoTracking()

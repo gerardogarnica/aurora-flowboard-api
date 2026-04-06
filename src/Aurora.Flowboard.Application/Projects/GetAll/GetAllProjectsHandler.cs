@@ -10,14 +10,14 @@ internal sealed class GetAllProjectsHandler(
         List<ProjectSummaryResponse> projects = await dbContext
             .Projects
             .AsNoTracking()
-            .Where(p => query.IncludeDeactivated || p.IsActive)
+            .Where(p => query.StatusFilter == null || p.Status == query.StatusFilter)
             .OrderBy(p => p.Name)
             .Select(p => new ProjectSummaryResponse(
                 p.Id,
                 p.Name,
                 p.Description,
                 p.EstimatedCompletionDate,
-                p.IsActive,
+                p.Status,
                 p.Members.Count))
             .ToListAsync(cancellationToken);
 

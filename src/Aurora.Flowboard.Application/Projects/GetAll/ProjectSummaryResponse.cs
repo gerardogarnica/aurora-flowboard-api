@@ -5,5 +5,5 @@ public sealed record ProjectSummaryResponse(
     string Name,
     string? Description,
     DateOnly? EstimatedCompletionDate,
-    bool IsActive,
+    ProjectStatus Status,
     int MemberCount);

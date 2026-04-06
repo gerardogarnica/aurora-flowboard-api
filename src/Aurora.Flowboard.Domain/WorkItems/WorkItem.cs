@@ -75,6 +75,11 @@ public sealed class WorkItem : BaseEntity
         DateOnly? estimatedCompletionDate,
         DateTime createdOnUtc)
     {
+        if (!project.IsActive)
+        {
+            return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
         if (!createdBy.IsActive)
         {
             return Result.Fail<WorkItem>(UserErrors.Inactive);

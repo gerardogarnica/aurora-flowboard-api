@@ -7,16 +7,28 @@ public sealed class Project : BaseEntity
 {
     private const int MaxNameLength = 100;
 
+    private static readonly Dictionary<ProjectStatus, ProjectStatus[]> ValidTransitions = new()
+    {
+        [ProjectStatus.Draft] = [ProjectStatus.Active, ProjectStatus.Archived],
+        [ProjectStatus.Active] = [ProjectStatus.OnHold, ProjectStatus.Completed, ProjectStatus.Archived],
+        [ProjectStatus.OnHold] = [ProjectStatus.Active, ProjectStatus.Archived],
+        [ProjectStatus.Completed] = [ProjectStatus.Archived],
+        [ProjectStatus.Archived] = []
+    };
+
     private readonly List<ProjectMember> _members = [];
 
     public string Name { get; private set; }
     public string? Description { get; private set; }
     public DateOnly? EstimatedCompletionDate { get; private set; }
-    public bool IsActive { get; private set; }
+    public ProjectStatus Status { get; private set; }
+    public bool IsActive => Status == ProjectStatus.Active;
     public DateTime CreatedOnUtc { get; private set; }
     public DateTime? UpdatedOnUtc { get; private set; }
 
     public IReadOnlyCollection<ProjectMember> Members => _members.AsReadOnly();
+
+    private bool IsModifiable => Status is ProjectStatus.Draft or ProjectStatus.Active or ProjectStatus.OnHold;
 
     private Project() : base(Guid.Empty) { } // EF Core
 
@@ -30,7 +42,7 @@ public sealed class Project : BaseEntity
         Name = name;
         Description = description;
         EstimatedCompletionDate = estimatedCompletionDate;
-        IsActive = true;
+        Status = ProjectStatus.Draft;
         CreatedOnUtc = createdOnUtc;
     }
 
@@ -38,6 +50,7 @@ public sealed class Project : BaseEntity
         string name,
         string? description,
         DateOnly? estimatedCompletionDate,
+        IReadOnlyCollection<(User User, ProjectRole Role)> members,
         DateTime createdOnUtc)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -57,6 +70,16 @@ public sealed class Project : BaseEntity
             estimatedCompletionDate,
             createdOnUtc);
 
+        foreach ((User user, ProjectRole role) in members)
+        {
+            Result result = project.AddMember(user, role, createdOnUtc);
+
+            if (!result.IsSuccessful)
+            {
+                return Result.Fail<Project>(result.Error);
+            }
+        }
+
         project.AddDomainEvent(new ProjectCreatedDomainEvent(project.Id));
 
         return project;
@@ -68,9 +91,9 @@ public sealed class Project : BaseEntity
         DateOnly? estimatedCompletionDate,
         DateTime updatedOnUtc)
     {
-        if (!IsActive)
+        if (!IsModifiable)
         {
-            return Result.Fail(ProjectErrors.Deactivated);
+            return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
 
         if (string.IsNullOrWhiteSpace(name))
@@ -93,26 +116,32 @@ public sealed class Project : BaseEntity
         return Result.Ok();
     }
 
-    public Result Deactivate(DateTime updatedOnUtc)
+    public Result ChangeStatus(ProjectStatus newStatus, DateTime updatedOnUtc)
     {
-        if (!IsActive)
+        if (Status == newStatus)
         {
-            return Result.Fail(ProjectErrors.AlreadyDeactivated);
+            return Result.Fail(ProjectErrors.InvalidStatusTransition);
         }
 
-        IsActive = false;
+        if (!IsValidTransition(Status, newStatus))
+        {
+            return Result.Fail(ProjectErrors.InvalidStatusTransition);
+        }
+
+        ProjectStatus oldStatus = Status;
+        Status = newStatus;
         UpdatedOnUtc = updatedOnUtc;
 
-        AddDomainEvent(new ProjectDeactivatedDomainEvent(Id));
+        AddDomainEvent(new ProjectStatusChangedDomainEvent(Id, oldStatus, newStatus));
 
         return Result.Ok();
     }
 
     public Result AddMember(User user, ProjectRole role, DateTime joinedOnUtc)
     {
-        if (!IsActive)
+        if (!IsModifiable)
         {
-            return Result.Fail(ProjectErrors.Deactivated);
+            return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
 
         if (!user.IsActive)
@@ -135,9 +164,9 @@ public sealed class Project : BaseEntity
 
     public Result RemoveMember(Guid userId, DateTime updatedOnUtc)
     {
-        if (!IsActive)
+        if (!IsModifiable)
         {
-            return Result.Fail(ProjectErrors.Deactivated);
+            return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
 
         var member = _members.FirstOrDefault(m => m.UserId == userId);
@@ -154,4 +183,7 @@ public sealed class Project : BaseEntity
 
         return Result.Ok();
     }
+
+    private static bool IsValidTransition(ProjectStatus from, ProjectStatus to) =>
+        ValidTransitions.TryGetValue(from, out ProjectStatus[]? targets) && targets.Contains(to);
 }

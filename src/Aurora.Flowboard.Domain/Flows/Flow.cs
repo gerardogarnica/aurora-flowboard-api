@@ -58,7 +58,7 @@ public sealed class Flow : BaseEntity
 
         if (!project.IsActive)
         {
-            return Result.Fail<Flow>(ProjectErrors.Deactivated);
+            return Result.Fail<Flow>(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
 
         var flow = new Flow(
