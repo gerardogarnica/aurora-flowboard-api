@@ -17,8 +17,6 @@ Aurora Flowboard is a .NET 10 internal REST API for software project management.
 
 ## Architecture
 
-The intended layer structure per the PRD:
-
 ```
 Aurora.Flowboard.API          → Controllers, middleware, DI composition root
 Aurora.Flowboard.Application  → Use cases, commands/queries (CQRS), handlers
