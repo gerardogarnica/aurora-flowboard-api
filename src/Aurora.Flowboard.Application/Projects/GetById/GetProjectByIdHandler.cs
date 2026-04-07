@@ -9,7 +9,7 @@ internal sealed class GetProjectByIdHandler(
     {
         Project? project = await dbContext
             .Projects
-            .Include(p => p.Members)
+            .Include(p => p.Members).ThenInclude(m => m.User)
             .Include(p => p.Creator)
             .AsNoTracking()
             .SingleOrDefaultAsync(p => p.Id == query.ProjectId, cancellationToken);
@@ -29,7 +29,7 @@ internal sealed class GetProjectByIdHandler(
             project.Creator.FullName,
             project.CreatedOnUtc,
             project.UpdatedOnUtc,
-            [.. project.Members.Select(m => new ProjectMemberResponse(m.UserId, m.Role, m.JoinedOnUtc))]);
+            [.. project.Members.Select(m => new ProjectMemberResponse(m.UserId, m.User.FullName, m.Role, m.JoinedOnUtc))]);
 
         return response;
     }

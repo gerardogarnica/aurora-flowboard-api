@@ -1,3 +1,5 @@
+using Aurora.Flowboard.Domain.Users;
+
 namespace Aurora.Flowboard.Domain.Projects;
 
 public sealed class ProjectMember
@@ -7,6 +9,8 @@ public sealed class ProjectMember
     public Guid UserId { get; private set; }
     public ProjectRole Role { get; private set; }
     public DateTime JoinedOnUtc { get; private set; }
+
+    public User User { get; init; } = null!; // Navigation property
 
     private ProjectMember() { } // EF Core
 
