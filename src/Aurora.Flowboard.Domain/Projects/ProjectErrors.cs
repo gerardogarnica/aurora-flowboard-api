@@ -49,4 +49,16 @@ public static class ProjectErrors
     public static readonly BaseError OnlyAdminCanChangeStatus = BaseError.Forbidden(
         "Project.OnlyAdminCanChangeStatus",
         "Only admin members can change the project status");
+
+    public static readonly BaseError CodeRequired = BaseError.Validation(
+        "Project.CodeRequired",
+        "Project code is required");
+
+    public static readonly BaseError CodeTooLong = BaseError.Validation(
+        "Project.CodeTooLong",
+        "Project code cannot exceed 3 characters");
+
+    public static readonly BaseError CodeInvalidCharacters = BaseError.Validation(
+        "Project.CodeInvalidCharacters",
+        "Project code must contain only alphabetic characters");
 }

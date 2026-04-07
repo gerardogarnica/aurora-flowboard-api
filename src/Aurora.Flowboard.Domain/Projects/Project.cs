@@ -21,8 +21,10 @@ public sealed class Project : BaseEntity
 
     public string Name { get; private set; }
     public string? Description { get; private set; }
+    public string Code { get; private set; }
     public DateOnly? EstimatedCompletionDate { get; private set; }
     public ProjectStatus Status { get; private set; }
+    public int WorkItemCounter { get; private set; }
     public bool IsActive => Status == ProjectStatus.Active;
     public Guid CreatedBy { get; private set; }
     public DateTime CreatedOnUtc { get; private set; }
@@ -41,13 +43,16 @@ public sealed class Project : BaseEntity
         Guid id,
         string name,
         string? description,
+        string code,
         DateOnly? estimatedCompletionDate,
         Guid createdBy,
         DateTime createdOnUtc) : base(id)
     {
         Name = name;
         Description = description;
+        Code = code;
         EstimatedCompletionDate = estimatedCompletionDate;
+        WorkItemCounter = 0;
         Status = ProjectStatus.Draft;
         CreatedBy = createdBy;
         CreatedOnUtc = createdOnUtc;
@@ -56,6 +61,7 @@ public sealed class Project : BaseEntity
     public static Result<Project> Create(
         string name,
         string? description,
+        string code,
         DateOnly? estimatedCompletionDate,
         User createdBy,
         DateTime createdOnUtc)
@@ -70,10 +76,17 @@ public sealed class Project : BaseEntity
             return Result.Fail<Project>(ProjectErrors.NameTooLong);
         }
 
+        Result<ProjectCode> codeResult = ProjectCode.Create(code);
+        if (!codeResult.IsSuccessful)
+        {
+            return Result.Fail<Project>(codeResult.Error);
+        }
+
         var project = new Project(
             Guid.NewGuid(),
             name.Trim(),
             description?.Trim(),
+            codeResult.Value.Value,
             estimatedCompletionDate,
             createdBy.Id,
             createdOnUtc);
@@ -219,6 +232,12 @@ public sealed class Project : BaseEntity
         AddDomainEvent(new ProjectMemberRemovedDomainEvent(Id, userId));
 
         return Result.Ok();
+    }
+
+    public int IncrementWorkItemCounter()
+    {
+        WorkItemCounter++;
+        return WorkItemCounter;
     }
 
     private bool IsAdmin(Guid userId) =>

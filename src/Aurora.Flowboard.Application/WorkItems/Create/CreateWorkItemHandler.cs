@@ -8,10 +8,15 @@ internal sealed class CreateWorkItemHandler(
         CreateWorkItemCommand command,
         CancellationToken cancellationToken)
     {
+        await using IDbContextTransaction transaction =
+            await dbContext.BeginTransactionAsync(cancellationToken);
+
+        // Pessimistic row-level lock prevents duplicate sequence numbers under concurrency.
+        // Table/column names must match the EF Core Infrastructure configuration.
         Project? project = await dbContext
             .Projects
-            .AsNoTracking()
-            .SingleOrDefaultAsync(p => p.Id == command.ProjectId, cancellationToken);
+            .FromSqlRaw("SELECT * FROM projects WHERE \"Id\" = {0} FOR UPDATE", command.ProjectId)
+            .SingleOrDefaultAsync(cancellationToken);
 
         if (project is null)
         {
@@ -38,6 +43,9 @@ internal sealed class CreateWorkItemHandler(
             return Result.Fail<Guid>(UserErrors.NotFound);
         }
 
+        int sequenceNumber = project.IncrementWorkItemCounter();
+        string code = $"{project.Code}-{sequenceNumber}";
+
         Result<WorkItem> result = WorkItem.Create(
             command.Title,
             command.Description,
@@ -46,6 +54,8 @@ internal sealed class CreateWorkItemHandler(
             project,
             flowState,
             createdBy,
+            code,
+            sequenceNumber,
             command.EstimatedPoints,
             command.EstimatedCompletionDate,
             dateTimeProvider.UtcNow);
@@ -60,6 +70,7 @@ internal sealed class CreateWorkItemHandler(
         dbContext.WorkItems.Add(workItem);
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return workItem.Id;
     }

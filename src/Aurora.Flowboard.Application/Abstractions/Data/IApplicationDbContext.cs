@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-
 namespace Aurora.Flowboard.Application.Abstractions.Data;
 
 public interface IApplicationDbContext : IAsyncDisposable
@@ -16,6 +14,8 @@ public interface IApplicationDbContext : IAsyncDisposable
     DbSet<TimeEntry> TimeEntries { get; }
     DbSet<WorkItemChangeLog> WorkItemChangeLogs { get; }
     DbSet<StateTransitionHistory> StateTransitionHistories { get; }
+
+    Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

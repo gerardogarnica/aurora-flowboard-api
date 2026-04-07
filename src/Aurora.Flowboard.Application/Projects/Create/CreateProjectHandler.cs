@@ -21,6 +21,7 @@ internal sealed class CreateProjectHandler(
         Result<Project> result = Project.Create(
             command.Name,
             command.Description,
+            command.Code,
             command.EstimatedCompletionDate,
             createdBy,
             dateTimeProvider.UtcNow);

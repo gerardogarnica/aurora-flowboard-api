@@ -22,6 +22,8 @@ public sealed class WorkItem : BaseEntity
     public Guid FlowStateId { get; private set; }
     public Guid? AssigneeId { get; private set; }
     public Guid CreatedById { get; private set; }
+    public string Code { get; private set; }
+    public int SequenceNumber { get; private set; }
     public int? EstimatedPoints { get; private set; }
     public DateOnly? EstimatedCompletionDate { get; private set; }
     public bool IsActive { get; private set; }
@@ -46,6 +48,8 @@ public sealed class WorkItem : BaseEntity
         Guid projectId,
         Guid flowStateId,
         Guid createdById,
+        string code,
+        int sequenceNumber,
         int? estimatedPoints,
         DateOnly? estimatedCompletionDate,
         DateTime createdOnUtc) : base(id)
@@ -57,6 +61,8 @@ public sealed class WorkItem : BaseEntity
         ProjectId = projectId;
         FlowStateId = flowStateId;
         CreatedById = createdById;
+        Code = code;
+        SequenceNumber = sequenceNumber;
         EstimatedPoints = estimatedPoints;
         EstimatedCompletionDate = estimatedCompletionDate;
         IsActive = true;
@@ -71,6 +77,8 @@ public sealed class WorkItem : BaseEntity
         Project project,
         FlowState initialState,
         User createdBy,
+        string code,
+        int sequenceNumber,
         int? estimatedPoints,
         DateOnly? estimatedCompletionDate,
         DateTime createdOnUtc)
@@ -104,6 +112,8 @@ public sealed class WorkItem : BaseEntity
             project.Id,
             initialState.Id,
             createdBy.Id,
+            code,
+            sequenceNumber,
             estimatedPoints,
             estimatedCompletionDate,
             createdOnUtc);
