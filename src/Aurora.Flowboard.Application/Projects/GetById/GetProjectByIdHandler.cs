@@ -10,6 +10,7 @@ internal sealed class GetProjectByIdHandler(
         Project? project = await dbContext
             .Projects
             .Include(p => p.Members)
+            .Include(p => p.Creator)
             .AsNoTracking()
             .SingleOrDefaultAsync(p => p.Id == query.ProjectId, cancellationToken);
 
@@ -24,6 +25,8 @@ internal sealed class GetProjectByIdHandler(
             project.Description,
             project.EstimatedCompletionDate,
             project.Status,
+            project.CreatedBy,
+            project.Creator.FullName,
             project.CreatedOnUtc,
             project.UpdatedOnUtc,
             [.. project.Members.Select(m => new ProjectMemberResponse(m.UserId, m.Role, m.JoinedOnUtc))]);

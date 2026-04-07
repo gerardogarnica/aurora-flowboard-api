@@ -6,6 +6,8 @@ public sealed record ProjectResponse(
     string? Description,
     DateOnly? EstimatedCompletionDate,
     ProjectStatus Status,
+    Guid CreatedById,
+    string CreatedByFullName,
     DateTime CreatedOnUtc,
     DateTime? UpdatedOnUtc,
     IReadOnlyCollection<ProjectMemberResponse> Members);

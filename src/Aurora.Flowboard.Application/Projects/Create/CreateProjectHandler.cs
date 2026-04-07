@@ -2,38 +2,18 @@ namespace Aurora.Flowboard.Application.Projects.Create;
 
 internal sealed class CreateProjectHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<CreateProjectCommand, Guid>
+    IDateTimeProvider dateTimeProvider,
+    IUserContext userContext) : ICommandHandler<CreateProjectCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(
         CreateProjectCommand command,
         CancellationToken cancellationToken)
     {
-        List<Guid> userIds = [.. command.Members.Select(m => m.UserId)];
-
-        List<User> users = await dbContext
-            .Users
-            .Where(u => userIds.Contains(u.Id))
-            .ToListAsync(cancellationToken);
-
-        var members = new List<(User User, ProjectRole Role)>();
-
-        foreach (ProjectMemberRequest memberRequest in command.Members)
-        {
-            User? user = users.SingleOrDefault(u => u.Id == memberRequest.UserId);
-
-            if (user is null)
-            {
-                return Result.Fail<Guid>(UserErrors.NotFound);
-            }
-
-            members.Add((user, memberRequest.Role));
-        }
-
         Result<Project> result = Project.Create(
             command.Name,
             command.Description,
             command.EstimatedCompletionDate,
-            members,
+            userContext.UserId,
             dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)

@@ -23,8 +23,11 @@ public sealed class Project : BaseEntity
     public DateOnly? EstimatedCompletionDate { get; private set; }
     public ProjectStatus Status { get; private set; }
     public bool IsActive => Status == ProjectStatus.Active;
+    public Guid CreatedBy { get; private set; }
     public DateTime CreatedOnUtc { get; private set; }
     public DateTime? UpdatedOnUtc { get; private set; }
+
+    public User Creator { get; init; } = null!; // Navigation property
 
     public IReadOnlyCollection<ProjectMember> Members => _members.AsReadOnly();
 
@@ -37,12 +40,14 @@ public sealed class Project : BaseEntity
         string name,
         string? description,
         DateOnly? estimatedCompletionDate,
+        Guid createdBy,
         DateTime createdOnUtc) : base(id)
     {
         Name = name;
         Description = description;
         EstimatedCompletionDate = estimatedCompletionDate;
         Status = ProjectStatus.Draft;
+        CreatedBy = createdBy;
         CreatedOnUtc = createdOnUtc;
     }
 
@@ -50,7 +55,7 @@ public sealed class Project : BaseEntity
         string name,
         string? description,
         DateOnly? estimatedCompletionDate,
-        IReadOnlyCollection<(User User, ProjectRole Role)> members,
+        Guid createdBy,
         DateTime createdOnUtc)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -68,17 +73,11 @@ public sealed class Project : BaseEntity
             name.Trim(),
             description?.Trim(),
             estimatedCompletionDate,
+            createdBy,
             createdOnUtc);
 
-        foreach ((User user, ProjectRole role) in members)
-        {
-            Result result = project.AddMember(user, role, createdOnUtc);
-
-            if (!result.IsSuccessful)
-            {
-                return Result.Fail<Project>(result.Error);
-            }
-        }
+        var creatorMember = ProjectMember.Create(project.Id, createdBy, ProjectRole.Admin, createdOnUtc);
+        project._members.Add(creatorMember);
 
         project.AddDomainEvent(new ProjectCreatedDomainEvent(project.Id));
 
