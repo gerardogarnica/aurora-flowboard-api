@@ -14,4 +14,6 @@ public record BaseError(string Code, string Message, BaseErrorType ErrorType)
     public static BaseError NotFound(string code, string message) => new(code, message, BaseErrorType.NotFound);
 
     public static BaseError Conflict(string code, string message) => new(code, message, BaseErrorType.Conflict);
+
+    public static BaseError Forbidden(string code, string message) => new(code, message, BaseErrorType.Forbidden);
 }
