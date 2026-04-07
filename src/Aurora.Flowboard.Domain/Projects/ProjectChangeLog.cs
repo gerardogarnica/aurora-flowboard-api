@@ -11,6 +11,8 @@ public sealed class ProjectChangeLog
     public Guid? AffectedEntityId { get; private set; }
     public DateTime ChangedOnUtc { get; private set; }
 
+    public User ChangedBy { get; init; } = null!; // Navigation property
+
     private ProjectChangeLog() { } // EF Core
 
     private ProjectChangeLog(

@@ -10,6 +10,7 @@ internal sealed class GetProjectByIdHandler(
         Project? project = await dbContext
             .Projects
             .Include(p => p.Members).ThenInclude(m => m.User)
+            .Include(p => p.ChangeLogs).ThenInclude(cl => cl.ChangedBy)
             .Include(p => p.Creator)
             .AsNoTracking()
             .SingleOrDefaultAsync(p => p.Id == query.ProjectId, cancellationToken);
@@ -19,7 +20,7 @@ internal sealed class GetProjectByIdHandler(
             return Result.Fail<ProjectResponse>(ProjectErrors.NotFound);
         }
 
-        var response = new ProjectResponse(
+        return new ProjectResponse(
             project.Id,
             project.Name,
             project.Description,
@@ -29,8 +30,7 @@ internal sealed class GetProjectByIdHandler(
             project.Creator.FullName,
             project.CreatedOnUtc,
             project.UpdatedOnUtc,
-            [.. project.Members.Select(m => new ProjectMemberResponse(m.UserId, m.User.FullName, m.Role, m.JoinedOnUtc))]);
-
-        return response;
+            [.. project.Members.OrderBy(m => m.User.FullName).Select(m => new ProjectMemberResponse(m.UserId, m.User.FullName, m.Role, m.JoinedOnUtc))],
+            [.. project.ChangeLogs.OrderBy(cl => cl.ChangedOnUtc).Select(cl => new ProjectChangeLogResponse(cl.Id, cl.ChangedById, cl.ChangedBy.FullName, cl.ChangeType, cl.AffectedEntityId, cl.ChangedOnUtc))]);
     }
 }

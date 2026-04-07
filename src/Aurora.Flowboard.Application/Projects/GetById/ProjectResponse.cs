@@ -10,10 +10,19 @@ public sealed record ProjectResponse(
     string CreatedByFullName,
     DateTime CreatedOnUtc,
     DateTime? UpdatedOnUtc,
-    IReadOnlyCollection<ProjectMemberResponse> Members);
+    IReadOnlyCollection<ProjectMemberResponse> Members,
+    IReadOnlyCollection<ProjectChangeLogResponse> ChangeLogs);
 
 public sealed record ProjectMemberResponse(
     Guid UserId,
     string FullName,
     ProjectRole Role,
     DateTime JoinedOnUtc);
+
+public sealed record ProjectChangeLogResponse(
+    Guid Id,
+    Guid ChangedById,
+    string ChangedByFullName,
+    ProjectChangeType ChangeType,
+    Guid? AffectedEntityId,
+    DateTime ChangedOnUtc);
