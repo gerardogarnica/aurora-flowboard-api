@@ -2,7 +2,8 @@ namespace Aurora.Flowboard.Application.Projects.Update;
 
 internal sealed class UpdateProjectHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<UpdateProjectCommand>
+    IDateTimeProvider dateTimeProvider,
+    IUserContext userContext) : ICommandHandler<UpdateProjectCommand>
 {
     public async Task<Result> Handle(
         UpdateProjectCommand command,
@@ -10,6 +11,7 @@ internal sealed class UpdateProjectHandler(
     {
         Project? project = await dbContext
             .Projects
+            .Include(p => p.Members)
             .SingleOrDefaultAsync(p => p.Id == command.Id, cancellationToken);
 
         if (project is null)
@@ -17,10 +19,20 @@ internal sealed class UpdateProjectHandler(
             return Result.Fail(ProjectErrors.NotFound);
         }
 
+        User? changedBy = await dbContext.Users
+            .AsNoTracking()
+            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+
+        if (changedBy is null)
+        {
+            return Result.Fail(UserErrors.NotFound);
+        }
+
         Result result = project.Update(
             command.Name,
             command.Description,
             command.EstimatedCompletionDate,
+            changedBy,
             dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)

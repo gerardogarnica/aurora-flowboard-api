@@ -29,4 +29,24 @@ public static class ProjectErrors
     public static readonly BaseError MemberNotFound = BaseError.NotFound(
         "Project.MemberNotFound",
         "The user is not a member of this project");
+
+    public static readonly BaseError CannotRemoveLastAdmin = BaseError.Validation(
+        "Project.CannotRemoveLastAdmin",
+        "Cannot remove the only admin member of the project");
+
+    public static readonly BaseError OnlyAdminCanRemoveMembers = BaseError.Forbidden(
+        "Project.OnlyAdminCanRemoveMembers",
+        "Only admin members can remove other members from the project");
+
+    public static readonly BaseError OnlyAdminCanAddMembers = BaseError.Forbidden(
+        "Project.OnlyAdminCanAddMembers",
+        "Only admin members can add members to the project");
+
+    public static readonly BaseError OnlyAdminCanUpdateProject = BaseError.Forbidden(
+        "Project.OnlyAdminCanUpdateProject",
+        "Only admin members can update the project");
+
+    public static readonly BaseError OnlyAdminCanChangeStatus = BaseError.Forbidden(
+        "Project.OnlyAdminCanChangeStatus",
+        "Only admin members can change the project status");
 }

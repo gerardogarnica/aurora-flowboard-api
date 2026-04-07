@@ -2,7 +2,8 @@ namespace Aurora.Flowboard.Application.Projects.AddMember;
 
 internal sealed class AddProjectMemberHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<AddProjectMemberCommand>
+    IDateTimeProvider dateTimeProvider,
+    IUserContext userContext) : ICommandHandler<AddProjectMemberCommand>
 {
     public async Task<Result> Handle(
         AddProjectMemberCommand command,
@@ -27,7 +28,16 @@ internal sealed class AddProjectMemberHandler(
             return Result.Fail(UserErrors.NotFound);
         }
 
-        Result result = project.AddMember(user, command.Role, dateTimeProvider.UtcNow);
+        User? changedBy = await dbContext.Users
+            .AsNoTracking()
+            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+
+        if (changedBy is null)
+        {
+            return Result.Fail(UserErrors.NotFound);
+        }
+
+        Result result = project.AddMember(user, command.Role, changedBy, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {

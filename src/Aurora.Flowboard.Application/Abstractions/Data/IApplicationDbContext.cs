@@ -7,6 +7,7 @@ public interface IApplicationDbContext : IAsyncDisposable
     DbSet<User> Users { get; }
     DbSet<Project> Projects { get; }
     DbSet<ProjectMember> ProjectMembers { get; }
+    DbSet<ProjectChangeLog> ProjectChangeLogs { get; }
     DbSet<Flow> Flows { get; }
     DbSet<FlowState> FlowStates { get; }
     DbSet<FlowTransition> FlowTransitions { get; }

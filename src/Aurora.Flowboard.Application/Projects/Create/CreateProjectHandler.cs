@@ -9,11 +9,20 @@ internal sealed class CreateProjectHandler(
         CreateProjectCommand command,
         CancellationToken cancellationToken)
     {
+        User? createdBy = await dbContext.Users
+            .AsNoTracking()
+            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+
+        if (createdBy is null)
+        {
+            return Result.Fail<Guid>(UserErrors.NotFound);
+        }
+
         Result<Project> result = Project.Create(
             command.Name,
             command.Description,
             command.EstimatedCompletionDate,
-            userContext.UserId,
+            createdBy,
             dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)

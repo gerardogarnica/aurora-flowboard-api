@@ -2,7 +2,8 @@ namespace Aurora.Flowboard.Application.Projects.RemoveMember;
 
 internal sealed class RemoveProjectMemberHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<RemoveProjectMemberCommand>
+    IDateTimeProvider dateTimeProvider,
+    IUserContext userContext) : ICommandHandler<RemoveProjectMemberCommand>
 {
     public async Task<Result> Handle(
         RemoveProjectMemberCommand command,
@@ -27,7 +28,16 @@ internal sealed class RemoveProjectMemberHandler(
             return Result.Fail(UserErrors.NotFound);
         }
 
-        Result result = project.RemoveMember(command.UserId, dateTimeProvider.UtcNow);
+        User? changedBy = await dbContext.Users
+            .AsNoTracking()
+            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+
+        if (changedBy is null)
+        {
+            return Result.Fail(UserErrors.NotFound);
+        }
+
+        Result result = project.RemoveMember(command.UserId, changedBy, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {

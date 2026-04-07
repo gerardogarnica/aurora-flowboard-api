@@ -2,7 +2,8 @@ namespace Aurora.Flowboard.Application.Projects.ChangeStatus;
 
 internal sealed class ChangeProjectStatusHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<ChangeProjectStatusCommand>
+    IDateTimeProvider dateTimeProvider,
+    IUserContext userContext) : ICommandHandler<ChangeProjectStatusCommand>
 {
     public async Task<Result> Handle(
         ChangeProjectStatusCommand command,
@@ -10,6 +11,7 @@ internal sealed class ChangeProjectStatusHandler(
     {
         Project? project = await dbContext
             .Projects
+            .Include(p => p.Members)
             .SingleOrDefaultAsync(p => p.Id == command.Id, cancellationToken);
 
         if (project is null)
@@ -17,7 +19,16 @@ internal sealed class ChangeProjectStatusHandler(
             return Result.Fail(ProjectErrors.NotFound);
         }
 
-        Result result = project.ChangeStatus(command.NewStatus, dateTimeProvider.UtcNow);
+        User? changedBy = await dbContext.Users
+            .AsNoTracking()
+            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+
+        if (changedBy is null)
+        {
+            return Result.Fail(UserErrors.NotFound);
+        }
+
+        Result result = project.ChangeStatus(command.NewStatus, changedBy, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {

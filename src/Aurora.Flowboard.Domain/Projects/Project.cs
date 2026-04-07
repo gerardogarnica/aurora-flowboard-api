@@ -17,6 +17,7 @@ public sealed class Project : BaseEntity
     };
 
     private readonly List<ProjectMember> _members = [];
+    private readonly List<ProjectChangeLog> _changeLogs = [];
 
     public string Name { get; private set; }
     public string? Description { get; private set; }
@@ -30,6 +31,7 @@ public sealed class Project : BaseEntity
     public User Creator { get; init; } = null!; // Navigation property
 
     public IReadOnlyCollection<ProjectMember> Members => _members.AsReadOnly();
+    public IReadOnlyCollection<ProjectChangeLog> ChangeLogs => _changeLogs.AsReadOnly();
 
     private bool IsModifiable => Status is ProjectStatus.Draft or ProjectStatus.Active or ProjectStatus.OnHold;
 
@@ -55,7 +57,7 @@ public sealed class Project : BaseEntity
         string name,
         string? description,
         DateOnly? estimatedCompletionDate,
-        Guid createdBy,
+        User createdBy,
         DateTime createdOnUtc)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -73,11 +75,13 @@ public sealed class Project : BaseEntity
             name.Trim(),
             description?.Trim(),
             estimatedCompletionDate,
-            createdBy,
+            createdBy.Id,
             createdOnUtc);
 
-        var creatorMember = ProjectMember.Create(project.Id, createdBy, ProjectRole.Admin, createdOnUtc);
+        var creatorMember = ProjectMember.Create(project.Id, createdBy.Id, ProjectRole.Admin, createdOnUtc);
         project._members.Add(creatorMember);
+
+        project._changeLogs.Add(ProjectChangeLog.Create(project, createdBy, ProjectChangeType.Created, null, createdOnUtc));
 
         project.AddDomainEvent(new ProjectCreatedDomainEvent(project.Id));
 
@@ -88,8 +92,14 @@ public sealed class Project : BaseEntity
         string name,
         string? description,
         DateOnly? estimatedCompletionDate,
+        User changedBy,
         DateTime updatedOnUtc)
     {
+        if (!IsAdmin(changedBy.Id))
+        {
+            return Result.Fail(ProjectErrors.OnlyAdminCanUpdateProject);
+        }
+
         if (!IsModifiable)
         {
             return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
@@ -110,13 +120,20 @@ public sealed class Project : BaseEntity
         EstimatedCompletionDate = estimatedCompletionDate;
         UpdatedOnUtc = updatedOnUtc;
 
+        _changeLogs.Add(ProjectChangeLog.Create(this, changedBy, ProjectChangeType.Updated, null, updatedOnUtc));
+
         AddDomainEvent(new ProjectUpdatedDomainEvent(Id));
 
         return Result.Ok();
     }
 
-    public Result ChangeStatus(ProjectStatus newStatus, DateTime updatedOnUtc)
+    public Result ChangeStatus(ProjectStatus newStatus, User changedBy, DateTime updatedOnUtc)
     {
+        if (!IsAdmin(changedBy.Id))
+        {
+            return Result.Fail(ProjectErrors.OnlyAdminCanChangeStatus);
+        }
+
         if (Status == newStatus)
         {
             return Result.Fail(ProjectErrors.InvalidStatusTransition);
@@ -131,13 +148,20 @@ public sealed class Project : BaseEntity
         Status = newStatus;
         UpdatedOnUtc = updatedOnUtc;
 
+        _changeLogs.Add(ProjectChangeLog.Create(this, changedBy, ProjectChangeType.StatusChanged, null, updatedOnUtc));
+
         AddDomainEvent(new ProjectStatusChangedDomainEvent(Id, oldStatus, newStatus));
 
         return Result.Ok();
     }
 
-    public Result AddMember(User user, ProjectRole role, DateTime joinedOnUtc)
+    public Result AddMember(User user, ProjectRole role, User changedBy, DateTime joinedOnUtc)
     {
+        if (!IsAdmin(changedBy.Id))
+        {
+            return Result.Fail(ProjectErrors.OnlyAdminCanAddMembers);
+        }
+
         if (!IsModifiable)
         {
             return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
@@ -156,13 +180,20 @@ public sealed class Project : BaseEntity
         var member = ProjectMember.Create(Id, user.Id, role, joinedOnUtc);
         _members.Add(member);
 
+        _changeLogs.Add(ProjectChangeLog.Create(this, changedBy, ProjectChangeType.MemberAdded, user.Id, joinedOnUtc));
+
         AddDomainEvent(new ProjectMemberAddedDomainEvent(Id, user.Id, role));
 
         return Result.Ok();
     }
 
-    public Result RemoveMember(Guid userId, DateTime updatedOnUtc)
+    public Result RemoveMember(Guid userId, User changedBy, DateTime updatedOnUtc)
     {
+        if (!IsAdmin(changedBy.Id))
+        {
+            return Result.Fail(ProjectErrors.OnlyAdminCanRemoveMembers);
+        }
+
         if (!IsModifiable)
         {
             return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
@@ -175,13 +206,23 @@ public sealed class Project : BaseEntity
             return Result.Fail(ProjectErrors.MemberNotFound);
         }
 
+        if (member.Role == ProjectRole.Admin && _members.Count(m => m.Role == ProjectRole.Admin) == 1)
+        {
+            return Result.Fail(ProjectErrors.CannotRemoveLastAdmin);
+        }
+
         _members.Remove(member);
         UpdatedOnUtc = updatedOnUtc;
+
+        _changeLogs.Add(ProjectChangeLog.Create(this, changedBy, ProjectChangeType.MemberRemoved, userId, updatedOnUtc));
 
         AddDomainEvent(new ProjectMemberRemovedDomainEvent(Id, userId));
 
         return Result.Ok();
     }
+
+    private bool IsAdmin(Guid userId) =>
+        _members.Any(m => m.UserId == userId && m.Role == ProjectRole.Admin);
 
     private static bool IsValidTransition(ProjectStatus from, ProjectStatus to) =>
         ValidTransitions.TryGetValue(from, out ProjectStatus[]? targets) && targets.Contains(to);
