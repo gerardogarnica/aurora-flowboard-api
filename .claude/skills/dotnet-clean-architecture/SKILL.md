@@ -90,8 +90,7 @@ This skill generates a complete .NET solution following Clean Architecture (also
 │   │   │   ├── Update/
 │   │   │   ├── Delete/
 │   │   │   ├── GetById/
-│   │   │   ├── GetList/
-│   │   │   └── {Entity}Response.cs
+│   │   │   └── GetAll/
 │   │   ├── DependencyInjection.cs
 │   │   ├── GlobalUsings.cs
 │   │   └── {name}.Application.csproj

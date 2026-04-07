@@ -35,6 +35,8 @@ This skill generates Domain Entities following Domain-Driven Design (DDD) princi
 /Domain/{Aggregate}s/
 ├── {Entity}.cs                    # Main entity
 ├── {Entity}Errors.cs              # Typed errors
+├── {Entity}{Child}.cs             # Child entity (if applicable)
+├── {Entity}Type.cs                # Enumerations related to the entity
 └── Events/
     ├── {Entity}CreatedDomainEvent.cs
     ├── {Entity}UpdatedDomainEvent.cs
@@ -65,9 +67,17 @@ public sealed class {Entity} : BaseEntity
     public string Name { get; private set; }
     public string? Description { get; private set; }
     public bool IsActive { get; private set; }
+    public Guid CreatedBy { get; private set; } // If tracking creator
+    public Guid? UpdatedBy { get; private set; } // If tracking updater
     public DateTime CreatedOnUtc { get; private set; }
     public DateTime? UpdatedOnUtc { get; private set; }
-    
+
+    // Navigation property to creator (if needed)
+    public {CreatorEntity} Creator { get; init; } = null!; // Navigation property
+
+    // Navigation property to updator (if needed)
+    public {UpdatorEntity} Updator { get; init; } = null!; // Navigation property
+
     // Navigation property (read-only collection)
     public IReadOnlyCollection<{ChildEntity}> {ChildEntities} => _{childEntities}.AsReadOnly();
 
@@ -82,11 +92,13 @@ public sealed class {Entity} : BaseEntity
         Guid id,
         string name,
         string? description,
+        Guid createdBy,
         DateTime createdOnUtc) : base(id)
     {
         Name = name;
         Description = description;
         IsActive = true;
+        CreatedBy = createdBy;
         CreatedOnUtc = createdOnUtc;
     }
 
@@ -96,6 +108,7 @@ public sealed class {Entity} : BaseEntity
     public static Result<{Entity}> Create(
         string name,
         string? description,
+        {CreatorEntity} createdBy,
         DateTime createdOnUtc)
     {
         // Validate invariants
@@ -113,6 +126,7 @@ public sealed class {Entity} : BaseEntity
             Guid.NewGuid(),
             name.Trim(),
             description.Trim(),
+            createdBy.Id,
             createdOnUtc);
 
         // Raise domain event
@@ -256,7 +270,7 @@ public sealed class {ChildEntity}
     public DateTime UpdatedOnUtc { get; private set; }
 
     // Navigation property
-    public {Parent} {Parent} { get; private set; } = null!;
+    public {Parent} {Parent} { get; init; } = null!;
 
     // ═══════════════════════════════════════════════════════════════
     // CONSTRUCTORS
@@ -520,19 +534,27 @@ public sealed class {Entity}CreatedDomainEvent(Guid {entity}Id) : DomainEvent
 {
     public Guid {Entity}Id { get; init; } = {entity}Id;
 }
+```
 
+```csharp
 // src/{name}.Domain/{Aggregate}/Events/{Entity}UpdatedDomainEvent.cs
 public sealed class {Entity}UpdatedDomainEvent(Guid {entity}Id) : DomainEvent
 {
     public Guid {Entity}Id { get; init; } = {entity}Id;
 }
 
+```
+
+```csharp
 // src/{name}.Domain/{Aggregate}/Events/{Entity}DeactivatedDomainEvent.cs
 public sealed class {Entity}DeactivatedDomainEvent(Guid {entity}Id) : DomainEvent
 {
     public Guid {Entity}Id { get; init; } = {entity}Id;
 }
 
+```
+
+```csharp
 // src/{name}.Domain/{Aggregate}/Events/{ChildEntity}AddedDomainEvent.cs
 public sealed class {ChildEntity}AddedDomainEvent(
     Guid {entity}Id,
@@ -627,5 +649,3 @@ public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
 
 - `domain-layer-setup` - Base abstractions for Domain layer
 - `ef-core-configuration` - Map entities to database
-- `domain-events-generator` - Handle domain events
-- `result-pattern` - Error handling
