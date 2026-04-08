@@ -16,7 +16,7 @@ public sealed record FlowStateResponse(
     Guid StateId,
     string Name,
     int SortOrder,
-    bool IsTerminal);
+    FlowStateCategory Category);
 
 public sealed record FlowTransitionResponse(
     Guid TransitionId,

@@ -113,7 +113,7 @@ public sealed class Flow : BaseEntity
         return Result.Ok();
     }
 
-    public Result AddState(string name, int sortOrder, bool isTerminal)
+    public Result AddState(string name, FlowStateCategory category)
     {
         if (!IsActive)
         {
@@ -125,7 +125,9 @@ public sealed class Flow : BaseEntity
             return Result.Fail(FlowErrors.DuplicateStateName);
         }
 
-        Result<FlowState> stateResult = FlowState.Create(this, name, sortOrder, isTerminal);
+        int sortOrder = _states.Count > 0 ? _states.Max(s => s.SortOrder) + 1 : 1;
+
+        Result<FlowState> stateResult = FlowState.Create(this, name, sortOrder, category);
 
         if (!stateResult.IsSuccessful)
         {

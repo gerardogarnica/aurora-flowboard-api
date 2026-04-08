@@ -2,26 +2,26 @@ namespace Aurora.Flowboard.Domain.Flows;
 
 public sealed class FlowState
 {
-    private const int MaxNameLength = 100;
+    private const int MaxNameLength = 50;
 
     public Guid Id { get; private set; }
     public Guid FlowId { get; private set; }
     public string Name { get; private set; }
     public int SortOrder { get; private set; }
-    public bool IsTerminal { get; private set; }
+    public FlowStateCategory Category { get; private set; }
 
     private FlowState() { } // EF Core
 
-    private FlowState(Guid id, Guid flowId, string name, int sortOrder, bool isTerminal)
+    private FlowState(Guid id, Guid flowId, string name, int sortOrder, FlowStateCategory category)
     {
         Id = id;
         FlowId = flowId;
         Name = name;
         SortOrder = sortOrder;
-        IsTerminal = isTerminal;
+        Category = category;
     }
 
-    internal static Result<FlowState> Create(Flow flow, string name, int sortOrder, bool isTerminal)
+    internal static Result<FlowState> Create(Flow flow, string name, int sortOrder, FlowStateCategory category)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -38,6 +38,6 @@ public sealed class FlowState
             flow.Id,
             name.Trim(),
             sortOrder,
-            isTerminal);
+            category);
     }
 }

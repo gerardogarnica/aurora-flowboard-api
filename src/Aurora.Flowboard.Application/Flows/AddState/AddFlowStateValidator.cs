@@ -9,9 +9,6 @@ internal sealed class AddFlowStateValidator : AbstractValidator<AddFlowStateComm
 
         RuleFor(x => x.Name)
             .NotEmpty()
-            .MaximumLength(100);
-
-        RuleFor(x => x.SortOrder)
-            .GreaterThanOrEqualTo(0);
+            .MaximumLength(50);
     }
 }

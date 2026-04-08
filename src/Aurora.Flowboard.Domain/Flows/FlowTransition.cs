@@ -8,6 +8,7 @@ public sealed class FlowTransition
     public Guid FlowId { get; private set; }
     public Guid FromStateId { get; private set; }
     public Guid ToStateId { get; private set; }
+    public bool IsGlobal { get; private set; }
     public ProjectRole AllowedRole { get; private set; }
 
     private FlowTransition() { } // EF Core

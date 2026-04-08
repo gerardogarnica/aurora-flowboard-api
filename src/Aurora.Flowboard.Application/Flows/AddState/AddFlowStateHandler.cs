@@ -17,7 +17,7 @@ internal sealed class AddFlowStateHandler(
             return Result.Fail(FlowErrors.NotFound);
         }
 
-        Result result = flow.AddState(command.Name, command.SortOrder, command.IsTerminal);
+        Result result = flow.AddState(command.Name, command.Category);
 
         if (!result.IsSuccessful)
         {
