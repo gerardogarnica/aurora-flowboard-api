@@ -32,7 +32,7 @@ internal sealed class AddFlowTransitionHandler(
             return Result.Fail(FlowErrors.TransitionToStateNotFound);
         }
 
-        Result result = flow.AddTransition(fromState, toState, command.AllowedRole);
+        Result result = flow.AddTransition(fromState, toState, command.IsGlobal, command.AllowedRoles);
 
         if (!result.IsSuccessful)
         {

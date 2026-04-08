@@ -41,7 +41,8 @@ internal sealed class GetFlowByIdHandler(
                 stateNames.GetValueOrDefault(t.FromStateId, string.Empty),
                 t.ToStateId,
                 stateNames.GetValueOrDefault(t.ToStateId, string.Empty),
-                t.AllowedRole))]);
+                t.IsGlobal,
+                t.AllowedRoles))]);
 
         return response;
     }

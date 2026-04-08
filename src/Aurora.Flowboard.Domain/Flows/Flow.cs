@@ -161,7 +161,7 @@ public sealed class Flow : BaseEntity
         return Result.Ok();
     }
 
-    public Result AddTransition(FlowState fromState, FlowState toState, ProjectRole allowedRole)
+    public Result AddTransition(FlowState fromState, FlowState toState, bool isGlobal, IReadOnlyCollection<ProjectRole> allowedRoles)
     {
         if (!IsActive)
         {
@@ -183,7 +183,7 @@ public sealed class Flow : BaseEntity
             return Result.Fail(FlowErrors.TransitionAlreadyExists);
         }
 
-        var transition = FlowTransition.Create(this, fromState, toState, allowedRole);
+        var transition = FlowTransition.Create(this, fromState, toState, isGlobal, allowedRoles);
         _transitions.Add(transition);
 
         AddDomainEvent(new FlowTransitionAddedDomainEvent(Id, fromState.Id, toState.Id));

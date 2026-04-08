@@ -4,4 +4,5 @@ public sealed record AddFlowTransitionCommand(
     Guid FlowId,
     Guid FromStateId,
     Guid ToStateId,
-    ProjectRole AllowedRole) : ICommand;
+    bool IsGlobal,
+    IReadOnlyCollection<ProjectRole> AllowedRoles) : ICommand;
