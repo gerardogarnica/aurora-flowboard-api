@@ -25,7 +25,6 @@ public sealed class Project : BaseEntity
     public DateOnly? EstimatedCompletionDate { get; private set; }
     public ProjectStatus Status { get; private set; }
     public int WorkItemCounter { get; private set; }
-    public bool IsActive => Status == ProjectStatus.Active;
     public Guid CreatedBy { get; private set; }
     public DateTime CreatedOnUtc { get; private set; }
     public DateTime? UpdatedOnUtc { get; private set; }
@@ -238,6 +237,16 @@ public sealed class Project : BaseEntity
     {
         WorkItemCounter++;
         return WorkItemCounter;
+    }
+
+    public bool CanAddOrUpdateFlow()
+    {
+        return Status is ProjectStatus.Draft or ProjectStatus.Active;
+    }
+
+    public bool CanAddOrUpdateWorkItem()
+    {
+        return Status is ProjectStatus.Active;
     }
 
     private bool IsAdmin(Guid userId) =>

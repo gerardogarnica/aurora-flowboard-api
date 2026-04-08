@@ -56,7 +56,7 @@ public sealed class Flow : BaseEntity
             return Result.Fail<Flow>(FlowErrors.NameTooLong);
         }
 
-        if (!project.IsActive)
+        if (!project.CanAddOrUpdateFlow())
         {
             return Result.Fail<Flow>(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
