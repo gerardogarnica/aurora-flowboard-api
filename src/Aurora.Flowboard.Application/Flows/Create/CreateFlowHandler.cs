@@ -22,7 +22,7 @@ internal sealed class CreateFlowHandler(
             command.Name,
             command.Description,
             project,
-            command.IsDefault,
+            false,
             dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
