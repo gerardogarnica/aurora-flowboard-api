@@ -210,7 +210,7 @@ public sealed class WorkItem : BaseEntity
         FlowStateId = toState.Id;
         UpdatedOnUtc = changedOnUtc;
 
-        if (toState.Category == FlowStateCategory.Terminal)
+        if (toState.Category == FlowStateCategory.Cancelled)
         {
             CompletedOnUtc = changedOnUtc;
         }

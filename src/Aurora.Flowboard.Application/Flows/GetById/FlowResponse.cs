@@ -24,5 +24,4 @@ public sealed record FlowTransitionResponse(
     string FromStateName,
     Guid ToStateId,
     string ToStateName,
-    bool IsGlobal,
     IReadOnlyCollection<ProjectRole> AllowedRoles);

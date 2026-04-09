@@ -10,21 +10,19 @@ public sealed class FlowTransition
     public Guid FlowId { get; private set; }
     public Guid FromStateId { get; private set; }
     public Guid ToStateId { get; private set; }
-    public bool IsGlobal { get; private set; }
     public IReadOnlyCollection<ProjectRole> AllowedRoles => _allowedRoles.AsReadOnly();
 
     private FlowTransition() { } // EF Core
 
-    private FlowTransition(Guid id, Guid flowId, Guid fromStateId, Guid toStateId, bool isGlobal, IReadOnlyCollection<ProjectRole> allowedRoles)
+    private FlowTransition(Guid id, Guid flowId, Guid fromStateId, Guid toStateId, IReadOnlyCollection<ProjectRole> allowedRoles)
     {
         Id = id;
         FlowId = flowId;
         FromStateId = fromStateId;
         ToStateId = toStateId;
-        IsGlobal = isGlobal;
         _allowedRoles = [.. allowedRoles];
     }
 
-    internal static FlowTransition Create(Flow flow, FlowState fromState, FlowState toState, bool isGlobal, IReadOnlyCollection<ProjectRole> allowedRoles) =>
-        new(Guid.NewGuid(), flow.Id, fromState.Id, toState.Id, isGlobal, allowedRoles);
+    internal static FlowTransition Create(Flow flow, FlowState fromState, FlowState toState, IReadOnlyCollection<ProjectRole> allowedRoles) =>
+        new(Guid.NewGuid(), flow.Id, fromState.Id, toState.Id, allowedRoles);
 }

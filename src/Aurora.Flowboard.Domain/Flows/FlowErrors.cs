@@ -18,6 +18,14 @@ public static class FlowErrors
         "Flow.AlreadyDeactivated",
         "The flow is already deactivated");
 
+    public static readonly BaseError IsDefault = BaseError.Validation(
+        "Flow.IsDefault",
+        "Cannot perform this operation on a default flow");
+
+    public static readonly BaseError MaxActiveStatesReached = BaseError.Validation(
+        "Flow.MaxActiveStatesReached",
+        "Cannot add more active states to the flow as it has reached the maximum limit of 10");
+
     public static readonly BaseError Deactivated = BaseError.Validation(
         "Flow.Deactivated",
         "Cannot perform this operation on a deactivated flow");

@@ -4,9 +4,8 @@ public enum FlowStateCategory
 {
     // Visible on board
     Active,
-    // Visible on board, the last state in the flow
+    // Not visible on board, the last state in the flow, used for archive or close work items
     Completed,
-    // Not visible on board, but work items can be moved to this state,
-    // can be used for archiving or closed states, can't be initial states in transitions
-    Terminal
+    // Not visible on board, used for remove or delete work items
+    Cancelled
 }

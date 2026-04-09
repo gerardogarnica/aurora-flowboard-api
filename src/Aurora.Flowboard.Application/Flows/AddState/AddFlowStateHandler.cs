@@ -10,6 +10,7 @@ internal sealed class AddFlowStateHandler(
         Flow? flow = await dbContext
             .Flows
             .Include(f => f.States)
+            .Include(f => f.Transitions)
             .SingleOrDefaultAsync(f => f.Id == command.FlowId, cancellationToken);
 
         if (flow is null)
@@ -17,7 +18,7 @@ internal sealed class AddFlowStateHandler(
             return Result.Fail(FlowErrors.NotFound);
         }
 
-        Result result = flow.AddState(command.Name, command.Category);
+        Result result = flow.AddState(command.Name, command.Category, command.AllowedRoles);
 
         if (!result.IsSuccessful)
         {
