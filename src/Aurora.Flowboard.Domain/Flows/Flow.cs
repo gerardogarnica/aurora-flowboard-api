@@ -284,6 +284,23 @@ public sealed class Flow : BaseEntity
         return Result.Ok();
     }
 
+    public Result AddTransitionRole(Guid transitionId, ProjectRole role)
+    {
+        if (!IsActive)
+        {
+            return Result.Fail(FlowErrors.Deactivated);
+        }
+
+        FlowTransition? transition = _transitions.FirstOrDefault(t => t.Id == transitionId);
+
+        if (transition is null)
+        {
+            return Result.Fail(FlowErrors.TransitionNotFound);
+        }
+
+        return transition.AddAllowedRole(role);
+    }
+
     private Result AddTransition(FlowState fromState, FlowState toState, IReadOnlyCollection<ProjectRole> allowedRoles)
     {
         if (!IsActive)

@@ -50,6 +50,14 @@ public static class FlowErrors
         "Flow.TransitionAlreadyExists",
         "A transition between these states already exists in the flow");
 
+    public static readonly BaseError TransitionNotFound = BaseError.NotFound(
+        "Flow.TransitionNotFound",
+        "The flow transition with the specified identifier was not found");
+
+    public static readonly BaseError TransitionRoleAlreadyAllowed = BaseError.Conflict(
+        "Flow.TransitionRoleAlreadyAllowed",
+        "The role is already allowed for this transition");
+
     public static readonly BaseError TransitionFromStateNotFound = BaseError.Validation(
         "Flow.TransitionFromStateNotFound",
         "The source state does not belong to this flow");

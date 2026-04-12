@@ -25,4 +25,16 @@ public sealed class FlowTransition
 
     internal static FlowTransition Create(Flow flow, FlowState fromState, FlowState toState, IReadOnlyCollection<ProjectRole> allowedRoles) =>
         new(Guid.NewGuid(), flow.Id, fromState.Id, toState.Id, allowedRoles);
+
+    internal Result AddAllowedRole(ProjectRole role)
+    {
+        if (_allowedRoles.Contains(role))
+        {
+            return Result.Fail(FlowErrors.TransitionRoleAlreadyAllowed);
+        }
+
+        _allowedRoles.Add(role);
+
+        return Result.Ok();
+    }
 }
