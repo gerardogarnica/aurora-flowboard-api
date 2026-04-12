@@ -167,8 +167,8 @@ public sealed class Flow : BaseEntity
                         .FirstOrDefault(s => s.SortOrder == newState.SortOrder - 1 && s.Category == FlowStateCategory.Active);
                     if (previousState is not null)
                     {
-                        AddTransition(previousState, newState, allowedRoles);
-                        AddTransition(newState, previousState, allowedRoles);
+                        _ = AddTransition(previousState, newState, allowedRoles);
+                        _ = AddTransition(newState, previousState, allowedRoles);
                     }
 
                     RerouteCompletedTransitionsToNewActiveState(newState);
@@ -183,7 +183,7 @@ public sealed class Flow : BaseEntity
                         .MaxBy(s => s.SortOrder);
                     if (lastActiveState is not null)
                     {
-                        AddTransition(lastActiveState, newState, allowedRoles);
+                        _ = AddTransition(lastActiveState, newState, allowedRoles);
                     }
 
                     break;
@@ -193,7 +193,7 @@ public sealed class Flow : BaseEntity
                 {
                     foreach (FlowState activeState in _states.Where(s => s.Category == FlowStateCategory.Active && s.Id != newState.Id))
                     {
-                        AddTransition(activeState, newState, allowedRoles);
+                        _ = AddTransition(activeState, newState, allowedRoles);
                     }
 
                     break;
@@ -220,7 +220,7 @@ public sealed class Flow : BaseEntity
             IReadOnlyCollection<ProjectRole> existingRoles = transition.AllowedRoles;
 
             _transitions.Remove(transition);
-            AddTransition(newActiveState, completedState, existingRoles);
+            _ = AddTransition(newActiveState, completedState, existingRoles);
         }
     }
 
@@ -277,14 +277,14 @@ public sealed class Flow : BaseEntity
 
             if (previousActiveState is not null && nextActiveState is not null)
             {
-                AddTransition(previousActiveState, nextActiveState, bridgeRoles);
+                _ = AddTransition(previousActiveState, nextActiveState, bridgeRoles);
             }
         }
 
         return Result.Ok();
     }
 
-    public Result AddTransition(FlowState fromState, FlowState toState, IReadOnlyCollection<ProjectRole> allowedRoles)
+    private Result AddTransition(FlowState fromState, FlowState toState, IReadOnlyCollection<ProjectRole> allowedRoles)
     {
         if (!IsActive)
         {
@@ -310,25 +310,6 @@ public sealed class Flow : BaseEntity
         _transitions.Add(transition);
 
         AddDomainEvent(new FlowTransitionAddedDomainEvent(Id, fromState.Id, toState.Id));
-
-        return Result.Ok();
-    }
-
-    public Result RemoveTransition(Guid transitionId)
-    {
-        if (!IsActive)
-        {
-            return Result.Fail(FlowErrors.Deactivated);
-        }
-
-        var transition = _transitions.FirstOrDefault(t => t.Id == transitionId);
-
-        if (transition is null)
-        {
-            return Result.Fail(FlowErrors.TransitionNotFound);
-        }
-
-        _transitions.Remove(transition);
 
         return Result.Ok();
     }
