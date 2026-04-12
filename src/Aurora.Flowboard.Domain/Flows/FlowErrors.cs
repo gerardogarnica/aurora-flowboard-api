@@ -61,4 +61,12 @@ public static class FlowErrors
     public static readonly BaseError TransitionToStateNotFound = BaseError.Validation(
         "Flow.TransitionToStateNotFound",
         "The destination state does not belong to this flow");
+
+    public static readonly BaseError LastCompletedState = BaseError.Validation(
+        "Flow.LastCompletedState",
+        "Cannot remove the last completed state from the flow");
+
+    public static readonly BaseError LastCancelledState = BaseError.Validation(
+        "Flow.LastCancelledState",
+        "Cannot remove the last cancelled state from the flow");
 }

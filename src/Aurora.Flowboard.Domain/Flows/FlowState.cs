@@ -40,4 +40,8 @@ public sealed class FlowState
             sortOrder,
             category);
     }
+
+    internal void IncrementSortOrder() => SortOrder++;
+
+    internal void DecrementSortOrder() => SortOrder--;
 }

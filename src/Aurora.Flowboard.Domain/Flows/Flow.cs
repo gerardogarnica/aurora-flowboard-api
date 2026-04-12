@@ -238,8 +238,48 @@ public sealed class Flow : BaseEntity
             return Result.Fail(FlowErrors.StateNotFound);
         }
 
+        if (state.Category == FlowStateCategory.Completed && _states.Count(s => s.Category == FlowStateCategory.Completed) == 1)
+        {
+            return Result.Fail(FlowErrors.LastCompletedState);
+        }
+
+        if (state.Category == FlowStateCategory.Cancelled && _states.Count(s => s.Category == FlowStateCategory.Cancelled) == 1)
+        {
+            return Result.Fail(FlowErrors.LastCancelledState);
+        }
+
+        FlowState? previousActiveState = null;
+        FlowState? nextActiveState = null;
+        IReadOnlyCollection<ProjectRole> bridgeRoles = [];
+
+        if (state.Category == FlowStateCategory.Active)
+        {
+            previousActiveState = _states.FirstOrDefault(s => s.Category == FlowStateCategory.Active && s.SortOrder == state.SortOrder - 1);
+            nextActiveState = _states.FirstOrDefault(s => s.Category == FlowStateCategory.Active && s.SortOrder == state.SortOrder + 1);
+
+            if (previousActiveState is not null)
+            {
+                bridgeRoles = _transitions
+                    .FirstOrDefault(t => t.FromStateId == previousActiveState.Id && t.ToStateId == stateId)
+                    ?.AllowedRoles ?? [];
+            }
+        }
+
         _transitions.RemoveAll(t => t.FromStateId == stateId || t.ToStateId == stateId);
         _states.Remove(state);
+
+        if (state.Category == FlowStateCategory.Active)
+        {
+            foreach (FlowState successor in _states.Where(s => s.Category == FlowStateCategory.Active && s.SortOrder > state.SortOrder))
+            {
+                successor.DecrementSortOrder();
+            }
+
+            if (previousActiveState is not null && nextActiveState is not null)
+            {
+                AddTransition(previousActiveState, nextActiveState, bridgeRoles);
+            }
+        }
 
         return Result.Ok();
     }
