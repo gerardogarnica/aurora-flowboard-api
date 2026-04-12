@@ -58,6 +58,10 @@ public static class FlowErrors
         "Flow.TransitionRoleAlreadyAllowed",
         "The role is already allowed for this transition");
 
+    public static readonly BaseError TransitionRoleNotAllowed = BaseError.Validation(
+        "Flow.TransitionRoleNotAllowed",
+        "The role is not allowed for this transition");
+
     public static readonly BaseError TransitionFromStateNotFound = BaseError.Validation(
         "Flow.TransitionFromStateNotFound",
         "The source state does not belong to this flow");

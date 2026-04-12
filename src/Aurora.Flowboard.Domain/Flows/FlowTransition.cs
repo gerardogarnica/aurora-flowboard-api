@@ -37,4 +37,16 @@ public sealed class FlowTransition
 
         return Result.Ok();
     }
+
+    internal Result RemoveAllowedRole(ProjectRole role)
+    {
+        if (!_allowedRoles.Contains(role))
+        {
+            return Result.Fail(FlowErrors.TransitionRoleNotAllowed);
+        }
+
+        _allowedRoles.Remove(role);
+
+        return Result.Ok();
+    }
 }
