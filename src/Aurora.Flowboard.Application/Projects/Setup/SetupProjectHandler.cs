@@ -55,7 +55,7 @@ internal sealed class SetupProjectHandler(
 
         foreach (SetupProjectFlowStateDto state in command.Flow.States)
         {
-            Result stateResult = flow.AddState(state.Name, state.Category, state.Roles);
+            Result stateResult = flow.AddState(state.Name, state.Category, state.Roles, createdBy);
 
             if (!stateResult.IsSuccessful)
             {

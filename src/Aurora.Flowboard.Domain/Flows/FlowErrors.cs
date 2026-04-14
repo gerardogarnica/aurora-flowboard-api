@@ -6,6 +6,10 @@ public static class FlowErrors
         "Flow.NotFound",
         "The flow with the specified identifier was not found");
 
+    public static readonly BaseError OnlyAdminCanModifyFlow = BaseError.Forbidden(
+        "Flow.OnlyAdminCanModifyFlow",
+        "Only project administrators can modify flows");
+
     public static readonly BaseError NameRequired = BaseError.Validation(
         "Flow.NameRequired",
         "Flow name is required");

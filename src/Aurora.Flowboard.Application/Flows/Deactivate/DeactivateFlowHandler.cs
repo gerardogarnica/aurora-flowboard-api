@@ -2,7 +2,8 @@ namespace Aurora.Flowboard.Application.Flows.Deactivate;
 
 internal sealed class DeactivateFlowHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<DeactivateFlowCommand>
+    IDateTimeProvider dateTimeProvider,
+    IUserContext userContext) : ICommandHandler<DeactivateFlowCommand>
 {
     public async Task<Result> Handle(
         DeactivateFlowCommand command,
@@ -10,7 +11,7 @@ internal sealed class DeactivateFlowHandler(
     {
         Flow? flow = await dbContext
             .Flows
-            .Include(f => f.Project)
+            .Include(f => f.Project).ThenInclude(p => p.Members)
             .SingleOrDefaultAsync(f => f.Id == command.Id, cancellationToken);
 
         if (flow is null)
@@ -18,7 +19,17 @@ internal sealed class DeactivateFlowHandler(
             return Result.Fail(FlowErrors.NotFound);
         }
 
-        Result result = flow.Deactivate(dateTimeProvider.UtcNow);
+        User? changedBy = await dbContext
+            .Users
+            .AsNoTracking()
+            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+
+        if (changedBy is null)
+        {
+            return Result.Fail(UserErrors.NotFound);
+        }
+
+        Result result = flow.Deactivate(changedBy, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {

@@ -249,7 +249,7 @@ public sealed class Project : BaseEntity
         return Status is ProjectStatus.Active;
     }
 
-    private bool IsAdmin(Guid userId) =>
+    internal bool IsAdmin(Guid userId) =>
         _members.Any(m => m.UserId == userId && m.Role == ProjectRole.Admin);
 
     private static bool IsValidTransition(ProjectStatus from, ProjectStatus to) =>

@@ -1,5 +1,6 @@
 using Aurora.Flowboard.Domain.Flows.Events;
 using Aurora.Flowboard.Domain.Projects;
+using Aurora.Flowboard.Domain.Users;
 
 namespace Aurora.Flowboard.Domain.Flows;
 
@@ -69,18 +70,31 @@ public sealed class Flow : BaseEntity
             description?.Trim(),
             project.Id,
             isDefault,
-            createdOnUtc);
+            createdOnUtc)
+        {
+            Project = project
+        };
 
         flow.AddDomainEvent(new FlowCreatedDomainEvent(flow.Id));
 
         return flow;
     }
 
-    public Result Update(string name, string? description, DateTime updatedOnUtc)
+    public Result Update(string name, string? description, User changedBy, DateTime updatedOnUtc)
     {
+        if (!Project.IsAdmin(changedBy.Id))
+        {
+            return Result.Fail(FlowErrors.OnlyAdminCanModifyFlow);
+        }
+
         if (!IsActive)
         {
             return Result.Fail(FlowErrors.Deactivated);
+        }
+
+        if (!Project.CanAddOrUpdateFlow())
+        {
+            return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
 
         if (string.IsNullOrWhiteSpace(name))
@@ -93,11 +107,6 @@ public sealed class Flow : BaseEntity
             return Result.Fail(FlowErrors.NameTooLong);
         }
 
-        if (!Project.CanAddOrUpdateFlow())
-        {
-            return Result.Fail<Flow>(ProjectErrors.OperationNotAllowedInCurrentStatus);
-        }
-
         Name = name.Trim();
         Description = description?.Trim();
         UpdatedOnUtc = updatedOnUtc;
@@ -107,8 +116,13 @@ public sealed class Flow : BaseEntity
         return Result.Ok();
     }
 
-    public Result Deactivate(DateTime updatedOnUtc)
+    public Result Deactivate(User changedBy, DateTime updatedOnUtc)
     {
+        if (!Project.IsAdmin(changedBy.Id))
+        {
+            return Result.Fail(FlowErrors.OnlyAdminCanModifyFlow);
+        }
+
         if (!IsActive)
         {
             return Result.Fail(FlowErrors.AlreadyDeactivated);
@@ -121,7 +135,7 @@ public sealed class Flow : BaseEntity
 
         if (!Project.CanAddOrUpdateFlow())
         {
-            return Result.Fail<Flow>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+            return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
 
         IsActive = false;
@@ -130,8 +144,13 @@ public sealed class Flow : BaseEntity
         return Result.Ok();
     }
 
-    public Result AddState(string name, FlowStateCategory category, IReadOnlyCollection<ProjectRole> allowedRoles)
+    public Result AddState(string name, FlowStateCategory category, IReadOnlyCollection<ProjectRole> allowedRoles, User changedBy)
     {
+        if (!Project.IsAdmin(changedBy.Id))
+        {
+            return Result.Fail(FlowErrors.OnlyAdminCanModifyFlow);
+        }
+
         if (!IsActive)
         {
             return Result.Fail(FlowErrors.Deactivated);
@@ -139,7 +158,7 @@ public sealed class Flow : BaseEntity
 
         if (!Project.CanAddOrUpdateFlow())
         {
-            return Result.Fail<Flow>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+            return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
 
         if (_states.Any(s => s.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase)))
@@ -240,8 +259,13 @@ public sealed class Flow : BaseEntity
         }
     }
 
-    public Result RemoveState(Guid stateId)
+    public Result RemoveState(Guid stateId, User changedBy)
     {
+        if (!Project.IsAdmin(changedBy.Id))
+        {
+            return Result.Fail(FlowErrors.OnlyAdminCanModifyFlow);
+        }
+
         if (!IsActive)
         {
             return Result.Fail(FlowErrors.Deactivated);
@@ -249,10 +273,10 @@ public sealed class Flow : BaseEntity
 
         if (!Project.CanAddOrUpdateFlow())
         {
-            return Result.Fail<Flow>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+            return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
 
-        var state = _states.FirstOrDefault(s => s.Id == stateId);
+        FlowState? state = _states.FirstOrDefault(s => s.Id == stateId);
 
         if (state is null)
         {
@@ -305,11 +329,21 @@ public sealed class Flow : BaseEntity
         return Result.Ok();
     }
 
-    public Result AddTransitionRole(Guid transitionId, ProjectRole role)
+    public Result AddTransitionRole(Guid transitionId, ProjectRole role, User changedBy)
     {
+        if (!Project.IsAdmin(changedBy.Id))
+        {
+            return Result.Fail(FlowErrors.OnlyAdminCanModifyFlow);
+        }
+
         if (!IsActive)
         {
             return Result.Fail(FlowErrors.Deactivated);
+        }
+
+        if (!Project.CanAddOrUpdateFlow())
+        {
+            return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
 
         FlowTransition? transition = _transitions.FirstOrDefault(t => t.Id == transitionId);
@@ -322,11 +356,21 @@ public sealed class Flow : BaseEntity
         return transition.AddAllowedRole(role);
     }
 
-    public Result RemoveTransitionRole(Guid transitionId, ProjectRole role)
+    public Result RemoveTransitionRole(Guid transitionId, ProjectRole role, User changedBy)
     {
+        if (!Project.IsAdmin(changedBy.Id))
+        {
+            return Result.Fail(FlowErrors.OnlyAdminCanModifyFlow);
+        }
+
         if (!IsActive)
         {
             return Result.Fail(FlowErrors.Deactivated);
+        }
+
+        if (!Project.CanAddOrUpdateFlow())
+        {
+            return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
 
         FlowTransition? transition = _transitions.FirstOrDefault(t => t.Id == transitionId);

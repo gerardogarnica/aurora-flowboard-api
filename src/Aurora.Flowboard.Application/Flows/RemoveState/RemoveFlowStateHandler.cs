@@ -1,7 +1,8 @@
 namespace Aurora.Flowboard.Application.Flows.RemoveState;
 
 internal sealed class RemoveFlowStateHandler(
-    IApplicationDbContext dbContext) : ICommandHandler<RemoveFlowStateCommand>
+    IApplicationDbContext dbContext,
+    IUserContext userContext) : ICommandHandler<RemoveFlowStateCommand>
 {
     public async Task<Result> Handle(
         RemoveFlowStateCommand command,
@@ -9,7 +10,7 @@ internal sealed class RemoveFlowStateHandler(
     {
         Flow? flow = await dbContext
             .Flows
-            .Include(f => f.Project)
+            .Include(f => f.Project).ThenInclude(p => p.Members)
             .Include(f => f.States)
             .Include(f => f.Transitions)
             .SingleOrDefaultAsync(f => f.Id == command.FlowId, cancellationToken);
@@ -19,7 +20,17 @@ internal sealed class RemoveFlowStateHandler(
             return Result.Fail(FlowErrors.NotFound);
         }
 
-        Result result = flow.RemoveState(command.StateId);
+        User? changedBy = await dbContext
+            .Users
+            .AsNoTracking()
+            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+
+        if (changedBy is null)
+        {
+            return Result.Fail(UserErrors.NotFound);
+        }
+
+        Result result = flow.RemoveState(command.StateId, changedBy);
 
         if (!result.IsSuccessful)
         {
