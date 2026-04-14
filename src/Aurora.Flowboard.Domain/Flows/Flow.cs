@@ -19,6 +19,7 @@ public sealed class Flow : BaseEntity
     public DateTime CreatedOnUtc { get; private set; }
     public DateTime? UpdatedOnUtc { get; private set; }
 
+    public Project Project { get; init; } = null!; // Navigation property
     public IReadOnlyCollection<FlowState> States => _states.AsReadOnly();
     public IReadOnlyCollection<FlowTransition> Transitions => _transitions.AsReadOnly();
 
@@ -92,6 +93,11 @@ public sealed class Flow : BaseEntity
             return Result.Fail(FlowErrors.NameTooLong);
         }
 
+        if (!Project.CanAddOrUpdateFlow())
+        {
+            return Result.Fail<Flow>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
         Name = name.Trim();
         Description = description?.Trim();
         UpdatedOnUtc = updatedOnUtc;
@@ -113,6 +119,11 @@ public sealed class Flow : BaseEntity
             return Result.Fail(FlowErrors.IsDefault);
         }
 
+        if (!Project.CanAddOrUpdateFlow())
+        {
+            return Result.Fail<Flow>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
         IsActive = false;
         UpdatedOnUtc = updatedOnUtc;
 
@@ -124,6 +135,11 @@ public sealed class Flow : BaseEntity
         if (!IsActive)
         {
             return Result.Fail(FlowErrors.Deactivated);
+        }
+
+        if (!Project.CanAddOrUpdateFlow())
+        {
+            return Result.Fail<Flow>(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
 
         if (_states.Any(s => s.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase)))
@@ -229,6 +245,11 @@ public sealed class Flow : BaseEntity
         if (!IsActive)
         {
             return Result.Fail(FlowErrors.Deactivated);
+        }
+
+        if (!Project.CanAddOrUpdateFlow())
+        {
+            return Result.Fail<Flow>(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
 
         var state = _states.FirstOrDefault(s => s.Id == stateId);

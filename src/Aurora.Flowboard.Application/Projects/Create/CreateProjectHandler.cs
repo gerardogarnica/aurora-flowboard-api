@@ -9,7 +9,8 @@ internal sealed class CreateProjectHandler(
         CreateProjectCommand command,
         CancellationToken cancellationToken)
     {
-        User? createdBy = await dbContext.Users
+        User? createdBy = await dbContext
+            .Users
             .AsNoTracking()
             .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
 

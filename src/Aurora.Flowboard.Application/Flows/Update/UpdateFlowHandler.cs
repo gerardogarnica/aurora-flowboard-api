@@ -10,6 +10,7 @@ internal sealed class UpdateFlowHandler(
     {
         Flow? flow = await dbContext
             .Flows
+            .Include(f => f.Project)
             .SingleOrDefaultAsync(f => f.Id == command.Id, cancellationToken);
 
         if (flow is null)

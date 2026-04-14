@@ -9,6 +9,7 @@ internal sealed class RemoveFlowStateHandler(
     {
         Flow? flow = await dbContext
             .Flows
+            .Include(f => f.Project)
             .Include(f => f.States)
             .Include(f => f.Transitions)
             .SingleOrDefaultAsync(f => f.Id == command.FlowId, cancellationToken);
