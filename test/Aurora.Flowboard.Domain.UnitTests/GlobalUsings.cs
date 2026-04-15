@@ -5,6 +5,8 @@ global using Aurora.Flowboard.Domain.Projects;
 global using Aurora.Flowboard.Domain.Projects.Events;
 global using Aurora.Flowboard.Domain.Shared;
 global using Aurora.Flowboard.Domain.UnitTests.Abstractions;
+global using Aurora.Flowboard.Domain.UnitTests.Flows;
+global using Aurora.Flowboard.Domain.UnitTests.Projects;
 global using Aurora.Flowboard.Domain.UnitTests.Users;
 global using Aurora.Flowboard.Domain.Users;
 global using FluentAssertions;
