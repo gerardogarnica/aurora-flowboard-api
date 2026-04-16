@@ -4,6 +4,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="EFCore.NamingConventions" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Aurora.Flowboard.Application\Aurora.Flowboard.Application.csproj" />
   </ItemGroup>
 </Project>
