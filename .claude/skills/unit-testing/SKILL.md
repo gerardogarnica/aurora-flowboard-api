@@ -18,8 +18,6 @@ The goal is to ensure:
 - Zero infrastructure dependencies
 - High maintainability
 
----
-
 ## When to Use This Skill
 
 - Generating unit tests for Domain entities and Value Objects
@@ -29,16 +27,12 @@ The goal is to ensure:
 - Verifying Result pattern outcomes
 - Refactoring safely with regression coverage
 
----
-
 ## Testing Strategy by Layer
 
 | Layer | What to Test | What NOT to Test |
 |------|-------------|------------------|
 | Domain | Business rules, invariants, state transitions, domain events | EF Core, database, external services |
 | Application | Handler logic, orchestration, validations, Result flow | Database implementation details, infrastructure |
-
----
 
 ## Project Structure (Tests)
 
@@ -60,8 +54,6 @@ test/
     └── {name}.Application.UnitTests.csproj
 ```
 
----
-
 ## Naming Conventions
 
 | Item | Convention | Example |
@@ -70,8 +62,6 @@ test/
 | Test Method | Should_{ExpectedBehavior}_When_{Condition} | Should_CreateWorkItem_When_DataIsValid |
 | Data Class | {ClassName}Data | WorkItemData |
 | Variables | camelCase | result, command |
-
----
 
 ## Domain Layer Testing Rules
 
@@ -144,8 +134,6 @@ internal static class WalletData
 valueObject1.Should().Be(valueObject2);
 ```
 
----
-
 ## Application Layer Testing Rules
 
 ### 1. Test Command Handlers
@@ -208,8 +196,6 @@ var result = validator.Validate(command);
 result.IsValid.Should().BeFalse();
 ```
 
----
-
 ## Test Data Guidelines
 
 - Use Mother Objects / Builders for complex entities
@@ -219,16 +205,12 @@ result.IsValid.Should().BeFalse();
 var command = CreateWorkItemCommandBuilder.Valid().Build();
 ```
 
----
-
 ## Deterministic Testing Rules
 
 Never depend on:
 - Current DateTime → use IDateTimeService
 - Random values
 - External APIs
-
----
 
 ## Tools & Libraries
 
@@ -237,8 +219,6 @@ Recommended:
 - FluentAssertions
 - Moq
 - Bogus (optional)
-
----
 
 ## Critical Rules
 
@@ -251,8 +231,6 @@ Recommended:
 7. Cover both success and failure paths
 8. Keep tests fast (< 10ms ideally)
 
----
-
 ## Common Pitfalls
 
 - Testing EF Core behavior in unit tests
@@ -260,8 +238,6 @@ Recommended:
 - Testing implementation instead of behavior
 - Not testing edge cases
 - Ignoring failure scenarios
-
----
 
 ## Example Pattern (AAA)
 
@@ -275,8 +251,6 @@ var result = await handler.Handle(command, CancellationToken.None);
 // Assert
 result.IsSuccess.Should().BeTrue();
 ```
-
----
 
 ## Related Skills
 

@@ -1,6 +1,6 @@
 ---
 name: application-layer-setup
-description: Application layer principles and abstractions.
+description: Application layer principles, CQRS patterns, orchestration rules, and production-ready abstractions for Clean Architecture in .NET applications.
 language: C#
 framework: .NET
 pattern: Domain-Driven Design
@@ -10,7 +10,7 @@ pattern: Domain-Driven Design
 
 ## Overview
 
-This skills provides abstractions for commands and queries, implementations for cross-cutting concerns, and guidelines for structuring the Application layer in a Clean Architecture application. It includes:
+This skill provides abstractions for commands and queries, implementations for cross-cutting concerns, and guidelines for structuring the Application layer in a Clean Architecture application. It includes:
 
 - **Base command and query** - Marker interfaces for commands and queries
 - **Command and query handlers** - Generic interfaces for handling commands and queries
@@ -18,8 +18,6 @@ This skills provides abstractions for commands and queries, implementations for 
 - **DbContext interface** - Abstraction for the database context to be used in handlers and behaviors
 - **Rule builder validation** - Base class for implementing business rules validation in handlers
 - **Authentication and authorization** - Interfaces for accessing the current user and checking permissions in handlers and behaviors
-
----
 
 ## Application layer structure and conventions
 
@@ -60,6 +58,7 @@ Use verb-only folder names inside a feature — not verb+entity:
 
 - `GetById` returns a full response DTO including nested collections (e.g. `ProjectResponse` with `ProjectMemberResponse` list).
 - `GetAll` returns a lightweight summary DTO — omit audit timestamps and nested collections; expose counts instead (e.g. `MemberCount`).
+- Use projections in queries (avoid over-fetching).
 - Never use `Include` with a `Select` projection — EF Core ignores includes when a projection is present; navigation properties accessed inside `Select` are translated to subqueries automatically.
 
 ### Behavior decorator chain
@@ -72,8 +71,6 @@ LoggingBehavior → PerformanceBehavior → ValidationBehavior → actual handle
 
 Logging wraps validation so the log captures the full round-trip including validation failures.
 Queries are **not** decorated with `ValidationBehavior` — only commands.
-
----
 
 ## Package References
 
@@ -634,8 +631,6 @@ public static class DependencyInjection
 }
 ```
 
----
-
 ## Anti-Patterns to Avoid
 
 ```csharp
@@ -679,8 +674,6 @@ public sealed class CachingBehavior<TRequest, TResponse>
 public sealed class CachingBehavior<TRequest, TResponse>
     where TRequest : ICachedQuery<TResponse>
 ```
-
----
 
 ## Related Skills
 
