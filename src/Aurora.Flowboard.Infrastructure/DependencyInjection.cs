@@ -1,4 +1,5 @@
 using Aurora.Flowboard.Infrastructure.Database;
+using Aurora.Flowboard.Infrastructure.DomainEvents;
 using Aurora.Flowboard.Infrastructure.Time;
 using Microsoft.EntityFrameworkCore.Migrations;
 
@@ -10,7 +11,8 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration) => services
             .AddDatabaseServices(configuration)
-            .AddDateTimeServices();
+            .AddDateTimeServices()
+            .AddDomainEventsServices();
 
     private static IServiceCollection AddDatabaseServices(
         this IServiceCollection services,
@@ -35,6 +37,12 @@ public static class DependencyInjection
     private static IServiceCollection AddDateTimeServices(this IServiceCollection services)
     {
         services.TryAddSingleton<IDateTimeProvider, DateTimeProvider>();
+        return services;
+    }
+
+    private static IServiceCollection AddDomainEventsServices(this IServiceCollection services)
+    {
+        services.AddTransient<IDomainEventsDispatcher, DomainEventsDispatcher>();
         return services;
     }
 }
