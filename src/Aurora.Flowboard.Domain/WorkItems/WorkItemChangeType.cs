@@ -8,6 +8,8 @@ public enum WorkItemChangeType
     Assigned = 3,
     Unassigned = 4,
     CommentAdded = 5,
-    TimeLogged = 6,
-    Deactivated = 7
+    CommentUpdated = 6,
+    CommentRemoved = 7,
+    TimeLogged = 8,
+    Deactivated = 9
 }

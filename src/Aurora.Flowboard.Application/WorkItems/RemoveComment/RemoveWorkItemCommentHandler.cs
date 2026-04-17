@@ -18,7 +18,17 @@ internal sealed class RemoveWorkItemCommentHandler(
             return Result.Fail(WorkItemErrors.NotFound);
         }
 
-        Result result = workItem.RemoveComment(command.CommentId, dateTimeProvider.UtcNow);
+        User? changedBy = await dbContext
+            .Users
+            .AsNoTracking()
+            .SingleOrDefaultAsync(u => u.Id == command.ChangedById, cancellationToken);
+
+        if (changedBy is null)
+        {
+            return Result.Fail(UserErrors.NotFound);
+        }
+
+        Result result = workItem.RemoveComment(command.CommentId, changedBy, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {

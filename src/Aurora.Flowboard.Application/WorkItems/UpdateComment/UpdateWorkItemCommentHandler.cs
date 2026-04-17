@@ -18,7 +18,17 @@ internal sealed class UpdateWorkItemCommentHandler(
             return Result.Fail(WorkItemErrors.NotFound);
         }
 
-        Result result = workItem.UpdateComment(command.CommentId, command.Content, dateTimeProvider.UtcNow);
+        User? changedBy = await dbContext
+            .Users
+            .AsNoTracking()
+            .SingleOrDefaultAsync(u => u.Id == command.ChangedById, cancellationToken);
+
+        if (changedBy is null)
+        {
+            return Result.Fail(UserErrors.NotFound);
+        }
+
+        Result result = workItem.UpdateComment(command.CommentId, changedBy, command.Content, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {

@@ -39,7 +39,7 @@ public sealed class Comment
             createdOnUtc);
     }
 
-    public Result UpdateContent(string content, DateTime updatedOnUtc)
+    internal Result UpdateContent(string content, DateTime updatedOnUtc)
     {
         if (string.IsNullOrWhiteSpace(content))
         {
@@ -52,7 +52,7 @@ public sealed class Comment
         return Result.Ok();
     }
 
-    public Result Remove(DateTime updatedOnUtc)
+    internal Result Remove(DateTime updatedOnUtc)
     {
         IsDeleted = true;
         UpdatedOnUtc = updatedOnUtc;
