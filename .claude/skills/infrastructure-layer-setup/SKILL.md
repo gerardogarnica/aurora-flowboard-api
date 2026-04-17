@@ -20,7 +20,7 @@ The Infrastructure layer is responsible for:
 
 Infrastructure implements interfaces defined in the Application and Domain layers.
 
-## Dependency Rule
+## Dependency Rules
 
 - Infrastructure depends on Application
 - Infrastructure NEVER depends on API
@@ -400,7 +400,6 @@ Rules:
 ❌ Using static services for infrastructure concerns  
 ❌ Skipping abstractions for "quick implementations"  
 ❌ Blocking async calls (`.Result`, `.Wait()`)
-
 
 ## Related Skills
 

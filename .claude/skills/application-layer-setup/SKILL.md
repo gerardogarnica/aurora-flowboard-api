@@ -19,6 +19,12 @@ This skill provides abstractions for commands and queries, implementations for c
 - **Rule builder validation** - Base class for implementing business rules validation in handlers
 - **Authentication and authorization** - Interfaces for accessing the current user and checking permissions in handlers and behaviors
 
+## Dependency Rules
+
+- Application depends ONLY on Domain
+- Application MUST NOT depend on Infrastructure
+- Application defines contracts implemented by Infrastructure
+
 ## Application layer structure and conventions
 
 ```
@@ -632,6 +638,14 @@ public static class DependencyInjection
 ```
 
 ## Anti-Patterns to Avoid
+
+❌ Business logic in handlers  
+❌ Returning domain entities  
+❌ Using Include with Select  
+❌ Ignoring cancellation tokens  
+❌ Throwing exceptions for business rules  
+❌ Blocking async code (.Result, .Wait())  
+❌ Overloading handlers with logic that belongs in the domain
 
 ```csharp
 // ❌ WRONG: Behavior that modifies request
