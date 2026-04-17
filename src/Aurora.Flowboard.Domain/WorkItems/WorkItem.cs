@@ -116,7 +116,10 @@ public sealed class WorkItem : BaseEntity
             sequenceNumber,
             estimatedPoints,
             estimatedCompletionDate,
-            createdOnUtc);
+            createdOnUtc)
+        {
+            FlowState = initialState
+        };
 
         workItem._changeLogs.Add(WorkItemChangeLog.Create(workItem, createdBy, WorkItemChangeType.Created, null, createdOnUtc));
         workItem.AddDomainEvent(new WorkItemCreatedDomainEvent(workItem.Id));
@@ -182,6 +185,8 @@ public sealed class WorkItem : BaseEntity
 
         _changeLogs.Add(WorkItemChangeLog.Create(this, changedBy, WorkItemChangeType.Deactivated, null, updatedOnUtc));
 
+        AddDomainEvent(new WorkItemDeactivatedDomainEvent(Id));
+
         return Result.Ok();
     }
 
@@ -197,7 +202,7 @@ public sealed class WorkItem : BaseEntity
             return Result.Fail(UserErrors.Inactive);
         }
 
-        Guid? fromStateId = FlowStateId;
+        Guid fromStateId = FlowStateId;
 
         _stateHistory.Add(StateTransitionHistory.Create(
             this,
@@ -210,7 +215,7 @@ public sealed class WorkItem : BaseEntity
         FlowStateId = toState.Id;
         UpdatedOnUtc = changedOnUtc;
 
-        if (toState.Category == FlowStateCategory.Cancelled)
+        if (toState.Category is FlowStateCategory.Completed or FlowStateCategory.Cancelled)
         {
             CompletedOnUtc = changedOnUtc;
         }
@@ -266,7 +271,7 @@ public sealed class WorkItem : BaseEntity
 
         _changeLogs.Add(WorkItemChangeLog.Create(this, changedBy, WorkItemChangeType.Unassigned, null, updatedOnUtc));
 
-        AddDomainEvent(new WorkItemAssignedDomainEvent(Id, null));
+        AddDomainEvent(new WorkItemUnassignedDomainEvent(Id));
 
         return Result.Ok();
     }
@@ -298,7 +303,7 @@ public sealed class WorkItem : BaseEntity
         return Result.Ok();
     }
 
-    public Result UpdateComment(Guid commentId, string content, DateTime updatedOnUtc)
+    public Result UpdateComment(Guid commentId, User changedBy, string content, DateTime updatedOnUtc)
     {
         if (!IsActive)
         {
@@ -312,10 +317,19 @@ public sealed class WorkItem : BaseEntity
             return Result.Fail(WorkItemErrors.CommentNotFound);
         }
 
-        return comment.UpdateContent(content, updatedOnUtc);
+        Result result = comment.UpdateContent(content, updatedOnUtc);
+
+        if (!result.IsSuccessful)
+        {
+            return result;
+        }
+
+        _changeLogs.Add(WorkItemChangeLog.Create(this, changedBy, WorkItemChangeType.CommentUpdated, commentId, updatedOnUtc));
+
+        return Result.Ok();
     }
 
-    public Result RemoveComment(Guid commentId, DateTime updatedOnUtc)
+    public Result RemoveComment(Guid commentId, User changedBy, DateTime updatedOnUtc)
     {
         if (!IsActive)
         {
@@ -329,7 +343,16 @@ public sealed class WorkItem : BaseEntity
             return Result.Fail(WorkItemErrors.CommentNotFound);
         }
 
-        return comment.Remove(updatedOnUtc);
+        Result result = comment.Remove(updatedOnUtc);
+
+        if (!result.IsSuccessful)
+        {
+            return result;
+        }
+
+        _changeLogs.Add(WorkItemChangeLog.Create(this, changedBy, WorkItemChangeType.CommentRemoved, commentId, updatedOnUtc));
+
+        return Result.Ok();
     }
 
     public Result LogTime(User user, decimal hours, string? description, DateTime loggedOnUtc, DateTime createdOnUtc)

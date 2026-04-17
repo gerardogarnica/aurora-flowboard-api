@@ -9,6 +9,7 @@
   <Folder Name="/src/">
     <Project Path="src/Aurora.Flowboard.Application/Aurora.Flowboard.Application.csproj" Id="66158506-055e-4cba-aba9-05643458ce54" />
     <Project Path="src/Aurora.Flowboard.Domain/Aurora.Flowboard.Domain.csproj" Id="aea0812f-164a-4827-9ef1-af2c3ad6b13e" />
+    <Project Path="src/Aurora.Flowboard.Infrastructure/Aurora.Flowboard.Infrastructure.csproj" Id="c7d83e12-9f41-4b18-b2d6-3e5a1c7f8e90" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/Aurora.Flowboard.Domain.UnitTests/Aurora.Flowboard.Domain.UnitTests.csproj" Id="b3f92c1e-4d87-4a56-9c3e-1f0e8a2b5d74" />

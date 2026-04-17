@@ -43,8 +43,6 @@ This skill generates a complete .NET solution following Clean Architecture (also
 | Add project to solution | `dotnet sln add src/{project}/{project}.csproj` |
 | Add project reference | `dotnet add reference ../other/other.csproj` |
 
----
-
 ## Project Structure
 
 ```
@@ -136,9 +134,7 @@ This skill generates a complete .NET solution following Clean Architecture (also
 └── {SolutionName}.slnx
 ```
 
----
-
-## 1. Create Solution and Projects
+## Create Solution and Projects
 
 ```bash
 # Create solution
@@ -167,203 +163,7 @@ cd ../{name}.Api
 dotnet add reference ../{name}.Infrastructure/{name}.Infrastructure.csproj
 ```
 
----
-
-## 2. Infrastructure Layer Setup
-
-### Package References
-
-```xml
-<!-- {name}.Infrastructure.csproj -->
-<ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-</ItemGroup>
-<ItemGroup>
-    <PackageReference Include="Dapper" />
-    <PackageReference Include="EFCore.NamingConventions" />
-    <PackageReference Include="MassTransit" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
-    <PackageReference Include="Quartz.Extensions.Hosting" />
-</ItemGroup>
-```
-
-### Application DbContext
-
-```csharp
-// src/{name}.Infrastructure/Database/ApplicationDbContext.cs
-using {name}.Application.Abstractions.Data;
-using {name}.Application.Abstractions.Time;
-using {name}.Domain.Abstractions;
-using Microsoft.EntityFrameworkCore;
-
-namespace {name}.Infrastructure.Database;
-
-public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext, I{name}DbContext
-{
-    internal const string DEFAULT_SCHEMA = "{name}";
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.HasDefaultSchema(DEFAULT_SCHEMA);
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
-
-        base.OnModelCreating(modelBuilder);
-    }
-}
-```
-
-### Outbox Messages interceptor
-
-```csharp
-// src/{name}.Infrastructure/Interceptors/InsertOutboxMessagesInterceptor.cs
-using Microsoft.EntityFrameworkCore.Diagnostics;
-
-namespace {name}.Infrastructure.Interceptors;
-
-public sealed class InsertOutboxMessagesInterceptor : SaveChangesInterceptor
-{
-    public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
-        DbContextEventData eventData,
-        InterceptionResult<int> result,
-        CancellationToken cancellationToken = default)
-    {
-        if (eventData.Context is not null)
-        {
-            InsertOutboxMessages(eventData.Context);
-        }
-
-        return await base.SavingChangesAsync(eventData, result, cancellationToken);
-    }
-
-    private static void InsertOutboxMessages(DbContext context)
-    {
-        var outboxMessages = context
-            .ChangeTracker
-            .Entries<BaseEntity>()
-            .Select(x => x.Entity)
-            .Where(x => x.DomainEvents.Count > 0)
-            .SelectMany(x =>
-            {
-                var domainEvents = x.DomainEvents.ToList();
-                x.ClearDomainEvents();
-
-                return domainEvents;
-            })
-            .Select(domainEvent => new OutboxMessage
-            {
-                Id = domainEvent.Id,
-                Type = domainEvent.GetType().Name,
-                Content = JsonConvert.SerializeObject(domainEvent, SerializerSettings.Instance),
-                OccurredOnUtc = domainEvent.OccurredOnUtc,
-                IsProcessed = false
-            })
-            .ToList();
-
-        context.Set<OutboxMessage>().AddRange(outboxMessages);
-    }
-}
-```
-
-### Dependency Injection
-
-```csharp
-// src/{name}.Infrastructure/DependencyInjection.cs
-using {name}.Application.Abstractions.Data;
-using {name}.Infrastructure.Authentication;
-using {name}.Infrastructure.DomainEvents;
-using {name}.Infrastructure.Interceptors;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore.Migrations;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-
-namespace {name}.Infrastructure;
-
-public static class DependencyInjection
-{
-    public static IServiceCollection AddInfrastructureServices(
-        this IServiceCollection services,
-        IConfiguration configuration) => services
-            .AddAuthenticationServices(configuration)
-            .AddAuthorizationServices()
-            .AddDatabaseConfiguration(configuration)
-            .AddDomainEventsDispatcher()
-            .AddHealthChecks(configuration)
-            .AddOutboxPatternImplementation()
-            .AddDateTimeServices();
-
-    private static IServiceCollection AddAuthenticationServices(this IServiceCollection services, IConfiguration configuration)
-    {
-        // See jwt-authentication skill
-        return services;
-    }
-
-    private static IServiceCollection AddAuthorizationServices(this IServiceCollection services)
-    {
-        // See permission-authorization skill
-        return services;
-    }
-
-    private static IServiceCollection AddDatabaseConfiguration(this IServiceCollection services, IConfiguration configuration)
-    {
-        // Database connection
-        var connectionString = configuration.GetConnectionString("Database");
-
-        services.AddDbContextFactory<ApplicationDbContext>((sp, options) =>
-            options
-                .UseNpgsql(
-                    connectionString,
-                    x => x.MigrationsHistoryTable(HistoryRepository.DefaultTableName, ApplicationDbContext.DEFAULT_SCHEMA))
-                .UseSnakeCaseNamingConvention()
-                .AddInterceptors(sp.GetRequiredService<InsertOutboxMessagesInterceptor>()));
-
-        // DbContextFactory implementations
-        services.AddScoped<IDbContextFactory, DbContextFactory>();
-
-        // IUnitOfWork implementation
-        services.AddScoped<IDbContext>(sp => sp.GetRequiredService<IDbContextFactory<ApplicationDbContext>>().CreateDbContext());
-
-        // Entity Framework Core interceptors
-        services.TryAddSingleton<InsertOutboxMessagesInterceptor>();
-
-        return services;
-    }
-
-    private static IServiceCollection AddDomainEventsDispatcher(this IServiceCollection services)
-    {
-        services.AddTransient<IDomainEventsDispatcher, DomainEventsDispatcher>();
-
-        return services;
-    }
-
-    private static void AddHealthChecks(IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddHealthChecks()
-            .AddNpgSql(configuration.GetConnectionString("Database")!);
-    }
-
-    private static IServiceCollection AddOutboxPatternImplementation(this IServiceCollection services)
-    {
-        services.AddOptions<OutboxOptions>().BindConfiguration("Outbox");
-        services.ConfigureOptions<ConfigureProcessOutboxJob>();
-
-        return services;
-    }
-
-    private static IServiceCollection AddDateTimeServices(this IServiceCollection services)
-    {
-        services.TryAddSingleton<IDateTimeService, DateTimeService>();
-        return services;
-    }
-}
-```
-
----
-
-## 5. API Layer Setup
+## API Layer Setup
 
 ### Program.cs
 
@@ -424,8 +224,6 @@ namespace {name}.Api
 }
 ```
 
----
-
 ## Naming Conventions
 
 | Item | Convention | Example |
@@ -442,8 +240,6 @@ namespace {name}.Api
 | Responses | {Entity}Response | `UserResponse` |
 | Domain Events | {Entity}{Action}DomainEvent | `UserCreatedDomainEvent` |
 | Errors | {Entity}Errors | `UserErrors` |
-
----
 
 ## Critical Rules
 
@@ -462,8 +258,6 @@ namespace {name}.Api
 13. **Use record types** for DTOs and immutable data
 14. **Use constants**, avoid magic numbers or strings
 
----
-
 ## Common Pitfalls
 
 - **N+1 Queries**: Use `.Include()` or explicit joins
@@ -474,8 +268,6 @@ namespace {name}.Api
 - **Timeout Issues**: Configure appropriate timeouts for HTTP clients
 - **Cache Stampede**: Use distributed locks for cache population
 
----
-
 ## Related Skills
 
 - `domain-layer-setup` - Base abstractions for Domain layer
@@ -483,4 +275,5 @@ namespace {name}.Api
 - `application-layer-setup` - Base abstractions for Application layer
 - `cqrs-command-generator` - Generate CQRS commands with handlers and validators
 - `cqrs-query-generator` - Generate CQRS queries with handlers
+- `infrastructure-layer-setup` - Setup and configure the infrastructure layer
 - `ef-core-configuration` - Generate EF configurations
