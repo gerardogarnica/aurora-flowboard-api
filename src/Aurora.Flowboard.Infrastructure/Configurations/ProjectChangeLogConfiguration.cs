@@ -20,7 +20,7 @@ internal sealed class ProjectChangeLogConfiguration : IEntityTypeConfiguration<P
 
         builder.Property(x => x.ChangeType)
             .IsRequired()
-            .HasConversion<int>();
+            .HasConversion<string>();
 
         builder.Property(x => x.AffectedEntityId);
 

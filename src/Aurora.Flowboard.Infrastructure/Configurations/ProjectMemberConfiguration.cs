@@ -20,7 +20,7 @@ internal sealed class ProjectMemberConfiguration : IEntityTypeConfiguration<Proj
 
         builder.Property(x => x.Role)
             .IsRequired()
-            .HasConversion<int>();
+            .HasConversion<string>();
 
         builder.Property(x => x.JoinedOnUtc)
             .IsRequired();
