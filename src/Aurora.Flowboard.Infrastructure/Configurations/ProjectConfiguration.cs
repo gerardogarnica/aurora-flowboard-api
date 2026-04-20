@@ -1,0 +1,69 @@
+using Aurora.Flowboard.Domain.Projects;
+using Aurora.Flowboard.Domain.Users;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Aurora.Flowboard.Infrastructure.Configurations;
+
+internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
+{
+    public void Configure(EntityTypeBuilder<Project> builder)
+    {
+        builder.ToTable("projects");
+
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.Name)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        builder.Property(x => x.Description)
+            .HasMaxLength(500);
+
+        builder.Property(x => x.Code)
+            .IsRequired()
+            .HasMaxLength(3);
+
+        builder.Property(x => x.EstimatedCompletionDate);
+
+        builder.Property(x => x.Status)
+            .IsRequired()
+            .HasConversion<int>();
+
+        builder.Property(x => x.WorkItemCounter)
+            .IsRequired();
+
+        builder.Property(x => x.CreatedBy)
+            .IsRequired();
+
+        builder.Property(x => x.CreatedOnUtc)
+            .IsRequired();
+
+        builder.Property(x => x.UpdatedOnUtc);
+
+        builder.HasOne<User>(x => x.Creator)
+            .WithMany()
+            .HasForeignKey(x => x.CreatedBy)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(x => x.Members)
+            .WithOne()
+            .HasForeignKey(x => x.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.Members)
+            .HasField("_members")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasMany(x => x.ChangeLogs)
+            .WithOne()
+            .HasForeignKey(x => x.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.ChangeLogs)
+            .HasField("_changeLogs")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasIndex(x => x.Code)
+            .IsUnique();
+    }
+}
