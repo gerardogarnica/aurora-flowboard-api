@@ -47,6 +47,21 @@ internal sealed class CreateWorkItemHandler(
             return Result.Fail<Guid>(UserErrors.NotFound);
         }
 
+        User? assignee = null;
+
+        if (command.AssigneeId.HasValue)
+        {
+            assignee = await dbContext
+                .Users
+                .AsNoTracking()
+                .SingleOrDefaultAsync(u => u.Id == command.AssigneeId.Value, cancellationToken);
+
+            if (assignee is null)
+            {
+                return Result.Fail<Guid>(WorkItemErrors.AssigneeNotFound);
+            }
+        }
+
         Result<WorkItem> result = WorkItem.Create(
             command.Title,
             command.Description,
@@ -57,7 +72,8 @@ internal sealed class CreateWorkItemHandler(
             createdBy,
             command.EstimatedPoints,
             command.EstimatedCompletionDate,
-            dateTimeProvider.UtcNow);
+            dateTimeProvider.UtcNow,
+            assignee);
 
         if (!result.IsSuccessful)
         {

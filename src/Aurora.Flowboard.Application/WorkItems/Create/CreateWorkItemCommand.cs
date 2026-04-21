@@ -8,4 +8,5 @@ public sealed record CreateWorkItemCommand(
     Guid ProjectId,
     Guid FlowId,
     int? EstimatedPoints,
-    DateOnly? EstimatedCompletionDate) : ICommand<Guid>;
+    DateOnly? EstimatedCompletionDate,
+    Guid? AssigneeId = null) : ICommand<Guid>;

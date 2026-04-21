@@ -49,6 +49,7 @@ public sealed class WorkItem : BaseEntity
         Guid projectId,
         Guid flowStateId,
         Guid createdById,
+        Guid? assigneeId,
         string code,
         int sequenceNumber,
         int? estimatedPoints,
@@ -62,6 +63,7 @@ public sealed class WorkItem : BaseEntity
         ProjectId = projectId;
         FlowStateId = flowStateId;
         CreatedById = createdById;
+        AssigneeId = assigneeId;
         Code = code;
         SequenceNumber = sequenceNumber;
         EstimatedPoints = estimatedPoints;
@@ -79,7 +81,8 @@ public sealed class WorkItem : BaseEntity
         User createdBy,
         int? estimatedPoints,
         DateOnly? estimatedCompletionDate,
-        DateTime createdOnUtc)
+        DateTime createdOnUtc,
+        User? assignee = null)
     {
         if (!project.IsMember(createdBy.Id))
         {
@@ -94,6 +97,19 @@ public sealed class WorkItem : BaseEntity
         if (!createdBy.IsActive)
         {
             return Result.Fail<WorkItem>(UserErrors.Inactive);
+        }
+
+        if (assignee is not null)
+        {
+            if (!project.IsMember(assignee.Id))
+            {
+                return Result.Fail<WorkItem>(WorkItemErrors.AssigneeNotProjectMember);
+            }
+
+            if (!assignee.IsActive)
+            {
+                return Result.Fail<WorkItem>(UserErrors.Inactive);
+            }
         }
 
         if (string.IsNullOrWhiteSpace(title))
@@ -130,6 +146,7 @@ public sealed class WorkItem : BaseEntity
             project.Id,
             initialState.Id,
             createdBy.Id,
+            assignee?.Id,
             code,
             sequenceNumber,
             estimatedPoints,
@@ -142,6 +159,12 @@ public sealed class WorkItem : BaseEntity
 
         workItem._changeLogs.Add(WorkItemChangeLog.Create(workItem, createdBy, WorkItemChangeType.Created, null, createdOnUtc));
         workItem.AddDomainEvent(new WorkItemCreatedDomainEvent(workItem.Id));
+
+        if (assignee is not null)
+        {
+            workItem._changeLogs.Add(WorkItemChangeLog.Create(workItem, createdBy, WorkItemChangeType.Assigned, assignee.Id, createdOnUtc));
+            workItem.AddDomainEvent(new WorkItemAssignedDomainEvent(workItem.Id, assignee.Id));
+        }
 
         return workItem;
     }
