@@ -26,7 +26,6 @@ public sealed class WorkItem : BaseEntity
     public int SequenceNumber { get; private set; }
     public int? EstimatedPoints { get; private set; }
     public DateOnly? EstimatedCompletionDate { get; private set; }
-    public bool IsActive { get; private set; }
     public DateTime CreatedOnUtc { get; private set; }
     public DateTime? UpdatedOnUtc { get; private set; }
     public DateTime? CompletedOnUtc { get; private set; }
@@ -65,7 +64,6 @@ public sealed class WorkItem : BaseEntity
         SequenceNumber = sequenceNumber;
         EstimatedPoints = estimatedPoints;
         EstimatedCompletionDate = estimatedCompletionDate;
-        IsActive = true;
         CreatedOnUtc = createdOnUtc;
     }
 
@@ -136,11 +134,6 @@ public sealed class WorkItem : BaseEntity
         User changedBy,
         DateTime updatedOnUtc)
     {
-        if (!IsActive)
-        {
-            return Result.Fail(WorkItemErrors.Deactivated);
-        }
-
         if (!changedBy.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);
@@ -168,35 +161,8 @@ public sealed class WorkItem : BaseEntity
         return Result.Ok();
     }
 
-    public Result Deactivate(User changedBy, DateTime updatedOnUtc)
-    {
-        if (!changedBy.IsActive)
-        {
-            return Result.Fail(UserErrors.Inactive);
-        }
-
-        if (!IsActive)
-        {
-            return Result.Fail(WorkItemErrors.AlreadyDeactivated);
-        }
-
-        IsActive = false;
-        UpdatedOnUtc = updatedOnUtc;
-
-        _changeLogs.Add(WorkItemChangeLog.Create(this, changedBy, WorkItemChangeType.Deactivated, null, updatedOnUtc));
-
-        AddDomainEvent(new WorkItemDeactivatedDomainEvent(Id));
-
-        return Result.Ok();
-    }
-
     public Result Move(FlowState toState, User changedBy, string? reason, DateTime changedOnUtc)
     {
-        if (!IsActive)
-        {
-            return Result.Fail(WorkItemErrors.Deactivated);
-        }
-
         if (!changedBy.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);
@@ -229,11 +195,6 @@ public sealed class WorkItem : BaseEntity
 
     public Result Assign(User assignee, User changedBy, DateTime updatedOnUtc)
     {
-        if (!IsActive)
-        {
-            return Result.Fail(WorkItemErrors.Deactivated);
-        }
-
         if (!assignee.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);
@@ -256,11 +217,6 @@ public sealed class WorkItem : BaseEntity
 
     public Result Unassign(User changedBy, DateTime updatedOnUtc)
     {
-        if (!IsActive)
-        {
-            return Result.Fail(WorkItemErrors.Deactivated);
-        }
-
         if (!changedBy.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);
@@ -278,11 +234,6 @@ public sealed class WorkItem : BaseEntity
 
     public Result AddComment(User author, string content, DateTime createdOnUtc)
     {
-        if (!IsActive)
-        {
-            return Result.Fail(WorkItemErrors.Deactivated);
-        }
-
         if (!author.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);
@@ -305,11 +256,6 @@ public sealed class WorkItem : BaseEntity
 
     public Result UpdateComment(Guid commentId, User changedBy, string content, DateTime updatedOnUtc)
     {
-        if (!IsActive)
-        {
-            return Result.Fail(WorkItemErrors.Deactivated);
-        }
-
         var comment = _comments.FirstOrDefault(c => c.Id == commentId && !c.IsDeleted);
 
         if (comment is null)
@@ -331,11 +277,6 @@ public sealed class WorkItem : BaseEntity
 
     public Result RemoveComment(Guid commentId, User changedBy, DateTime updatedOnUtc)
     {
-        if (!IsActive)
-        {
-            return Result.Fail(WorkItemErrors.Deactivated);
-        }
-
         var comment = _comments.FirstOrDefault(c => c.Id == commentId && !c.IsDeleted);
 
         if (comment is null)
@@ -357,11 +298,6 @@ public sealed class WorkItem : BaseEntity
 
     public Result LogTime(User user, decimal hours, string? description, DateTime loggedOnUtc, DateTime createdOnUtc)
     {
-        if (!IsActive)
-        {
-            return Result.Fail(WorkItemErrors.Deactivated);
-        }
-
         if (!user.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);

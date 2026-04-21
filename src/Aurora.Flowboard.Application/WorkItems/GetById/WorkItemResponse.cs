@@ -16,7 +16,6 @@ public sealed record WorkItemResponse(
     string CreatedByFullName,
     int? EstimatedPoints,
     DateOnly? EstimatedCompletionDate,
-    bool IsActive,
     DateTime CreatedOnUtc,
     DateTime? UpdatedOnUtc,
     DateTime? CompletedOnUtc,

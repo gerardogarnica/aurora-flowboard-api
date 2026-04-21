@@ -20,7 +20,6 @@ internal sealed class GetWorkItemsByProjectHandler(
             .WorkItems
             .AsNoTracking()
             .Where(w => w.ProjectId == query.ProjectId)
-            .Where(w => query.IncludeDeactivated || w.IsActive)
             .OrderBy(w => w.CreatedOnUtc)
             .Select(w => new WorkItemSummaryResponse(
                 w.Id,
@@ -32,7 +31,6 @@ internal sealed class GetWorkItemsByProjectHandler(
                 w.AssigneeId,
                 w.EstimatedPoints,
                 w.EstimatedCompletionDate,
-                w.IsActive,
                 w.CreatedOnUtc,
                 w.Comments.Count(c => !c.IsDeleted),
                 w.TimeEntries.Count))

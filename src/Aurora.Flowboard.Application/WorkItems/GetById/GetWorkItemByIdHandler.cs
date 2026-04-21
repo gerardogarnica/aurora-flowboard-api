@@ -62,7 +62,6 @@ internal sealed class GetWorkItemByIdHandler(
             createdByFullName ?? string.Empty,
             workItem.EstimatedPoints,
             workItem.EstimatedCompletionDate,
-            workItem.IsActive,
             workItem.CreatedOnUtc,
             workItem.UpdatedOnUtc,
             workItem.CompletedOnUtc,

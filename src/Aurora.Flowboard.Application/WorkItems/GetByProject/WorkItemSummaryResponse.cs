@@ -10,7 +10,6 @@ public sealed record WorkItemSummaryResponse(
     Guid? AssigneeId,
     int? EstimatedPoints,
     DateOnly? EstimatedCompletionDate,
-    bool IsActive,
     DateTime CreatedOnUtc,
     int CommentCount,
     int TimeEntryCount);
