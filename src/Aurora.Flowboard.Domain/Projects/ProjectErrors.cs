@@ -14,6 +14,10 @@ public static class ProjectErrors
         "Project.NameTooLong",
         "Project name cannot exceed 100 characters");
 
+    public static readonly BaseError DescriptionTooLong = BaseError.Validation(
+        "Project.DescriptionTooLong",
+        "Project description cannot exceed 500 characters");
+
     public static readonly BaseError InvalidStatusTransition = BaseError.Validation(
         "Project.InvalidStatusTransition",
         "The requested status transition is not allowed");

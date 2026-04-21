@@ -6,6 +6,7 @@ namespace Aurora.Flowboard.Domain.Projects;
 public sealed class Project : BaseEntity
 {
     private const int MaxNameLength = 100;
+    private const int MaxDescriptionLength = 500;
 
     private static readonly Dictionary<ProjectStatus, ProjectStatus[]> ValidTransitions = new()
     {
@@ -81,6 +82,11 @@ public sealed class Project : BaseEntity
             return Result.Fail<Project>(codeResult.Error);
         }
 
+        if (description?.Length > MaxDescriptionLength)
+        {
+            return Result.Fail<Project>(ProjectErrors.DescriptionTooLong);
+        }
+
         var project = new Project(
             Guid.NewGuid(),
             name.Trim(),
@@ -125,6 +131,11 @@ public sealed class Project : BaseEntity
         if (name.Length > MaxNameLength)
         {
             return Result.Fail(ProjectErrors.NameTooLong);
+        }
+
+        if (description?.Length > MaxDescriptionLength)
+        {
+            return Result.Fail<Project>(ProjectErrors.DescriptionTooLong);
         }
 
         Name = name.Trim();
@@ -251,6 +262,12 @@ public sealed class Project : BaseEntity
 
     internal bool IsAdmin(Guid userId) =>
         _members.Any(m => m.UserId == userId && m.Role == ProjectRole.Admin);
+
+    internal bool IsMember(Guid userId) =>
+        _members.Any(m => m.UserId == userId);
+
+    internal ProjectRole? GetRole(Guid userId) =>
+        _members.FirstOrDefault(m => m.UserId == userId)?.Role;
 
     private static bool IsValidTransition(ProjectStatus from, ProjectStatus to) =>
         ValidTransitions.TryGetValue(from, out ProjectStatus[]? targets) && targets.Contains(to);
