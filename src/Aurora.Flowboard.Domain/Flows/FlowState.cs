@@ -10,6 +10,8 @@ public sealed class FlowState
     public int SortOrder { get; private set; }
     public FlowStateCategory Category { get; private set; }
 
+    public Flow Flow { get; init; } = null!;
+
     private FlowState() { } // EF Core
 
     private FlowState(Guid id, Guid flowId, string name, int sortOrder, FlowStateCategory category)

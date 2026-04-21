@@ -18,6 +18,10 @@ public static class FlowErrors
         "Flow.NameTooLong",
         "Flow name cannot exceed 100 characters");
 
+    public static readonly BaseError DescriptionTooLong = BaseError.Validation(
+        "Flow.DescriptionTooLong",
+        "Flow description cannot exceed 500 characters");
+
     public static readonly BaseError AlreadyDeactivated = BaseError.Validation(
         "Flow.AlreadyDeactivated",
         "The flow is already deactivated");
@@ -81,4 +85,8 @@ public static class FlowErrors
     public static readonly BaseError LastCancelledState = BaseError.Validation(
         "Flow.LastCancelledState",
         "Cannot remove the last cancelled state from the flow");
+
+    public static readonly BaseError NoInitialState = BaseError.Validation(
+        "Flow.NoInitialState",
+        "The flow has no active state that can be used as the initial state");
 }

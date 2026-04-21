@@ -7,6 +7,7 @@ namespace Aurora.Flowboard.Domain.Flows;
 public sealed class Flow : BaseEntity
 {
     private const int MaxNameLength = 100;
+    private const int MaxDescriptionLength = 500;
     private const int MaxActiveStates = 10;
 
     private readonly List<FlowState> _states = [];
@@ -49,6 +50,11 @@ public sealed class Flow : BaseEntity
         bool isDefault,
         DateTime createdOnUtc)
     {
+        if (!project.CanAddOrUpdateFlow())
+        {
+            return Result.Fail<Flow>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
         if (string.IsNullOrWhiteSpace(name))
         {
             return Result.Fail<Flow>(FlowErrors.NameRequired);
@@ -59,9 +65,9 @@ public sealed class Flow : BaseEntity
             return Result.Fail<Flow>(FlowErrors.NameTooLong);
         }
 
-        if (!project.CanAddOrUpdateFlow())
+        if (description?.Length > MaxDescriptionLength)
         {
-            return Result.Fail<Flow>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+            return Result.Fail<Flow>(FlowErrors.DescriptionTooLong);
         }
 
         var flow = new Flow(
@@ -105,6 +111,11 @@ public sealed class Flow : BaseEntity
         if (name.Length > MaxNameLength)
         {
             return Result.Fail(FlowErrors.NameTooLong);
+        }
+
+        if (description?.Length > MaxDescriptionLength)
+        {
+            return Result.Fail<Flow>(FlowErrors.DescriptionTooLong);
         }
 
         Name = name.Trim();
@@ -328,6 +339,14 @@ public sealed class Flow : BaseEntity
 
         return Result.Ok();
     }
+
+    internal FlowState? GetInitialState() =>
+        _states
+            .Where(s => s.Category == FlowStateCategory.Active)
+            .MinBy(s => s.SortOrder);
+
+    internal FlowTransition? FindTransition(Guid fromStateId, Guid toStateId) =>
+        _transitions.FirstOrDefault(t => t.FromStateId == fromStateId && t.ToStateId == toStateId);
 
     public Result AddTransitionRole(Guid transitionId, ProjectRole role, User changedBy)
     {
