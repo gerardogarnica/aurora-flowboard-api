@@ -6,8 +6,5 @@ internal sealed class UnassignWorkItemValidator : AbstractValidator<UnassignWork
     {
         RuleFor(x => x.Id)
             .NotEmpty();
-
-        RuleFor(x => x.ChangedById)
-            .NotEmpty();
     }
 }

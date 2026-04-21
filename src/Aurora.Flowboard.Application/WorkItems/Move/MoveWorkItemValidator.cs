@@ -10,9 +10,6 @@ internal sealed class MoveWorkItemValidator : AbstractValidator<MoveWorkItemComm
         RuleFor(x => x.ToStateId)
             .NotEmpty();
 
-        RuleFor(x => x.ChangedById)
-            .NotEmpty();
-
         RuleFor(x => x.Reason)
             .MaximumLength(500)
             .When(x => x.Reason is not null);

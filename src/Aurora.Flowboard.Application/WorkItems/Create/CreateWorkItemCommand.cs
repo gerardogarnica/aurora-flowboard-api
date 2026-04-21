@@ -7,6 +7,5 @@ public sealed record CreateWorkItemCommand(
     Priority Priority,
     Guid ProjectId,
     Guid FlowId,
-    Guid CreatedById,
     int? EstimatedPoints,
     DateOnly? EstimatedCompletionDate) : ICommand<Guid>;

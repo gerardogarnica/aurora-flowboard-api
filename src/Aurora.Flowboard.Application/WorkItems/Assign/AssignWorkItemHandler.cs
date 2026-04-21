@@ -2,7 +2,8 @@ namespace Aurora.Flowboard.Application.WorkItems.Assign;
 
 internal sealed class AssignWorkItemHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<AssignWorkItemCommand>
+    IDateTimeProvider dateTimeProvider,
+    IUserContext userContext) : ICommandHandler<AssignWorkItemCommand>
 {
     public async Task<Result> Handle(
         AssignWorkItemCommand command,
@@ -33,7 +34,7 @@ internal sealed class AssignWorkItemHandler(
         User? changedBy = await dbContext
             .Users
             .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == command.ChangedById, cancellationToken);
+            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
 
         if (changedBy is null)
         {

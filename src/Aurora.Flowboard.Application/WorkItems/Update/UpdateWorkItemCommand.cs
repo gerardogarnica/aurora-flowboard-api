@@ -5,6 +5,5 @@ public sealed record UpdateWorkItemCommand(
     string Title,
     string? Description,
     Priority Priority,
-    Guid ChangedById,
     int? EstimatedPoints,
     DateOnly? EstimatedCompletionDate) : ICommand;

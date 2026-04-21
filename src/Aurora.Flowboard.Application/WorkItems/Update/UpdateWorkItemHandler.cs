@@ -2,7 +2,8 @@ namespace Aurora.Flowboard.Application.WorkItems.Update;
 
 internal sealed class UpdateWorkItemHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<UpdateWorkItemCommand>
+    IDateTimeProvider dateTimeProvider,
+    IUserContext userContext) : ICommandHandler<UpdateWorkItemCommand>
 {
     public async Task<Result> Handle(
         UpdateWorkItemCommand command,
@@ -23,7 +24,7 @@ internal sealed class UpdateWorkItemHandler(
         User? changedBy = await dbContext
             .Users
             .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == command.ChangedById, cancellationToken);
+            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
 
         if (changedBy is null)
         {

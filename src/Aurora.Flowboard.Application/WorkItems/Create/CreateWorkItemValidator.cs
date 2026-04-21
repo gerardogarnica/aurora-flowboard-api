@@ -17,9 +17,6 @@ internal sealed class CreateWorkItemValidator : AbstractValidator<CreateWorkItem
         RuleFor(x => x.FlowId)
             .NotEmpty();
 
-        RuleFor(x => x.CreatedById)
-            .NotEmpty();
-
         RuleFor(x => x.EstimatedPoints)
             .GreaterThan(0)
             .When(x => x.EstimatedPoints.HasValue);

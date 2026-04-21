@@ -7,9 +7,6 @@ internal sealed class LogWorkItemTimeValidator : AbstractValidator<LogWorkItemTi
         RuleFor(x => x.WorkItemId)
             .NotEmpty();
 
-        RuleFor(x => x.UserId)
-            .NotEmpty();
-
         RuleFor(x => x.Hours)
             .GreaterThan(0)
             .PrecisionScale(9, 2, true);

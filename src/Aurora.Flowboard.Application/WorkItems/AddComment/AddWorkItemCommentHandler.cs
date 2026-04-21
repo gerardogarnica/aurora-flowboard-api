@@ -2,7 +2,8 @@ namespace Aurora.Flowboard.Application.WorkItems.AddComment;
 
 internal sealed class AddWorkItemCommentHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<AddWorkItemCommentCommand>
+    IDateTimeProvider dateTimeProvider,
+    IUserContext userContext) : ICommandHandler<AddWorkItemCommentCommand>
 {
     public async Task<Result> Handle(
         AddWorkItemCommentCommand command,
@@ -23,7 +24,7 @@ internal sealed class AddWorkItemCommentHandler(
         User? author = await dbContext
             .Users
             .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == command.AuthorId, cancellationToken);
+            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
 
         if (author is null)
         {

@@ -9,8 +9,5 @@ internal sealed class AssignWorkItemValidator : AbstractValidator<AssignWorkItem
 
         RuleFor(x => x.AssigneeId)
             .NotEmpty();
-
-        RuleFor(x => x.ChangedById)
-            .NotEmpty();
     }
 }

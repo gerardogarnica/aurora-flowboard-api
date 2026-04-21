@@ -2,7 +2,8 @@ namespace Aurora.Flowboard.Application.WorkItems.Create;
 
 internal sealed class CreateWorkItemHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<CreateWorkItemCommand, Guid>
+    IDateTimeProvider dateTimeProvider,
+    IUserContext userContext) : ICommandHandler<CreateWorkItemCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(
         CreateWorkItemCommand command,
@@ -39,7 +40,7 @@ internal sealed class CreateWorkItemHandler(
         User? createdBy = await dbContext
             .Users
             .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == command.CreatedById, cancellationToken);
+            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
 
         if (createdBy is null)
         {

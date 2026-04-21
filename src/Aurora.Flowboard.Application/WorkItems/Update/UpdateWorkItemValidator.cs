@@ -11,9 +11,6 @@ internal sealed class UpdateWorkItemValidator : AbstractValidator<UpdateWorkItem
             .NotEmpty()
             .MaximumLength(200);
 
-        RuleFor(x => x.ChangedById)
-            .NotEmpty();
-
         RuleFor(x => x.EstimatedPoints)
             .GreaterThan(0)
             .When(x => x.EstimatedPoints.HasValue);

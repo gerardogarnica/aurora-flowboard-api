@@ -2,7 +2,8 @@ namespace Aurora.Flowboard.Application.WorkItems.LogTime;
 
 internal sealed class LogWorkItemTimeHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<LogWorkItemTimeCommand>
+    IDateTimeProvider dateTimeProvider,
+    IUserContext userContext) : ICommandHandler<LogWorkItemTimeCommand>
 {
     public async Task<Result> Handle(
         LogWorkItemTimeCommand command,
@@ -23,7 +24,7 @@ internal sealed class LogWorkItemTimeHandler(
         User? user = await dbContext
             .Users
             .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == command.UserId, cancellationToken);
+            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
 
         if (user is null)
         {

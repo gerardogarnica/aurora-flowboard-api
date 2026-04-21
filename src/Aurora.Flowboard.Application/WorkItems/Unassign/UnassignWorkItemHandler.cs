@@ -2,7 +2,8 @@ namespace Aurora.Flowboard.Application.WorkItems.Unassign;
 
 internal sealed class UnassignWorkItemHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<UnassignWorkItemCommand>
+    IDateTimeProvider dateTimeProvider,
+    IUserContext userContext) : ICommandHandler<UnassignWorkItemCommand>
 {
     public async Task<Result> Handle(
         UnassignWorkItemCommand command,
@@ -23,7 +24,7 @@ internal sealed class UnassignWorkItemHandler(
         User? changedBy = await dbContext
             .Users
             .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == command.ChangedById, cancellationToken);
+            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
 
         if (changedBy is null)
         {

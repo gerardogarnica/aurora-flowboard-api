@@ -7,9 +7,6 @@ internal sealed class AddWorkItemCommentValidator : AbstractValidator<AddWorkIte
         RuleFor(x => x.WorkItemId)
             .NotEmpty();
 
-        RuleFor(x => x.AuthorId)
-            .NotEmpty();
-
         RuleFor(x => x.Content)
             .NotEmpty()
             .MaximumLength(4000);

@@ -2,7 +2,8 @@ namespace Aurora.Flowboard.Application.WorkItems.Move;
 
 internal sealed class MoveWorkItemHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<MoveWorkItemCommand>
+    IDateTimeProvider dateTimeProvider,
+    IUserContext userContext) : ICommandHandler<MoveWorkItemCommand>
 {
     public async Task<Result> Handle(
         MoveWorkItemCommand command,
@@ -36,7 +37,7 @@ internal sealed class MoveWorkItemHandler(
         User? changedBy = await dbContext
             .Users
             .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == command.ChangedById, cancellationToken);
+            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
 
         if (changedBy is null)
         {

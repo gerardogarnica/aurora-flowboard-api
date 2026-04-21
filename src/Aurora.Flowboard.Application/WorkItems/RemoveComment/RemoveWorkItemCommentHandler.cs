@@ -2,7 +2,8 @@ namespace Aurora.Flowboard.Application.WorkItems.RemoveComment;
 
 internal sealed class RemoveWorkItemCommentHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<RemoveWorkItemCommentCommand>
+    IDateTimeProvider dateTimeProvider,
+    IUserContext userContext) : ICommandHandler<RemoveWorkItemCommentCommand>
 {
     public async Task<Result> Handle(
         RemoveWorkItemCommentCommand command,
@@ -24,7 +25,7 @@ internal sealed class RemoveWorkItemCommentHandler(
         User? changedBy = await dbContext
             .Users
             .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == command.ChangedById, cancellationToken);
+            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
 
         if (changedBy is null)
         {

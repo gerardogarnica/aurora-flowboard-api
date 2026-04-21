@@ -2,7 +2,8 @@ namespace Aurora.Flowboard.Application.WorkItems.UpdateComment;
 
 internal sealed class UpdateWorkItemCommentHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<UpdateWorkItemCommentCommand>
+    IDateTimeProvider dateTimeProvider,
+    IUserContext userContext) : ICommandHandler<UpdateWorkItemCommentCommand>
 {
     public async Task<Result> Handle(
         UpdateWorkItemCommentCommand command,
@@ -24,7 +25,7 @@ internal sealed class UpdateWorkItemCommentHandler(
         User? changedBy = await dbContext
             .Users
             .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == command.ChangedById, cancellationToken);
+            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
 
         if (changedBy is null)
         {
