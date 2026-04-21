@@ -8,10 +8,13 @@ internal sealed class CreateWorkItemValidator : AbstractValidator<CreateWorkItem
             .NotEmpty()
             .MaximumLength(200);
 
+        RuleFor(x => x.Description)
+            .MaximumLength(4000);
+
         RuleFor(x => x.ProjectId)
             .NotEmpty();
 
-        RuleFor(x => x.FlowStateId)
+        RuleFor(x => x.FlowId)
             .NotEmpty();
 
         RuleFor(x => x.CreatedById)

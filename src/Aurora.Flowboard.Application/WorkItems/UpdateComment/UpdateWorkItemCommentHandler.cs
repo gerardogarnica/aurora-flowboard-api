@@ -11,6 +11,9 @@ internal sealed class UpdateWorkItemCommentHandler(
         WorkItem? workItem = await dbContext
             .WorkItems
             .Include(w => w.Comments)
+            .Include(w => w.Project)
+            .ThenInclude(p => p.Members)
+            .AsSplitQuery()
             .SingleOrDefaultAsync(w => w.Id == command.WorkItemId, cancellationToken);
 
         if (workItem is null)

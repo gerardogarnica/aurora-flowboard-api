@@ -16,6 +16,7 @@ internal sealed class CreateWorkItemHandler(
         Project? project = await dbContext
             .Projects
             .FromSqlRaw("SELECT * FROM projects WHERE \"Id\" = {0} FOR UPDATE", command.ProjectId)
+            .Include(p => p.Members)
             .SingleOrDefaultAsync(cancellationToken);
 
         if (project is null)
@@ -23,14 +24,16 @@ internal sealed class CreateWorkItemHandler(
             return Result.Fail<Guid>(ProjectErrors.NotFound);
         }
 
-        FlowState? flowState = await dbContext
-            .FlowStates
+        Flow? flow = await dbContext
+            .Flows
             .AsNoTracking()
-            .SingleOrDefaultAsync(s => s.Id == command.FlowStateId, cancellationToken);
+            .Include(f => f.States)
+            .AsSplitQuery()
+            .SingleOrDefaultAsync(f => f.Id == command.FlowId && f.ProjectId == command.ProjectId, cancellationToken);
 
-        if (flowState is null)
+        if (flow is null)
         {
-            return Result.Fail<Guid>(FlowErrors.StateNotFound);
+            return Result.Fail<Guid>(FlowErrors.NotFound);
         }
 
         User? createdBy = await dbContext
@@ -43,19 +46,14 @@ internal sealed class CreateWorkItemHandler(
             return Result.Fail<Guid>(UserErrors.NotFound);
         }
 
-        int sequenceNumber = project.IncrementWorkItemCounter();
-        string code = $"{project.Code}-{sequenceNumber}";
-
         Result<WorkItem> result = WorkItem.Create(
             command.Title,
             command.Description,
             command.Type,
             command.Priority,
             project,
-            flowState,
+            flow,
             createdBy,
-            code,
-            sequenceNumber,
             command.EstimatedPoints,
             command.EstimatedCompletionDate,
             dateTimeProvider.UtcNow);

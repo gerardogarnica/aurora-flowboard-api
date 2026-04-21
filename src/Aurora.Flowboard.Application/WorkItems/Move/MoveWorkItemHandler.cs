@@ -11,6 +11,11 @@ internal sealed class MoveWorkItemHandler(
         WorkItem? workItem = await dbContext
             .WorkItems
             .Include(w => w.FlowState)
+            .ThenInclude(s => s.Flow)
+            .ThenInclude(f => f.Transitions)
+            .Include(w => w.Project)
+            .ThenInclude(p => p.Members)
+            .AsSplitQuery()
             .SingleOrDefaultAsync(w => w.Id == command.Id, cancellationToken);
 
         if (workItem is null)

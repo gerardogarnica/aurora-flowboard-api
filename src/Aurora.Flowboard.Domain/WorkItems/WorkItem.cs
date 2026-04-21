@@ -8,6 +8,7 @@ namespace Aurora.Flowboard.Domain.WorkItems;
 public sealed class WorkItem : BaseEntity
 {
     private const int MaxTitleLength = 200;
+    private const int MaxDescriptionLength = 4000;
 
     private readonly List<Comment> _comments = [];
     private readonly List<TimeEntry> _timeEntries = [];
@@ -30,6 +31,7 @@ public sealed class WorkItem : BaseEntity
     public DateTime? UpdatedOnUtc { get; private set; }
     public DateTime? CompletedOnUtc { get; private set; }
 
+    public Project Project { get; init; } = null!;
     public FlowState FlowState { get; init; } = null!;
     public IReadOnlyCollection<Comment> Comments => _comments.AsReadOnly();
     public IReadOnlyCollection<TimeEntry> TimeEntries => _timeEntries.AsReadOnly();
@@ -73,14 +75,17 @@ public sealed class WorkItem : BaseEntity
         WorkItemType type,
         Priority priority,
         Project project,
-        FlowState initialState,
+        Flow flow,
         User createdBy,
-        string code,
-        int sequenceNumber,
         int? estimatedPoints,
         DateOnly? estimatedCompletionDate,
         DateTime createdOnUtc)
     {
+        if (!project.IsMember(createdBy.Id))
+        {
+            return Result.Fail<WorkItem>(WorkItemErrors.UserNotProjectMember);
+        }
+
         if (!project.CanAddOrUpdateWorkItem())
         {
             return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
@@ -101,6 +106,21 @@ public sealed class WorkItem : BaseEntity
             return Result.Fail<WorkItem>(WorkItemErrors.TitleTooLong);
         }
 
+        if (description?.Length > MaxDescriptionLength)
+        {
+            return Result.Fail<WorkItem>(WorkItemErrors.DescriptionTooLong);
+        }
+
+        FlowState? initialState = flow.GetInitialState();
+
+        if (initialState is null)
+        {
+            return Result.Fail<WorkItem>(FlowErrors.NoInitialState);
+        }
+
+        int sequenceNumber = project.IncrementWorkItemCounter();
+        string code = $"{project.Code}-{sequenceNumber}";
+
         var workItem = new WorkItem(
             Guid.NewGuid(),
             title.Trim(),
@@ -116,6 +136,7 @@ public sealed class WorkItem : BaseEntity
             estimatedCompletionDate,
             createdOnUtc)
         {
+            Project = project,
             FlowState = initialState
         };
 
@@ -134,6 +155,11 @@ public sealed class WorkItem : BaseEntity
         User changedBy,
         DateTime updatedOnUtc)
     {
+        if (!Project.IsMember(changedBy.Id))
+        {
+            return Result.Fail(WorkItemErrors.UserNotProjectMember);
+        }
+
         if (!changedBy.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);
@@ -147,6 +173,11 @@ public sealed class WorkItem : BaseEntity
         if (title.Length > MaxTitleLength)
         {
             return Result.Fail(WorkItemErrors.TitleTooLong);
+        }
+
+        if (description?.Length > MaxDescriptionLength)
+        {
+            return Result.Fail<WorkItem>(WorkItemErrors.DescriptionTooLong);
         }
 
         Title = title.Trim();
@@ -163,9 +194,33 @@ public sealed class WorkItem : BaseEntity
 
     public Result Move(FlowState toState, User changedBy, string? reason, DateTime changedOnUtc)
     {
+        if (!Project.IsMember(changedBy.Id))
+        {
+            return Result.Fail(WorkItemErrors.UserNotProjectMember);
+        }
+
         if (!changedBy.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);
+        }
+
+        if (toState.FlowId != FlowState.FlowId)
+        {
+            return Result.Fail(WorkItemErrors.TargetStateNotInFlow);
+        }
+
+        FlowTransition? transition = FlowState.Flow.FindTransition(FlowStateId, toState.Id);
+
+        if (transition is null)
+        {
+            return Result.Fail(WorkItemErrors.TransitionNotAllowed);
+        }
+
+        ProjectRole? role = Project.GetRole(changedBy.Id);
+
+        if (role is null || !transition.AllowedRoles.Contains(role.Value))
+        {
+            return Result.Fail(WorkItemErrors.TransitionRoleNotAllowed);
         }
 
         Guid fromStateId = FlowStateId;
@@ -195,12 +250,22 @@ public sealed class WorkItem : BaseEntity
 
     public Result Assign(User assignee, User changedBy, DateTime updatedOnUtc)
     {
-        if (!assignee.IsActive)
+        if (!Project.IsMember(changedBy.Id))
+        {
+            return Result.Fail(WorkItemErrors.UserNotProjectMember);
+        }
+
+        if (!Project.IsMember(assignee.Id))
+        {
+            return Result.Fail(WorkItemErrors.AssigneeNotProjectMember);
+        }
+
+        if (!changedBy.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);
         }
 
-        if (!changedBy.IsActive)
+        if (!assignee.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);
         }
@@ -217,6 +282,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result Unassign(User changedBy, DateTime updatedOnUtc)
     {
+        if (!Project.IsMember(changedBy.Id))
+        {
+            return Result.Fail(WorkItemErrors.UserNotProjectMember);
+        }
+
         if (!changedBy.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);
@@ -234,6 +304,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result AddComment(User author, string content, DateTime createdOnUtc)
     {
+        if (!Project.IsMember(author.Id))
+        {
+            return Result.Fail(WorkItemErrors.UserNotProjectMember);
+        }
+
         if (!author.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);
@@ -256,6 +331,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result UpdateComment(Guid commentId, User changedBy, string content, DateTime updatedOnUtc)
     {
+        if (!Project.IsMember(changedBy.Id))
+        {
+            return Result.Fail(WorkItemErrors.UserNotProjectMember);
+        }
+
         var comment = _comments.FirstOrDefault(c => c.Id == commentId && !c.IsDeleted);
 
         if (comment is null)
@@ -277,6 +357,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result RemoveComment(Guid commentId, User changedBy, DateTime updatedOnUtc)
     {
+        if (!Project.IsMember(changedBy.Id))
+        {
+            return Result.Fail(WorkItemErrors.UserNotProjectMember);
+        }
+
         var comment = _comments.FirstOrDefault(c => c.Id == commentId && !c.IsDeleted);
 
         if (comment is null)
@@ -298,6 +383,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result LogTime(User user, decimal hours, string? description, DateTime loggedOnUtc, DateTime createdOnUtc)
     {
+        if (!Project.IsMember(user.Id))
+        {
+            return Result.Fail(WorkItemErrors.UserNotProjectMember);
+        }
+
         if (!user.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);
