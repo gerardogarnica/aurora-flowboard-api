@@ -53,4 +53,8 @@ public static class WorkItemErrors
     public static readonly BaseError TransitionRoleNotAllowed = BaseError.Forbidden(
         "WorkItem.TransitionRoleNotAllowed",
         "The user's project role is not allowed to perform this transition");
+
+    public static readonly BaseError CommentNotOwnedByUser = BaseError.Forbidden(
+        "WorkItem.CommentNotOwnedByUser",
+        "Only the comment author can edit this comment");
 }

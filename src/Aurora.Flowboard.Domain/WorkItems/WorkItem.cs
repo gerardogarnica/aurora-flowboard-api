@@ -343,6 +343,11 @@ public sealed class WorkItem : BaseEntity
             return Result.Fail(WorkItemErrors.CommentNotFound);
         }
 
+        if (comment.AuthorId != changedBy.Id)
+        {
+            return Result.Fail(WorkItemErrors.CommentNotOwnedByUser);
+        }
+
         Result result = comment.UpdateContent(content, updatedOnUtc);
 
         if (!result.IsSuccessful)
@@ -367,6 +372,11 @@ public sealed class WorkItem : BaseEntity
         if (comment is null)
         {
             return Result.Fail(WorkItemErrors.CommentNotFound);
+        }
+
+        if (comment.AuthorId != changedBy.Id)
+        {
+            return Result.Fail(WorkItemErrors.CommentNotOwnedByUser);
         }
 
         Result result = comment.Remove(updatedOnUtc);
