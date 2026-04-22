@@ -190,7 +190,7 @@ public sealed class WorkItem : BaseEntity
 
         if (description?.Length > MaxDescriptionLength)
         {
-            return Result.Fail<WorkItem>(WorkItemErrors.DescriptionTooLong);
+            return Result.Fail(WorkItemErrors.DescriptionTooLong);
         }
 
         if (!Project.IsMember(changedBy.Id))
@@ -305,6 +305,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result Unassign(User changedBy, DateTime updatedOnUtc)
     {
+        if (AssigneeId is null)
+        {
+            return Result.Fail(WorkItemErrors.NotAssigned);
+        }
+
         if (!Project.IsMember(changedBy.Id))
         {
             return Result.Fail(WorkItemErrors.UserNotProjectMember);

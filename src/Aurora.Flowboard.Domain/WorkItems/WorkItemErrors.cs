@@ -61,4 +61,8 @@ public static class WorkItemErrors
     public static readonly BaseError CommentNotOwnedByUser = BaseError.Forbidden(
         "WorkItem.CommentNotOwnedByUser",
         "Only the comment author can edit this comment");
+
+    public static readonly BaseError NotAssigned = BaseError.Conflict(
+        "WorkItem.NotAssigned",
+        "The work item does not have an assignee");
 }
