@@ -22,6 +22,7 @@ internal sealed class CreateWorkItemHandler(
 
         if (project is null)
         {
+            await transaction.RollbackAsync(cancellationToken);
             return Result.Fail<Guid>(ProjectErrors.NotFound);
         }
 
@@ -34,6 +35,7 @@ internal sealed class CreateWorkItemHandler(
 
         if (flow is null)
         {
+            await transaction.RollbackAsync(cancellationToken);
             return Result.Fail<Guid>(FlowErrors.NotFound);
         }
 
@@ -44,6 +46,7 @@ internal sealed class CreateWorkItemHandler(
 
         if (createdBy is null)
         {
+            await transaction.RollbackAsync(cancellationToken);
             return Result.Fail<Guid>(UserErrors.NotFound);
         }
 
@@ -58,6 +61,7 @@ internal sealed class CreateWorkItemHandler(
 
             if (assignee is null)
             {
+                await transaction.RollbackAsync(cancellationToken);
                 return Result.Fail<Guid>(WorkItemErrors.AssigneeNotFound);
             }
         }
@@ -77,6 +81,7 @@ internal sealed class CreateWorkItemHandler(
 
         if (!result.IsSuccessful)
         {
+            await transaction.RollbackAsync(cancellationToken);
             return Result.Fail<Guid>(result.Error);
         }
 
