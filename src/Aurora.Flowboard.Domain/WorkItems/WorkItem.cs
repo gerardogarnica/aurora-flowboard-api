@@ -84,6 +84,21 @@ public sealed class WorkItem : BaseEntity
         DateTime createdOnUtc,
         User? assignee = null)
     {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return Result.Fail<WorkItem>(WorkItemErrors.TitleRequired);
+        }
+
+        if (title.Length > MaxTitleLength)
+        {
+            return Result.Fail<WorkItem>(WorkItemErrors.TitleTooLong);
+        }
+
+        if (description?.Length > MaxDescriptionLength)
+        {
+            return Result.Fail<WorkItem>(WorkItemErrors.DescriptionTooLong);
+        }
+
         if (!project.IsMember(createdBy.Id))
         {
             return Result.Fail<WorkItem>(WorkItemErrors.UserNotProjectMember);
@@ -108,23 +123,8 @@ public sealed class WorkItem : BaseEntity
 
             if (!assignee.IsActive)
             {
-                return Result.Fail<WorkItem>(UserErrors.Inactive);
+                return Result.Fail<WorkItem>(WorkItemErrors.AssigneeInactive);
             }
-        }
-
-        if (string.IsNullOrWhiteSpace(title))
-        {
-            return Result.Fail<WorkItem>(WorkItemErrors.TitleRequired);
-        }
-
-        if (title.Length > MaxTitleLength)
-        {
-            return Result.Fail<WorkItem>(WorkItemErrors.TitleTooLong);
-        }
-
-        if (description?.Length > MaxDescriptionLength)
-        {
-            return Result.Fail<WorkItem>(WorkItemErrors.DescriptionTooLong);
         }
 
         FlowState? initialState = flow.GetInitialState();
@@ -178,16 +178,6 @@ public sealed class WorkItem : BaseEntity
         User changedBy,
         DateTime updatedOnUtc)
     {
-        if (!Project.IsMember(changedBy.Id))
-        {
-            return Result.Fail(WorkItemErrors.UserNotProjectMember);
-        }
-
-        if (!changedBy.IsActive)
-        {
-            return Result.Fail(UserErrors.Inactive);
-        }
-
         if (string.IsNullOrWhiteSpace(title))
         {
             return Result.Fail(WorkItemErrors.TitleRequired);
@@ -201,6 +191,16 @@ public sealed class WorkItem : BaseEntity
         if (description?.Length > MaxDescriptionLength)
         {
             return Result.Fail<WorkItem>(WorkItemErrors.DescriptionTooLong);
+        }
+
+        if (!Project.IsMember(changedBy.Id))
+        {
+            return Result.Fail(WorkItemErrors.UserNotProjectMember);
+        }
+
+        if (!changedBy.IsActive)
+        {
+            return Result.Fail(UserErrors.Inactive);
         }
 
         Title = title.Trim();

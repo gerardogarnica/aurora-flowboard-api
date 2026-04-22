@@ -30,6 +30,10 @@ public static class WorkItemErrors
         "WorkItem.AssigneeNotFound",
         "The assignee user was not found");
 
+    public static readonly BaseError AssigneeInactive = BaseError.Validation(
+        "WorkItem.AssigneeInactive",
+        "The assignee user is inactive");
+
     public static readonly BaseError CommentNotFound = BaseError.NotFound(
         "WorkItem.CommentNotFound",
         "The comment with the specified identifier was not found");
