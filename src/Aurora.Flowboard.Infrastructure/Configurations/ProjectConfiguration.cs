@@ -14,14 +14,14 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
 
         builder.Property(x => x.Name)
             .IsRequired()
-            .HasMaxLength(100);
+            .HasMaxLength(Project.MaxNameLength);
 
         builder.Property(x => x.Description)
-            .HasMaxLength(500);
+            .HasMaxLength(Project.MaxDescriptionLength);
 
         builder.Property(x => x.Code)
             .IsRequired()
-            .HasMaxLength(3);
+            .HasMaxLength(ProjectCode.MaxLength);
 
         builder.Property(x => x.EstimatedCompletionDate);
 

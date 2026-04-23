@@ -5,8 +5,8 @@ namespace Aurora.Flowboard.Domain.Projects;
 
 public sealed class Project : BaseEntity
 {
-    private const int MaxNameLength = 100;
-    private const int MaxDescriptionLength = 500;
+    public const int MaxNameLength = 100;
+    public const int MaxDescriptionLength = 500;
 
     private static readonly Dictionary<ProjectStatus, ProjectStatus[]> ValidTransitions = new()
     {

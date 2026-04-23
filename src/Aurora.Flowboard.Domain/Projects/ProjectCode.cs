@@ -2,7 +2,7 @@ namespace Aurora.Flowboard.Domain.Projects;
 
 public sealed record ProjectCode
 {
-    private const int MaxLength = 3;
+    public const int MaxLength = 3;
 
     public string Value { get; }
 

@@ -9,10 +9,10 @@ internal sealed class UpdateProjectValidator : AbstractValidator<UpdateProjectCo
 
         RuleFor(x => x.Name)
             .NotEmpty()
-            .MaximumLength(100);
+            .MaximumLength(Project.MaxNameLength);
 
         RuleFor(x => x.Description)
-            .MaximumLength(500);
+            .MaximumLength(Project.MaxDescriptionLength);
 
         RuleFor(x => x.EstimatedCompletionDate)
             .GreaterThanOrEqualTo(_ => dateTimeProvider.Today)

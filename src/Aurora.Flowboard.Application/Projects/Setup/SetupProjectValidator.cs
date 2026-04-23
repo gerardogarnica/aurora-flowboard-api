@@ -6,15 +6,15 @@ internal sealed class SetupProjectValidator : AbstractValidator<SetupProjectComm
     {
         RuleFor(x => x.Name)
             .NotEmpty()
-            .MaximumLength(100);
+            .MaximumLength(Project.MaxNameLength);
 
         RuleFor(x => x.Code)
             .NotEmpty()
-            .MaximumLength(3)
+            .MaximumLength(ProjectCode.MaxLength)
             .Matches("^[A-Za-z]+$");
 
         RuleFor(x => x.Description)
-            .MaximumLength(500);
+            .MaximumLength(Project.MaxDescriptionLength);
 
         RuleFor(x => x.EstimatedCompletionDate)
             .GreaterThanOrEqualTo(_ => dateTimeProvider.Today)
