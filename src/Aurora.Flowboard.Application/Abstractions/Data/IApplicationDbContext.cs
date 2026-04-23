@@ -13,6 +13,7 @@ public interface IApplicationDbContext : IAsyncDisposable
     DbSet<Comment> Comments { get; }
     DbSet<TimeEntry> TimeEntries { get; }
     DbSet<WorkItemChangeLog> WorkItemChangeLogs { get; }
+    DbSet<WorkItemTag> WorkItemTags { get; }
     DbSet<StateTransitionHistory> StateTransitionHistories { get; }
 
     Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
