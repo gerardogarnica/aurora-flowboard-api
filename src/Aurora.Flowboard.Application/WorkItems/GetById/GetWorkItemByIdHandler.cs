@@ -10,6 +10,7 @@ internal sealed class GetWorkItemByIdHandler(
         WorkItem? workItem = await dbContext
             .WorkItems
             .Include(w => w.FlowState)
+            .Include(w => w.Tags)
             .Include(w => w.Comments)
             .Include(w => w.TimeEntries)
             .Include(w => w.StateHistory)
@@ -65,6 +66,11 @@ internal sealed class GetWorkItemByIdHandler(
             workItem.CreatedOnUtc,
             workItem.UpdatedOnUtc,
             workItem.CompletedOnUtc,
+            [.. workItem.Tags
+                .OrderBy(t => t.Name)
+                .Select(t => new WorkItemTagResponse(
+                    t.Id,
+                    t.Name))],
             [.. workItem.Comments
                 .Where(c => !c.IsDeleted)
                 .Select(c => new WorkItemCommentResponse(

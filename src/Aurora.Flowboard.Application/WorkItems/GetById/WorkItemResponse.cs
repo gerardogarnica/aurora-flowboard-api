@@ -19,10 +19,15 @@ public sealed record WorkItemResponse(
     DateTime CreatedOnUtc,
     DateTime? UpdatedOnUtc,
     DateTime? CompletedOnUtc,
+    IReadOnlyCollection<WorkItemTagResponse> Tags,
     IReadOnlyCollection<WorkItemCommentResponse> Comments,
     IReadOnlyCollection<WorkItemTimeEntryResponse> TimeEntries,
     IReadOnlyCollection<WorkItemStateTransitionResponse> StateHistory,
     IReadOnlyCollection<WorkItemChangeLogResponse> ChangeLogs);
+
+public sealed record WorkItemTagResponse(
+    Guid TagId,
+    string Name);
 
 public sealed record WorkItemCommentResponse(
     Guid CommentId,
