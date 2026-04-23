@@ -19,6 +19,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<FlowState> FlowStates { get; set; } = null!;
     public DbSet<FlowTransition> FlowTransitions { get; set; } = null!;
     public DbSet<WorkItem> WorkItems { get; set; } = null!;
+    public DbSet<WorkItemTag> WorkItemTags { get; set; } = null!;
     public DbSet<Comment> Comments { get; set; } = null!;
     public DbSet<TimeEntry> TimeEntries { get; set; } = null!;
     public DbSet<WorkItemChangeLog> WorkItemChangeLogs { get; set; } = null!;

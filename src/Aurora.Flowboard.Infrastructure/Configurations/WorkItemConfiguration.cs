@@ -1,0 +1,113 @@
+using Aurora.Flowboard.Domain.Flows;
+using Aurora.Flowboard.Domain.Projects;
+using Aurora.Flowboard.Domain.WorkItems;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Aurora.Flowboard.Infrastructure.Configurations;
+
+internal sealed class WorkItemConfiguration : IEntityTypeConfiguration<WorkItem>
+{
+    public void Configure(EntityTypeBuilder<WorkItem> builder)
+    {
+        builder.ToTable("work_items");
+
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.Title)
+            .IsRequired()
+            .HasMaxLength(200);
+
+        builder.Property(x => x.Description)
+            .HasMaxLength(4000);
+
+        builder.Property(x => x.Type)
+            .IsRequired()
+            .HasConversion<string>();
+
+        builder.Property(x => x.Priority)
+            .IsRequired()
+            .HasConversion<string>();
+
+        builder.Property(x => x.Code)
+            .IsRequired()
+            .HasMaxLength(20);
+
+        builder.Property(x => x.SequenceNumber)
+            .IsRequired();
+
+        builder.Property(x => x.EstimatedPoints);
+
+        builder.Property(x => x.EstimatedCompletionDate);
+
+        builder.Property(x => x.CreatedById)
+            .IsRequired();
+
+        builder.Property(x => x.AssigneeId);
+
+        builder.Property(x => x.CreatedOnUtc)
+            .IsRequired();
+
+        builder.Property(x => x.UpdatedOnUtc);
+
+        builder.Property(x => x.CompletedOnUtc);
+
+        builder.HasOne<Project>(x => x.Project)
+            .WithMany()
+            .HasForeignKey(x => x.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne<FlowState>(x => x.FlowState)
+            .WithMany()
+            .HasForeignKey(x => x.FlowStateId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasMany(x => x.Tags)
+            .WithOne()
+            .HasForeignKey(x => x.WorkItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.Tags)
+            .HasField("_tags")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasMany(x => x.Comments)
+            .WithOne()
+            .HasForeignKey(x => x.WorkItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.Comments)
+            .HasField("_comments")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasMany(x => x.TimeEntries)
+            .WithOne()
+            .HasForeignKey(x => x.WorkItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.TimeEntries)
+            .HasField("_timeEntries")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasMany(x => x.StateHistory)
+            .WithOne()
+            .HasForeignKey(x => x.WorkItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.StateHistory)
+            .HasField("_stateHistory")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasMany(x => x.ChangeLogs)
+            .WithOne()
+            .HasForeignKey(x => x.WorkItemId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.ChangeLogs)
+            .HasField("_changeLogs")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasIndex(x => x.Code).IsUnique();
+
+        builder.HasIndex(x => x.ProjectId);
+    }
+}
