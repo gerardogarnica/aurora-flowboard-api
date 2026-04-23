@@ -1338,4 +1338,178 @@ public sealed class WorkItemTests
             result.Error.Should().Be(WorkItemErrors.TimeEntryHoursInvalid);
         }
     }
+
+    public sealed class AddTag : BaseTest
+    {
+        [Fact]
+        public void Should_AddTag_When_DataIsValid()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.AddTag("backend", admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.Tags.Should().ContainSingle(t => t.Name == "backend");
+            workItem.DomainEvents.Should().ContainSingle(e => e is WorkItemTagAddedDomainEvent);
+        }
+
+        [Fact]
+        public void Should_NormalizeName_When_TagAdded()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            workItem.AddTag("  Backend  ", admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.Tags.Should().ContainSingle(t => t.Name == "backend");
+        }
+
+        [Fact]
+        public void Should_Fail_When_TagNameIsEmpty()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.AddTag(string.Empty, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.TagNameRequired);
+        }
+
+        [Fact]
+        public void Should_Fail_When_TagNameTooLong()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            string longName = new('x', WorkItemTag.MaxNameLength + 1);
+
+            // Act
+            Result result = workItem.AddTag(longName, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.TagNameTooLong);
+        }
+
+        [Fact]
+        public void Should_Fail_When_DuplicateTagName()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            workItem.AddTag("backend", admin, WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.AddTag("BACKEND", admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.DuplicateTagName);
+        }
+
+        [Fact]
+        public void Should_Fail_When_UserNotProjectMember()
+        {
+            // Arrange
+            var (workItem, _, _, _) = WorkItemData.GetWorkItemWithContext();
+            User nonMember = UserData.GetActiveUser();
+
+            // Act
+            Result result = workItem.AddTag("backend", nonMember, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+        }
+
+        [Fact]
+        public void Should_Fail_When_UserIsInactive()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            admin.Deactivate(WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.AddTag("backend", admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(UserErrors.Inactive);
+        }
+    }
+
+    public sealed class RemoveTag : BaseTest
+    {
+        [Fact]
+        public void Should_RemoveTag_When_TagExists()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            workItem.AddTag("backend", admin, WorkItemData.UpdatedOnUtc);
+            Guid tagId = workItem.Tags.First().Id;
+            workItem.ClearDomainEvents();
+
+            // Act
+            Result result = workItem.RemoveTag(tagId, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.Tags.Should().BeEmpty();
+            workItem.DomainEvents.Should().ContainSingle(e => e is WorkItemTagRemovedDomainEvent);
+        }
+
+        [Fact]
+        public void Should_Fail_When_TagNotFound()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.RemoveTag(Guid.NewGuid(), admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.TagNotFound);
+        }
+
+        [Fact]
+        public void Should_Fail_When_UserNotProjectMember()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            workItem.AddTag("backend", admin, WorkItemData.UpdatedOnUtc);
+            Guid tagId = workItem.Tags.First().Id;
+            User nonMember = UserData.GetActiveUser();
+
+            // Act
+            Result result = workItem.RemoveTag(tagId, nonMember, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+        }
+
+        [Fact]
+        public void Should_Fail_When_UserIsInactive()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            workItem.AddTag("backend", admin, WorkItemData.UpdatedOnUtc);
+            Guid tagId = workItem.Tags.First().Id;
+            admin.Deactivate(WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.RemoveTag(tagId, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(UserErrors.Inactive);
+        }
+    }
 }
