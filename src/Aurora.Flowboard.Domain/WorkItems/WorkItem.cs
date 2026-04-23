@@ -14,6 +14,7 @@ public sealed class WorkItem : BaseEntity
     private readonly List<TimeEntry> _timeEntries = [];
     private readonly List<StateTransitionHistory> _stateHistory = [];
     private readonly List<WorkItemChangeLog> _changeLogs = [];
+    private readonly List<WorkItemTag> _tags = [];
 
     public string Title { get; private set; }
     public string? Description { get; private set; }
@@ -37,6 +38,7 @@ public sealed class WorkItem : BaseEntity
     public IReadOnlyCollection<TimeEntry> TimeEntries => _timeEntries.AsReadOnly();
     public IReadOnlyCollection<StateTransitionHistory> StateHistory => _stateHistory.AsReadOnly();
     public IReadOnlyCollection<WorkItemChangeLog> ChangeLogs => _changeLogs.AsReadOnly();
+    public IReadOnlyCollection<WorkItemTag> Tags => _tags.AsReadOnly();
 
     private WorkItem() : base(Guid.Empty) { } // EF Core
 
@@ -442,6 +444,74 @@ public sealed class WorkItem : BaseEntity
         _changeLogs.Add(WorkItemChangeLog.Create(this, user, WorkItemChangeType.TimeLogged, entryResult.Value.Id, createdOnUtc));
 
         AddDomainEvent(new WorkItemTimeLoggedDomainEvent(Id, entryResult.Value.Id, hours));
+
+        return Result.Ok();
+    }
+
+    public Result AddTag(string name, User changedBy, DateTime updatedOnUtc)
+    {
+        if (!Project.IsMember(changedBy.Id))
+        {
+            return Result.Fail(WorkItemErrors.UserNotProjectMember);
+        }
+
+        if (!changedBy.IsActive)
+        {
+            return Result.Fail(UserErrors.Inactive);
+        }
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return Result.Fail(WorkItemErrors.TagNameRequired);
+        }
+
+        if (name.Length > WorkItemTag.MaxNameLength)
+        {
+            return Result.Fail(WorkItemErrors.TagNameTooLong);
+        }
+
+        string normalizedName = name.Trim().ToLowerInvariant();
+
+        if (_tags.Any(t => t.Name == normalizedName))
+        {
+            return Result.Fail(WorkItemErrors.DuplicateTagName);
+        }
+
+        WorkItemTag tag = WorkItemTag.Create(this, normalizedName);
+        _tags.Add(tag);
+        UpdatedOnUtc = updatedOnUtc;
+
+        _changeLogs.Add(WorkItemChangeLog.Create(this, changedBy, WorkItemChangeType.TagAdded, tag.Id, updatedOnUtc));
+
+        AddDomainEvent(new WorkItemTagAddedDomainEvent(Id, tag.Id));
+
+        return Result.Ok();
+    }
+
+    public Result RemoveTag(Guid tagId, User changedBy, DateTime updatedOnUtc)
+    {
+        if (!Project.IsMember(changedBy.Id))
+        {
+            return Result.Fail(WorkItemErrors.UserNotProjectMember);
+        }
+
+        if (!changedBy.IsActive)
+        {
+            return Result.Fail(UserErrors.Inactive);
+        }
+
+        WorkItemTag? tag = _tags.FirstOrDefault(t => t.Id == tagId);
+
+        if (tag is null)
+        {
+            return Result.Fail(WorkItemErrors.TagNotFound);
+        }
+
+        _tags.Remove(tag);
+        UpdatedOnUtc = updatedOnUtc;
+
+        _changeLogs.Add(WorkItemChangeLog.Create(this, changedBy, WorkItemChangeType.TagRemoved, tagId, updatedOnUtc));
+        AddDomainEvent(new WorkItemTagRemovedDomainEvent(Id, tagId));
 
         return Result.Ok();
     }

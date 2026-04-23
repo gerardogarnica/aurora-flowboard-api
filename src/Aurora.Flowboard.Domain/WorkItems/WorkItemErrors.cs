@@ -65,4 +65,20 @@ public static class WorkItemErrors
     public static readonly BaseError NotAssigned = BaseError.Conflict(
         "WorkItem.NotAssigned",
         "The work item does not have an assignee");
+
+    public static readonly BaseError TagNotFound = BaseError.NotFound(
+        "WorkItem.TagNotFound",
+        "The tag with the specified identifier was not found on this work item");
+
+    public static readonly BaseError TagNameRequired = BaseError.Validation(
+        "WorkItem.TagNameRequired",
+        "Tag name is required");
+
+    public static readonly BaseError TagNameTooLong = BaseError.Validation(
+        "WorkItem.TagNameTooLong",
+        $"Tag name cannot exceed {WorkItemTag.MaxNameLength} characters");
+
+    public static readonly BaseError DuplicateTagName = BaseError.Conflict(
+        "WorkItem.DuplicateTagName",
+        "A tag with this name already exists on this work item");
 }
