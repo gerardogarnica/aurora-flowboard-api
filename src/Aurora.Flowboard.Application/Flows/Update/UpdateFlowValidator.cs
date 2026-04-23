@@ -9,9 +9,9 @@ internal sealed class UpdateFlowValidator : AbstractValidator<UpdateFlowCommand>
 
         RuleFor(x => x.Name)
             .NotEmpty()
-            .MaximumLength(100);
+            .MaximumLength(Flow.MaxNameLength);
 
         RuleFor(x => x.Description)
-            .MaximumLength(500);
+            .MaximumLength(Flow.MaxDescriptionLength);
     }
 }

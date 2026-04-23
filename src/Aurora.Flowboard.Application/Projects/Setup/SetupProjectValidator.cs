@@ -25,11 +25,11 @@ internal sealed class SetupProjectValidator : AbstractValidator<SetupProjectComm
 
         RuleFor(x => x.Flow.Name)
             .NotEmpty()
-            .MaximumLength(100)
+            .MaximumLength(Flow.MaxNameLength)
             .When(x => x.Flow is not null);
 
         RuleFor(x => x.Flow.Description)
-            .MaximumLength(500)
+            .MaximumLength(Flow.MaxDescriptionLength)
             .When(x => x.Flow is not null);
 
         RuleFor(x => x.Flow.States)
@@ -56,7 +56,7 @@ internal sealed class SetupProjectValidator : AbstractValidator<SetupProjectComm
             {
                 state.RuleFor(s => s.Name)
                     .NotEmpty()
-                    .MaximumLength(50);
+                    .MaximumLength(FlowState.MaxNameLength);
 
                 state.RuleFor(s => s.Category)
                     .IsInEnum();

@@ -16,7 +16,7 @@ internal sealed class FlowStateConfiguration : IEntityTypeConfiguration<FlowStat
 
         builder.Property(x => x.Name)
             .IsRequired()
-            .HasMaxLength(50);
+            .HasMaxLength(FlowState.MaxNameLength);
 
         builder.Property(x => x.SortOrder)
             .IsRequired();

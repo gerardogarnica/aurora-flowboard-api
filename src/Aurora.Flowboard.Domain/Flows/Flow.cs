@@ -6,9 +6,9 @@ namespace Aurora.Flowboard.Domain.Flows;
 
 public sealed class Flow : BaseEntity
 {
-    private const int MaxNameLength = 100;
-    private const int MaxDescriptionLength = 500;
-    private const int MaxActiveStates = 10;
+    public const int MaxNameLength = 100;
+    public const int MaxDescriptionLength = 500;
+    public const int MaxActiveStates = 10;
 
     private readonly List<FlowState> _states = [];
     private readonly List<FlowTransition> _transitions = [];

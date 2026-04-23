@@ -14,10 +14,10 @@ internal sealed class FlowConfiguration : IEntityTypeConfiguration<Flow>
 
         builder.Property(x => x.Name)
             .IsRequired()
-            .HasMaxLength(100);
+            .HasMaxLength(Flow.MaxNameLength);
 
         builder.Property(x => x.Description)
-            .HasMaxLength(500);
+            .HasMaxLength(Flow.MaxDescriptionLength);
 
         builder.Property(x => x.ProjectId)
             .IsRequired();

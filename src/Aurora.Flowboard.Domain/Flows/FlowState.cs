@@ -2,7 +2,7 @@ namespace Aurora.Flowboard.Domain.Flows;
 
 public sealed class FlowState
 {
-    private const int MaxNameLength = 50;
+    public const int MaxNameLength = 50;
 
     public Guid Id { get; private set; }
     public Guid FlowId { get; private set; }
