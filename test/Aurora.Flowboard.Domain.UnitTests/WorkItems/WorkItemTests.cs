@@ -1,0 +1,1341 @@
+namespace Aurora.Flowboard.Domain.UnitTests.WorkItems;
+
+public sealed class WorkItemTests
+{
+    public sealed class Create : BaseTest
+    {
+        [Fact]
+        public void Should_CreateWorkItem_When_DataIsValid()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title,
+                WorkItemData.Description,
+                WorkItemData.Type,
+                WorkItemData.Priority,
+                project,
+                flow,
+                admin,
+                WorkItemData.EstimatedPoints,
+                WorkItemData.EstimatedCompletionDate,
+                WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            result.Value.Title.Should().Be(WorkItemData.Title);
+            result.Value.Description.Should().Be(WorkItemData.Description);
+            result.Value.Type.Should().Be(WorkItemData.Type);
+            result.Value.Priority.Should().Be(WorkItemData.Priority);
+            result.Value.ProjectId.Should().Be(project.Id);
+            result.Value.CreatedById.Should().Be(admin.Id);
+            result.Value.AssigneeId.Should().BeNull();
+            result.Value.EstimatedPoints.Should().Be(WorkItemData.EstimatedPoints);
+            result.Value.EstimatedCompletionDate.Should().Be(WorkItemData.EstimatedCompletionDate);
+            result.Value.CreatedOnUtc.Should().Be(WorkItemData.CreatedOnUtc);
+        }
+
+        [Fact]
+        public void Should_GenerateCode_When_Created()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            int expectedSequence = project.WorkItemCounter + 1;
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title,
+                null,
+                WorkItemData.Type,
+                WorkItemData.Priority,
+                project,
+                flow,
+                admin,
+                null,
+                null,
+                WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.Value.Code.Should().Be($"{project.Code}-{expectedSequence}");
+            result.Value.SequenceNumber.Should().Be(expectedSequence);
+        }
+
+        [Fact]
+        public void Should_IncrementProjectWorkItemCounter_When_Created()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            int counterBefore = project.WorkItemCounter;
+
+            // Act
+            WorkItem.Create(WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            project.WorkItemCounter.Should().Be(counterBefore + 1);
+        }
+
+        [Fact]
+        public void Should_SetInitialFlowState_When_Created()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            FlowState expectedInitialState = flow.States
+                .Where(s => s.Category == FlowStateCategory.Active)
+                .MinBy(s => s.SortOrder)!;
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.Value.FlowStateId.Should().Be(expectedInitialState.Id);
+        }
+
+        [Fact]
+        public void Should_TrimTitleAndDescription_When_Created()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                $"  {WorkItemData.Title}  ",
+                $"  {WorkItemData.Description}  ",
+                WorkItemData.Type,
+                WorkItemData.Priority,
+                project,
+                flow,
+                admin,
+                null,
+                null,
+                WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.Value.Title.Should().Be(WorkItemData.Title);
+            result.Value.Description.Should().Be(WorkItemData.Description);
+        }
+
+        [Fact]
+        public void Should_CreateChangeLog_When_Created()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.Value.ChangeLogs.Should().ContainSingle(c => c.ChangeType == WorkItemChangeType.Created);
+        }
+
+        [Fact]
+        public void Should_RaiseWorkItemCreatedDomainEvent_When_Created()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            WorkItemCreatedDomainEvent domainEvent = AssertDomainEventWasPublished<WorkItemCreatedDomainEvent>(result.Value);
+            domainEvent.WorkItemId.Should().Be(result.Value.Id);
+        }
+
+        [Fact]
+        public void Should_CreateWithAssignee_When_AssigneeIsProjectMemberAndActive()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            result.Value.AssigneeId.Should().Be(assignee.Id);
+        }
+
+        [Fact]
+        public void Should_RaiseWorkItemAssignedDomainEvent_When_CreatedWithAssignee()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee);
+
+            // Assert
+            WorkItemAssignedDomainEvent domainEvent = AssertDomainEventWasPublished<WorkItemAssignedDomainEvent>(result.Value);
+            domainEvent.WorkItemId.Should().Be(result.Value.Id);
+            domainEvent.AssigneeId.Should().Be(assignee.Id);
+        }
+
+        [Fact]
+        public void Should_CreateAssignedChangeLog_When_CreatedWithAssignee()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee);
+
+            // Assert
+            result.Value.ChangeLogs.Should().Contain(c => c.ChangeType == WorkItemChangeType.Assigned);
+        }
+
+        [Fact]
+        public void Should_Fail_When_TitleIsEmpty()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                string.Empty, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.TitleRequired);
+        }
+
+        [Fact]
+        public void Should_Fail_When_TitleIsWhitespace()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                "   ", null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.TitleRequired);
+        }
+
+        [Fact]
+        public void Should_Fail_When_TitleExceedsMaxLength()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            string longTitle = new('A', 201);
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                longTitle, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.TitleTooLong);
+        }
+
+        [Fact]
+        public void Should_Fail_When_DescriptionExceedsMaxLength()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            string longDescription = new('A', 4001);
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title, longDescription, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.DescriptionTooLong);
+        }
+
+        [Fact]
+        public void Should_Fail_When_CreatorIsNotProjectMember()
+        {
+            // Arrange
+            var (project, flow, _) = WorkItemData.GetActiveProjectWithFlow();
+            User nonMember = UserData.GetActiveUser();
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, nonMember, null, null, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project draftProject = ProjectData.GetDraftProject(admin);
+            Flow flow = Flow.Create(FlowData.Name, null, draftProject, true, FlowData.CreatedOnUtc).Value;
+            flow.AddState("Todo", FlowStateCategory.Active, [ProjectRole.Admin], admin);
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                draftProject, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
+        [Fact]
+        public void Should_Fail_When_CreatorIsInactive()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            User creator = UserData.GetActiveUser();
+            project.AddMember(creator, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            creator.Deactivate(WorkItemData.CreatedOnUtc);
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, creator, null, null, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(UserErrors.Inactive);
+        }
+
+        [Fact]
+        public void Should_Fail_When_FlowHasNoInitialState()
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetDraftProject(admin);
+            project.ChangeStatus(ProjectStatus.Active, admin, ProjectData.UpdatedOnUtc);
+            Flow flow = Flow.Create(FlowData.Name, null, project, true, FlowData.CreatedOnUtc).Value;
+            // No states added - flow has no initial state
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(FlowErrors.NoInitialState);
+        }
+
+        [Fact]
+        public void Should_Fail_When_AssigneeIsNotProjectMember()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            User nonMemberAssignee = UserData.GetActiveUser();
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, nonMemberAssignee);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.AssigneeNotProjectMember);
+        }
+
+        [Fact]
+        public void Should_Fail_When_AssigneeIsInactive()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            assignee.Deactivate(WorkItemData.CreatedOnUtc);
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.AssigneeInactive);
+        }
+    }
+
+    public sealed class Update : BaseTest
+    {
+        [Fact]
+        public void Should_UpdateWorkItem_When_DataIsValid()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            const string newTitle = "Updated title";
+            const string newDescription = "Updated description";
+
+            // Act
+            Result result = workItem.Update(
+                newTitle,
+                newDescription,
+                Priority.High,
+                8,
+                new DateOnly(2026, 9, 30),
+                admin,
+                WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.Title.Should().Be(newTitle);
+            workItem.Description.Should().Be(newDescription);
+            workItem.Priority.Should().Be(Priority.High);
+            workItem.EstimatedPoints.Should().Be(8);
+            workItem.EstimatedCompletionDate.Should().Be(new DateOnly(2026, 9, 30));
+            workItem.UpdatedOnUtc.Should().Be(WorkItemData.UpdatedOnUtc);
+        }
+
+        [Fact]
+        public void Should_TrimTitleAndDescription_When_Updated()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            workItem.Update("  New Title  ", "  New Desc  ", Priority.Low, null, null, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.Title.Should().Be("New Title");
+            workItem.Description.Should().Be("New Desc");
+        }
+
+        [Fact]
+        public void Should_CreateUpdateChangeLog_When_Updated()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            workItem.Update("New Title", null, Priority.Low, null, null, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.ChangeLogs.Should().Contain(c => c.ChangeType == WorkItemChangeType.Updated);
+        }
+
+        [Fact]
+        public void Should_Fail_When_TitleIsEmpty()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.Update(string.Empty, null, Priority.Low, null, null, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.TitleRequired);
+        }
+
+        [Fact]
+        public void Should_Fail_When_TitleExceedsMaxLength()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            string longTitle = new('A', 201);
+
+            // Act
+            Result result = workItem.Update(longTitle, null, Priority.Low, null, null, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.TitleTooLong);
+        }
+
+        [Fact]
+        public void Should_Fail_When_DescriptionExceedsMaxLength()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            string longDesc = new('A', 4001);
+
+            // Act
+            Result result = workItem.Update(WorkItemData.Title, longDesc, Priority.Low, null, null, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.DescriptionTooLong);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ChangedByIsNotProjectMember()
+        {
+            // Arrange
+            var (workItem, _, _, _) = WorkItemData.GetWorkItemWithContext();
+            User nonMember = UserData.GetActiveUser();
+
+            // Act
+            Result result = workItem.Update(WorkItemData.Title, null, Priority.Low, null, null, nonMember, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ChangedByIsInactive()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            User user = UserData.GetActiveUser();
+            project.AddMember(user, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            user.Deactivate(WorkItemData.CreatedOnUtc);
+
+            // Act
+            Result result = workItem.Update(WorkItemData.Title, null, Priority.Low, null, null, user, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(UserErrors.Inactive);
+        }
+    }
+
+    public sealed class Move : BaseTest
+    {
+        [Fact]
+        public void Should_MoveToState_When_TransitionIsAllowed()
+        {
+            // Arrange
+            var (workItem, _, flow, admin) = WorkItemData.GetWorkItemWithContext();
+            FlowState toState = flow.States.Single(s => s.Name == "In Progress");
+
+            // Act
+            Result result = workItem.Move(toState, admin, null, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.FlowStateId.Should().Be(toState.Id);
+            workItem.UpdatedOnUtc.Should().Be(WorkItemData.UpdatedOnUtc);
+        }
+
+        [Fact]
+        public void Should_RecordStateTransitionHistory_When_Moved()
+        {
+            // Arrange
+            var (workItem, _, flow, admin) = WorkItemData.GetWorkItemWithContext();
+            FlowState toState = flow.States.Single(s => s.Name == "In Progress");
+
+            // Act
+            workItem.Move(toState, admin, "Moving to active work", WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.StateHistory.Should().ContainSingle();
+        }
+
+        [Fact]
+        public void Should_CreateMoveChangeLog_When_Moved()
+        {
+            // Arrange
+            var (workItem, _, flow, admin) = WorkItemData.GetWorkItemWithContext();
+            FlowState toState = flow.States.Single(s => s.Name == "In Progress");
+
+            // Act
+            workItem.Move(toState, admin, null, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.ChangeLogs.Should().Contain(c => c.ChangeType == WorkItemChangeType.Moved);
+        }
+
+        [Fact]
+        public void Should_RaiseWorkItemMovedDomainEvent_When_Moved()
+        {
+            // Arrange
+            var (workItem, _, flow, admin) = WorkItemData.GetWorkItemWithContext();
+            FlowState toState = flow.States.Single(s => s.Name == "In Progress");
+            Guid fromStateId = workItem.FlowStateId;
+
+            // Act
+            workItem.Move(toState, admin, null, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            WorkItemMovedDomainEvent domainEvent = AssertDomainEventWasPublished<WorkItemMovedDomainEvent>(workItem);
+            domainEvent.WorkItemId.Should().Be(workItem.Id);
+            domainEvent.FromStateId.Should().Be(fromStateId);
+            domainEvent.ToStateId.Should().Be(toState.Id);
+        }
+
+        [Fact]
+        public void Should_SetCompletedOnUtc_When_MovedToCompletedState()
+        {
+            // Arrange
+            var (workItem, _, flow, admin) = WorkItemData.GetWorkItemWithContext();
+            // First move to In Progress so we can reach Done
+            FlowState inProgress = flow.States.Single(s => s.Name == "In Progress");
+            workItem.Move(inProgress, admin, null, WorkItemData.UpdatedOnUtc);
+            FlowState doneState = flow.States.Single(s => s.Name == "Done");
+
+            // Act
+            workItem.Move(doneState, admin, null, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.CompletedOnUtc.Should().Be(WorkItemData.UpdatedOnUtc);
+        }
+
+        [Fact]
+        public void Should_SetCompletedOnUtc_When_MovedToCancelledState()
+        {
+            // Arrange
+            var (workItem, _, flow, admin) = WorkItemData.GetWorkItemWithContext();
+            FlowState cancelledState = flow.States.Single(s => s.Name == "Cancelled");
+
+            // Act
+            workItem.Move(cancelledState, admin, null, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.CompletedOnUtc.Should().Be(WorkItemData.UpdatedOnUtc);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ChangedByIsNotProjectMember()
+        {
+            // Arrange
+            var (workItem, _, flow, _) = WorkItemData.GetWorkItemWithContext();
+            User nonMember = UserData.GetActiveUser();
+            FlowState toState = flow.States.Single(s => s.Name == "In Progress");
+
+            // Act
+            Result result = workItem.Move(toState, nonMember, null, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ChangedByIsInactive()
+        {
+            // Arrange
+            var (workItem, project, flow, admin) = WorkItemData.GetWorkItemWithContext();
+            User user = UserData.GetActiveUser();
+            project.AddMember(user, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            user.Deactivate(WorkItemData.CreatedOnUtc);
+            FlowState toState = flow.States.Single(s => s.Name == "In Progress");
+
+            // Act
+            Result result = workItem.Move(toState, user, null, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(UserErrors.Inactive);
+        }
+
+        [Fact]
+        public void Should_Fail_When_TargetStateIsFromDifferentFlow()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            Flow otherFlow = Flow.Create("Other Flow", null, project, false, WorkItemData.CreatedOnUtc).Value;
+            otherFlow.AddState("Other Todo", FlowStateCategory.Active, [], admin);
+            FlowState otherState = otherFlow.States.Single();
+
+            // Act
+            Result result = workItem.Move(otherState, admin, null, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.TargetStateNotInFlow);
+        }
+
+        [Fact]
+        public void Should_Fail_When_NoTransitionDefined()
+        {
+            // Arrange
+            var (workItem, _, flow, admin) = WorkItemData.GetWorkItemWithContext();
+            FlowState doneState = flow.States.Single(s => s.Name == "Done");
+
+            // Act
+            Result result = workItem.Move(doneState, admin, null, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.TransitionNotAllowed);
+        }
+
+        [Fact]
+        public void Should_Fail_When_UserRoleNotAllowedForTransition()
+        {
+            // Arrange
+            var (project, _, admin) = WorkItemData.GetActiveProjectWithFlow();
+            User member = UserData.GetActiveUser();
+            project.AddMember(member, ProjectRole.QA, admin, WorkItemData.CreatedOnUtc);
+
+            // Add a state only Admin can transition to
+            Flow restrictedFlow = Flow.Create("Restricted", null, project, false, WorkItemData.CreatedOnUtc).Value;
+            restrictedFlow.AddState("Start", FlowStateCategory.Active, [ProjectRole.Admin], admin);
+            restrictedFlow.AddState("End", FlowStateCategory.Active, [ProjectRole.Admin], admin);
+            foreach (FlowState s in restrictedFlow.States)
+            {
+                WorkItemData.SetFlowNavProperty(s, restrictedFlow);
+            }
+
+            WorkItem workItem = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, restrictedFlow, admin, null, null, WorkItemData.CreatedOnUtc).Value;
+
+            FlowState endState = restrictedFlow.States.Single(s => s.Name == "End");
+
+            // Act
+            Result result = workItem.Move(endState, member, null, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.TransitionRoleNotAllowed);
+        }
+    }
+
+    public sealed class Assign : BaseTest
+    {
+        [Fact]
+        public void Should_AssignUser_When_UserIsProjectMemberAndActive()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+
+            // Act
+            Result result = workItem.Assign(assignee, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.AssigneeId.Should().Be(assignee.Id);
+            workItem.UpdatedOnUtc.Should().Be(WorkItemData.UpdatedOnUtc);
+        }
+
+        [Fact]
+        public void Should_CreateAssignedChangeLog_When_Assigned()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+
+            // Act
+            workItem.Assign(assignee, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.ChangeLogs.Should().Contain(c => c.ChangeType == WorkItemChangeType.Assigned);
+        }
+
+        [Fact]
+        public void Should_RaiseWorkItemAssignedDomainEvent_When_Assigned()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+
+            // Act
+            workItem.Assign(assignee, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            WorkItemAssignedDomainEvent domainEvent = AssertDomainEventWasPublished<WorkItemAssignedDomainEvent>(workItem);
+            domainEvent.WorkItemId.Should().Be(workItem.Id);
+            domainEvent.AssigneeId.Should().Be(assignee.Id);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ChangedByIsNotProjectMember()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            User nonMember = UserData.GetActiveUser();
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+
+            // Act
+            Result result = workItem.Assign(assignee, nonMember, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+        }
+
+        [Fact]
+        public void Should_Fail_When_AssigneeIsNotProjectMember()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            User nonMemberAssignee = UserData.GetActiveUser();
+
+            // Act
+            Result result = workItem.Assign(nonMemberAssignee, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.AssigneeNotProjectMember);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ChangedByIsInactive()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            User changedBy = UserData.GetActiveUser();
+            project.AddMember(changedBy, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            changedBy.Deactivate(WorkItemData.CreatedOnUtc);
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+
+            // Act
+            Result result = workItem.Assign(assignee, changedBy, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(UserErrors.Inactive);
+        }
+
+        [Fact]
+        public void Should_Fail_When_AssigneeIsInactive()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            assignee.Deactivate(WorkItemData.CreatedOnUtc);
+
+            // Act
+            Result result = workItem.Assign(assignee, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(UserErrors.Inactive);
+        }
+    }
+
+    public sealed class Unassign : BaseTest
+    {
+        [Fact]
+        public void Should_Unassign_When_WorkItemIsAssigned()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            WorkItem workItem = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
+
+            // Act
+            Result result = workItem.Unassign(admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.AssigneeId.Should().BeNull();
+            workItem.UpdatedOnUtc.Should().Be(WorkItemData.UpdatedOnUtc);
+        }
+
+        [Fact]
+        public void Should_CreateUnassignedChangeLog_When_Unassigned()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            WorkItem workItem = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
+
+            // Act
+            workItem.Unassign(admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.ChangeLogs.Should().Contain(c => c.ChangeType == WorkItemChangeType.Unassigned);
+        }
+
+        [Fact]
+        public void Should_RaiseWorkItemUnassignedDomainEvent_When_Unassigned()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            WorkItem workItem = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
+
+            // Act
+            workItem.Unassign(admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            WorkItemUnassignedDomainEvent domainEvent = AssertDomainEventWasPublished<WorkItemUnassignedDomainEvent>(workItem);
+            domainEvent.WorkItemId.Should().Be(workItem.Id);
+        }
+
+        [Fact]
+        public void Should_Fail_When_WorkItemIsNotAssigned()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.Unassign(admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.NotAssigned);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ChangedByIsNotProjectMember()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            WorkItem workItem = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
+            User nonMember = UserData.GetActiveUser();
+
+            // Act
+            Result result = workItem.Unassign(nonMember, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ChangedByIsInactive()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            WorkItem workItem = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
+            User changedBy = UserData.GetActiveUser();
+            project.AddMember(changedBy, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            changedBy.Deactivate(WorkItemData.CreatedOnUtc);
+
+            // Act
+            Result result = workItem.Unassign(changedBy, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(UserErrors.Inactive);
+        }
+    }
+
+    public sealed class AddComment : BaseTest
+    {
+        [Fact]
+        public void Should_AddComment_When_DataIsValid()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            const string content = "This is a comment";
+
+            // Act
+            Result result = workItem.AddComment(admin, content, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.Comments.Should().ContainSingle(c => c.Content == content);
+        }
+
+        [Fact]
+        public void Should_CreateCommentAddedChangeLog_When_CommentAdded()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            workItem.AddComment(admin, "A comment", WorkItemData.CreatedOnUtc);
+
+            // Assert
+            workItem.ChangeLogs.Should().Contain(c => c.ChangeType == WorkItemChangeType.CommentAdded);
+        }
+
+        [Fact]
+        public void Should_RaiseWorkItemCommentAddedDomainEvent_When_CommentAdded()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            workItem.AddComment(admin, "A comment", WorkItemData.CreatedOnUtc);
+
+            // Assert
+            WorkItemCommentAddedDomainEvent domainEvent = AssertDomainEventWasPublished<WorkItemCommentAddedDomainEvent>(workItem);
+            domainEvent.WorkItemId.Should().Be(workItem.Id);
+        }
+
+        [Fact]
+        public void Should_Fail_When_AuthorIsNotProjectMember()
+        {
+            // Arrange
+            var (workItem, _, _, _) = WorkItemData.GetWorkItemWithContext();
+            User nonMember = UserData.GetActiveUser();
+
+            // Act
+            Result result = workItem.AddComment(nonMember, "A comment", WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+        }
+
+        [Fact]
+        public void Should_Fail_When_AuthorIsInactive()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            User author = UserData.GetActiveUser();
+            project.AddMember(author, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            author.Deactivate(WorkItemData.CreatedOnUtc);
+
+            // Act
+            Result result = workItem.AddComment(author, "A comment", WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(UserErrors.Inactive);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ContentIsEmpty()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.AddComment(admin, string.Empty, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.CommentContentRequired);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ContentIsWhitespace()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.AddComment(admin, "   ", WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.CommentContentRequired);
+        }
+    }
+
+    public sealed class UpdateComment : BaseTest
+    {
+        [Fact]
+        public void Should_UpdateComment_When_AuthorUpdatesOwnComment()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            workItem.AddComment(admin, "Original content", WorkItemData.CreatedOnUtc);
+            Guid commentId = workItem.Comments.Single().Id;
+
+            // Act
+            Result result = workItem.UpdateComment(commentId, admin, "Updated content", WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.Comments.Single().Content.Should().Be("Updated content");
+        }
+
+        [Fact]
+        public void Should_CreateCommentUpdatedChangeLog_When_CommentUpdated()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            workItem.AddComment(admin, "Original content", WorkItemData.CreatedOnUtc);
+            Guid commentId = workItem.Comments.Single().Id;
+
+            // Act
+            workItem.UpdateComment(commentId, admin, "Updated content", WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.ChangeLogs.Should().Contain(c => c.ChangeType == WorkItemChangeType.CommentUpdated);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ChangedByIsNotProjectMember()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            workItem.AddComment(admin, "Original content", WorkItemData.CreatedOnUtc);
+            Guid commentId = workItem.Comments.Single().Id;
+            User nonMember = UserData.GetActiveUser();
+
+            // Act
+            Result result = workItem.UpdateComment(commentId, nonMember, "Updated content", WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+        }
+
+        [Fact]
+        public void Should_Fail_When_CommentNotFound()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.UpdateComment(Guid.NewGuid(), admin, "Updated content", WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.CommentNotFound);
+        }
+
+        [Fact]
+        public void Should_Fail_When_UserIsNotCommentAuthor()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            workItem.AddComment(admin, "Original content", WorkItemData.CreatedOnUtc);
+            Guid commentId = workItem.Comments.Single().Id;
+            User otherMember = UserData.GetActiveUser();
+            project.AddMember(otherMember, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+
+            // Act
+            Result result = workItem.UpdateComment(commentId, otherMember, "Updated content", WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.CommentNotOwnedByUser);
+        }
+
+        [Fact]
+        public void Should_Fail_When_UpdatedContentIsEmpty()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            workItem.AddComment(admin, "Original content", WorkItemData.CreatedOnUtc);
+            Guid commentId = workItem.Comments.Single().Id;
+
+            // Act
+            Result result = workItem.UpdateComment(commentId, admin, string.Empty, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.CommentContentRequired);
+        }
+    }
+
+    public sealed class RemoveComment : BaseTest
+    {
+        [Fact]
+        public void Should_RemoveComment_When_AuthorRemovesOwnComment()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            workItem.AddComment(admin, "A comment", WorkItemData.CreatedOnUtc);
+            Guid commentId = workItem.Comments.Single().Id;
+
+            // Act
+            Result result = workItem.RemoveComment(commentId, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.Comments.Single(c => c.Id == commentId).IsDeleted.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Should_CreateCommentRemovedChangeLog_When_CommentRemoved()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            workItem.AddComment(admin, "A comment", WorkItemData.CreatedOnUtc);
+            Guid commentId = workItem.Comments.Single().Id;
+
+            // Act
+            workItem.RemoveComment(commentId, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.ChangeLogs.Should().Contain(c => c.ChangeType == WorkItemChangeType.CommentRemoved);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ChangedByIsNotProjectMember()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            workItem.AddComment(admin, "A comment", WorkItemData.CreatedOnUtc);
+            Guid commentId = workItem.Comments.Single().Id;
+            User nonMember = UserData.GetActiveUser();
+
+            // Act
+            Result result = workItem.RemoveComment(commentId, nonMember, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+        }
+
+        [Fact]
+        public void Should_Fail_When_CommentNotFound()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.RemoveComment(Guid.NewGuid(), admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.CommentNotFound);
+        }
+
+        [Fact]
+        public void Should_Fail_When_UserIsNotCommentAuthor()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            workItem.AddComment(admin, "A comment", WorkItemData.CreatedOnUtc);
+            Guid commentId = workItem.Comments.Single().Id;
+            User otherMember = UserData.GetActiveUser();
+            project.AddMember(otherMember, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+
+            // Act
+            Result result = workItem.RemoveComment(commentId, otherMember, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.CommentNotOwnedByUser);
+        }
+    }
+
+    public sealed class LogTime : BaseTest
+    {
+        [Fact]
+        public void Should_LogTime_When_DataIsValid()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            const decimal hours = 2.5m;
+
+            // Act
+            Result result = workItem.LogTime(admin, hours, "Worked on implementation", WorkItemData.UpdatedOnUtc, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.TimeEntries.Should().ContainSingle(e => e.Hours == hours);
+        }
+
+        [Fact]
+        public void Should_CreateTimeLoggedChangeLog_When_TimeLogged()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            workItem.LogTime(admin, 1m, null, WorkItemData.UpdatedOnUtc, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            workItem.ChangeLogs.Should().Contain(c => c.ChangeType == WorkItemChangeType.TimeLogged);
+        }
+
+        [Fact]
+        public void Should_RaiseWorkItemTimeLoggedDomainEvent_When_TimeLogged()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            const decimal hours = 3m;
+
+            // Act
+            workItem.LogTime(admin, hours, null, WorkItemData.UpdatedOnUtc, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            WorkItemTimeLoggedDomainEvent domainEvent = AssertDomainEventWasPublished<WorkItemTimeLoggedDomainEvent>(workItem);
+            domainEvent.WorkItemId.Should().Be(workItem.Id);
+            domainEvent.Hours.Should().Be(hours);
+        }
+
+        [Fact]
+        public void Should_Fail_When_UserIsNotProjectMember()
+        {
+            // Arrange
+            var (workItem, _, _, _) = WorkItemData.GetWorkItemWithContext();
+            User nonMember = UserData.GetActiveUser();
+
+            // Act
+            Result result = workItem.LogTime(nonMember, 1m, null, WorkItemData.UpdatedOnUtc, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+        }
+
+        [Fact]
+        public void Should_Fail_When_UserIsInactive()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            User user = UserData.GetActiveUser();
+            project.AddMember(user, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            user.Deactivate(WorkItemData.CreatedOnUtc);
+
+            // Act
+            Result result = workItem.LogTime(user, 1m, null, WorkItemData.UpdatedOnUtc, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(UserErrors.Inactive);
+        }
+
+        [Fact]
+        public void Should_Fail_When_HoursIsZero()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.LogTime(admin, 0m, null, WorkItemData.UpdatedOnUtc, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.TimeEntryHoursInvalid);
+        }
+
+        [Fact]
+        public void Should_Fail_When_HoursIsNegative()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.LogTime(admin, -1m, null, WorkItemData.UpdatedOnUtc, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.TimeEntryHoursInvalid);
+        }
+    }
+}
