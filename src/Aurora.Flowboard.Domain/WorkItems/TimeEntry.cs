@@ -4,6 +4,8 @@ namespace Aurora.Flowboard.Domain.WorkItems;
 
 public sealed class TimeEntry
 {
+    public const int MaxDescriptionLength = 500;
+
     public Guid Id { get; private set; }
     public Guid WorkItemId { get; private set; }
     public Guid UserId { get; private set; }

@@ -12,6 +12,6 @@ internal sealed class UpdateWorkItemCommentValidator : AbstractValidator<UpdateW
 
         RuleFor(x => x.Content)
             .NotEmpty()
-            .MaximumLength(4000);
+            .MaximumLength(Comment.MaxContentLength);
     }
 }

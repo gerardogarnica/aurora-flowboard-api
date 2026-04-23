@@ -9,6 +9,6 @@ internal sealed class AddWorkItemCommentValidator : AbstractValidator<AddWorkIte
 
         RuleFor(x => x.Content)
             .NotEmpty()
-            .MaximumLength(4000);
+            .MaximumLength(Comment.MaxContentLength);
     }
 }

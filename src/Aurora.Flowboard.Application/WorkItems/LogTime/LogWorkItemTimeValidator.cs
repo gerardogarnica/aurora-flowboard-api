@@ -12,7 +12,7 @@ internal sealed class LogWorkItemTimeValidator : AbstractValidator<LogWorkItemTi
             .PrecisionScale(9, 2, true);
 
         RuleFor(x => x.Description)
-            .MaximumLength(500)
+            .MaximumLength(TimeEntry.MaxDescriptionLength)
             .When(x => x.Description is not null);
 
         RuleFor(x => x.LoggedOnUtc)

@@ -4,6 +4,8 @@ namespace Aurora.Flowboard.Domain.WorkItems;
 
 public sealed class Comment
 {
+    public const int MaxContentLength = 4000;
+
     public Guid Id { get; private set; }
     public Guid WorkItemId { get; private set; }
     public Guid AuthorId { get; private set; }

@@ -19,7 +19,7 @@ internal sealed class CommentConfiguration : IEntityTypeConfiguration<Comment>
 
         builder.Property(x => x.Content)
             .IsRequired()
-            .HasMaxLength(4000);
+            .HasMaxLength(Comment.MaxContentLength);
 
         builder.Property(x => x.IsDeleted)
             .IsRequired();

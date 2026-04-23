@@ -6,10 +6,11 @@ internal sealed class CreateWorkItemValidator : AbstractValidator<CreateWorkItem
     {
         RuleFor(x => x.Title)
             .NotEmpty()
-            .MaximumLength(200);
+            .MaximumLength(WorkItem.MaxTitleLength);
 
         RuleFor(x => x.Description)
-            .MaximumLength(4000);
+            .MaximumLength(WorkItem.MaxDescriptionLength)
+            .When(x => x.Description is not null);
 
         RuleFor(x => x.ProjectId)
             .NotEmpty();

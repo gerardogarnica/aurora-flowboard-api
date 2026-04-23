@@ -22,7 +22,7 @@ internal sealed class TimeEntryConfiguration : IEntityTypeConfiguration<TimeEntr
             .HasPrecision(8, 2);
 
         builder.Property(x => x.Description)
-            .HasMaxLength(500);
+            .HasMaxLength(TimeEntry.MaxDescriptionLength);
 
         builder.Property(x => x.LoggedOnUtc)
             .IsRequired();

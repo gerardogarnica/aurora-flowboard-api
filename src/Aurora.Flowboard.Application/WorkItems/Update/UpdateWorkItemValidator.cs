@@ -9,7 +9,11 @@ internal sealed class UpdateWorkItemValidator : AbstractValidator<UpdateWorkItem
 
         RuleFor(x => x.Title)
             .NotEmpty()
-            .MaximumLength(200);
+            .MaximumLength(WorkItem.MaxTitleLength);
+
+        RuleFor(x => x.Description)
+            .MaximumLength(WorkItem.MaxDescriptionLength)
+            .When(x => x.Description is not null);
 
         RuleFor(x => x.EstimatedPoints)
             .GreaterThan(0)

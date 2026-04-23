@@ -24,7 +24,7 @@ internal sealed class StateTransitionHistoryConfiguration : IEntityTypeConfigura
             .IsRequired();
 
         builder.Property(x => x.Reason)
-            .HasMaxLength(500);
+            .HasMaxLength(StateTransitionHistory.MaxReasonLength);
 
         builder.Property(x => x.ChangedOnUtc)
             .IsRequired();

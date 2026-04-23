@@ -15,10 +15,10 @@ internal sealed class WorkItemConfiguration : IEntityTypeConfiguration<WorkItem>
 
         builder.Property(x => x.Title)
             .IsRequired()
-            .HasMaxLength(200);
+            .HasMaxLength(WorkItem.MaxTitleLength);
 
         builder.Property(x => x.Description)
-            .HasMaxLength(4000);
+            .HasMaxLength(WorkItem.MaxDescriptionLength);
 
         builder.Property(x => x.Type)
             .IsRequired()
@@ -30,7 +30,7 @@ internal sealed class WorkItemConfiguration : IEntityTypeConfiguration<WorkItem>
 
         builder.Property(x => x.Code)
             .IsRequired()
-            .HasMaxLength(20);
+            .HasMaxLength(WorkItem.MaxCodeLength);
 
         builder.Property(x => x.SequenceNumber)
             .IsRequired();

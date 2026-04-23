@@ -5,6 +5,8 @@ namespace Aurora.Flowboard.Domain.WorkItems;
 
 public sealed class StateTransitionHistory
 {
+    public const int MaxReasonLength = 500;
+
     public Guid Id { get; private set; }
     public Guid WorkItemId { get; private set; }
     public Guid? FromStateId { get; private set; }

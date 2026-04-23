@@ -7,8 +7,9 @@ namespace Aurora.Flowboard.Domain.WorkItems;
 
 public sealed class WorkItem : BaseEntity
 {
-    private const int MaxTitleLength = 200;
-    private const int MaxDescriptionLength = 4000;
+    public const int MaxTitleLength = 200;
+    public const int MaxDescriptionLength = 4000;
+    public const int MaxCodeLength = 20;
 
     private readonly List<Comment> _comments = [];
     private readonly List<TimeEntry> _timeEntries = [];

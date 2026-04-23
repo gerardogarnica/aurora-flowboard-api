@@ -11,7 +11,7 @@ internal sealed class MoveWorkItemValidator : AbstractValidator<MoveWorkItemComm
             .NotEmpty();
 
         RuleFor(x => x.Reason)
-            .MaximumLength(500)
+            .MaximumLength(StateTransitionHistory.MaxReasonLength)
             .When(x => x.Reason is not null);
     }
 }
