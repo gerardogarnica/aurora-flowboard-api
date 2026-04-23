@@ -107,6 +107,21 @@ public sealed class FlowTests
         }
 
         [Fact]
+        public void Should_Fail_When_DescriptionExceedsMaxLength()
+        {
+            // Arrange
+            Project project = ProjectData.GetDraftProject();
+            string longDescription = new('A', 501);
+
+            // Act
+            Result<Flow> result = Flow.Create(FlowData.Name, longDescription, project, false, FlowData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(FlowErrors.DescriptionTooLong);
+        }
+
+        [Fact]
         public void Should_Fail_When_ProjectDoesNotAllowFlowCreation()
         {
             // Arrange
@@ -244,6 +259,22 @@ public sealed class FlowTests
             // Assert
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(FlowErrors.NameTooLong);
+        }
+
+        [Fact]
+        public void Should_Fail_When_DescriptionExceedsMaxLengthOnUpdate()
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Flow flow = FlowData.GetFlow(admin);
+            string longDescription = new('A', 501);
+
+            // Act
+            Result result = flow.Update(FlowData.Name, longDescription, admin, FlowData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(FlowErrors.DescriptionTooLong);
         }
     }
 

@@ -206,6 +206,27 @@ public sealed class ProjectTests
         }
 
         [Fact]
+        public void Should_Fail_When_DescriptionExceedsMaxLength()
+        {
+            // Arrange
+            User creator = UserData.GetActiveUser();
+            string longDescription = new('A', 501);
+
+            // Act
+            Result<Project> result = Project.Create(
+                ProjectData.Name,
+                longDescription,
+                ProjectData.Code,
+                ProjectData.EstimatedCompletionDate,
+                creator,
+                ProjectData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.DescriptionTooLong);
+        }
+
+        [Fact]
         public void Should_Fail_When_CodeIsEmpty()
         {
             // Arrange
@@ -390,6 +411,22 @@ public sealed class ProjectTests
             // Assert
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(ProjectErrors.NameTooLong);
+        }
+
+        [Fact]
+        public void Should_Fail_When_DescriptionExceedsMaxLengthOnUpdate()
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetDraftProject(admin);
+            string longDescription = new('A', 501);
+
+            // Act
+            Result result = project.Update(ProjectData.Name, longDescription, null, admin, ProjectData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.DescriptionTooLong);
         }
     }
 
@@ -746,6 +783,21 @@ public sealed class ProjectTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Completed, admin);
+
+            // Act
+            Result result = project.RemoveMember(Guid.NewGuid(), admin, ProjectData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
+        [Fact]
+        public void Should_Fail_When_RemoveMemberOnArchivedProject()
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Archived, admin);
 
             // Act
             Result result = project.RemoveMember(Guid.NewGuid(), admin, ProjectData.UpdatedOnUtc);
