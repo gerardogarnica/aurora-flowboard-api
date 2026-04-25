@@ -9,4 +9,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="Scrutor" />
   </ItemGroup>
+
+  <ItemGroup>
+	<InternalsVisibleTo Include="Aurora.Flowboard.Application.UnitTests" />
+  </ItemGroup>
 </Project>
