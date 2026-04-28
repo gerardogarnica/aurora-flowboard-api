@@ -1,20 +1,26 @@
+using Aurora.Flowboard.Api;
 using Aurora.Flowboard.Api.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder
+    .AddApiServices()
+    .AddErrorHandling();
 
 var app = builder.Build();
 
 RouteGroupBuilder routeGroup = app.MapGroup("/api/v1/flowboard").WithTags("Flowboard API");
 app.MapEndpoints(routeGroup);
 
-// Configure the HTTP request pipeline.
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    options.DocumentTitle = "Coinly API";
+});
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    //app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
