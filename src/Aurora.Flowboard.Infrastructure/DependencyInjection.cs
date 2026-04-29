@@ -1,3 +1,4 @@
+using Aurora.Flowboard.Infrastructure.Authentication;
 using Aurora.Flowboard.Infrastructure.Database;
 using Aurora.Flowboard.Infrastructure.DomainEvents;
 using Aurora.Flowboard.Infrastructure.Time;
@@ -10,9 +11,18 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructureServices(
         this IServiceCollection services,
         IConfiguration configuration) => services
+            .AddAuthenticationServices()
             .AddDatabaseServices(configuration)
             .AddDateTimeServices()
             .AddDomainEventsServices();
+
+    private static IServiceCollection AddAuthenticationServices(this IServiceCollection services)
+    {
+        services.AddHttpContextAccessor();
+        services.AddScoped<IUserContext, UserContext>();
+
+        return services;
+    }
 
     private static IServiceCollection AddDatabaseServices(
         this IServiceCollection services,
