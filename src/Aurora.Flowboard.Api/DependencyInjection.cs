@@ -1,5 +1,4 @@
 ﻿using Aurora.Flowboard.Api.Middlewares;
-using System.Text.Json.Serialization;
 
 namespace Aurora.Flowboard.Api;
 
