@@ -21,6 +21,7 @@ internal sealed class AddProjectMemberHandler(
 
         User? user = await dbContext
             .Users
+            .AsNoTracking()
             .SingleOrDefaultAsync(u => u.Id == command.UserId, cancellationToken);
 
         if (user is null)

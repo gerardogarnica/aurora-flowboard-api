@@ -23,7 +23,7 @@ public sealed class ValidationExceptionHandler(IProblemDetailsService problemDet
             ProblemDetails = new ProblemDetails
             {
                 Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-                Title = "Internal Server Error",
+                Title = "Bad Request",
                 Status = StatusCodes.Status400BadRequest,
                 Detail = "One or more validation error ocurred. See the errors property for details."
             }

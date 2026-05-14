@@ -10,7 +10,7 @@ internal static class DependencyInjection
 
         builder.Services.AddSwaggerGen(options =>
         {
-            options.SwaggerDoc("v1", new() { Title = "Coinly API", Version = "v1" });
+            options.SwaggerDoc("v1", new() { Title = "Flowboard API", Version = "v1" });
         });
 
         builder.Services.Configure<JsonOptions>(options =>
