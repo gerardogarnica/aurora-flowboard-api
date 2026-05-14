@@ -121,7 +121,7 @@ public sealed class Flow : BaseEntity
 
         if (description?.Length > MaxDescriptionLength)
         {
-            return Result.Fail<Flow>(FlowErrors.DescriptionTooLong);
+            return Result.Fail(FlowErrors.DescriptionTooLong);
         }
 
         Name = name.Trim();

@@ -135,7 +135,7 @@ public sealed class Project : BaseEntity
 
         if (description?.Length > MaxDescriptionLength)
         {
-            return Result.Fail<Project>(ProjectErrors.DescriptionTooLong);
+            return Result.Fail(ProjectErrors.DescriptionTooLong);
         }
 
         Name = name.Trim();
