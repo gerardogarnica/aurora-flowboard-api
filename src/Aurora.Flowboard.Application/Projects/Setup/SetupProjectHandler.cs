@@ -19,6 +19,7 @@ internal sealed class SetupProjectHandler(
 
         if (createdBy is null)
         {
+            await transaction.RollbackAsync(cancellationToken);
             return Result.Fail<Guid>(UserErrors.NotFound);
         }
 
@@ -32,6 +33,7 @@ internal sealed class SetupProjectHandler(
 
         if (!projectResult.IsSuccessful)
         {
+            await transaction.RollbackAsync(cancellationToken);
             return Result.Fail<Guid>(projectResult.Error);
         }
 
@@ -47,6 +49,7 @@ internal sealed class SetupProjectHandler(
 
         if (!flowResult.IsSuccessful)
         {
+            await transaction.RollbackAsync(cancellationToken);
             return Result.Fail<Guid>(flowResult.Error);
         }
 
@@ -59,6 +62,7 @@ internal sealed class SetupProjectHandler(
 
             if (!stateResult.IsSuccessful)
             {
+                await transaction.RollbackAsync(cancellationToken);
                 return Result.Fail<Guid>(stateResult.Error);
             }
         }
