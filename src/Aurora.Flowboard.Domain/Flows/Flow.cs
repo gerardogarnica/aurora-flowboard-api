@@ -48,8 +48,14 @@ public sealed class Flow : BaseEntity
         string? description,
         Project project,
         bool isDefault,
+        User createdBy,
         DateTime createdOnUtc)
     {
+        if (!project.IsAdmin(createdBy.Id))
+        {
+            return Result.Fail<Flow>(FlowErrors.OnlyAdminCanModifyFlow);
+        }
+
         if (!project.CanAddOrUpdateFlow())
         {
             return Result.Fail<Flow>(ProjectErrors.OperationNotAllowedInCurrentStatus);

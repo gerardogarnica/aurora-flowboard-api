@@ -45,6 +45,7 @@ internal sealed class SetupProjectHandler(
             command.Flow.Description,
             project,
             true,
+            createdBy,
             dateTimeProvider.UtcNow);
 
         if (!flowResult.IsSuccessful)

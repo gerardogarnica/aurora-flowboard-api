@@ -2,7 +2,8 @@ namespace Aurora.Flowboard.Application.Flows.Create;
 
 internal sealed class CreateFlowHandler(
     IApplicationDbContext dbContext,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<CreateFlowCommand, Guid>
+    IDateTimeProvider dateTimeProvider,
+    IUserContext userContext) : ICommandHandler<CreateFlowCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(
         CreateFlowCommand command,
@@ -10,7 +11,7 @@ internal sealed class CreateFlowHandler(
     {
         Project? project = await dbContext
             .Projects
-            .AsNoTracking()
+            .Include(p => p.Members)
             .SingleOrDefaultAsync(p => p.Id == command.ProjectId, cancellationToken);
 
         if (project is null)
@@ -18,11 +19,22 @@ internal sealed class CreateFlowHandler(
             return Result.Fail<Guid>(ProjectErrors.NotFound);
         }
 
+        User? createdBy = await dbContext
+            .Users
+            .AsNoTracking()
+            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+
+        if (createdBy is null)
+        {
+            return Result.Fail<Guid>(UserErrors.NotFound);
+        }
+
         Result<Flow> result = Flow.Create(
             command.Name,
             command.Description,
             project,
             false,
+            createdBy,
             dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
