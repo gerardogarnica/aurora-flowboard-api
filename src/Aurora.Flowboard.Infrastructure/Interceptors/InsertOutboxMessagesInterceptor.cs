@@ -1,4 +1,5 @@
 ﻿using Aurora.Flowboard.Infrastructure.Outbox;
+using Aurora.Flowboard.Infrastructure.Serialization;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Aurora.Flowboard.Infrastructure.Interceptors;

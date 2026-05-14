@@ -1,4 +1,5 @@
 ﻿using Aurora.Flowboard.Infrastructure.Database;
+using Aurora.Flowboard.Infrastructure.Serialization;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 
