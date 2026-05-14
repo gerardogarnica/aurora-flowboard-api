@@ -71,17 +71,16 @@ internal static class ValidationBehavior
             return [];
         }
 
-        var context = new ValidationContext<TCommand>(command);
+        ValidationContext<TCommand> context = new(command);
+        List<ValidationFailure> failures = [];
 
-        ValidationResult[] results = await Task.WhenAll(
-            validatorArray.Select(v => v.ValidateAsync(context)));
+        foreach (IValidator<TCommand> validator in validatorArray)
+        {
+            ValidationResult result = await validator.ValidateAsync(context);
+            failures.AddRange(result.Errors);
+        }
 
-        ValidationFailure[] failures = [.. results
-            .Where(x => !x.IsValid)
-            .SelectMany(x => x.Errors)
-            .Distinct()];
-
-        return failures;
+        return [.. failures.Distinct()];
     }
 
     private static ValidationError CreateValidationError(ValidationFailure[] validationFailures) =>
