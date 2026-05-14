@@ -42,6 +42,24 @@ internal static class ValidationBehavior
         }
     }
 
+    internal sealed class QueryHandler<TQuery, TResponse>(
+        IQueryHandler<TQuery, TResponse> innerHandler,
+        IEnumerable<IValidator<TQuery>> validators) : IQueryHandler<TQuery, TResponse>
+        where TQuery : IQuery<TResponse>
+    {
+        public async Task<Result<TResponse>> Handle(TQuery query, CancellationToken cancellationToken)
+        {
+            ValidationFailure[] failures = await ValidateAsync(query, validators);
+
+            if (failures.Length == 0)
+            {
+                return await innerHandler.Handle(query, cancellationToken);
+            }
+
+            return Result.Fail<TResponse>(CreateValidationError(failures));
+        }
+    }
+
     private static async Task<ValidationFailure[]> ValidateAsync<TCommand>(
         TCommand command,
         IEnumerable<IValidator<TCommand>> validators)

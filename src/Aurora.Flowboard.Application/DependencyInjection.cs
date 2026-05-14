@@ -37,6 +37,7 @@ public static class DependencyInjection
 
     private static IServiceCollection AddBehaviors(this IServiceCollection services)
     {
+        services.Decorate(typeof(IQueryHandler<,>), typeof(ValidationBehavior.QueryHandler<,>));
         services.Decorate(typeof(ICommandHandler<,>), typeof(ValidationBehavior.CommandHandler<,>));
         services.Decorate(typeof(ICommandHandler<>), typeof(ValidationBehavior.CommandBaseHandler<>));
 
