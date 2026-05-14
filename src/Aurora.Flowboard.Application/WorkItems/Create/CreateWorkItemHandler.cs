@@ -16,7 +16,7 @@ internal sealed class CreateWorkItemHandler(
         // Table/column names must match the EF Core Infrastructure configuration.
         Project? project = await dbContext
             .Projects
-            .FromSqlRaw("SELECT * FROM projects WHERE \"id\" = {0} FOR UPDATE", command.ProjectId)
+            .FromSqlRaw("SELECT * FROM flowboard.projects WHERE id = {0} FOR UPDATE", command.ProjectId)
             .Include(p => p.Members)
             .SingleOrDefaultAsync(cancellationToken);
 

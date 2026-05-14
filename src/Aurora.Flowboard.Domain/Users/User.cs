@@ -4,6 +4,9 @@ namespace Aurora.Flowboard.Domain.Users;
 
 public sealed class User : BaseEntity
 {
+    public const int MaxNameLength = 100;
+    public const int MaxPasswordHashLength = 500;
+
     public string FirstName { get; private set; }
     public string LastName { get; private set; }
     public string FullName => $"{FirstName} {LastName}";
