@@ -1,6 +1,8 @@
-﻿namespace Aurora.Flowboard.Infrastructure.Authentication;
+﻿using Microsoft.AspNetCore.Http;
 
-internal sealed class UserContext() : IUserContext
+namespace Aurora.Flowboard.Infrastructure.Authentication;
+
+internal sealed class UserContext(IHttpContextAccessor contextAccessor) : IUserContext
 {
-    public Guid UserId => throw new NotImplementedException();
+    public Guid UserId => contextAccessor.HttpContext?.User.GetUserId() ?? throw new AuroraFlowboardException("User context is not available.");
 }
