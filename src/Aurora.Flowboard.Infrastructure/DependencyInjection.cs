@@ -1,6 +1,7 @@
 using Aurora.Flowboard.Infrastructure.Authentication;
 using Aurora.Flowboard.Infrastructure.Database;
 using Aurora.Flowboard.Infrastructure.DomainEvents;
+using Aurora.Flowboard.Infrastructure.Interceptors;
 using Aurora.Flowboard.Infrastructure.Time;
 using Microsoft.EntityFrameworkCore.Migrations;
 
@@ -31,15 +32,19 @@ public static class DependencyInjection
         string connectionString = configuration.GetConnectionString("Database")
             ?? throw new InvalidOperationException("Connection string 'Database' not found.");
 
-        services.AddDbContextFactory<ApplicationDbContext>(options =>
+        services.AddDbContextFactory<ApplicationDbContext>((sp, options) =>
             options
                 .UseNpgsql(
                     connectionString,
                     x => x.MigrationsHistoryTable(HistoryRepository.DefaultTableName, ApplicationDbContext.DefaultSchema))
-                .UseSnakeCaseNamingConvention());
+                .UseSnakeCaseNamingConvention()
+                .AddInterceptors(sp.GetRequiredService<InsertOutboxMessagesInterceptor>()));
 
         services.AddScoped<IApplicationDbContextFactory, ApplicationDbContextFactory>();
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<IDbContextFactory<ApplicationDbContext>>().CreateDbContext());
+
+        // Entity Framework Core interceptors
+        services.TryAddSingleton<InsertOutboxMessagesInterceptor>();
 
         return services;
     }
