@@ -2,6 +2,7 @@ using Aurora.Flowboard.Infrastructure.Authentication;
 using Aurora.Flowboard.Infrastructure.Database;
 using Aurora.Flowboard.Infrastructure.DomainEvents;
 using Aurora.Flowboard.Infrastructure.Interceptors;
+using Aurora.Flowboard.Infrastructure.Outbox;
 using Aurora.Flowboard.Infrastructure.Time;
 using Microsoft.EntityFrameworkCore.Migrations;
 
@@ -15,7 +16,9 @@ public static class DependencyInjection
             .AddAuthenticationServices()
             .AddDatabaseServices(configuration)
             .AddDateTimeServices()
-            .AddDomainEventsServices();
+            .AddDomainEventsServices()
+            .AddOutboxPatternImplementation()
+            .AddQuartzServices();
 
     private static IServiceCollection AddAuthenticationServices(this IServiceCollection services)
     {
@@ -58,6 +61,22 @@ public static class DependencyInjection
     private static IServiceCollection AddDomainEventsServices(this IServiceCollection services)
     {
         services.AddTransient<IDomainEventsDispatcher, DomainEventsDispatcher>();
+        return services;
+    }
+
+    private static IServiceCollection AddOutboxPatternImplementation(this IServiceCollection services)
+    {
+        services.AddOptions<OutboxOptions>().BindConfiguration("Outbox");
+        services.ConfigureOptions<ConfigureProcessOutboxJob>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddQuartzServices(this IServiceCollection services)
+    {
+        services.AddQuartz();
+        services.AddQuartzHostedService(cfg => cfg.WaitForJobsToComplete = true);
+
         return services;
     }
 }

@@ -20,6 +20,8 @@
     <!-- Npgsql / EF Core -->
     <PackageVersion Include="EFCore.NamingConventions" Version="10.0.1" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
+    <!-- Quartz -->
+    <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.18.1" />
     <!-- Scrutor -->
     <PackageVersion Include="Scrutor" Version="7.0.0" />
     <!-- SonarAnalyzer -->

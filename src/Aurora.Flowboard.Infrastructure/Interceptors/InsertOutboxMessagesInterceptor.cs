@@ -1,6 +1,5 @@
 ﻿using Aurora.Flowboard.Infrastructure.Outbox;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Newtonsoft.Json;
 
 namespace Aurora.Flowboard.Infrastructure.Interceptors;
 

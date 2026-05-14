@@ -1,7 +1,6 @@
 using Aurora.Flowboard.Domain.Flows;
 using Aurora.Flowboard.Domain.Projects;
 using Aurora.Flowboard.Domain.WorkItems;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Aurora.Flowboard.Infrastructure.Configurations;
 

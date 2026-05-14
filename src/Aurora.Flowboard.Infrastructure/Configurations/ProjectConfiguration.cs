@@ -1,6 +1,5 @@
 using Aurora.Flowboard.Domain.Projects;
 using Aurora.Flowboard.Domain.Users;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Aurora.Flowboard.Infrastructure.Configurations;
 
