@@ -13,21 +13,19 @@ internal static class PerformanceBehavior
         ILogger<CommandHandler<TCommand, TResponse>> logger) : ICommandHandler<TCommand, TResponse>
         where TCommand : ICommand<TResponse>
     {
-        private readonly Stopwatch stopWatch = new();
-
         public async Task<Result<TResponse>> Handle(
             TCommand command,
             CancellationToken cancellationToken)
         {
-            stopWatch.Start();
+            Stopwatch stopwatch = Stopwatch.StartNew();
 
             Result<TResponse> result = await innerHandler.Handle(command, cancellationToken);
 
-            stopWatch.Stop();
+            stopwatch.Stop();
 
-            if (stopWatch.ElapsedMilliseconds > MaximumAllowedMilliseconds)
+            if (stopwatch.ElapsedMilliseconds > MaximumAllowedMilliseconds)
             {
-                logger.LogWarning(LongRunningMessage, typeof(TCommand).Name, stopWatch.ElapsedMilliseconds, command);
+                logger.LogWarning(LongRunningMessage, typeof(TCommand).Name, stopwatch.ElapsedMilliseconds, command);
             }
 
             return result;
@@ -39,21 +37,19 @@ internal static class PerformanceBehavior
         ILogger<CommandBaseHandler<TCommand>> logger) : ICommandHandler<TCommand>
         where TCommand : ICommand
     {
-        private readonly Stopwatch stopWatch = new();
-
         public async Task<Result> Handle(
             TCommand command,
             CancellationToken cancellationToken)
         {
-            stopWatch.Start();
+            Stopwatch stopwatch = Stopwatch.StartNew();
 
             Result result = await innerHandler.Handle(command, cancellationToken);
 
-            stopWatch.Stop();
+            stopwatch.Stop();
 
-            if (stopWatch.ElapsedMilliseconds > MaximumAllowedMilliseconds)
+            if (stopwatch.ElapsedMilliseconds > MaximumAllowedMilliseconds)
             {
-                logger.LogWarning(LongRunningMessage, typeof(TCommand).Name, stopWatch.ElapsedMilliseconds, command);
+                logger.LogWarning(LongRunningMessage, typeof(TCommand).Name, stopwatch.ElapsedMilliseconds, command);
             }
 
             return result;
@@ -65,21 +61,19 @@ internal static class PerformanceBehavior
         ILogger<QueryHandler<TQuery, TResponse>> logger) : IQueryHandler<TQuery, TResponse>
         where TQuery : IQuery<TResponse>
     {
-        private readonly Stopwatch stopWatch = new();
-
         public async Task<Result<TResponse>> Handle(
             TQuery query,
             CancellationToken cancellationToken)
         {
-            stopWatch.Start();
+            Stopwatch stopwatch = Stopwatch.StartNew();
 
             Result<TResponse> result = await innerHandler.Handle(query, cancellationToken);
 
-            stopWatch.Stop();
+            stopwatch.Stop();
 
-            if (stopWatch.ElapsedMilliseconds > MaximumAllowedMilliseconds)
+            if (stopwatch.ElapsedMilliseconds > MaximumAllowedMilliseconds)
             {
-                logger.LogWarning(LongRunningMessage, typeof(TQuery).Name, stopWatch.ElapsedMilliseconds, query);
+                logger.LogWarning(LongRunningMessage, typeof(TQuery).Name, stopwatch.ElapsedMilliseconds, query);
             }
 
             return result;
