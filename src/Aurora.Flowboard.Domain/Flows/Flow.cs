@@ -430,7 +430,7 @@ public sealed class Flow : BaseEntity
             return Result.Fail(FlowErrors.TransitionAlreadyExists);
         }
 
-        var transition = FlowTransition.Create(this, fromState, toState, allowedRoles);
+        FlowTransition transition = FlowTransition.Create(this, fromState, toState, allowedRoles);
         _transitions.Add(transition);
 
         AddDomainEvent(new FlowTransitionAddedDomainEvent(Id, fromState.Id, toState.Id));

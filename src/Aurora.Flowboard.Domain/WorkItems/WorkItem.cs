@@ -367,7 +367,7 @@ public sealed class WorkItem : BaseEntity
             return Result.Fail(WorkItemErrors.UserNotProjectMember);
         }
 
-        var comment = _comments.FirstOrDefault(c => c.Id == commentId && !c.IsDeleted);
+        Comment? comment = _comments.FirstOrDefault(c => c.Id == commentId && !c.IsDeleted);
 
         if (comment is null)
         {
@@ -398,7 +398,7 @@ public sealed class WorkItem : BaseEntity
             return Result.Fail(WorkItemErrors.UserNotProjectMember);
         }
 
-        var comment = _comments.FirstOrDefault(c => c.Id == commentId && !c.IsDeleted);
+        Comment? comment = _comments.FirstOrDefault(c => c.Id == commentId && !c.IsDeleted);
 
         if (comment is null)
         {

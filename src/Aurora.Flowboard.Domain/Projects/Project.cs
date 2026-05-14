@@ -96,7 +96,7 @@ public sealed class Project : BaseEntity
             createdBy.Id,
             createdOnUtc);
 
-        var creatorMember = ProjectMember.Create(project.Id, createdBy.Id, ProjectRole.Admin, createdOnUtc);
+        ProjectMember creatorMember = ProjectMember.Create(project.Id, createdBy.Id, ProjectRole.Admin, createdOnUtc);
         project._members.Add(creatorMember);
 
         project._changeLogs.Add(ProjectChangeLog.Create(project, createdBy, ProjectChangeType.Created, null, createdOnUtc));
@@ -200,7 +200,7 @@ public sealed class Project : BaseEntity
             return Result.Fail(ProjectErrors.MemberAlreadyExists);
         }
 
-        var member = ProjectMember.Create(Id, user.Id, role, joinedOnUtc);
+        ProjectMember member = ProjectMember.Create(Id, user.Id, role, joinedOnUtc);
         _members.Add(member);
 
         _changeLogs.Add(ProjectChangeLog.Create(this, changedBy, ProjectChangeType.MemberAdded, user.Id, joinedOnUtc));
@@ -222,7 +222,7 @@ public sealed class Project : BaseEntity
             return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
 
-        var member = _members.FirstOrDefault(m => m.UserId == userId);
+        ProjectMember? member = _members.FirstOrDefault(m => m.UserId == userId);
 
         if (member is null)
         {
