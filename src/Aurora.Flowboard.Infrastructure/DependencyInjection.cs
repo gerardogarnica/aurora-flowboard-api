@@ -1,4 +1,5 @@
 using Aurora.Flowboard.Infrastructure.Authentication;
+using Aurora.Flowboard.Infrastructure.Cryptography;
 using Aurora.Flowboard.Infrastructure.Database;
 using Aurora.Flowboard.Infrastructure.DomainEvents;
 using Aurora.Flowboard.Infrastructure.Interceptors;
@@ -17,6 +18,7 @@ public static class DependencyInjection
             .AddDatabaseServices(configuration)
             .AddDateTimeServices()
             .AddDomainEventsServices()
+            .AddEncryptionServices(configuration)
             .AddOutboxPatternImplementation()
             .AddQuartzServices();
 
@@ -61,6 +63,15 @@ public static class DependencyInjection
     private static IServiceCollection AddDomainEventsServices(this IServiceCollection services)
     {
         services.AddTransient<IDomainEventsDispatcher, DomainEventsDispatcher>();
+        return services;
+    }
+
+    private static IServiceCollection AddEncryptionServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<EncryptionOptions>(configuration.GetSection(EncryptionOptions.SectionName));
+
+        services.AddTransient<EncryptionService>();
+
         return services;
     }
 
