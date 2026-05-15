@@ -362,6 +362,21 @@ public sealed class FlowTests
         }
 
         [Fact]
+        public void Should_RaiseFlowDeactivatedDomainEvent_When_Deactivated()
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Flow flow = FlowData.GetFlow(admin, isDefault: false);
+
+            // Act
+            flow.Deactivate(admin, FlowData.UpdatedOnUtc);
+
+            // Assert
+            FlowDeactivatedDomainEvent domainEvent = AssertDomainEventWasPublished<FlowDeactivatedDomainEvent>(flow);
+            domainEvent.FlowId.Should().Be(flow.Id);
+        }
+
+        [Fact]
         public void Should_Fail_When_ProjectDoesNotAllowDeactivation()
         {
             // Arrange

@@ -158,6 +158,8 @@ public sealed class Flow : BaseEntity
         IsActive = false;
         UpdatedOnUtc = updatedOnUtc;
 
+        AddDomainEvent(new FlowDeactivatedDomainEvent(Id));
+
         return Result.Ok();
     }
 
