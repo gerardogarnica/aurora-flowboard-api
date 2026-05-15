@@ -12,7 +12,7 @@ public sealed class FlowTests
             Project project = ProjectData.GetDraftProject(admin);
 
             // Act
-            Result<Flow> result = Flow.Create(FlowData.Name, FlowData.Description, project, true, FlowData.CreatedOnUtc);
+            Result<Flow> result = Flow.Create(FlowData.Name, FlowData.Description, project, true, admin, FlowData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeTrue();
@@ -26,10 +26,11 @@ public sealed class FlowTests
         public void Should_SetIsActiveToTrue_When_Created()
         {
             // Arrange
-            Project project = ProjectData.GetDraftProject();
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetDraftProject(admin);
 
             // Act
-            Result<Flow> result = Flow.Create(FlowData.Name, null, project, false, FlowData.CreatedOnUtc);
+            Result<Flow> result = Flow.Create(FlowData.Name, null, project, false, admin, FlowData.CreatedOnUtc);
 
             // Assert
             result.Value.IsActive.Should().BeTrue();
@@ -39,10 +40,11 @@ public sealed class FlowTests
         public void Should_TrimNameAndDescription_When_Creating()
         {
             // Arrange
-            Project project = ProjectData.GetDraftProject();
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetDraftProject(admin);
 
             // Act
-            Result<Flow> result = Flow.Create($"  {FlowData.Name}  ", $"  {FlowData.Description}  ", project, false, FlowData.CreatedOnUtc);
+            Result<Flow> result = Flow.Create($"  {FlowData.Name}  ", $"  {FlowData.Description}  ", project, false, admin, FlowData.CreatedOnUtc);
 
             // Assert
             result.Value.Name.Should().Be(FlowData.Name);
@@ -53,10 +55,11 @@ public sealed class FlowTests
         public void Should_RaiseFlowCreatedDomainEvent_When_Created()
         {
             // Arrange
-            Project project = ProjectData.GetDraftProject();
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetDraftProject(admin);
 
             // Act
-            Result<Flow> result = Flow.Create(FlowData.Name, null, project, false, FlowData.CreatedOnUtc);
+            Result<Flow> result = Flow.Create(FlowData.Name, null, project, false, admin, FlowData.CreatedOnUtc);
 
             // Assert
             FlowCreatedDomainEvent domainEvent = AssertDomainEventWasPublished<FlowCreatedDomainEvent>(result.Value);
@@ -67,10 +70,11 @@ public sealed class FlowTests
         public void Should_Fail_When_NameIsEmpty()
         {
             // Arrange
-            Project project = ProjectData.GetDraftProject();
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetDraftProject(admin);
 
             // Act
-            Result<Flow> result = Flow.Create(string.Empty, null, project, false, FlowData.CreatedOnUtc);
+            Result<Flow> result = Flow.Create(string.Empty, null, project, false, admin, FlowData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -81,10 +85,11 @@ public sealed class FlowTests
         public void Should_Fail_When_NameIsWhitespace()
         {
             // Arrange
-            Project project = ProjectData.GetDraftProject();
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetDraftProject(admin);
 
             // Act
-            Result<Flow> result = Flow.Create("   ", null, project, false, FlowData.CreatedOnUtc);
+            Result<Flow> result = Flow.Create("   ", null, project, false, admin, FlowData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -95,11 +100,12 @@ public sealed class FlowTests
         public void Should_Fail_When_NameExceedsMaxLength()
         {
             // Arrange
-            Project project = ProjectData.GetDraftProject();
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetDraftProject(admin);
             string longName = new('A', 101);
 
             // Act
-            Result<Flow> result = Flow.Create(longName, null, project, false, FlowData.CreatedOnUtc);
+            Result<Flow> result = Flow.Create(longName, null, project, false, admin, FlowData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -110,11 +116,12 @@ public sealed class FlowTests
         public void Should_Fail_When_DescriptionExceedsMaxLength()
         {
             // Arrange
-            Project project = ProjectData.GetDraftProject();
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetDraftProject(admin);
             string longDescription = new('A', 501);
 
             // Act
-            Result<Flow> result = Flow.Create(FlowData.Name, longDescription, project, false, FlowData.CreatedOnUtc);
+            Result<Flow> result = Flow.Create(FlowData.Name, longDescription, project, false, admin, FlowData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -129,7 +136,7 @@ public sealed class FlowTests
             Project project = ProjectData.GetProjectWithStatus(ProjectStatus.OnHold, admin);
 
             // Act
-            Result<Flow> result = Flow.Create(FlowData.Name, null, project, false, FlowData.CreatedOnUtc);
+            Result<Flow> result = Flow.Create(FlowData.Name, null, project, false, admin, FlowData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();

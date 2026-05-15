@@ -6,32 +6,32 @@
 **Product Type:** Internal API for software project management
 **Primary Users:**
 
-* Analistas Funcionales
-* Desarrolladores
+* Functional Analysts
+* Developers
 * QA (Quality Assurance)
-* Administradores de equipo
+* Team Administrators
 
 **Objective:**
-Desarrollar una API robusta en .NET que permita gestionar proyectos de desarrollo de software mediante flujos de trabajo estructurados, facilitando la colaboración, trazabilidad y ejecución eficiente del trabajo.
+Build a robust .NET API to manage software development projects through structured workflows, enabling collaboration, traceability, and efficient task execution.
 
 ---
 
 ## 2. Problem Statement
 
-Los equipos de desarrollo requieren herramientas para:
+Development teams need tools to:
 
-* Gestionar tareas y requerimientos
-* Coordinar trabajo entre roles distintos
-* Tener visibilidad del progreso
-* Mantener trazabilidad de cambios
+* Manage tasks and requirements
+* Coordinate work across different roles
+* Track progress visibility
+* Maintain change traceability
 
-Las soluciones existentes (Jira, Trello, Notion) pueden ser:
+Existing solutions (Jira, Trello, Notion) can be:
 
-* Costosas
-* Sobredimensionadas
-* Poco adaptadas a necesidades internas
+* Expensive
+* Oversized
+* Poorly adapted to internal needs
 
-**Flowboard busca cubrir este gap con una solución interna, flexible y extensible.**
+**Flowboard aims to fill this gap with an internal, flexible, and extensible solution.**
 
 ---
 
@@ -39,16 +39,16 @@ Las soluciones existentes (Jira, Trello, Notion) pueden ser:
 
 ### 3.1 Goals
 
-* Centralizar la gestión de proyectos de desarrollo
-* Estandarizar workflows de trabajo
-* Mejorar la colaboración entre equipos
-* Permitir trazabilidad completa del ciclo de vida de tareas
+* Centralize software project management
+* Standardize work workflows
+* Improve cross-team collaboration
+* Enable full traceability of the task lifecycle
 
 ### 3.2 Non-Goals (MVP)
 
-* No incluir UI (solo API inicialmente)
-* No incluir integraciones externas complejas
-* No implementar analítica avanzada en la primera fase
+* No UI (API only initially)
+* No complex external integrations
+* No advanced analytics in the first phase
 
 ---
 
@@ -56,94 +56,94 @@ Las soluciones existentes (Jira, Trello, Notion) pueden ser:
 
 ### 4.1 Project Management
 
-* Crear, editar y eliminar proyectos
-* Configurar información básica del proyecto
-* Asociar usuarios a proyectos
+* Create, edit, and delete projects
+* Configure basic project information
+* Associate users to projects
 
 ---
 
 ### 4.2 User & Role Management
 
-* Gestión de usuarios
-* Asignación de roles (Admin, Analyst, Developer, QA)
-* Control de acceso basado en roles (RBAC)
+* User management
+* Role assignment (Admin, Analyst, Developer, QA)
+* Role-based access control (RBAC)
 
 ---
 
 ### 4.3 Work Item Management
 
-* Crear y gestionar WorkItems
-* Tipos: Historia, Bug, Tarea Técnica, Investigación
-* Asignación a usuarios
-* Prioridad y estimación
+* Create and manage WorkItems
+* Types: Story, Bug, Technical Task, Research
+* Assignment to users
+* Priority and estimation
 
 ---
 
 ### 4.4 Workflow Management (Flow Engine)
 
-* Definición de estados (FlowStates)
-* Transiciones entre estados
-* Validaciones por rol
+* State definitions (FlowStates)
+* Transitions between states
+* Role-based validations
 
-Ejemplo:
+Example:
 Backlog → In Progress → Code Review → QA → Done
 
 ---
 
 ### 4.5 Boards (Kanban View)
 
-* Visualización de WorkItems por estado
-* Agrupación por proyecto
-* Ordenamiento y filtrado
+* WorkItem visualization by state
+* Grouping by project
+* Sorting and filtering
 
 ---
 
 ### 4.6 Comments & Collaboration
 
-* Comentarios en WorkItems
-* Menciones a usuarios
-* Historial de conversación
+* Comments on WorkItems
+* User mentions
+* Conversation history
 
 ---
 
 ### 4.7 Time Tracking (Basic)
 
-* Estimación inicial
-* Registro de tiempo trabajado
+* Initial estimation
+* Worked time logging
 
 ---
 
 ### 4.8 Audit & History
 
-* Registro de cambios en WorkItems
-* Historial de estados
-* Cambios de asignación
+* WorkItem change log
+* State history
+* Assignment changes
 
 ---
 
 ### 4.9 Notifications (Basic)
 
-* Eventos internos (Domain Events)
-* Base para futuras notificaciones
+* Internal events (Domain Events)
+* Foundation for future notifications
 
 ---
 
-## 5. User Stories (Ejemplos)
+## 5. User Stories (Examples)
 
-* Como desarrollador, quiero ver mis tareas asignadas para priorizar mi trabajo
-* Como QA, quiero validar tareas antes de marcarlas como completadas
-* Como analista, quiero documentar requerimientos dentro de una tarea
-* Como administrador, quiero controlar quién accede a cada proyecto
+* As a developer, I want to see my assigned tasks to prioritize my work
+* As a QA, I want to validate tasks before marking them as complete
+* As an analyst, I want to document requirements within a task
+* As an admin, I want to control who has access to each project
 
 ---
 
 ## 6. Functional Requirements
 
-* CRUD completo para todas las entidades principales
-* Soporte para workflows configurables
-* Validaciones de negocio en transiciones de estado
-* Persistencia en base de datos relacional
-* API RESTful
+* Full CRUD for all main entities
+* Support for configurable workflows
+* Business validations on state transitions
+* Persistence in a relational database
+* RESTful API
 
 ---
 
@@ -151,21 +151,21 @@ Backlog → In Progress → Code Review → QA → Done
 
 ### 7.1 Performance
 
-* Respuesta < 300ms en operaciones comunes
+* Response < 300ms for common operations
 
 ### 7.2 Scalability
 
-* Arquitectura preparada para crecimiento modular
+* Architecture prepared for modular growth
 
 ### 7.3 Security
 
-* Autenticación basada en JWT
-* Autorización basada en roles
+* JWT-based authentication
+* Role-based authorization
 
 ### 7.4 Maintainability
 
 * Clean Architecture
-* Separación de capas (Domain, Application, Infrastructure, API)
+* Layer separation (Domain, Application, Infrastructure, API)
 
 ---
 
@@ -182,7 +182,7 @@ Backlog → In Progress → Code Review → QA → Done
 ### 8.2 Architecture Style
 
 * Clean Architecture
-* Monolito modular
+* Modular monolith
 * Domain-Driven Design (DDD)
 
 ---
@@ -199,7 +199,7 @@ Backlog → In Progress → Code Review → QA → Done
 
 ## 9. Domain Model (High-Level)
 
-**Entities principales:**
+**Main entities:**
 
 * Project
 * WorkItem
@@ -213,7 +213,7 @@ Backlog → In Progress → Code Review → QA → Done
 
 ## 10. API Design (High-Level)
 
-### Endpoints clave
+### Key endpoints
 
 ```
 GET    /api/projects
@@ -233,41 +233,41 @@ POST   /api/comments
 
 ## 11. Success Metrics
 
-* Adopción interna por equipos
-* Reducción en uso de herramientas externas
-* Mejora en visibilidad del trabajo
-* Tiempo promedio de ciclo de tareas
+* Internal team adoption
+* Reduction in use of external tools
+* Improved work visibility
+* Average task cycle time
 
 ---
 
 ## 12. Risks & Considerations
 
-* Sobrediseño temprano del workflow
-* Complejidad en manejo de permisos
-* Necesidad futura de UI
-* Posible integración con herramientas externas
+* Early over-engineering of the workflow
+* Complexity in permission management
+* Future need for a UI
+* Possible integration with external tools
 
 ---
 
 ## 13. Future Enhancements
 
-* Integración con repositorios (Git)
-* Automatización de workflows
-* IA para priorización de tareas
-* Métricas avanzadas (velocity, burndown)
-* Notificaciones en tiempo real
+* Integration with repositories (Git)
+* Workflow automation
+* AI for task prioritization
+* Advanced metrics (velocity, burndown)
+* Real-time notifications
 
 ---
 
 ## 14. Open Questions
 
-* ¿Se permitirá configuración dinámica de workflows por proyecto?
-* ¿Se manejarán múltiples tipos de boards?
-* ¿Qué nivel de personalización necesitan los equipos?
-* ¿Se integrará autenticación con sistemas corporativos (SSO)?
+* Will dynamic workflow configuration per project be allowed?
+* Will multiple board types be supported?
+* What level of customization do teams need?
+* Will authentication integrate with corporate systems (SSO)?
 
 ---
 
 # Conclusion
 
-Flowboard se posiciona como una API interna sólida, extensible y alineada a buenas prácticas de arquitectura, enfocada en mejorar la eficiencia y colaboración de equipos de desarrollo mediante un modelo centrado en el flujo de trabajo.
+Flowboard is positioned as a solid, extensible internal API aligned with architecture best practices, focused on improving development team efficiency and collaboration through a workflow-centric model.

@@ -12,7 +12,7 @@ internal static class FlowData
     {
         User user = admin ?? UserData.GetActiveUser();
         Project project = ProjectData.GetDraftProject(user);
-        return Flow.Create(Name, Description, project, isDefault, CreatedOnUtc).Value;
+        return Flow.Create(Name, Description, project, isDefault, user, CreatedOnUtc).Value;
     }
 
     public static Flow GetDeactivatedFlow(User? admin = null)
@@ -28,7 +28,7 @@ internal static class FlowData
     {
         User admin = UserData.GetActiveUser();
         Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Active, admin);
-        Flow flow = Flow.Create(Name, Description, project, false, CreatedOnUtc).Value;
+        Flow flow = Flow.Create(Name, Description, project, false, admin, CreatedOnUtc).Value;
         project.ChangeStatus(ProjectStatus.OnHold, admin, ProjectData.UpdatedOnUtc);
         return (flow, admin);
     }

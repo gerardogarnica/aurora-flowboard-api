@@ -19,7 +19,7 @@ internal static class WorkItemData
         Project project = ProjectData.GetDraftProject(admin);
         project.ChangeStatus(ProjectStatus.Active, admin, ProjectData.UpdatedOnUtc);
 
-        Flow flow = Flow.Create(FlowData.Name, FlowData.Description, project, true, FlowData.CreatedOnUtc).Value;
+        Flow flow = Flow.Create(FlowData.Name, FlowData.Description, project, true, admin, FlowData.CreatedOnUtc).Value;
 
         ProjectRole[] allRoles = [ProjectRole.Admin, ProjectRole.Analyst, ProjectRole.Developer, ProjectRole.QA, ProjectRole.Support];
         flow.AddState("Todo", FlowStateCategory.Active, allRoles, admin);

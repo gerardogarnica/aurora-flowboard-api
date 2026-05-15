@@ -293,7 +293,7 @@ public sealed class WorkItemTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Project draftProject = ProjectData.GetDraftProject(admin);
-            Flow flow = Flow.Create(FlowData.Name, null, draftProject, true, FlowData.CreatedOnUtc).Value;
+            Flow flow = Flow.Create(FlowData.Name, null, draftProject, true, admin, FlowData.CreatedOnUtc).Value;
             flow.AddState("Todo", FlowStateCategory.Active, [ProjectRole.Admin], admin);
 
             // Act
@@ -332,7 +332,7 @@ public sealed class WorkItemTests
             User admin = UserData.GetActiveUser();
             Project project = ProjectData.GetDraftProject(admin);
             project.ChangeStatus(ProjectStatus.Active, admin, ProjectData.UpdatedOnUtc);
-            Flow flow = Flow.Create(FlowData.Name, null, project, true, FlowData.CreatedOnUtc).Value;
+            Flow flow = Flow.Create(FlowData.Name, null, project, true, admin, FlowData.CreatedOnUtc).Value;
             // No states added - flow has no initial state
 
             // Act
@@ -650,7 +650,7 @@ public sealed class WorkItemTests
         {
             // Arrange
             var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
-            Flow otherFlow = Flow.Create("Other Flow", null, project, false, WorkItemData.CreatedOnUtc).Value;
+            Flow otherFlow = Flow.Create("Other Flow", null, project, false, admin, WorkItemData.CreatedOnUtc).Value;
             otherFlow.AddState("Other Todo", FlowStateCategory.Active, [], admin);
             FlowState otherState = otherFlow.States.Single();
 
@@ -686,7 +686,7 @@ public sealed class WorkItemTests
             project.AddMember(member, ProjectRole.QA, admin, WorkItemData.CreatedOnUtc);
 
             // Add a state only Admin can transition to
-            Flow restrictedFlow = Flow.Create("Restricted", null, project, false, WorkItemData.CreatedOnUtc).Value;
+            Flow restrictedFlow = Flow.Create("Restricted", null, project, false, admin, WorkItemData.CreatedOnUtc).Value;
             restrictedFlow.AddState("Start", FlowStateCategory.Active, [ProjectRole.Admin], admin);
             restrictedFlow.AddState("End", FlowStateCategory.Active, [ProjectRole.Admin], admin);
             foreach (FlowState s in restrictedFlow.States)

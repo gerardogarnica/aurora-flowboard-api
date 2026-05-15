@@ -22,7 +22,7 @@ app.MapEndpoints(routeGroup);
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {
-    options.DocumentTitle = "Coinly API";
+    options.DocumentTitle = "Flowboard API";
 });
 
 if (app.Environment.IsDevelopment())
@@ -34,6 +34,9 @@ app.UseHttpsRedirection();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 await app.RunAsync();
 
