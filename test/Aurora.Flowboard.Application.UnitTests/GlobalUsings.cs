@@ -1,9 +1,12 @@
 ﻿global using Aurora.Flowboard.Application.Abstractions.Authentication;
 global using Aurora.Flowboard.Application.Abstractions.Data;
 global using Aurora.Flowboard.Application.Abstractions.Time;
+global using Aurora.Flowboard.Application.Projects.AddMember;
+global using Aurora.Flowboard.Application.Projects.ChangeStatus;
 global using Aurora.Flowboard.Application.Projects.Create;
+global using Aurora.Flowboard.Application.Projects.RemoveMember;
+global using Aurora.Flowboard.Application.Projects.Update;
 global using Aurora.Flowboard.Application.UnitTests.Abstractions;
-global using Aurora.Flowboard.Application.UnitTests.Projects;
 global using Aurora.Flowboard.Domain.Abstractions;
 global using Aurora.Flowboard.Domain.Projects;
 global using Aurora.Flowboard.Domain.Shared;
