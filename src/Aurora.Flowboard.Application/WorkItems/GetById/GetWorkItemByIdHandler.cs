@@ -7,102 +7,60 @@ internal sealed class GetWorkItemByIdHandler(
         GetWorkItemByIdQuery query,
         CancellationToken cancellationToken)
     {
-        WorkItem? workItem = await dbContext
+        WorkItemResponse? response = await dbContext
             .WorkItems
-            .Include(w => w.FlowState)
-            .Include(w => w.Tags)
-            .Include(w => w.Comments)
-            .Include(w => w.TimeEntries)
-            .Include(w => w.StateHistory)
-            .Include(w => w.ChangeLogs)
-            .AsSplitQuery()
+            .Where(w => w.Id == query.WorkItemId)
+            .Select(w => new WorkItemResponse(
+                w.Id,
+                w.Title,
+                w.Description,
+                w.Type,
+                w.Priority,
+                w.ProjectId,
+                w.Project.Name,
+                w.FlowStateId,
+                w.FlowState.Name,
+                w.AssigneeId,
+                dbContext.Users
+                    .Where(u => u.Id == w.AssigneeId)
+                    .Select(u => u.FirstName + " " + u.LastName)
+                    .FirstOrDefault(),
+                w.CreatedById,
+                dbContext.Users
+                    .Where(u => u.Id == w.CreatedById)
+                    .Select(u => u.FirstName + " " + u.LastName)
+                    .FirstOrDefault() ?? string.Empty,
+                w.EstimatedPoints,
+                w.EstimatedCompletionDate,
+                w.CreatedOnUtc,
+                w.UpdatedOnUtc,
+                w.CompletedOnUtc,
+                w.Tags
+                    .OrderBy(t => t.Name)
+                    .Select(t => new WorkItemTagResponse(t.Id, t.Name))
+                    .ToList(),
+                w.Comments
+                    .Where(c => !c.IsDeleted)
+                    .Select(c => new WorkItemCommentResponse(c.Id, c.AuthorId, c.Content, c.CreatedOnUtc, c.UpdatedOnUtc))
+                    .ToList(),
+                w.TimeEntries
+                    .Select(t => new WorkItemTimeEntryResponse(t.Id, t.UserId, t.Hours, t.Description, t.LoggedOnUtc))
+                    .ToList(),
+                w.StateHistory
+                    .OrderBy(s => s.ChangedOnUtc)
+                    .Select(s => new WorkItemStateTransitionResponse(s.Id, s.FromStateId, s.ToStateId, s.ChangedById, s.Reason, s.ChangedOnUtc))
+                    .ToList(),
+                w.ChangeLogs
+                    .OrderBy(c => c.ChangedOnUtc)
+                    .Select(c => new WorkItemChangeLogResponse(c.Id, c.ChangedById, c.ChangeType, c.AffectedEntityId, c.ChangedOnUtc))
+                    .ToList()))
             .AsNoTracking()
-            .SingleOrDefaultAsync(w => w.Id == query.WorkItemId, cancellationToken);
+            .SingleOrDefaultAsync(cancellationToken);
 
-        if (workItem is null)
+        if (response is null)
         {
             return Result.Fail<WorkItemResponse>(WorkItemErrors.NotFound);
         }
-
-        string? projectName = await dbContext
-            .Projects
-            .Where(p => p.Id == workItem.ProjectId)
-            .Select(p => p.Name)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        string? createdByFullName = await dbContext
-            .Users
-            .Where(u => u.Id == workItem.CreatedById)
-            .Select(u => u.FirstName + " " + u.LastName)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        string? assigneeFullName = null;
-
-        if (workItem.AssigneeId.HasValue)
-        {
-            assigneeFullName = await dbContext
-                .Users
-                .Where(u => u.Id == workItem.AssigneeId.Value)
-                .Select(u => u.FirstName + " " + u.LastName)
-                .FirstOrDefaultAsync(cancellationToken);
-        }
-
-        var response = new WorkItemResponse(
-            workItem.Id,
-            workItem.Title,
-            workItem.Description,
-            workItem.Type,
-            workItem.Priority,
-            workItem.ProjectId,
-            projectName ?? string.Empty,
-            workItem.FlowStateId,
-            workItem.FlowState.Name,
-            workItem.AssigneeId,
-            assigneeFullName,
-            workItem.CreatedById,
-            createdByFullName ?? string.Empty,
-            workItem.EstimatedPoints,
-            workItem.EstimatedCompletionDate,
-            workItem.CreatedOnUtc,
-            workItem.UpdatedOnUtc,
-            workItem.CompletedOnUtc,
-            [.. workItem.Tags
-                .OrderBy(t => t.Name)
-                .Select(t => new WorkItemTagResponse(
-                    t.Id,
-                    t.Name))],
-            [.. workItem.Comments
-                .Where(c => !c.IsDeleted)
-                .Select(c => new WorkItemCommentResponse(
-                    c.Id,
-                    c.AuthorId,
-                    c.Content,
-                    c.CreatedOnUtc,
-                    c.UpdatedOnUtc))],
-            [.. workItem.TimeEntries
-                .Select(t => new WorkItemTimeEntryResponse(
-                    t.Id,
-                    t.UserId,
-                    t.Hours,
-                    t.Description,
-                    t.LoggedOnUtc))],
-            [.. workItem.StateHistory
-                .OrderBy(s => s.ChangedOnUtc)
-                .Select(s => new WorkItemStateTransitionResponse(
-                    s.Id,
-                    s.FromStateId,
-                    s.ToStateId,
-                    s.ChangedById,
-                    s.Reason,
-                    s.ChangedOnUtc))],
-            [.. workItem.ChangeLogs
-                .OrderBy(c => c.ChangedOnUtc)
-                .Select(c => new WorkItemChangeLogResponse(
-                    c.Id,
-                    c.ChangedById,
-                    c.ChangeType,
-                    c.AffectedEntityId,
-                    c.ChangedOnUtc))]);
 
         return response;
     }
