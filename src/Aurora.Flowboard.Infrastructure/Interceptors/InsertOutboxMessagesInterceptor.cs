@@ -1,4 +1,4 @@
-﻿using Aurora.Flowboard.Infrastructure.Outbox;
+using Aurora.Flowboard.Infrastructure.Outbox;
 using Aurora.Flowboard.Infrastructure.Serialization;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
@@ -19,20 +19,27 @@ public sealed class InsertOutboxMessagesInterceptor : SaveChangesInterceptor
         return await base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
+    public override async ValueTask<int> SavedChangesAsync(
+        SaveChangesCompletedEventData eventData,
+        int result,
+        CancellationToken cancellationToken = default)
+    {
+        if (eventData.Context is not null)
+        {
+            ClearDomainEvents(eventData.Context);
+        }
+
+        return await base.SavedChangesAsync(eventData, result, cancellationToken);
+    }
+
     private static void InsertOutboxMessages(DbContext context)
     {
-        var outboxMessages = context
+        List<OutboxMessage> outboxMessages = [.. context
             .ChangeTracker
             .Entries<BaseEntity>()
             .Select(x => x.Entity)
             .Where(x => x.DomainEvents.Count > 0)
-            .SelectMany(x =>
-            {
-                var domainEvents = x.DomainEvents.ToList();
-                x.ClearDomainEvents();
-
-                return domainEvents;
-            })
+            .SelectMany(x => x.DomainEvents)
             .Select(domainEvent => new OutboxMessage
             {
                 Id = domainEvent.Id,
@@ -40,9 +47,20 @@ public sealed class InsertOutboxMessagesInterceptor : SaveChangesInterceptor
                 Content = JsonConvert.SerializeObject(domainEvent, SerializerSettings.Instance),
                 OccurredOnUtc = domainEvent.OccurredOnUtc,
                 IsProcessed = false
-            })
-            .ToList();
+            })];
 
         context.Set<OutboxMessage>().AddRange(outboxMessages);
+    }
+
+    private static void ClearDomainEvents(DbContext context)
+    {
+        foreach (BaseEntity entity in context
+            .ChangeTracker
+            .Entries<BaseEntity>()
+            .Select(x => x.Entity)
+            .Where(x => x.DomainEvents.Count > 0))
+        {
+            entity.ClearDomainEvents();
+        }
     }
 }

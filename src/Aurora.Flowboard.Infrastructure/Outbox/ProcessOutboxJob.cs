@@ -29,7 +29,7 @@ internal sealed class ProcessOutboxJob(
 
             try
             {
-                IDomainEvent domainEvent = JsonConvert.DeserializeObject<IDomainEvent>(
+                IDomainEvent domainEvent = (IDomainEvent)JsonConvert.DeserializeObject(
                     outboxMessage.Content,
                     SerializerSettings.Instance)!;
 
