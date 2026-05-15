@@ -19,17 +19,17 @@ public sealed class UpdateProjectHandlerTests
     public async Task Should_ReturnSuccess_When_CommandIsValid()
     {
         // Arrange
-        User admin = UpdateProjectCommandData.GetAdmin();
-        Project project = UpdateProjectCommandData.GetDraftProject(admin);
+        User admin = ProjectCommandData.GetAdmin();
+        Project project = ProjectCommandData.GetDraftProject(admin);
         _userContext.UserId.Returns(admin.Id);
-        _dateTimeProvider.UtcNow.Returns(UpdateProjectCommandData.UtcNow);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
         _dbContext.Projects.Returns(projectsMock);
         _dbContext.Users.Returns(usersMock);
 
-        UpdateProjectCommand command = UpdateProjectCommandData.GetValidCommand(project.Id);
+        UpdateProjectCommand command = ProjectCommandData.GetUpdateCommand(project.Id);
 
         // Act
         Result result = await _handler.Handle(command, CancellationToken.None);
@@ -42,17 +42,17 @@ public sealed class UpdateProjectHandlerTests
     public async Task Should_PersistChanges_When_CommandIsValid()
     {
         // Arrange
-        User admin = UpdateProjectCommandData.GetAdmin();
-        Project project = UpdateProjectCommandData.GetDraftProject(admin);
+        User admin = ProjectCommandData.GetAdmin();
+        Project project = ProjectCommandData.GetDraftProject(admin);
         _userContext.UserId.Returns(admin.Id);
-        _dateTimeProvider.UtcNow.Returns(UpdateProjectCommandData.UtcNow);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
         _dbContext.Projects.Returns(projectsMock);
         _dbContext.Users.Returns(usersMock);
 
-        UpdateProjectCommand command = UpdateProjectCommandData.GetValidCommand(project.Id);
+        UpdateProjectCommand command = ProjectCommandData.GetUpdateCommand(project.Id);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -68,7 +68,7 @@ public sealed class UpdateProjectHandlerTests
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
         _dbContext.Projects.Returns(projectsMock);
 
-        UpdateProjectCommand command = UpdateProjectCommandData.GetValidCommand(Guid.NewGuid());
+        UpdateProjectCommand command = ProjectCommandData.GetUpdateCommand(Guid.NewGuid());
 
         // Act
         Result result = await _handler.Handle(command, CancellationToken.None);
@@ -85,7 +85,7 @@ public sealed class UpdateProjectHandlerTests
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
         _dbContext.Projects.Returns(projectsMock);
 
-        UpdateProjectCommand command = UpdateProjectCommandData.GetValidCommand(Guid.NewGuid());
+        UpdateProjectCommand command = ProjectCommandData.GetUpdateCommand(Guid.NewGuid());
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -98,8 +98,8 @@ public sealed class UpdateProjectHandlerTests
     public async Task Should_ReturnUserNotFoundError_When_UserDoesNotExist()
     {
         // Arrange
-        User admin = UpdateProjectCommandData.GetAdmin();
-        Project project = UpdateProjectCommandData.GetDraftProject(admin);
+        User admin = ProjectCommandData.GetAdmin();
+        Project project = ProjectCommandData.GetDraftProject(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
 
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
@@ -107,7 +107,7 @@ public sealed class UpdateProjectHandlerTests
         _dbContext.Projects.Returns(projectsMock);
         _dbContext.Users.Returns(usersMock);
 
-        UpdateProjectCommand command = UpdateProjectCommandData.GetValidCommand(project.Id);
+        UpdateProjectCommand command = ProjectCommandData.GetUpdateCommand(project.Id);
 
         // Act
         Result result = await _handler.Handle(command, CancellationToken.None);
@@ -121,8 +121,8 @@ public sealed class UpdateProjectHandlerTests
     public async Task Should_NotPersist_When_UserDoesNotExist()
     {
         // Arrange
-        User admin = UpdateProjectCommandData.GetAdmin();
-        Project project = UpdateProjectCommandData.GetDraftProject(admin);
+        User admin = ProjectCommandData.GetAdmin();
+        Project project = ProjectCommandData.GetDraftProject(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
 
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
@@ -130,7 +130,7 @@ public sealed class UpdateProjectHandlerTests
         _dbContext.Projects.Returns(projectsMock);
         _dbContext.Users.Returns(usersMock);
 
-        UpdateProjectCommand command = UpdateProjectCommandData.GetValidCommand(project.Id);
+        UpdateProjectCommand command = ProjectCommandData.GetUpdateCommand(project.Id);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -143,18 +143,18 @@ public sealed class UpdateProjectHandlerTests
     public async Task Should_ReturnDomainError_When_UserIsNotProjectAdmin()
     {
         // Arrange
-        User admin = UpdateProjectCommandData.GetAdmin();
-        Project project = UpdateProjectCommandData.GetDraftProject(admin);
-        User nonAdmin = UpdateProjectCommandData.GetNonAdmin();
+        User admin = ProjectCommandData.GetAdmin();
+        Project project = ProjectCommandData.GetDraftProject(admin);
+        User nonAdmin = ProjectCommandData.GetNonAdmin();
         _userContext.UserId.Returns(nonAdmin.Id);
-        _dateTimeProvider.UtcNow.Returns(UpdateProjectCommandData.UtcNow);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonAdmin]);
         _dbContext.Projects.Returns(projectsMock);
         _dbContext.Users.Returns(usersMock);
 
-        UpdateProjectCommand command = UpdateProjectCommandData.GetValidCommand(project.Id);
+        UpdateProjectCommand command = ProjectCommandData.GetUpdateCommand(project.Id);
 
         // Act
         Result result = await _handler.Handle(command, CancellationToken.None);
@@ -168,18 +168,18 @@ public sealed class UpdateProjectHandlerTests
     public async Task Should_NotPersist_When_UpdateFails()
     {
         // Arrange
-        User admin = UpdateProjectCommandData.GetAdmin();
-        Project project = UpdateProjectCommandData.GetDraftProject(admin);
-        User nonAdmin = UpdateProjectCommandData.GetNonAdmin();
+        User admin = ProjectCommandData.GetAdmin();
+        Project project = ProjectCommandData.GetDraftProject(admin);
+        User nonAdmin = ProjectCommandData.GetNonAdmin();
         _userContext.UserId.Returns(nonAdmin.Id);
-        _dateTimeProvider.UtcNow.Returns(UpdateProjectCommandData.UtcNow);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonAdmin]);
         _dbContext.Projects.Returns(projectsMock);
         _dbContext.Users.Returns(usersMock);
 
-        UpdateProjectCommand command = UpdateProjectCommandData.GetValidCommand(project.Id);
+        UpdateProjectCommand command = ProjectCommandData.GetUpdateCommand(project.Id);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);

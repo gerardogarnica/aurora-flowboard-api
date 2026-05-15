@@ -12,7 +12,7 @@ public sealed class ChangeProjectStatusValidatorTests
     [Fact]
     public void Should_Pass_When_CommandIsValid()
     {
-        ChangeProjectStatusCommand command = ChangeProjectStatusCommandData.GetValidCommand(Guid.NewGuid());
+        ChangeProjectStatusCommand command = ProjectCommandData.GetChangeStatusCommand(Guid.NewGuid());
 
         var result = _validator.Validate(command);
 
@@ -22,7 +22,7 @@ public sealed class ChangeProjectStatusValidatorTests
     [Fact]
     public void Should_Fail_When_IdIsEmpty()
     {
-        ChangeProjectStatusCommand command = ChangeProjectStatusCommandData.GetValidCommand(Guid.Empty);
+        ChangeProjectStatusCommand command = ProjectCommandData.GetChangeStatusCommand(Guid.Empty);
 
         var result = _validator.Validate(command);
 

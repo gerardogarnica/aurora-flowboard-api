@@ -19,16 +19,16 @@ public sealed class CreateProjectHandlerTests
     public async Task Should_ReturnProjectId_When_CommandIsValid()
     {
         // Arrange
-        User user = CreateProjectCommandData.GetUser();
+        User user = ProjectCommandData.GetUser();
         _userContext.UserId.Returns(user.Id);
-        _dateTimeProvider.UtcNow.Returns(CreateProjectCommandData.UtcNow);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
         _dbContext.Users.Returns(usersMock);
         _dbContext.Projects.Returns(projectsMock);
 
-        CreateProjectCommand command = CreateProjectCommandData.GetValidCommand();
+        CreateProjectCommand command = ProjectCommandData.GetCreateCommand();
 
         // Act
         Result<Guid> result = await _handler.Handle(command, CancellationToken.None);
@@ -42,16 +42,16 @@ public sealed class CreateProjectHandlerTests
     public async Task Should_PersistProject_When_CommandIsValid()
     {
         // Arrange
-        User user = CreateProjectCommandData.GetUser();
+        User user = ProjectCommandData.GetUser();
         _userContext.UserId.Returns(user.Id);
-        _dateTimeProvider.UtcNow.Returns(CreateProjectCommandData.UtcNow);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
         _dbContext.Users.Returns(usersMock);
         _dbContext.Projects.Returns(projectsMock);
 
-        CreateProjectCommand command = CreateProjectCommandData.GetValidCommand();
+        CreateProjectCommand command = ProjectCommandData.GetCreateCommand();
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -69,7 +69,7 @@ public sealed class CreateProjectHandlerTests
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
         _dbContext.Users.Returns(usersMock);
 
-        CreateProjectCommand command = CreateProjectCommandData.GetValidCommand();
+        CreateProjectCommand command = ProjectCommandData.GetCreateCommand();
 
         // Act
         Result<Guid> result = await _handler.Handle(command, CancellationToken.None);
@@ -88,7 +88,7 @@ public sealed class CreateProjectHandlerTests
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
         _dbContext.Users.Returns(usersMock);
 
-        CreateProjectCommand command = CreateProjectCommandData.GetValidCommand();
+        CreateProjectCommand command = ProjectCommandData.GetCreateCommand();
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -101,14 +101,14 @@ public sealed class CreateProjectHandlerTests
     public async Task Should_ReturnDomainError_When_ProjectCreationFails()
     {
         // Arrange
-        User user = CreateProjectCommandData.GetUser();
+        User user = ProjectCommandData.GetUser();
         _userContext.UserId.Returns(user.Id);
-        _dateTimeProvider.UtcNow.Returns(CreateProjectCommandData.UtcNow);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
         _dbContext.Users.Returns(usersMock);
 
-        var command = new CreateProjectCommand(string.Empty, null, CreateProjectCommandData.Code, null);
+        var command = new CreateProjectCommand(string.Empty, null, ProjectCommandData.Code, null);
 
         // Act
         Result<Guid> result = await _handler.Handle(command, CancellationToken.None);
@@ -122,14 +122,14 @@ public sealed class CreateProjectHandlerTests
     public async Task Should_NotPersist_When_ProjectCreationFails()
     {
         // Arrange
-        User user = CreateProjectCommandData.GetUser();
+        User user = ProjectCommandData.GetUser();
         _userContext.UserId.Returns(user.Id);
-        _dateTimeProvider.UtcNow.Returns(CreateProjectCommandData.UtcNow);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
         _dbContext.Users.Returns(usersMock);
 
-        var command = new CreateProjectCommand(string.Empty, null, CreateProjectCommandData.Code, null);
+        var command = new CreateProjectCommand(string.Empty, null, ProjectCommandData.Code, null);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);

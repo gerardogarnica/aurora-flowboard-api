@@ -7,14 +7,14 @@ public sealed class CreateProjectValidatorTests
     public CreateProjectValidatorTests()
     {
         IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
-        dateTimeProvider.Today.Returns(CreateProjectCommandData.Today);
+        dateTimeProvider.Today.Returns(ProjectCommandData.Today);
         _validator = new CreateProjectValidator(dateTimeProvider);
     }
 
     [Fact]
     public void Should_Pass_When_CommandIsValid()
     {
-        CreateProjectCommand command = CreateProjectCommandData.GetValidCommand();
+        CreateProjectCommand command = ProjectCommandData.GetCreateCommand();
 
         var result = _validator.Validate(command);
 
@@ -25,7 +25,7 @@ public sealed class CreateProjectValidatorTests
     public void Should_Fail_When_NameIsEmpty()
     {
         var command = new CreateProjectCommand(
-            string.Empty, null, CreateProjectCommandData.Code, null);
+            string.Empty, null, ProjectCommandData.Code, null);
 
         var result = _validator.Validate(command);
 
@@ -37,7 +37,7 @@ public sealed class CreateProjectValidatorTests
     {
         string longName = new('A', Project.MaxNameLength + 1);
         var command = new CreateProjectCommand(
-            longName, null, CreateProjectCommandData.Code, null);
+            longName, null, ProjectCommandData.Code, null);
 
         var result = _validator.Validate(command);
 
@@ -48,7 +48,7 @@ public sealed class CreateProjectValidatorTests
     public void Should_Fail_When_CodeIsEmpty()
     {
         var command = new CreateProjectCommand(
-            CreateProjectCommandData.Name, null, string.Empty, null);
+            ProjectCommandData.Name, null, string.Empty, null);
 
         var result = _validator.Validate(command);
 
@@ -60,7 +60,7 @@ public sealed class CreateProjectValidatorTests
     {
         string longCode = new('A', ProjectCode.MaxLength + 1);
         var command = new CreateProjectCommand(
-            CreateProjectCommandData.Name, null, longCode, null);
+            ProjectCommandData.Name, null, longCode, null);
 
         var result = _validator.Validate(command);
 
@@ -71,7 +71,7 @@ public sealed class CreateProjectValidatorTests
     public void Should_Fail_When_CodeContainsNonAlphabeticCharacters()
     {
         var command = new CreateProjectCommand(
-            CreateProjectCommandData.Name, null, "A1B", null);
+            ProjectCommandData.Name, null, "A1B", null);
 
         var result = _validator.Validate(command);
 
@@ -83,7 +83,7 @@ public sealed class CreateProjectValidatorTests
     {
         string longDescription = new('A', Project.MaxDescriptionLength + 1);
         var command = new CreateProjectCommand(
-            CreateProjectCommandData.Name, longDescription, CreateProjectCommandData.Code, null);
+            ProjectCommandData.Name, longDescription, ProjectCommandData.Code, null);
 
         var result = _validator.Validate(command);
 
@@ -93,9 +93,9 @@ public sealed class CreateProjectValidatorTests
     [Fact]
     public void Should_Fail_When_EstimatedCompletionDateIsInThePast()
     {
-        DateOnly pastDate = CreateProjectCommandData.Today.AddDays(-1);
+        DateOnly pastDate = ProjectCommandData.Today.AddDays(-1);
         var command = new CreateProjectCommand(
-            CreateProjectCommandData.Name, null, CreateProjectCommandData.Code, pastDate);
+            ProjectCommandData.Name, null, ProjectCommandData.Code, pastDate);
 
         var result = _validator.Validate(command);
 
@@ -106,7 +106,7 @@ public sealed class CreateProjectValidatorTests
     public void Should_Pass_When_EstimatedCompletionDateIsToday()
     {
         var command = new CreateProjectCommand(
-            CreateProjectCommandData.Name, null, CreateProjectCommandData.Code, CreateProjectCommandData.Today);
+            ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Today);
 
         var result = _validator.Validate(command);
 
@@ -117,7 +117,7 @@ public sealed class CreateProjectValidatorTests
     public void Should_Pass_When_EstimatedCompletionDateIsNull()
     {
         var command = new CreateProjectCommand(
-            CreateProjectCommandData.Name, null, CreateProjectCommandData.Code, null);
+            ProjectCommandData.Name, null, ProjectCommandData.Code, null);
 
         var result = _validator.Validate(command);
 

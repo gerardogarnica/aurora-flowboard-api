@@ -12,7 +12,7 @@ public sealed class AddProjectMemberValidatorTests
     [Fact]
     public void Should_Pass_When_CommandIsValid()
     {
-        AddProjectMemberCommand command = AddProjectMemberCommandData.GetValidCommand(Guid.NewGuid(), Guid.NewGuid());
+        AddProjectMemberCommand command = ProjectCommandData.GetAddMemberCommand(Guid.NewGuid(), Guid.NewGuid());
 
         var result = _validator.Validate(command);
 
@@ -22,7 +22,7 @@ public sealed class AddProjectMemberValidatorTests
     [Fact]
     public void Should_Fail_When_ProjectIdIsEmpty()
     {
-        AddProjectMemberCommand command = AddProjectMemberCommandData.GetValidCommand(Guid.Empty, Guid.NewGuid());
+        AddProjectMemberCommand command = ProjectCommandData.GetAddMemberCommand(Guid.Empty, Guid.NewGuid());
 
         var result = _validator.Validate(command);
 
@@ -32,7 +32,7 @@ public sealed class AddProjectMemberValidatorTests
     [Fact]
     public void Should_Fail_When_UserIdIsEmpty()
     {
-        AddProjectMemberCommand command = AddProjectMemberCommandData.GetValidCommand(Guid.NewGuid(), Guid.Empty);
+        AddProjectMemberCommand command = ProjectCommandData.GetAddMemberCommand(Guid.NewGuid(), Guid.Empty);
 
         var result = _validator.Validate(command);
 
