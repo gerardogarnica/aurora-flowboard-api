@@ -72,4 +72,15 @@ internal static class ProjectCommandData
 
     public static RemoveProjectMemberCommand GetRemoveCommand(Guid projectId, Guid userId) =>
         new(projectId, userId);
+
+    public static SetupProjectFlowDto GetSetupFlowDto() =>
+        new("Sprint Flow", null,
+        [
+            new("Todo", FlowStateCategory.Active, [ProjectRole.Developer]),
+            new("Done", FlowStateCategory.Completed, [ProjectRole.Developer]),
+            new("Cancelled", FlowStateCategory.Cancelled, [ProjectRole.Developer])
+        ]);
+
+    public static SetupProjectCommand GetSetupCommand() =>
+        new(Name, Description, Code, EstimatedCompletionDate, GetSetupFlowDto());
 }
