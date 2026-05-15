@@ -87,6 +87,7 @@ internal sealed class CreateWorkItemHandler(
 
         WorkItem workItem = result.Value;
 
+        dbContext.FlowStates.Attach(workItem.FlowState);
         dbContext.WorkItems.Add(workItem);
 
         await dbContext.SaveChangesAsync(cancellationToken);

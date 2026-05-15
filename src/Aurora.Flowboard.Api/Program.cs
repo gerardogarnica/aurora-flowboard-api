@@ -30,10 +30,10 @@ if (app.Environment.IsDevelopment())
     //app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
-
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+
+app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();

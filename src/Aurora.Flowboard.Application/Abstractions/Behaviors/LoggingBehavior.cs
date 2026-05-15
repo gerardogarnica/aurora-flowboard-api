@@ -27,9 +27,13 @@ internal static class LoggingBehavior
                     logger.LogInformation("Request processed successfully: {Name} {@Response}", typeof(TCommand).Name, result);
                 }
             }
-            else
+            else if (result.Error.ErrorType == BaseErrorType.Failure)
             {
                 logger.LogError("Request processed with errors: {Name} {@Response}", typeof(TCommand).Name, result);
+            }
+            else
+            {
+                logger.LogWarning("Request processed with errors: {Name} {@Response}", typeof(TCommand).Name, result);
             }
 
             return result;
@@ -59,9 +63,13 @@ internal static class LoggingBehavior
                     logger.LogInformation("Request processed successfully: {Name} {@Response}", typeof(TCommand).Name, result);
                 }
             }
-            else
+            else if (result.Error.ErrorType == BaseErrorType.Failure)
             {
                 logger.LogError("Request processed with errors: {Name} {@Response}", typeof(TCommand).Name, result);
+            }
+            else
+            {
+                logger.LogWarning("Request processed with errors: {Name} {@Response}", typeof(TCommand).Name, result);
             }
 
             return result;
@@ -91,9 +99,13 @@ internal static class LoggingBehavior
                     logger.LogInformation("Request processed successfully: {Name} {@Response}", typeof(TResponse).Name, result);
                 }
             }
-            else
+            else if (result.Error.ErrorType == BaseErrorType.Failure)
             {
                 logger.LogError("Request processed with errors: {Name} {@Response}", typeof(TResponse).Name, result);
+            }
+            else
+            {
+                logger.LogWarning("Request processed with errors: {Name} {@Response}", typeof(TResponse).Name, result);
             }
 
             return result;

@@ -1,3 +1,5 @@
+using System.Net.Mail;
+
 namespace Aurora.Flowboard.Domain.Shared;
 
 public sealed record Email
@@ -35,12 +37,19 @@ public sealed record Email
 
     private static bool IsValidFormat(string email)
     {
-        int atIndex = email.IndexOf('@');
-        int dotIndex = email.LastIndexOf('.');
+        try
+        {
+            MailAddress address = new(email);
+            string host = address.Host;
 
-        return atIndex > 0
-            && dotIndex > atIndex + 1
-            && dotIndex < email.Length - 1;
+            return address.Address == email
+                && host.Contains('.')
+                && !host.EndsWith('.');
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
     }
 
     public override string ToString() => Value;
