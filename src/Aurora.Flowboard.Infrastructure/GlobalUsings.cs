@@ -4,6 +4,7 @@ global using Aurora.Flowboard.Application.Abstractions.Exceptions;
 global using Aurora.Flowboard.Application.Abstractions.Messaging;
 global using Aurora.Flowboard.Application.Abstractions.Time;
 global using Aurora.Flowboard.Domain.Abstractions;
+global using Microsoft.AspNetCore.Authentication.JwtBearer;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.EntityFrameworkCore.Metadata.Builders;
 global using Microsoft.Extensions.Configuration;
