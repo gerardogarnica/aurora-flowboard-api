@@ -1,0 +1,33 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dotnet build --nologo -v q 2>&1 | tail -20",
+            "shell": "bash"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep:*)",
+      "Bash(find:*)",
+      "Bash(grep -r \"DbContext\\\\\\\\.Projects\" /c/SourcesGG/aurora-flowboard-api/src --include=\"*.cs\" -B 2)",
+      "Bash(grep:*)",
+      "Bash(xargs head -40)",
+      "PowerShell(dotnet build *)",
+      "PowerShell(dotnet build \"C:\\\\SourcesGG\\\\aurora-flowboard-api\" /p:TreatWarningsAsErrors=false 2>&1 | Where-Object { $_ -match \"error CS\" })",
+      "PowerShell(dotnet test \"C:\\\\SourcesGG\\\\aurora-flowboard-api\" --no-build 2>&1 | Select-Object -Last 15; dotnet build \"C:\\\\SourcesGG\\\\aurora-flowboard-api\" /p:TreatWarningsAsErrors=false 2>&1 | Select-Object -Last 8)",
+      "Bash(dotnet test *)",
+      "Bash(dotnet build *)",
+      "Bash(Remove-Item *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
+    ]
+  }
+}

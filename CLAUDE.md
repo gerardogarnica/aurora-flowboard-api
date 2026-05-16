@@ -67,6 +67,11 @@ Tests live under `test/`:
 - Outbound HTTP calls must have timeouts and cancellation.
 - Caching must consider time budgets and stampede protection.
 
+## Build & Test Verification
+- After every code change, run `dotnet build` to verify a clean build.
+- After modifying domain/application logic or tests, run `dotnet test` and report pass/fail counts.
+- Do not consider a task complete until build and tests pass
+
 ## Commands
 
 ```bash
