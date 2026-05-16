@@ -6,7 +6,6 @@ using Aurora.Flowboard.Infrastructure.Interceptors;
 using Aurora.Flowboard.Infrastructure.Outbox;
 using Aurora.Flowboard.Infrastructure.Time;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 namespace Aurora.Flowboard.Infrastructure;
@@ -26,11 +25,12 @@ public static class DependencyInjection
 
     private static IServiceCollection AddAuthenticationServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddHttpContextAccessor();
-        services.AddScoped<IUserContext, UserContext>();
-
         services.Configure<JwtAuthOptions>(configuration.GetSection(JwtAuthOptions.SectionName));
         JwtAuthOptions jwtAuthOptions = configuration.GetSection(JwtAuthOptions.SectionName).Get<JwtAuthOptions>()!;
+
+        services.AddHttpContextAccessor();
+        services.AddScoped<IUserContext, UserContext>();
+        services.AddSingleton<ITokenProvider, JwtTokenProvider>();
 
         services
             .AddAuthentication(options =>
