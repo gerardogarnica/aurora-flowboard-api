@@ -95,6 +95,8 @@ internal sealed class WorkItemConfiguration : IEntityTypeConfiguration<WorkItem>
 ### Properties
 - All properties MUST be configured explicitly
 - String properties MUST have `HasMaxLength()`
+- Do not add `HasColumnName(...)` calls by default; rely on EF conventions
+- Only specify `HasColumnName` for owned-type properties where column naming would otherwise be ambiguous (e.g., the `Email` owned type)
 - Required properties MUST have `IsRequired()`
 - Optional properties MUST NOT have `IsRequired()`
 - Decimal properties MUST have `HasPrecision()`

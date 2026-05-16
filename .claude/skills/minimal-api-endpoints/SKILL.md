@@ -312,6 +312,10 @@ Examples:
 * /api/{entity}s
 * /api/{entity}s/{id:guid}
 
+## HTTP Conventions for Minimal API Endpoints
+- Status change endpoints must use `MapPatch` (not MapPut or MapPost)
+- Do not place `[JsonStringEnumConverter]` attributes on collection properties — apply enum converters at the serializer options level instead
+
 ## Critical Rules
 
 

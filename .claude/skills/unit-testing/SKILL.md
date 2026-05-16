@@ -198,12 +198,10 @@ result.IsValid.Should().BeFalse();
 
 ## Test Data Guidelines
 
+- Use NSubstitute carefully: avoid `Returns()` ambiguity by using `arg.Returns(...)` form tied to a specific call
+- Watch for SonarAnalyzer violations (collection expressions in TheoryData, etc.) before declaring tests complete
 - Use Mother Objects / Builders for complex entities
 - Avoid duplication
-
-```csharp
-var command = CreateWorkItemCommandBuilder.Valid().Build();
-```
 
 ## Deterministic Testing Rules
 
