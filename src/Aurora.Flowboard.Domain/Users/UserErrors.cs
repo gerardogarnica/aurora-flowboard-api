@@ -29,4 +29,12 @@ public static class UserErrors
     public static readonly BaseError EmailAlreadyInUse = BaseError.Conflict(
         "User.EmailAlreadyInUse",
         "A user with this email address already exists");
+
+    public static readonly BaseError RoleAlreadyAssigned = BaseError.Conflict(
+        "User.RoleAlreadyAssigned",
+        "The role is already assigned to this user");
+
+    public static readonly BaseError RoleNotAssigned = BaseError.Validation(
+        "User.RoleNotAssigned",
+        "The role is not assigned to this user");
 }

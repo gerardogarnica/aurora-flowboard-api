@@ -8,6 +8,7 @@ public sealed class User : BaseEntity
     public const int MaxPasswordHashLength = 500;
 
     private readonly List<UserToken> _tokens = [];
+    private readonly List<Role> _roles = [];
 
     public string FirstName { get; private set; }
     public string LastName { get; private set; }
@@ -19,6 +20,7 @@ public sealed class User : BaseEntity
     public DateTime? UpdatedOnUtc { get; private set; }
 
     public IReadOnlyCollection<UserToken> Tokens => _tokens.AsReadOnly();
+    public IReadOnlyCollection<Role> Roles => _roles.AsReadOnly();
 
     private User() : base(Guid.Empty) { } // EF Core
 
@@ -157,6 +159,40 @@ public sealed class User : BaseEntity
         }
 
         AddDomainEvent(new UserTokenRevokedDomainEvent(Id, userTokenId));
+
+        return Result.Ok();
+    }
+
+    public Result AssignRole(Role role)
+    {
+        ArgumentNullException.ThrowIfNull(role);
+
+        if (_roles.Any(r => r.Name == role.Name))
+        {
+            return Result.Fail(UserErrors.RoleAlreadyAssigned);
+        }
+
+        _roles.Add(role);
+
+        AddDomainEvent(new UserRoleAssignedDomainEvent(Id, role.Name));
+
+        return Result.Ok();
+    }
+
+    public Result RemoveRole(Role role)
+    {
+        ArgumentNullException.ThrowIfNull(role);
+
+        var existing = _roles.FirstOrDefault(r => r.Name == role.Name);
+
+        if (existing is null)
+        {
+            return Result.Fail(UserErrors.RoleNotAssigned);
+        }
+
+        _roles.Remove(existing);
+
+        AddDomainEvent(new UserRoleRemovedDomainEvent(Id, role.Name));
 
         return Result.Ok();
     }
