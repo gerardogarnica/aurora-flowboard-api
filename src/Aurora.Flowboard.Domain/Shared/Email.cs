@@ -4,7 +4,7 @@ namespace Aurora.Flowboard.Domain.Shared;
 
 public sealed record Email
 {
-    private const int MaxLength = 255;
+    public const int MaxLength = 255;
 
     public string Value { get; init; }
 

@@ -7,6 +7,8 @@ public sealed class User : BaseEntity
     public const int MaxNameLength = 100;
     public const int MaxPasswordHashLength = 500;
 
+    private readonly List<UserToken> _tokens = [];
+
     public string FirstName { get; private set; }
     public string LastName { get; private set; }
     public string FullName => $"{FirstName} {LastName}";
@@ -15,6 +17,8 @@ public sealed class User : BaseEntity
     public bool IsActive { get; private set; }
     public DateTime CreatedOnUtc { get; private set; }
     public DateTime? UpdatedOnUtc { get; private set; }
+
+    public IReadOnlyCollection<UserToken> Tokens => _tokens.AsReadOnly();
 
     private User() : base(Guid.Empty) { } // EF Core
 
@@ -90,6 +94,69 @@ public sealed class User : BaseEntity
         UpdatedOnUtc = updatedOnUtc;
 
         AddDomainEvent(new UserDeactivatedDomainEvent(Id));
+
+        return Result.Ok();
+    }
+
+    public Result<UserToken> IssueToken(
+        string accessToken,
+        string refreshToken,
+        DateTime accessTokenExpiresOnUtc,
+        DateTime refreshTokenExpiresOnUtc,
+        DateTime issuedOnUtc)
+    {
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return Result.Fail<UserToken>(UserTokenErrors.AccessTokenRequired);
+        }
+
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            return Result.Fail<UserToken>(UserTokenErrors.RefreshTokenRequired);
+        }
+
+        if (accessTokenExpiresOnUtc <= issuedOnUtc)
+        {
+            return Result.Fail<UserToken>(UserTokenErrors.InvalidExpiration);
+        }
+
+        if (refreshTokenExpiresOnUtc <= issuedOnUtc)
+        {
+            return Result.Fail<UserToken>(UserTokenErrors.InvalidExpiration);
+        }
+
+        var token = UserToken.Create(
+            Id,
+            accessToken,
+            refreshToken,
+            accessTokenExpiresOnUtc,
+            refreshTokenExpiresOnUtc,
+            issuedOnUtc);
+
+        _tokens.Add(token);
+
+        AddDomainEvent(new UserTokenIssuedDomainEvent(Id, token.UserTokenId));
+
+        return token;
+    }
+
+    public Result RevokeToken(Guid userTokenId)
+    {
+        var token = _tokens.FirstOrDefault(t => t.UserTokenId == userTokenId);
+
+        if (token is null)
+        {
+            return Result.Fail(UserTokenErrors.NotFound);
+        }
+
+        Result revokeResult = token.Revoke();
+
+        if (!revokeResult.IsSuccessful)
+        {
+            return revokeResult;
+        }
+
+        AddDomainEvent(new UserTokenRevokedDomainEvent(Id, userTokenId));
 
         return Result.Ok();
     }

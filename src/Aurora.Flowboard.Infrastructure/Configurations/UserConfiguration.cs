@@ -1,3 +1,4 @@
+using Aurora.Flowboard.Domain.Shared;
 using Aurora.Flowboard.Domain.Users;
 
 namespace Aurora.Flowboard.Infrastructure.Configurations;
@@ -25,7 +26,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
             email.Property(e => e.Value)
                 .HasColumnName("email")
                 .IsRequired()
-                .HasMaxLength(255);
+                .HasMaxLength(Email.MaxLength);
 
             email.HasIndex(e => e.Value)
                 .IsUnique();
@@ -42,5 +43,14 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired();
 
         builder.Property(x => x.UpdatedOnUtc);
+
+        builder.HasMany(x => x.Tokens)
+            .WithOne(t => t.User)
+            .HasForeignKey(t => t.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.Tokens)
+            .HasField("_tokens")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
