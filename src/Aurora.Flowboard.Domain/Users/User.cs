@@ -5,7 +5,6 @@ namespace Aurora.Flowboard.Domain.Users;
 public sealed class User : BaseEntity
 {
     public const int MaxNameLength = 100;
-    public const int MaxPasswordHashLength = 500;
 
     private readonly List<UserToken> _tokens = [];
     private readonly List<Role> _roles = [];
@@ -14,7 +13,7 @@ public sealed class User : BaseEntity
     public string LastName { get; private set; }
     public string FullName => $"{FirstName} {LastName}";
     public Email Email { get; private set; }
-    public string PasswordHash { get; private set; }
+    private Password Password { get; set; }
     public bool IsActive { get; private set; }
     public DateTime CreatedOnUtc { get; private set; }
     public DateTime? UpdatedOnUtc { get; private set; }
@@ -29,13 +28,13 @@ public sealed class User : BaseEntity
         string firstName,
         string lastName,
         Email email,
-        string passwordHash,
+        Password password,
         DateTime createdOnUtc) : base(id)
     {
         FirstName = firstName;
         LastName = lastName;
         Email = email;
-        PasswordHash = passwordHash;
+        Password = password;
         IsActive = true;
         CreatedOnUtc = createdOnUtc;
     }
@@ -44,7 +43,7 @@ public sealed class User : BaseEntity
         string firstName,
         string lastName,
         Email email,
-        string passwordHash,
+        Password password,
         DateTime createdOnUtc)
     {
         if (string.IsNullOrWhiteSpace(firstName))
@@ -62,7 +61,7 @@ public sealed class User : BaseEntity
             firstName.Trim(),
             lastName.Trim(),
             email,
-            passwordHash,
+            password,
             createdOnUtc);
 
         user.AddDomainEvent(new UserCreatedDomainEvent(user.Id));
@@ -70,14 +69,9 @@ public sealed class User : BaseEntity
         return user;
     }
 
-    public Result ChangePassword(string newPasswordHash, DateTime updatedOnUtc)
+    public Result ChangePassword(Password newPassword, DateTime updatedOnUtc)
     {
-        if (string.IsNullOrWhiteSpace(newPasswordHash))
-        {
-            return Result.Fail(UserErrors.PasswordHashRequired);
-        }
-
-        PasswordHash = newPasswordHash;
+        Password = newPassword;
         UpdatedOnUtc = updatedOnUtc;
 
         AddDomainEvent(new UserPasswordChangedDomainEvent(Id));

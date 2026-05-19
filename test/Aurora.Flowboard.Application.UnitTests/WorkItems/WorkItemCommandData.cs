@@ -16,19 +16,19 @@ internal static class WorkItemCommandData
     public static User GetAdmin()
     {
         Email email = Email.Create("admin@example.com").Value;
-        return User.Create("Admin", "User", email, "hashed_password_123", UtcNow).Value;
+        return User.Create("Admin", "User", email, Password.Create("hashed_password_123").Value, UtcNow).Value;
     }
 
     public static User GetNonMember()
     {
         Email email = Email.Create("nonmember@example.com").Value;
-        return User.Create("Non", "Member", email, "hashed_password_456", UtcNow).Value;
+        return User.Create("Non", "Member", email, Password.Create("hashed_password_456").Value, UtcNow).Value;
     }
 
     public static User GetAssignee()
     {
         Email email = Email.Create("assignee@example.com").Value;
-        return User.Create("Assignee", "User", email, "hashed_password_789", UtcNow).Value;
+        return User.Create("Assignee", "User", email, Password.Create("hashed_password_789").Value, UtcNow).Value;
     }
 
     public static (Project Project, Flow Flow) GetActiveProjectWithFlow(User admin)

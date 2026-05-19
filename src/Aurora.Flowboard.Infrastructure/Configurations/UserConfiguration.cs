@@ -32,9 +32,13 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
                 .IsUnique();
         });
 
-        builder.Property(x => x.PasswordHash)
-            .IsRequired()
-            .HasMaxLength(User.MaxPasswordHashLength);
+        builder.OwnsOne<Password>("Password", password =>
+        {
+            password.Property(p => p.Hash)
+                .HasColumnName("password_hash")
+                .IsRequired()
+                .HasMaxLength(Password.MaxHashLength);
+        });
 
         builder.Property(x => x.IsActive)
             .IsRequired();

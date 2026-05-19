@@ -14,31 +14,31 @@ internal static class ProjectCommandData
     public static User GetUser()
     {
         Email email = Email.Create("john.doe@example.com").Value;
-        return User.Create("John", "Doe", email, "hashed_password_123", UtcNow).Value;
+        return User.Create("John", "Doe", email, Password.Create("hashed_password_123").Value, UtcNow).Value;
     }
 
     public static User GetAdmin()
     {
         Email email = Email.Create("admin@example.com").Value;
-        return User.Create("Admin", "User", email, "hashed_password_123", UtcNow).Value;
+        return User.Create("Admin", "User", email, Password.Create("hashed_password_123").Value, UtcNow).Value;
     }
 
     public static User GetNonAdmin()
     {
         Email email = Email.Create("nonadmin@example.com").Value;
-        return User.Create("Non", "Admin", email, "hashed_password_456", UtcNow).Value;
+        return User.Create("Non", "Admin", email, Password.Create("hashed_password_456").Value, UtcNow).Value;
     }
 
     public static User GetNewUser()
     {
         Email email = Email.Create("newuser@example.com").Value;
-        return User.Create("New", "User", email, "hashed_password_789", UtcNow).Value;
+        return User.Create("New", "User", email, Password.Create("hashed_password_789").Value, UtcNow).Value;
     }
 
     public static User GetMember()
     {
         Email email = Email.Create("member@example.com").Value;
-        return User.Create("Regular", "Member", email, "hashed_password_789", UtcNow).Value;
+        return User.Create("Regular", "Member", email, Password.Create("hashed_password_789").Value, UtcNow).Value;
     }
 
     public static Project GetDraftProject(User admin) =>

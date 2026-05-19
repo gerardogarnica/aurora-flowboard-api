@@ -14,13 +14,13 @@ internal static class FlowCommandData
     public static User GetAdmin()
     {
         Email email = Email.Create("admin@example.com").Value;
-        return User.Create("Admin", "User", email, "hashed_password_123", UtcNow).Value;
+        return User.Create("Admin", "User", email, Password.Create("hashed_password_123").Value, UtcNow).Value;
     }
 
     public static User GetNonAdmin()
     {
         Email email = Email.Create("nonadmin@example.com").Value;
-        return User.Create("Non", "Admin", email, "hashed_password_456", UtcNow).Value;
+        return User.Create("Non", "Admin", email, Password.Create("hashed_password_456").Value, UtcNow).Value;
     }
 
     public static Project GetActiveProject(User admin)

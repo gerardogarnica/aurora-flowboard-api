@@ -14,10 +14,6 @@ public static class UserErrors
         "User.LastNameRequired",
         "Last name is required");
 
-    public static readonly BaseError PasswordHashRequired = BaseError.Validation(
-        "User.PasswordHashRequired",
-        "Password hash is required");
-
     public static readonly BaseError AlreadyDeactivated = BaseError.Validation(
         "User.AlreadyDeactivated",
         "The user is already deactivated");
