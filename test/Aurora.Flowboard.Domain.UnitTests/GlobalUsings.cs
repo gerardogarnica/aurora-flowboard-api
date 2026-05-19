@@ -9,6 +9,7 @@ global using Aurora.Flowboard.Domain.UnitTests.Flows;
 global using Aurora.Flowboard.Domain.UnitTests.Projects;
 global using Aurora.Flowboard.Domain.UnitTests.Users;
 global using Aurora.Flowboard.Domain.Users;
+global using Aurora.Flowboard.Domain.Users.Events;
 global using Aurora.Flowboard.Domain.WorkItems;
 global using Aurora.Flowboard.Domain.WorkItems.Events;
 global using FluentAssertions;
