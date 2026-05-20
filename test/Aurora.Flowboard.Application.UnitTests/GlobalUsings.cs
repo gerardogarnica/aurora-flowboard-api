@@ -23,6 +23,8 @@ global using Aurora.Flowboard.Application.WorkItems.AddComment;
 global using Aurora.Flowboard.Application.WorkItems.AddTag;
 global using Aurora.Flowboard.Application.WorkItems.Assign;
 global using Aurora.Flowboard.Application.WorkItems.Create;
+global using Aurora.Flowboard.Application.WorkItems.GetById;
+global using Aurora.Flowboard.Application.WorkItems.GetByProject;
 global using Aurora.Flowboard.Application.WorkItems.LogTime;
 global using Aurora.Flowboard.Application.WorkItems.Move;
 global using Aurora.Flowboard.Application.WorkItems.RemoveComment;
