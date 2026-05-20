@@ -5,6 +5,8 @@ global using Aurora.Flowboard.Application.Flows.AddState;
 global using Aurora.Flowboard.Application.Flows.AddTransitionRole;
 global using Aurora.Flowboard.Application.Flows.Create;
 global using Aurora.Flowboard.Application.Flows.Deactivate;
+global using Aurora.Flowboard.Application.Flows.GetAll;
+global using Aurora.Flowboard.Application.Flows.GetById;
 global using Aurora.Flowboard.Application.Flows.RemoveState;
 global using Aurora.Flowboard.Application.Flows.RemoveTransitionRole;
 global using Aurora.Flowboard.Application.Flows.Update;
