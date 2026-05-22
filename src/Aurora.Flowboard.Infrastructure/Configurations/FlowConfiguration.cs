@@ -38,7 +38,7 @@ internal sealed class FlowConfiguration : IEntityTypeConfiguration<Flow>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(x => x.States)
-            .WithOne()
+            .WithOne(x => x.Flow)
             .HasForeignKey(x => x.FlowId)
             .OnDelete(DeleteBehavior.Cascade);
 

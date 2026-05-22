@@ -20,7 +20,7 @@ internal sealed class FlowTransitionConfiguration : IEntityTypeConfiguration<Flo
         builder.Property(x => x.ToStateId)
             .IsRequired();
 
-        builder.PrimitiveCollection<ProjectRole>("_allowedRoles")
+        builder.PrimitiveCollection<List<ProjectRole>>("_allowedRoles")
             .HasColumnName("allowed_roles")
             .IsRequired();
 

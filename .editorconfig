@@ -449,3 +449,8 @@ dotnet_diagnostic.S6781.severity = none
 
 # IDE0032: Use auto property
 dotnet_diagnostic.IDE0032.severity = none
+
+# EF Core generated migration files — suppress rules that conflict with scaffolded code
+[**/Migrations/*.cs]
+dotnet_diagnostic.IDE0161.severity = none
+dotnet_diagnostic.CA1861.severity = none
