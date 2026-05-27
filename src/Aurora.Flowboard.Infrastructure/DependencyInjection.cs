@@ -19,6 +19,7 @@ public static class DependencyInjection
             .AddDatabaseServices(configuration)
             .AddDateTimeServices()
             .AddDomainEventsServices()
+            .AddPasswordHashingServices()
             .AddEncryptionServices(configuration)
             .AddOutboxPatternImplementation()
             .AddQuartzServices();
@@ -89,6 +90,12 @@ public static class DependencyInjection
     private static IServiceCollection AddDomainEventsServices(this IServiceCollection services)
     {
         services.AddTransient<IDomainEventsDispatcher, DomainEventsDispatcher>();
+        return services;
+    }
+
+    private static IServiceCollection AddPasswordHashingServices(this IServiceCollection services)
+    {
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
         return services;
     }
 
