@@ -1,9 +1,12 @@
 using Aurora.Flowboard.Api;
 using Aurora.Flowboard.Api.Endpoints;
+using Aurora.Flowboard.Api.Extensions;
 using Aurora.Flowboard.Application;
 using Aurora.Flowboard.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.AddServiceDefaults();
 
 builder
     .AddApiServices()
@@ -16,6 +19,8 @@ builder.Services
 
 var app = builder.Build();
 
+app.MapDefaultEndpoints();
+
 RouteGroupBuilder routeGroup = app.MapGroup("/api/v1/flowboard");
 app.MapEndpoints(routeGroup);
 
@@ -27,7 +32,7 @@ app.UseSwaggerUI(options =>
 
 if (app.Environment.IsDevelopment())
 {
-    //app.MapOpenApi();
+    await app.ApplyMigrationsAsync();
 }
 
 app.UseExceptionHandler();

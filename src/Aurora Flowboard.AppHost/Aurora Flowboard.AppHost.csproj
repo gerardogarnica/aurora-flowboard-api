@@ -1,0 +1,16 @@
+﻿<Project Sdk="Aspire.AppHost.Sdk/13.3.5">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <UserSecretsId>c369dce6-e1e9-46fa-8102-8a676a3edbd8</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Aurora.Flowboard.Api\Aurora.Flowboard.Api.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -10,6 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Aurora Flowboard.ServiceDefaults\Aurora Flowboard.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Aurora.Flowboard.Infrastructure\Aurora.Flowboard.Infrastructure.csproj" />
   </ItemGroup>
 
