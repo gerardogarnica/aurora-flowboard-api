@@ -2,8 +2,9 @@
 
 internal static class EndpointTags
 {
-    internal const string Projects = "Projects";
+    internal const string Authentication = "Authentication";
     internal const string Flows = "Flows";
-    internal const string WorkItems = "WorkItems";
+    internal const string Projects = "Projects";
     internal const string Users = "Users";
+    internal const string WorkItems = "WorkItems";
 }

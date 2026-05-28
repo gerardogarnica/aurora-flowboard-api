@@ -11,6 +11,18 @@ internal sealed class PasswordHasher : IPasswordHasher
     private const byte FormatVersion = 0x01;
     private const int TotalSize = 1 + SaltSize + HashSize;
 
+    private static readonly string DummyHash = BuildDummyHash();
+
+    private static string BuildDummyHash()
+    {
+        byte[] buffer = new byte[TotalSize];
+        buffer[0] = FormatVersion;
+        return Convert.ToBase64String(buffer);
+    }
+
+    public void VerifyDummy(string providedPassword) =>
+        VerifyHashedPassword(DummyHash, providedPassword);
+
     public string HashPassword(string password)
     {
         byte[] salt = RandomNumberGenerator.GetBytes(SaltSize);

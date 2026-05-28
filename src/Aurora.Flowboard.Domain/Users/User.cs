@@ -69,6 +69,13 @@ public sealed class User : BaseEntity
         return user;
     }
 
+    public bool VerifyPassword(IPasswordHasher passwordHasher, string providedPassword)
+    {
+        ArgumentNullException.ThrowIfNull(passwordHasher);
+
+        return passwordHasher.VerifyHashedPassword(Password.Hash, providedPassword);
+    }
+
     public Result ChangePassword(Password newPassword, DateTime updatedOnUtc)
     {
         Password = newPassword;
