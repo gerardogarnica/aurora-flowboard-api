@@ -1,18 +1,4 @@
 {
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "dotnet build --nologo -v q 2>&1 | tail -20",
-            "shell": "bash"
-          }
-        ]
-      }
-    ]
-  },
   "permissions": {
     "allow": [
       "Bash(xargs grep:*)",
@@ -27,7 +13,33 @@
       "Bash(dotnet build *)",
       "Bash(Remove-Item *)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Skill(domain-entity)",
+      "Bash(Get-ChildItem *)",
+      "Skill(ef-core-configuration)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "Skill(unit-testing)",
+      "Skill(spec-creator)",
+      "Bash(Select-Object FullName)",
+      "Bash(dotnet-ildasm src/Aurora.Flowboard.Domain/bin/Debug/net10.0/Aurora.Flowboard.Domain.dll)",
+      "Bash(powershell -command ' *)",
+      "Bash(dotnet run *)",
+      "Bash(Select-Object Name)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "dotnet build --nologo -v q 2>&1 | tail -20",
+            "shell": "bash"
+          }
+        ]
+      }
     ]
   }
 }
