@@ -13,9 +13,9 @@ internal static class DependencyInjection
             options.SwaggerDoc("v1", new() { Title = "Flowboard API", Version = "v1" });
         });
 
-        builder.Services.Configure<JsonOptions>(options =>
+        builder.Services.ConfigureHttpJsonOptions(options =>
         {
-            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
         });
 
         return builder;

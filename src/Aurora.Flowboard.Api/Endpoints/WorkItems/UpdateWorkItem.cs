@@ -41,7 +41,6 @@ public sealed class UpdateWorkItem : IBaseEndpoint
     internal sealed record UpdateWorkItemRequest(
         string Title,
         string? Description,
-        [property: JsonConverter(typeof(JsonStringEnumConverter))]
         Priority Priority,
         int? EstimatedPoints,
         DateOnly? EstimatedCompletionDate);

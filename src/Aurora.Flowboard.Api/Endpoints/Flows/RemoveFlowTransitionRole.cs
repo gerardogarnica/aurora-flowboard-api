@@ -34,6 +34,5 @@ public sealed class RemoveFlowTransitionRole : IBaseEndpoint
     }
 
     internal sealed record RemoveFlowTransitionRoleRequest(
-        [property: JsonConverter(typeof(JsonStringEnumConverter))]
         ProjectRole Role);
 }

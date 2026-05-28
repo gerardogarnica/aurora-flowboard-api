@@ -44,9 +44,7 @@ public sealed class CreateWorkItem : IBaseEndpoint
     internal sealed record CreateWorkItemRequest(
         string Title,
         string? Description,
-        [property: JsonConverter(typeof(JsonStringEnumConverter))]
         WorkItemType Type,
-        [property: JsonConverter(typeof(JsonStringEnumConverter))]
         Priority Priority,
         Guid ProjectId,
         Guid FlowId,

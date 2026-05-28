@@ -35,6 +35,5 @@ public sealed class AddProjectMember : IBaseEndpoint
 
     internal sealed record AddProjectMemberRequest(
         Guid UserId,
-        [property: JsonConverter(typeof(JsonStringEnumConverter))]
         ProjectRole Role);
 }

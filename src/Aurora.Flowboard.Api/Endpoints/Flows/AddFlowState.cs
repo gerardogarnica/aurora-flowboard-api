@@ -39,7 +39,6 @@ public sealed class AddFlowState : IBaseEndpoint
 
     internal sealed record AddFlowStateRequest(
         string Name,
-        [property: JsonConverter(typeof(JsonStringEnumConverter))]
         FlowStateCategory Category,
         IReadOnlyCollection<ProjectRole> AllowedRoles);
 }

@@ -34,6 +34,5 @@ public sealed class AddFlowTransitionRole : IBaseEndpoint
     }
 
     internal sealed record AddFlowTransitionRoleRequest(
-        [property: JsonConverter(typeof(JsonStringEnumConverter))]
         ProjectRole Role);
 }
