@@ -12,6 +12,7 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     internal const string DefaultSchema = "flowboard";
 
     public DbSet<User> Users { get; set; } = null!;
+    public DbSet<UserToken> UserTokens { get; set; } = null!;
     public DbSet<Project> Projects { get; set; } = null!;
     public DbSet<ProjectMember> ProjectMembers { get; set; } = null!;
     public DbSet<ProjectChangeLog> ProjectChangeLogs { get; set; } = null!;

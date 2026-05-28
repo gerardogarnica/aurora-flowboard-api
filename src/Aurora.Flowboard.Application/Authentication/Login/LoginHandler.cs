@@ -23,6 +23,8 @@ internal sealed class LoginHandler(
 
         User? user = await dbContext
             .Users
+            .Include(u => u.Roles)
+            .AsNoTracking()
             .SingleOrDefaultAsync(u => u.Email.Value == emailValue, cancellationToken);
 
         if (user is null)
@@ -58,6 +60,8 @@ internal sealed class LoginHandler(
         {
             return Result.Fail<IdentityToken>(issueResult.Error);
         }
+
+        dbContext.UserTokens.Add(issueResult.Value);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 

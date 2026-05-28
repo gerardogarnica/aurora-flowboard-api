@@ -3,6 +3,7 @@ namespace Aurora.Flowboard.Application.Abstractions.Data;
 public interface IApplicationDbContext : IAsyncDisposable
 {
     DbSet<User> Users { get; }
+    DbSet<UserToken> UserTokens { get; }
     DbSet<Project> Projects { get; }
     DbSet<ProjectMember> ProjectMembers { get; }
     DbSet<ProjectChangeLog> ProjectChangeLogs { get; }

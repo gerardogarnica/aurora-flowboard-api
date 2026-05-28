@@ -63,8 +63,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Navigation(x => x.Roles)
             .HasField("_roles")
-            .UsePropertyAccessMode(PropertyAccessMode.Field)
-            .AutoInclude();
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         builder.HasMany(x => x.Tokens)
             .WithOne(t => t.User)
