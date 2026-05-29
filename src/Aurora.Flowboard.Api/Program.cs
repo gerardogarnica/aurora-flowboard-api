@@ -10,7 +10,8 @@ builder.AddServiceDefaults();
 
 builder
     .AddApiServices()
-    .AddErrorHandling();
+    .AddErrorHandling()
+    .AddObservability();
 
 builder.Services
     .AddApplicationServices()

@@ -1,4 +1,6 @@
 ﻿using Aurora.Flowboard.Api.Middlewares;
+using Npgsql;
+using OpenTelemetry.Resources;
 
 namespace Aurora.Flowboard.Api;
 
@@ -33,6 +35,18 @@ internal static class DependencyInjection
 
         builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+        return builder;
+    }
+
+    internal static WebApplicationBuilder AddObservability(this WebApplicationBuilder builder)
+    {
+        builder.Services
+            .AddOpenTelemetry()
+            .ConfigureResource(cfg => cfg
+                .AddService(builder.Environment.ApplicationName))
+            .WithTracing(cfg => cfg
+                .AddNpgsql());
 
         return builder;
     }
