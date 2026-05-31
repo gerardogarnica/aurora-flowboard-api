@@ -1,3 +1,4 @@
+using Aurora.Flowboard.Domain.Flows;
 using Aurora.Flowboard.Domain.Projects.Events;
 using Aurora.Flowboard.Domain.Users;
 
@@ -19,6 +20,7 @@ public sealed class Project : BaseEntity
 
     private readonly List<ProjectMember> _members = [];
     private readonly List<ProjectChangeLog> _changeLogs = [];
+    private readonly List<Flow> _flows = [];
 
     public string Name { get; private set; }
     public string? Description { get; private set; }
@@ -34,6 +36,7 @@ public sealed class Project : BaseEntity
 
     public IReadOnlyCollection<ProjectMember> Members => _members.AsReadOnly();
     public IReadOnlyCollection<ProjectChangeLog> ChangeLogs => _changeLogs.AsReadOnly();
+    public IReadOnlyCollection<Flow> Flows => _flows.AsReadOnly();
 
     private bool IsModifiable => Status is ProjectStatus.Draft or ProjectStatus.Active or ProjectStatus.OnHold;
 

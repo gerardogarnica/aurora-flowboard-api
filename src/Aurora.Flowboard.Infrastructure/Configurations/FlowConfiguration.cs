@@ -33,7 +33,7 @@ internal sealed class FlowConfiguration : IEntityTypeConfiguration<Flow>
         builder.Property(x => x.UpdatedOnUtc);
 
         builder.HasOne<Project>(x => x.Project)
-            .WithMany()
+            .WithMany(p => p.Flows)
             .HasForeignKey(x => x.ProjectId)
             .OnDelete(DeleteBehavior.Restrict);
 

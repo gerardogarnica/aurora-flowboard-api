@@ -6,4 +6,11 @@ public sealed record ProjectSummaryResponse(
     string? Description,
     DateOnly? EstimatedCompletionDate,
     ProjectStatus Status,
-    int MemberCount);
+    int MemberCount,
+    IReadOnlyCollection<ProjectFlowSummaryResponse> Flows);
+
+public sealed record ProjectFlowSummaryResponse(
+    Guid FlowId,
+    string Name,
+    bool IsDefault,
+    bool IsActive);

@@ -925,6 +925,17 @@ public sealed class ProjectTests
         }
     }
 
+    public sealed class Flows
+    {
+        [Fact]
+        public void Should_ReturnEmptyCollection_When_ProjectIsCreated()
+        {
+            Project project = ProjectData.GetDraftProject();
+
+            project.Flows.Should().BeEmpty();
+        }
+    }
+
     public sealed class CanAddOrUpdateWorkItem
     {
         [Fact]

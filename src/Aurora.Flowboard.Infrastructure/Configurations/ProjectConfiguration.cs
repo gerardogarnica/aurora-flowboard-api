@@ -62,6 +62,10 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
             .HasField("_changeLogs")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
+        builder.Navigation(x => x.Flows)
+            .HasField("_flows")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
         builder.HasIndex(x => x.Code)
             .IsUnique();
     }

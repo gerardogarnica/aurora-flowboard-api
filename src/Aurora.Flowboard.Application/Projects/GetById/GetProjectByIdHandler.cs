@@ -13,6 +13,7 @@ internal sealed class GetProjectByIdHandler(
             .Include(p => p.ChangeLogs).ThenInclude(cl => cl.ChangedBy)
             .Include(p => p.Creator)
             .AsNoTracking()
+            .AsSplitQuery()
             .SingleOrDefaultAsync(p => p.Id == query.ProjectId, cancellationToken);
 
         if (project is null)
