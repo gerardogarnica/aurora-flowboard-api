@@ -18,6 +18,7 @@ public sealed class UpdateProject : IBaseEndpoint
                     id,
                     request.Name,
                     request.Description,
+                    request.Color,
                     request.EstimatedCompletionDate);
 
                 Result result = await handler.Handle(command, cancellationToken);
@@ -38,5 +39,6 @@ public sealed class UpdateProject : IBaseEndpoint
     internal sealed record UpdateProjectRequest(
         string Name,
         string? Description,
+        string Color,
         DateOnly? EstimatedCompletionDate);
 }

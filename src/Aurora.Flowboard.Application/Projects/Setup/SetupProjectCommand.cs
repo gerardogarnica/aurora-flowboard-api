@@ -4,6 +4,7 @@ public sealed record SetupProjectCommand(
     string Name,
     string? Description,
     string Code,
+    string Color,
     DateOnly? EstimatedCompletionDate,
     SetupProjectFlowDto Flow) : ICommand<Guid>;
 

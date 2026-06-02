@@ -23,10 +23,11 @@ internal sealed class GetAllProjectsHandler(
                 p.Id,
                 p.Name,
                 p.Description,
+                p.Color,
                 p.EstimatedCompletionDate,
                 p.Status,
                 p.Members.Count,
-                [.. p.Flows.Select(f => new ProjectFlowSummaryResponse(f.Id, f.Name, f.IsDefault, f.IsActive))]))
+                [.. p.Flows.Select(f => new ProjectFlowSummaryResponse(f.Id, f.Name, f.IsDefault, f.IsActive)).OrderByDescending(f => f.IsDefault)]))
             .ToList();
     }
 }

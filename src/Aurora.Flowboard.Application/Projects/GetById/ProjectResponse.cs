@@ -4,6 +4,7 @@ public sealed record ProjectResponse(
     Guid ProjectId,
     string Name,
     string? Description,
+    string Color,
     DateOnly? EstimatedCompletionDate,
     ProjectStatus Status,
     Guid CreatedById,
@@ -25,4 +26,5 @@ public sealed record ProjectChangeLogResponse(
     string ChangedByFullName,
     ProjectChangeType ChangeType,
     Guid? AffectedEntityId,
+    ProjectStatus? NewStatus,
     DateTime ChangedOnUtc);

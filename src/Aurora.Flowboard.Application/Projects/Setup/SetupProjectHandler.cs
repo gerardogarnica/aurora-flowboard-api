@@ -27,6 +27,7 @@ internal sealed class SetupProjectHandler(
             command.Name,
             command.Description,
             command.Code,
+            command.Color,
             command.EstimatedCompletionDate,
             createdBy,
             dateTimeProvider.UtcNow);

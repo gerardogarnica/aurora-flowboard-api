@@ -4,6 +4,7 @@ public sealed record ProjectSummaryResponse(
     Guid ProjectId,
     string Name,
     string? Description,
+    string Color,
     DateOnly? EstimatedCompletionDate,
     ProjectStatus Status,
     int MemberCount,

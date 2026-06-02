@@ -4,4 +4,5 @@ public sealed record UpdateProjectCommand(
     Guid Id,
     string Name,
     string? Description,
+    string Color,
     DateOnly? EstimatedCompletionDate) : ICommand;

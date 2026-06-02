@@ -25,6 +25,7 @@ internal sealed class GetProjectByIdHandler(
             project.Id,
             project.Name,
             project.Description,
+            project.Color,
             project.EstimatedCompletionDate,
             project.Status,
             project.CreatedBy,
@@ -32,6 +33,6 @@ internal sealed class GetProjectByIdHandler(
             project.CreatedOnUtc,
             project.UpdatedOnUtc,
             [.. project.Members.OrderBy(m => m.User.FullName).Select(m => new ProjectMemberResponse(m.UserId, m.User.FullName, m.Role, m.JoinedOnUtc))],
-            [.. project.ChangeLogs.OrderBy(cl => cl.ChangedOnUtc).Select(cl => new ProjectChangeLogResponse(cl.Id, cl.ChangedById, cl.ChangedBy.FullName, cl.ChangeType, cl.AffectedEntityId, cl.ChangedOnUtc))]);
+            [.. project.ChangeLogs.OrderBy(cl => cl.ChangedOnUtc).Select(cl => new ProjectChangeLogResponse(cl.Id, cl.ChangedById, cl.ChangedBy.FullName, cl.ChangeType, cl.AffectedEntityId, cl.NewStatus, cl.ChangedOnUtc))]);
     }
 }

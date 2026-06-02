@@ -23,6 +23,9 @@ internal sealed class ProjectChangeLogConfiguration : IEntityTypeConfiguration<P
 
         builder.Property(x => x.AffectedEntityId);
 
+        builder.Property(x => x.NewStatus)
+            .HasConversion<int>();
+
         builder.Property(x => x.ChangedOnUtc)
             .IsRequired();
 

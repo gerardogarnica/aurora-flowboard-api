@@ -22,6 +22,10 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
             .IsRequired()
             .HasMaxLength(ProjectCode.MaxLength);
 
+        builder.Property(x => x.Color)
+            .IsRequired()
+            .HasMaxLength(Project.MaxColorLength);
+
         builder.Property(x => x.EstimatedCompletionDate);
 
         builder.Property(x => x.Status)
