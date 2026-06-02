@@ -8,7 +8,6 @@ public sealed class Project : BaseEntity
 {
     public const int MaxNameLength = 100;
     public const int MaxDescriptionLength = 500;
-    public const int MaxColorLength = 20;
 
     private static readonly Dictionary<ProjectStatus, ProjectStatus[]> ValidTransitions = new()
     {
@@ -26,7 +25,7 @@ public sealed class Project : BaseEntity
     public string Name { get; private set; }
     public string? Description { get; private set; }
     public string Code { get; private set; }
-    public string Color { get; private set; }
+    public Color Color { get; private set; }
     public DateOnly? EstimatedCompletionDate { get; private set; }
     public ProjectStatus Status { get; private set; }
     public int WorkItemCounter { get; private set; }
@@ -49,7 +48,7 @@ public sealed class Project : BaseEntity
         string name,
         string? description,
         string code,
-        string color,
+        Color color,
         DateOnly? estimatedCompletionDate,
         Guid createdBy,
         DateTime createdOnUtc) : base(id)
@@ -69,7 +68,7 @@ public sealed class Project : BaseEntity
         string name,
         string? description,
         string code,
-        string color,
+        Color color,
         DateOnly? estimatedCompletionDate,
         User createdBy,
         DateTime createdOnUtc)
@@ -95,22 +94,12 @@ public sealed class Project : BaseEntity
             return Result.Fail<Project>(ProjectErrors.DescriptionTooLong);
         }
 
-        if (string.IsNullOrWhiteSpace(color))
-        {
-            return Result.Fail<Project>(ProjectErrors.ColorRequired);
-        }
-
-        if (color.Length > MaxColorLength)
-        {
-            return Result.Fail<Project>(ProjectErrors.ColorTooLong);
-        }
-
         var project = new Project(
             Guid.NewGuid(),
             name.Trim(),
             description?.Trim(),
             codeResult.Value.Value,
-            color.Trim(),
+            color,
             estimatedCompletionDate,
             createdBy.Id,
             createdOnUtc);
@@ -128,7 +117,7 @@ public sealed class Project : BaseEntity
     public Result Update(
         string name,
         string? description,
-        string color,
+        Color color,
         DateOnly? estimatedCompletionDate,
         User changedBy,
         DateTime updatedOnUtc)
@@ -158,19 +147,9 @@ public sealed class Project : BaseEntity
             return Result.Fail(ProjectErrors.DescriptionTooLong);
         }
 
-        if (string.IsNullOrWhiteSpace(color))
-        {
-            return Result.Fail(ProjectErrors.ColorRequired);
-        }
-
-        if (color.Length > MaxColorLength)
-        {
-            return Result.Fail(ProjectErrors.ColorTooLong);
-        }
-
         Name = name.Trim();
         Description = description?.Trim();
-        Color = color.Trim();
+        Color = color;
         EstimatedCompletionDate = estimatedCompletionDate;
         UpdatedOnUtc = updatedOnUtc;
 

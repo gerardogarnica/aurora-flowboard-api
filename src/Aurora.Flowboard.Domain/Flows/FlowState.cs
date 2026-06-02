@@ -9,21 +9,23 @@ public sealed class FlowState
     public string Name { get; private set; }
     public int SortOrder { get; private set; }
     public FlowStateCategory Category { get; private set; }
+    public Color Color { get; private set; }
 
     public Flow Flow { get; init; } = null!;
 
     private FlowState() { } // EF Core
 
-    private FlowState(Guid id, Guid flowId, string name, int sortOrder, FlowStateCategory category)
+    private FlowState(Guid id, Guid flowId, string name, int sortOrder, FlowStateCategory category, Color color)
     {
         Id = id;
         FlowId = flowId;
         Name = name;
         SortOrder = sortOrder;
         Category = category;
+        Color = color;
     }
 
-    internal static Result<FlowState> Create(Flow flow, string name, int sortOrder, FlowStateCategory category)
+    internal static Result<FlowState> Create(Flow flow, string name, int sortOrder, FlowStateCategory category, Color color)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -40,7 +42,8 @@ public sealed class FlowState
             flow.Id,
             name.Trim(),
             sortOrder,
-            category);
+            category,
+            color);
     }
 
     internal void IncrementSortOrder() => SortOrder++;

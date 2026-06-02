@@ -30,7 +30,13 @@ internal sealed class AddFlowStateHandler(
             return Result.Fail(UserErrors.NotFound);
         }
 
-        Result result = flow.AddState(command.Name, command.Category, command.AllowedRoles, changedBy);
+        Result<Color> colorResult = Color.Create(command.Color);
+        if (!colorResult.IsSuccessful)
+        {
+            return Result.Fail(colorResult.Error);
+        }
+
+        Result result = flow.AddState(command.Name, command.Category, colorResult.Value, command.AllowedRoles, changedBy);
 
         if (!result.IsSuccessful)
         {

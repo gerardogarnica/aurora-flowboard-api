@@ -18,7 +18,7 @@ internal sealed class SetupProjectValidator : AbstractValidator<SetupProjectComm
 
         RuleFor(x => x.Color)
             .NotEmpty()
-            .MaximumLength(Project.MaxColorLength);
+            .MaximumLength(Color.MaxLength);
 
         RuleFor(x => x.EstimatedCompletionDate)
             .GreaterThanOrEqualTo(_ => dateTimeProvider.Today)
@@ -64,6 +64,10 @@ internal sealed class SetupProjectValidator : AbstractValidator<SetupProjectComm
 
                 state.RuleFor(s => s.Category)
                     .IsInEnum();
+
+                state.RuleFor(s => s.Color)
+                    .NotEmpty()
+                    .MaximumLength(Color.MaxLength);
 
                 state.RuleFor(s => s.Roles)
                     .NotEmpty();

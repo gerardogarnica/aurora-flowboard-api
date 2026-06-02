@@ -16,4 +16,5 @@ public sealed record SetupProjectFlowDto(
 public sealed record SetupProjectFlowStateDto(
     string Name,
     FlowStateCategory Category,
+    string Color,
     IReadOnlyCollection<ProjectRole> Roles);

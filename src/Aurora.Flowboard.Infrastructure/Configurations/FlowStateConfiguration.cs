@@ -1,4 +1,5 @@
 using Aurora.Flowboard.Domain.Flows;
+using Aurora.Flowboard.Domain.Shared;
 
 namespace Aurora.Flowboard.Infrastructure.Configurations;
 
@@ -23,6 +24,14 @@ internal sealed class FlowStateConfiguration : IEntityTypeConfiguration<FlowStat
         builder.Property(x => x.Category)
             .IsRequired()
             .HasConversion<string>();
+
+        builder.OwnsOne(x => x.Color, color =>
+        {
+            color.Property(c => c.Value)
+                .HasColumnName("color")
+                .IsRequired()
+                .HasMaxLength(Color.MaxLength);
+        });
 
         builder.HasIndex(x => x.FlowId);
     }

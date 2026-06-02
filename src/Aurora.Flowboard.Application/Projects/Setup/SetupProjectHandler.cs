@@ -23,11 +23,18 @@ internal sealed class SetupProjectHandler(
             return Result.Fail<Guid>(UserErrors.NotFound);
         }
 
+        Result<Color> projectColorResult = Color.Create(command.Color);
+        if (!projectColorResult.IsSuccessful)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return Result.Fail<Guid>(projectColorResult.Error);
+        }
+
         Result<Project> projectResult = Project.Create(
             command.Name,
             command.Description,
             command.Code,
-            command.Color,
+            projectColorResult.Value,
             command.EstimatedCompletionDate,
             createdBy,
             dateTimeProvider.UtcNow);
@@ -60,7 +67,14 @@ internal sealed class SetupProjectHandler(
 
         foreach (SetupProjectFlowStateDto state in command.Flow.States)
         {
-            Result stateResult = flow.AddState(state.Name, state.Category, state.Roles, createdBy);
+            Result<Color> stateColorResult = Color.Create(state.Color);
+            if (!stateColorResult.IsSuccessful)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return Result.Fail<Guid>(stateColorResult.Error);
+            }
+
+            Result stateResult = flow.AddState(state.Name, state.Category, stateColorResult.Value, state.Roles, createdBy);
 
             if (!stateResult.IsSuccessful)
             {

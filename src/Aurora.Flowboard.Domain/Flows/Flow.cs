@@ -163,7 +163,7 @@ public sealed class Flow : BaseEntity
         return Result.Ok();
     }
 
-    public Result AddState(string name, FlowStateCategory category, IReadOnlyCollection<ProjectRole> allowedRoles, User changedBy)
+    public Result AddState(string name, FlowStateCategory category, Color color, IReadOnlyCollection<ProjectRole> allowedRoles, User changedBy)
     {
         if (!Project.IsAdmin(changedBy.Id))
         {
@@ -193,7 +193,7 @@ public sealed class Flow : BaseEntity
         int nextActiveOrder = _states.Any(s => s.Category == FlowStateCategory.Active) ? _states.Max(s => s.SortOrder) + 1 : 1;
         int sortOrder = category == FlowStateCategory.Active ? nextActiveOrder : 0;
 
-        Result<FlowState> stateResult = FlowState.Create(this, name, sortOrder, category);
+        Result<FlowState> stateResult = FlowState.Create(this, name, sortOrder, category, color);
 
         if (!stateResult.IsSuccessful)
         {

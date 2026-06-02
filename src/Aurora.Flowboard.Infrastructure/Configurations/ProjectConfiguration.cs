@@ -1,4 +1,5 @@
 using Aurora.Flowboard.Domain.Projects;
+using Aurora.Flowboard.Domain.Shared;
 using Aurora.Flowboard.Domain.Users;
 
 namespace Aurora.Flowboard.Infrastructure.Configurations;
@@ -22,9 +23,13 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
             .IsRequired()
             .HasMaxLength(ProjectCode.MaxLength);
 
-        builder.Property(x => x.Color)
-            .IsRequired()
-            .HasMaxLength(Project.MaxColorLength);
+        builder.OwnsOne(x => x.Color, color =>
+        {
+            color.Property(c => c.Value)
+                .HasColumnName("color")
+                .IsRequired()
+                .HasMaxLength(Color.MaxLength);
+        });
 
         builder.Property(x => x.EstimatedCompletionDate);
 

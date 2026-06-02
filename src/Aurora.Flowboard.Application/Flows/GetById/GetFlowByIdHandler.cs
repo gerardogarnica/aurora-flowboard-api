@@ -34,7 +34,8 @@ internal sealed class GetFlowByIdHandler(
                 s.Id,
                 s.Name,
                 s.SortOrder,
-                s.Category))],
+                s.Category,
+                s.Color.Value))],
             [.. flow.Transitions.Select(t => new FlowTransitionResponse(
                 t.Id,
                 t.FromStateId,

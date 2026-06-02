@@ -18,14 +18,6 @@ public static class ProjectErrors
         "Project.DescriptionTooLong",
         "Project description cannot exceed 500 characters");
 
-    public static readonly BaseError ColorRequired = BaseError.Validation(
-        "Project.ColorRequired",
-        "Project color is required");
-
-    public static readonly BaseError ColorTooLong = BaseError.Validation(
-        "Project.ColorTooLong",
-        "Project color cannot exceed 50 characters");
-
     public static readonly BaseError InvalidStatusTransition = BaseError.Validation(
         "Project.InvalidStatusTransition",
         "The requested status transition is not allowed");

@@ -24,7 +24,7 @@ public sealed class SetupProject : IBaseEndpoint
                     new SetupProjectFlowDto(
                         request.Flow.Name,
                         request.Flow.Description,
-                        [.. request.Flow.States.Select(s => new SetupProjectFlowStateDto(s.Name, s.Category, s.Roles))]));
+                        [.. request.Flow.States.Select(s => new SetupProjectFlowStateDto(s.Name, s.Category, s.Color, s.Roles))]));
 
                 Result<Guid> result = await handler.Handle(command, cancellationToken);
 
@@ -58,5 +58,6 @@ public sealed class SetupProject : IBaseEndpoint
     internal sealed record SetupProjectFlowStateRequest(
         string Name,
         FlowStateCategory Category,
+        string Color,
         IReadOnlyCollection<ProjectRole> Roles);
 }

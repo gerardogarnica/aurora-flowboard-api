@@ -28,10 +28,16 @@ internal sealed class UpdateProjectHandler(
             return Result.Fail(UserErrors.NotFound);
         }
 
+        Result<Color> colorResult = Color.Create(command.Color);
+        if (!colorResult.IsSuccessful)
+        {
+            return Result.Fail(colorResult.Error);
+        }
+
         Result result = project.Update(
             command.Name,
             command.Description,
-            command.Color,
+            colorResult.Value,
             command.EstimatedCompletionDate,
             changedBy,
             dateTimeProvider.UtcNow);

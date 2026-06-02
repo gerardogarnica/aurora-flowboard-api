@@ -10,5 +10,9 @@ internal sealed class AddFlowStateValidator : AbstractValidator<AddFlowStateComm
         RuleFor(x => x.Name)
             .NotEmpty()
             .MaximumLength(FlowState.MaxNameLength);
+
+        RuleFor(x => x.Color)
+            .NotEmpty()
+            .MaximumLength(Color.MaxLength);
     }
 }

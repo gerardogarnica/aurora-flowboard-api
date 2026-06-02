@@ -19,11 +19,17 @@ internal sealed class CreateProjectHandler(
             return Result.Fail<Guid>(UserErrors.NotFound);
         }
 
+        Result<Color> colorResult = Color.Create(command.Color);
+        if (!colorResult.IsSuccessful)
+        {
+            return Result.Fail<Guid>(colorResult.Error);
+        }
+
         Result<Project> result = Project.Create(
             command.Name,
             command.Description,
             command.Code,
-            command.Color,
+            colorResult.Value,
             command.EstimatedCompletionDate,
             createdBy,
             dateTimeProvider.UtcNow);

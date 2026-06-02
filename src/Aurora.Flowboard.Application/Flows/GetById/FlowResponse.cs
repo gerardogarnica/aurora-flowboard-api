@@ -16,7 +16,8 @@ public sealed record FlowStateResponse(
     Guid StateId,
     string Name,
     int SortOrder,
-    FlowStateCategory Category);
+    FlowStateCategory Category,
+    string Color);
 
 public sealed record FlowTransitionResponse(
     Guid TransitionId,

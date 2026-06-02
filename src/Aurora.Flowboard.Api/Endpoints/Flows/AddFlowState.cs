@@ -20,6 +20,7 @@ public sealed class AddFlowState : IBaseEndpoint
                     id,
                     request.Name,
                     request.Category,
+                    request.Color,
                     request.AllowedRoles);
 
                 Result result = await handler.Handle(command, cancellationToken);
@@ -40,5 +41,6 @@ public sealed class AddFlowState : IBaseEndpoint
     internal sealed record AddFlowStateRequest(
         string Name,
         FlowStateCategory Category,
+        string Color,
         IReadOnlyCollection<ProjectRole> AllowedRoles);
 }

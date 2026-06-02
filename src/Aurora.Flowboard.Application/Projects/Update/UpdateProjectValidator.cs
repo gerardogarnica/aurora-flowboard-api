@@ -16,7 +16,7 @@ internal sealed class UpdateProjectValidator : AbstractValidator<UpdateProjectCo
 
         RuleFor(x => x.Color)
             .NotEmpty()
-            .MaximumLength(Project.MaxColorLength);
+            .MaximumLength(Color.MaxLength);
 
         RuleFor(x => x.EstimatedCompletionDate)
             .GreaterThanOrEqualTo(_ => dateTimeProvider.Today)
