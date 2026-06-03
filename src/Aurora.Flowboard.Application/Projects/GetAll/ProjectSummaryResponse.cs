@@ -4,6 +4,7 @@ public sealed record ProjectSummaryResponse(
     Guid ProjectId,
     string Name,
     string? Description,
+    string Code,
     string Color,
     DateOnly? EstimatedCompletionDate,
     ProjectStatus Status,
@@ -13,5 +14,6 @@ public sealed record ProjectSummaryResponse(
 public sealed record ProjectFlowSummaryResponse(
     Guid FlowId,
     string Name,
+    string? Description,
     bool IsDefault,
     bool IsActive);

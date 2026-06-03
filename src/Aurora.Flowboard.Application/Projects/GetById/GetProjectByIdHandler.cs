@@ -1,7 +1,8 @@
 namespace Aurora.Flowboard.Application.Projects.GetById;
 
 internal sealed class GetProjectByIdHandler(
-    IApplicationDbContext dbContext) : IQueryHandler<GetProjectByIdQuery, ProjectResponse>
+    IApplicationDbContext dbContext,
+    IUserContext userContext) : IQueryHandler<GetProjectByIdQuery, ProjectResponse>
 {
     public async Task<Result<ProjectResponse>> Handle(
         GetProjectByIdQuery query,
@@ -16,7 +17,7 @@ internal sealed class GetProjectByIdHandler(
             .AsSplitQuery()
             .SingleOrDefaultAsync(p => p.Id == query.ProjectId, cancellationToken);
 
-        if (project is null)
+        if (project is null || !project.Members.Any(m => m.UserId == userContext.UserId))
         {
             return Result.Fail<ProjectResponse>(ProjectErrors.NotFound);
         }
@@ -25,6 +26,7 @@ internal sealed class GetProjectByIdHandler(
             project.Id,
             project.Name,
             project.Description,
+            project.Code,
             project.Color,
             project.EstimatedCompletionDate,
             project.Status,

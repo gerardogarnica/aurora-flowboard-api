@@ -4,6 +4,7 @@ public sealed record ProjectResponse(
     Guid ProjectId,
     string Name,
     string? Description,
+    string Code,
     string Color,
     DateOnly? EstimatedCompletionDate,
     ProjectStatus Status,
