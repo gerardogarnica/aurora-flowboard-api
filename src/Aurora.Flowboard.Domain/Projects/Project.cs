@@ -1,6 +1,7 @@
 using Aurora.Flowboard.Domain.Flows;
 using Aurora.Flowboard.Domain.Projects.Events;
 using Aurora.Flowboard.Domain.Users;
+using Aurora.Flowboard.Domain.WorkItems;
 
 namespace Aurora.Flowboard.Domain.Projects;
 
@@ -21,6 +22,7 @@ public sealed class Project : BaseEntity
     private readonly List<ProjectMember> _members = [];
     private readonly List<ProjectChangeLog> _changeLogs = [];
     private readonly List<Flow> _flows = [];
+    private readonly List<WorkItem> _workItems = [];
 
     public string Name { get; private set; }
     public string? Description { get; private set; }
@@ -29,6 +31,7 @@ public sealed class Project : BaseEntity
     public DateOnly? EstimatedCompletionDate { get; private set; }
     public ProjectStatus Status { get; private set; }
     public int WorkItemCounter { get; private set; }
+    public DateTime LastActivityDate { get; private set; }
     public Guid CreatedBy { get; private set; }
     public DateTime CreatedOnUtc { get; private set; }
     public DateTime? UpdatedOnUtc { get; private set; }
@@ -38,6 +41,7 @@ public sealed class Project : BaseEntity
     public IReadOnlyCollection<ProjectMember> Members => _members.AsReadOnly();
     public IReadOnlyCollection<ProjectChangeLog> ChangeLogs => _changeLogs.AsReadOnly();
     public IReadOnlyCollection<Flow> Flows => _flows.AsReadOnly();
+    public IReadOnlyCollection<WorkItem> WorkItems => _workItems.AsReadOnly();
 
     private bool IsModifiable => Status is ProjectStatus.Draft or ProjectStatus.Active or ProjectStatus.OnHold;
 
@@ -59,6 +63,7 @@ public sealed class Project : BaseEntity
         Color = color;
         EstimatedCompletionDate = estimatedCompletionDate;
         WorkItemCounter = 0;
+        LastActivityDate = createdOnUtc;
         Status = ProjectStatus.Draft;
         CreatedBy = createdBy;
         CreatedOnUtc = createdOnUtc;

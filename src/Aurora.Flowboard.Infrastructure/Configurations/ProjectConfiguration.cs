@@ -46,6 +46,9 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.Property(x => x.CreatedOnUtc)
             .IsRequired();
 
+        builder.Property(x => x.LastActivityDate)
+            .IsRequired();
+
         builder.Property(x => x.UpdatedOnUtc);
 
         builder.HasOne<User>(x => x.Creator)
@@ -73,6 +76,10 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
 
         builder.Navigation(x => x.Flows)
             .HasField("_flows")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.Navigation(x => x.WorkItems)
+            .HasField("_workItems")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         builder.HasIndex(x => x.Code)

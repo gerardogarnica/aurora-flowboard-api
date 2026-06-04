@@ -51,7 +51,7 @@ internal sealed class WorkItemConfiguration : IEntityTypeConfiguration<WorkItem>
         builder.Property(x => x.CompletedOnUtc);
 
         builder.HasOne<Project>(x => x.Project)
-            .WithMany()
+            .WithMany(p => p.WorkItems)
             .HasForeignKey(x => x.ProjectId)
             .OnDelete(DeleteBehavior.Cascade);
 
