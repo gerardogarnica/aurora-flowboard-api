@@ -5,6 +5,7 @@ public sealed record UserProfileResponse(
     string FirstName,
     string LastName,
     string FullName,
+    string Initials,
     string Email,
     bool IsActive,
     IReadOnlyCollection<string> Roles,

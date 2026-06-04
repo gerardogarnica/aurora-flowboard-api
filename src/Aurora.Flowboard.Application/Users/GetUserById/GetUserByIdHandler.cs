@@ -23,6 +23,7 @@ internal sealed class GetUserByIdHandler(
             user.FirstName,
             user.LastName,
             user.FullName,
+            user.Initials,
             user.Email.Value,
             user.IsActive,
             [.. user.Roles.Select(r => r.Name)],
