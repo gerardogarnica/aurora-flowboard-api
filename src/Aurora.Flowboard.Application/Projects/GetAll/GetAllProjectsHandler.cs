@@ -12,6 +12,7 @@ internal sealed class GetAllProjectsHandler(
             .Projects
             .Include(p => p.Flows)
             .Include(p => p.Members).ThenInclude(m => m.User)
+            .Include(p => p.WorkItems).ThenInclude(wi => wi.FlowState)
             .Where(p => p.Members.Any(m => m.UserId == userContext.UserId))
             .Where(p => query.StatusFilter == null || p.Status == query.StatusFilter)
             .OrderBy(p => p.Name)
@@ -28,6 +29,8 @@ internal sealed class GetAllProjectsHandler(
                 p.Color,
                 p.EstimatedCompletionDate,
                 p.Status,
+                p.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Active),
+                p.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Completed),
                 [.. p.Members.OrderBy(m => m.User.FullName).Select(m => new ProjectMemberSummaryResponse(m.UserId, m.User.FullName, m.User.Initials))],
                 [.. p.Flows.Select(f => new ProjectFlowSummaryResponse(f.Id, f.Name, f.Description, f.IsDefault, f.IsActive)).OrderByDescending(f => f.IsDefault)]))
             .ToList();

@@ -13,6 +13,7 @@ internal sealed class GetProjectByIdHandler(
             .Include(p => p.Members).ThenInclude(m => m.User)
             .Include(p => p.ChangeLogs).ThenInclude(cl => cl.ChangedBy)
             .Include(p => p.Creator)
+            .Include(p => p.WorkItems).ThenInclude(wi => wi.FlowState)
             .AsNoTracking()
             .AsSplitQuery()
             .SingleOrDefaultAsync(p => p.Id == query.ProjectId, cancellationToken);
@@ -30,6 +31,8 @@ internal sealed class GetProjectByIdHandler(
             project.Color,
             project.EstimatedCompletionDate,
             project.Status,
+            project.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Active),
+            project.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Completed),
             project.CreatedBy,
             project.Creator.FullName,
             project.CreatedOnUtc,

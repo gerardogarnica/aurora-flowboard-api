@@ -8,6 +8,8 @@ public sealed record ProjectResponse(
     string Color,
     DateOnly? EstimatedCompletionDate,
     ProjectStatus Status,
+    int OpenWorkItems,
+    int ClosedWorkItems,
     Guid CreatedById,
     string CreatedByFullName,
     DateTime CreatedOnUtc,

@@ -8,6 +8,8 @@ public sealed record ProjectSummaryResponse(
     string Color,
     DateOnly? EstimatedCompletionDate,
     ProjectStatus Status,
+    int OpenWorkItems,
+    int ClosedWorkItems,
     IReadOnlyCollection<ProjectMemberSummaryResponse> Members,
     IReadOnlyCollection<ProjectFlowSummaryResponse> Flows);
 
