@@ -12,6 +12,9 @@ public sealed class User : BaseEntity
     public string FirstName { get; private set; }
     public string LastName { get; private set; }
     public string FullName => $"{FirstName} {LastName}";
+    public string Initials => string.IsNullOrEmpty(FirstName) || string.IsNullOrEmpty(LastName)
+        ? "U"
+        : $"{char.ToUpperInvariant(FirstName[0])}{char.ToUpperInvariant(LastName[0])}";
     public Email Email { get; private set; }
     private Password Password { get; set; }
     public bool IsActive { get; private set; }
