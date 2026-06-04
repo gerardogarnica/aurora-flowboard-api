@@ -11,6 +11,7 @@ internal sealed class GetAllProjectsHandler(
         List<Project> projects = await dbContext
             .Projects
             .Include(p => p.Flows)
+            .Include(p => p.Members).ThenInclude(m => m.User)
             .Where(p => p.Members.Any(m => m.UserId == userContext.UserId))
             .Where(p => query.StatusFilter == null || p.Status == query.StatusFilter)
             .OrderBy(p => p.Name)
@@ -27,7 +28,7 @@ internal sealed class GetAllProjectsHandler(
                 p.Color,
                 p.EstimatedCompletionDate,
                 p.Status,
-                p.Members.Count,
+                [.. p.Members.OrderBy(m => m.User.FullName).Select(m => new ProjectMemberSummaryResponse(m.UserId, m.User.FullName, m.User.Initials))],
                 [.. p.Flows.Select(f => new ProjectFlowSummaryResponse(f.Id, f.Name, f.Description, f.IsDefault, f.IsActive)).OrderByDescending(f => f.IsDefault)]))
             .ToList();
     }

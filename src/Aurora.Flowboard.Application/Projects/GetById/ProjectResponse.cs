@@ -17,7 +17,10 @@ public sealed record ProjectResponse(
 
 public sealed record ProjectMemberResponse(
     Guid UserId,
+    string FirstName,
+    string LastName,
     string FullName,
+    string Initials,
     ProjectRole Role,
     DateTime JoinedOnUtc);
 

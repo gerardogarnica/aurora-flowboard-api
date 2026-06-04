@@ -8,8 +8,13 @@ public sealed record ProjectSummaryResponse(
     string Color,
     DateOnly? EstimatedCompletionDate,
     ProjectStatus Status,
-    int MemberCount,
+    IReadOnlyCollection<ProjectMemberSummaryResponse> Members,
     IReadOnlyCollection<ProjectFlowSummaryResponse> Flows);
+
+public sealed record ProjectMemberSummaryResponse(
+    Guid UserId,
+    string FullName,
+    string Initials);
 
 public sealed record ProjectFlowSummaryResponse(
     Guid FlowId,
