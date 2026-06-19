@@ -22,10 +22,11 @@ internal static class WorkItemData
         Flow flow = Flow.Create(FlowData.Name, FlowData.Description, project, true, admin, FlowData.CreatedOnUtc).Value;
 
         ProjectRole[] allRoles = [ProjectRole.Admin, ProjectRole.Analyst, ProjectRole.Developer, ProjectRole.QA, ProjectRole.Support];
-        flow.AddState("Todo", FlowStateCategory.Active, allRoles, admin);
-        flow.AddState("In Progress", FlowStateCategory.Active, allRoles, admin);
-        flow.AddState("Done", FlowStateCategory.Completed, allRoles, admin);
-        flow.AddState("Cancelled", FlowStateCategory.Cancelled, allRoles, admin);
+        Color stateColor = FlowData.Color;
+        flow.AddState("Todo", FlowStateCategory.Active, stateColor, allRoles, admin);
+        flow.AddState("In Progress", FlowStateCategory.Active, stateColor, allRoles, admin);
+        flow.AddState("Done", FlowStateCategory.Completed, stateColor, allRoles, admin);
+        flow.AddState("Cancelled", FlowStateCategory.Cancelled, stateColor, allRoles, admin);
 
         // Set Flow nav property on all FlowStates so Move() can call FlowState.Flow.FindTransition()
         foreach (FlowState state in flow.States)

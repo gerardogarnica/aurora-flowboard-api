@@ -5,6 +5,7 @@ internal static class FlowData
     public const string Name = "Default Flow";
     public const string Description = "Main workflow";
     public const string StateName = "In Progress";
+    public static readonly Color Color = Color.Create("white").Value;
     public static readonly DateTime CreatedOnUtc = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     public static readonly DateTime UpdatedOnUtc = new(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc);
 

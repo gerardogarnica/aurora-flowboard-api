@@ -294,7 +294,7 @@ public sealed class WorkItemTests
             User admin = UserData.GetActiveUser();
             Project draftProject = ProjectData.GetDraftProject(admin);
             Flow flow = Flow.Create(FlowData.Name, null, draftProject, true, admin, FlowData.CreatedOnUtc).Value;
-            flow.AddState("Todo", FlowStateCategory.Active, [ProjectRole.Admin], admin);
+            flow.AddState("Todo", FlowStateCategory.Active, FlowData.Color, [ProjectRole.Admin], admin);
 
             // Act
             Result<WorkItem> result = WorkItem.Create(
@@ -651,7 +651,7 @@ public sealed class WorkItemTests
             // Arrange
             var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
             Flow otherFlow = Flow.Create("Other Flow", null, project, false, admin, WorkItemData.CreatedOnUtc).Value;
-            otherFlow.AddState("Other Todo", FlowStateCategory.Active, [], admin);
+            otherFlow.AddState("Other Todo", FlowStateCategory.Active, FlowData.Color, [], admin);
             FlowState otherState = otherFlow.States.Single();
 
             // Act
@@ -687,8 +687,8 @@ public sealed class WorkItemTests
 
             // Add a state only Admin can transition to
             Flow restrictedFlow = Flow.Create("Restricted", null, project, false, admin, WorkItemData.CreatedOnUtc).Value;
-            restrictedFlow.AddState("Start", FlowStateCategory.Active, [ProjectRole.Admin], admin);
-            restrictedFlow.AddState("End", FlowStateCategory.Active, [ProjectRole.Admin], admin);
+            restrictedFlow.AddState("Start", FlowStateCategory.Active, FlowData.Color, [ProjectRole.Admin], admin);
+            restrictedFlow.AddState("End", FlowStateCategory.Active, FlowData.Color, [ProjectRole.Admin], admin);
             foreach (FlowState s in restrictedFlow.States)
             {
                 WorkItemData.SetFlowNavProperty(s, restrictedFlow);

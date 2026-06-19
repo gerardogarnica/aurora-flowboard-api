@@ -15,6 +15,7 @@ public sealed class ProjectTests
                 ProjectData.Name,
                 ProjectData.Description,
                 ProjectData.Code,
+                ProjectData.Color,
                 ProjectData.EstimatedCompletionDate,
                 creator,
                 ProjectData.CreatedOnUtc);
@@ -37,6 +38,7 @@ public sealed class ProjectTests
                 ProjectData.Name,
                 ProjectData.Description,
                 ProjectData.Code,
+                ProjectData.Color,
                 ProjectData.EstimatedCompletionDate,
                 creator,
                 ProjectData.CreatedOnUtc);
@@ -56,6 +58,7 @@ public sealed class ProjectTests
                 ProjectData.Name,
                 ProjectData.Description,
                 ProjectData.Code,
+                ProjectData.Color,
                 ProjectData.EstimatedCompletionDate,
                 creator,
                 ProjectData.CreatedOnUtc);
@@ -75,6 +78,7 @@ public sealed class ProjectTests
                 ProjectData.Name,
                 ProjectData.Description,
                 ProjectData.Code,
+                ProjectData.Color,
                 ProjectData.EstimatedCompletionDate,
                 creator,
                 ProjectData.CreatedOnUtc);
@@ -95,6 +99,7 @@ public sealed class ProjectTests
                 ProjectData.Name,
                 ProjectData.Description,
                 ProjectData.Code,
+                ProjectData.Color,
                 ProjectData.EstimatedCompletionDate,
                 creator,
                 ProjectData.CreatedOnUtc);
@@ -115,6 +120,7 @@ public sealed class ProjectTests
                 ProjectData.Name,
                 ProjectData.Description,
                 ProjectData.Code,
+                ProjectData.Color,
                 ProjectData.EstimatedCompletionDate,
                 creator,
                 ProjectData.CreatedOnUtc);
@@ -135,6 +141,7 @@ public sealed class ProjectTests
                 $"  {ProjectData.Name}  ",
                 $"  {ProjectData.Description}  ",
                 ProjectData.Code,
+                ProjectData.Color,
                 ProjectData.EstimatedCompletionDate,
                 creator,
                 ProjectData.CreatedOnUtc);
@@ -155,6 +162,7 @@ public sealed class ProjectTests
                 string.Empty,
                 ProjectData.Description,
                 ProjectData.Code,
+                ProjectData.Color,
                 ProjectData.EstimatedCompletionDate,
                 creator,
                 ProjectData.CreatedOnUtc);
@@ -175,6 +183,7 @@ public sealed class ProjectTests
                 "   ",
                 ProjectData.Description,
                 ProjectData.Code,
+                ProjectData.Color,
                 ProjectData.EstimatedCompletionDate,
                 creator,
                 ProjectData.CreatedOnUtc);
@@ -196,6 +205,7 @@ public sealed class ProjectTests
                 longName,
                 ProjectData.Description,
                 ProjectData.Code,
+                ProjectData.Color,
                 ProjectData.EstimatedCompletionDate,
                 creator,
                 ProjectData.CreatedOnUtc);
@@ -217,6 +227,7 @@ public sealed class ProjectTests
                 ProjectData.Name,
                 longDescription,
                 ProjectData.Code,
+                ProjectData.Color,
                 ProjectData.EstimatedCompletionDate,
                 creator,
                 ProjectData.CreatedOnUtc);
@@ -237,6 +248,7 @@ public sealed class ProjectTests
                 ProjectData.Name,
                 ProjectData.Description,
                 string.Empty,
+                ProjectData.Color,
                 ProjectData.EstimatedCompletionDate,
                 creator,
                 ProjectData.CreatedOnUtc);
@@ -257,6 +269,7 @@ public sealed class ProjectTests
                 ProjectData.Name,
                 ProjectData.Description,
                 "ABCD",
+                ProjectData.Color,
                 ProjectData.EstimatedCompletionDate,
                 creator,
                 ProjectData.CreatedOnUtc);
@@ -277,6 +290,7 @@ public sealed class ProjectTests
                 ProjectData.Name,
                 ProjectData.Description,
                 "A1B",
+                ProjectData.Color,
                 ProjectData.EstimatedCompletionDate,
                 creator,
                 ProjectData.CreatedOnUtc);
@@ -284,6 +298,27 @@ public sealed class ProjectTests
             // Assert
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(ProjectErrors.CodeInvalidCharacters);
+        }
+
+        [Fact]
+        public void Should_StoreColorValueObject_When_Created()
+        {
+            // Arrange
+            User creator = UserData.GetActiveUser();
+
+            // Act
+            Result<Project> result = Project.Create(
+                ProjectData.Name,
+                ProjectData.Description,
+                ProjectData.Code,
+                ProjectData.Color,
+                ProjectData.EstimatedCompletionDate,
+                creator,
+                ProjectData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            result.Value.Color.Value.Should().Be("white");
         }
     }
 
@@ -297,7 +332,7 @@ public sealed class ProjectTests
             Project project = ProjectData.GetDraftProject(admin);
 
             // Act
-            Result result = project.Update("New Name", "New Description", null, admin, ProjectData.UpdatedOnUtc);
+            Result result = project.Update("New Name", "New Description", ProjectData.Color, null, admin, ProjectData.UpdatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeTrue();
@@ -313,7 +348,7 @@ public sealed class ProjectTests
             Project project = ProjectData.GetDraftProject(admin);
 
             // Act
-            project.Update("New Name", null, null, admin, ProjectData.UpdatedOnUtc);
+            project.Update("New Name", null, ProjectData.Color, null, admin, ProjectData.UpdatedOnUtc);
 
             // Assert
             ProjectUpdatedDomainEvent domainEvent = AssertDomainEventWasPublished<ProjectUpdatedDomainEvent>(project);
@@ -329,7 +364,7 @@ public sealed class ProjectTests
             int initialCount = project.ChangeLogs.Count;
 
             // Act
-            project.Update("New Name", null, null, admin, ProjectData.UpdatedOnUtc);
+            project.Update("New Name", null, ProjectData.Color, null, admin, ProjectData.UpdatedOnUtc);
 
             // Assert
             project.ChangeLogs.Count.Should().Be(initialCount + 1);
@@ -345,7 +380,7 @@ public sealed class ProjectTests
             User nonAdmin = UserData.GetActiveUser();
 
             // Act
-            Result result = project.Update("New Name", null, null, nonAdmin, ProjectData.UpdatedOnUtc);
+            Result result = project.Update("New Name", null, ProjectData.Color, null, nonAdmin, ProjectData.UpdatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -360,7 +395,7 @@ public sealed class ProjectTests
             Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Completed, admin);
 
             // Act
-            Result result = project.Update("New Name", null, null, admin, ProjectData.UpdatedOnUtc);
+            Result result = project.Update("New Name", null, ProjectData.Color, null, admin, ProjectData.UpdatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -375,7 +410,7 @@ public sealed class ProjectTests
             Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Archived, admin);
 
             // Act
-            Result result = project.Update("New Name", null, null, admin, ProjectData.UpdatedOnUtc);
+            Result result = project.Update("New Name", null, ProjectData.Color, null, admin, ProjectData.UpdatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -390,7 +425,7 @@ public sealed class ProjectTests
             Project project = ProjectData.GetDraftProject(admin);
 
             // Act
-            Result result = project.Update(string.Empty, null, null, admin, ProjectData.UpdatedOnUtc);
+            Result result = project.Update(string.Empty, null, ProjectData.Color, null, admin, ProjectData.UpdatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -406,7 +441,7 @@ public sealed class ProjectTests
             string longName = new('A', 101);
 
             // Act
-            Result result = project.Update(longName, null, null, admin, ProjectData.UpdatedOnUtc);
+            Result result = project.Update(longName, null, ProjectData.Color, null, admin, ProjectData.UpdatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -422,7 +457,7 @@ public sealed class ProjectTests
             string longDescription = new('A', 501);
 
             // Act
-            Result result = project.Update(ProjectData.Name, longDescription, null, admin, ProjectData.UpdatedOnUtc);
+            Result result = project.Update(ProjectData.Name, longDescription, ProjectData.Color, null, admin, ProjectData.UpdatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -503,6 +538,32 @@ public sealed class ProjectTests
             // Assert
             project.ChangeLogs.Count.Should().Be(initialCount + 1);
             project.ChangeLogs.Should().Contain(cl => cl.ChangeType == ProjectChangeType.StatusChanged);
+        }
+
+        [Fact]
+        public void Should_RecordNewStatusOnChangeLog_When_StatusChanges()
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetDraftProject(admin);
+
+            // Act
+            project.ChangeStatus(ProjectStatus.Active, admin, ProjectData.UpdatedOnUtc);
+
+            // Assert
+            project.ChangeLogs.Should().ContainSingle(cl =>
+                cl.ChangeType == ProjectChangeType.StatusChanged && cl.NewStatus == ProjectStatus.Active);
+        }
+
+        [Fact]
+        public void Should_NotSetNewStatusOnChangeLog_When_ChangeIsNotStatusChange()
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetDraftProject(admin);
+
+            // Assert
+            project.ChangeLogs.Should().OnlyContain(cl => cl.NewStatus == null);
         }
 
         [Fact]

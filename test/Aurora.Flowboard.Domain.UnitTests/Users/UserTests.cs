@@ -161,6 +161,16 @@ public sealed class UserTests
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(UserErrors.LastNameRequired);
         }
+
+        [Fact]
+        public void Should_ComputeInitials_From_FirstAndLastName()
+        {
+            // Act
+            User user = UserData.GetActiveUser();
+
+            // Assert
+            user.Initials.Should().Be($"{UserData.FirstName[0]}{UserData.LastName[0]}".ToUpperInvariant());
+        }
     }
 
     public sealed class ChangePassword : BaseTest
@@ -649,6 +659,57 @@ public sealed class UserTests
 
             // Act
             Action act = () => user.RemoveRole(null!);
+
+            // Assert
+            act.Should().Throw<ArgumentNullException>();
+        }
+    }
+
+    public sealed class VerifyPassword : BaseTest
+    {
+        private sealed class FakePasswordHasher(bool verifyResult) : IPasswordHasher
+        {
+            public string HashPassword(string password) => password;
+            public bool VerifyHashedPassword(string hashedPassword, string providedPassword) => verifyResult;
+            public void VerifyDummy(string providedPassword) { }
+        }
+
+        [Fact]
+        public void Should_ReturnTrue_When_PasswordMatchesHash()
+        {
+            // Arrange
+            User user = UserData.GetActiveUser();
+            IPasswordHasher hasher = new FakePasswordHasher(true);
+
+            // Act
+            bool result = user.VerifyPassword(hasher, "correct-password");
+
+            // Assert
+            result.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Should_ReturnFalse_When_PasswordDoesNotMatchHash()
+        {
+            // Arrange
+            User user = UserData.GetActiveUser();
+            IPasswordHasher hasher = new FakePasswordHasher(false);
+
+            // Act
+            bool result = user.VerifyPassword(hasher, "wrong-password");
+
+            // Assert
+            result.Should().BeFalse();
+        }
+
+        [Fact]
+        public void Should_Throw_When_PasswordHasherIsNull()
+        {
+            // Arrange
+            User user = UserData.GetActiveUser();
+
+            // Act
+            Action act = () => user.VerifyPassword(null!, "any-password");
 
             // Assert
             act.Should().Throw<ArgumentNullException>();

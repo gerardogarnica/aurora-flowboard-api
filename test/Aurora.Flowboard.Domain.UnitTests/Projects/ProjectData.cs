@@ -5,6 +5,7 @@ internal static class ProjectData
     public const string Name = "Aurora Flowboard";
     public const string Description = "Project management API";
     public const string Code = "AFB";
+    public static readonly Color Color = Color.Create("white").Value;
     public static readonly DateOnly EstimatedCompletionDate = new(2026, 12, 31);
     public static readonly DateTime CreatedOnUtc = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     public static readonly DateTime UpdatedOnUtc = new(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -12,7 +13,7 @@ internal static class ProjectData
     public static Project GetDraftProject(User? creator = null)
     {
         User user = creator ?? UserData.GetActiveUser();
-        return Project.Create(Name, Description, Code, EstimatedCompletionDate, user, CreatedOnUtc).Value;
+        return Project.Create(Name, Description, Code, Color, EstimatedCompletionDate, user, CreatedOnUtc).Value;
     }
 
     public static Project GetProjectWithStatus(ProjectStatus status, User? admin = null)

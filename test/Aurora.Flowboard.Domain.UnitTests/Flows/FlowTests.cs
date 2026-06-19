@@ -401,7 +401,7 @@ public sealed class FlowTests
             Flow flow = FlowData.GetFlow(admin);
 
             // Act
-            Result result = flow.AddState("In Progress", FlowStateCategory.Active, [], admin);
+            Result result = flow.AddState("In Progress", FlowStateCategory.Active, FlowData.Color, [], admin);
 
             // Assert
             result.IsSuccessful.Should().BeTrue();
@@ -416,7 +416,7 @@ public sealed class FlowTests
             Flow flow = FlowData.GetFlow(admin);
 
             // Act
-            Result result = flow.AddState("Done", FlowStateCategory.Completed, [], admin);
+            Result result = flow.AddState("Done", FlowStateCategory.Completed, FlowData.Color, [], admin);
 
             // Assert
             result.IsSuccessful.Should().BeTrue();
@@ -431,7 +431,7 @@ public sealed class FlowTests
             Flow flow = FlowData.GetFlow(admin);
 
             // Act
-            Result result = flow.AddState("Cancelled", FlowStateCategory.Cancelled, [], admin);
+            Result result = flow.AddState("Cancelled", FlowStateCategory.Cancelled, FlowData.Color, [], admin);
 
             // Assert
             result.IsSuccessful.Should().BeTrue();
@@ -446,7 +446,7 @@ public sealed class FlowTests
             Flow flow = FlowData.GetFlow(admin);
 
             // Act
-            flow.AddState("In Progress", FlowStateCategory.Active, [], admin);
+            flow.AddState("In Progress", FlowStateCategory.Active, FlowData.Color, [], admin);
 
             // Assert
             FlowStateAddedDomainEvent domainEvent = AssertDomainEventWasPublished<FlowStateAddedDomainEvent>(flow);
@@ -462,7 +462,7 @@ public sealed class FlowTests
             Flow flow = FlowData.GetFlow(admin);
 
             // Act
-            flow.AddState("State A", FlowStateCategory.Active, [], admin);
+            flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], admin);
 
             // Assert
             flow.States.Single(s => s.Name == "State A").SortOrder.Should().Be(1);
@@ -474,10 +474,10 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("State A", FlowStateCategory.Active, [], admin);
+            flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], admin);
 
             // Act
-            flow.AddState("State B", FlowStateCategory.Active, [], admin);
+            flow.AddState("State B", FlowStateCategory.Active, FlowData.Color, [], admin);
 
             // Assert
             flow.States.Single(s => s.Name == "State B").SortOrder.Should().Be(2);
@@ -491,7 +491,7 @@ public sealed class FlowTests
             Flow flow = FlowData.GetFlow(admin);
 
             // Act
-            flow.AddState("Done", FlowStateCategory.Completed, [], admin);
+            flow.AddState("Done", FlowStateCategory.Completed, FlowData.Color, [], admin);
 
             // Assert
             flow.States.Single(s => s.Name == "Done").SortOrder.Should().Be(0);
@@ -505,7 +505,7 @@ public sealed class FlowTests
             Flow flow = FlowData.GetFlow(admin);
 
             // Act
-            flow.AddState("Cancelled", FlowStateCategory.Cancelled, [], admin);
+            flow.AddState("Cancelled", FlowStateCategory.Cancelled, FlowData.Color, [], admin);
 
             // Assert
             flow.States.Single(s => s.Name == "Cancelled").SortOrder.Should().Be(0);
@@ -517,10 +517,10 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("State A", FlowStateCategory.Active, [], admin);
+            flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], admin);
 
             // Act
-            flow.AddState("State B", FlowStateCategory.Active, [], admin);
+            flow.AddState("State B", FlowStateCategory.Active, FlowData.Color, [], admin);
 
             // Assert
             FlowState stateA = flow.States.Single(s => s.Name == "State A");
@@ -536,10 +536,10 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("State A", FlowStateCategory.Active, [], admin);
+            flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], admin);
 
             // Act
-            flow.AddState("Done", FlowStateCategory.Completed, [], admin);
+            flow.AddState("Done", FlowStateCategory.Completed, FlowData.Color, [], admin);
 
             // Assert
             FlowState stateA = flow.States.Single(s => s.Name == "State A");
@@ -555,11 +555,11 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("State A", FlowStateCategory.Active, [], admin);
-            flow.AddState("State B", FlowStateCategory.Active, [], admin);
+            flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], admin);
+            flow.AddState("State B", FlowStateCategory.Active, FlowData.Color, [], admin);
 
             // Act
-            flow.AddState("Cancelled", FlowStateCategory.Cancelled, [], admin);
+            flow.AddState("Cancelled", FlowStateCategory.Cancelled, FlowData.Color, [], admin);
 
             // Assert
             FlowState stateA = flow.States.Single(s => s.Name == "State A");
@@ -576,11 +576,11 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("State A", FlowStateCategory.Active, [], admin);
-            flow.AddState("Done", FlowStateCategory.Completed, [], admin);
+            flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], admin);
+            flow.AddState("Done", FlowStateCategory.Completed, FlowData.Color, [], admin);
 
             // Act
-            flow.AddState("State B", FlowStateCategory.Active, [], admin);
+            flow.AddState("State B", FlowStateCategory.Active, FlowData.Color, [], admin);
 
             // Assert
             FlowState stateA = flow.States.Single(s => s.Name == "State A");
@@ -602,7 +602,7 @@ public sealed class FlowTests
             User nonAdmin = UserData.GetActiveUser();
 
             // Act
-            Result result = flow.AddState("State A", FlowStateCategory.Active, [], nonAdmin);
+            Result result = flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], nonAdmin);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -617,7 +617,7 @@ public sealed class FlowTests
             Flow flow = FlowData.GetDeactivatedFlow(admin);
 
             // Act
-            Result result = flow.AddState("State A", FlowStateCategory.Active, [], admin);
+            Result result = flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], admin);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -631,7 +631,7 @@ public sealed class FlowTests
             (Flow flow, User admin) = FlowData.GetFlowOnBlockedProject();
 
             // Act
-            Result result = flow.AddState("State A", FlowStateCategory.Active, [], admin);
+            Result result = flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], admin);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -644,10 +644,10 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("State A", FlowStateCategory.Active, [], admin);
+            flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], admin);
 
             // Act
-            Result result = flow.AddState("State A", FlowStateCategory.Active, [], admin);
+            Result result = flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], admin);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -660,10 +660,10 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("state a", FlowStateCategory.Active, [], admin);
+            flow.AddState("state a", FlowStateCategory.Active, FlowData.Color, [], admin);
 
             // Act
-            Result result = flow.AddState("STATE A", FlowStateCategory.Active, [], admin);
+            Result result = flow.AddState("STATE A", FlowStateCategory.Active, FlowData.Color, [], admin);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -678,11 +678,11 @@ public sealed class FlowTests
             Flow flow = FlowData.GetFlow(admin);
             for (int i = 1; i <= 10; i++)
             {
-                flow.AddState($"State {i}", FlowStateCategory.Active, [], admin);
+                flow.AddState($"State {i}", FlowStateCategory.Active, FlowData.Color, [], admin);
             }
 
             // Act
-            Result result = flow.AddState("State 11", FlowStateCategory.Active, [], admin);
+            Result result = flow.AddState("State 11", FlowStateCategory.Active, FlowData.Color, [], admin);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -697,7 +697,7 @@ public sealed class FlowTests
             Flow flow = FlowData.GetFlow(admin);
 
             // Act
-            Result result = flow.AddState(string.Empty, FlowStateCategory.Active, [], admin);
+            Result result = flow.AddState(string.Empty, FlowStateCategory.Active, FlowData.Color, [], admin);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -713,7 +713,7 @@ public sealed class FlowTests
             string longName = new('A', 51);
 
             // Act
-            Result result = flow.AddState(longName, FlowStateCategory.Active, [], admin);
+            Result result = flow.AddState(longName, FlowStateCategory.Active, FlowData.Color, [], admin);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -729,8 +729,8 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("State A", FlowStateCategory.Active, [], admin);
-            flow.AddState("Done", FlowStateCategory.Completed, [], admin);
+            flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], admin);
+            flow.AddState("Done", FlowStateCategory.Completed, FlowData.Color, [], admin);
             FlowState stateToRemove = flow.States.Single(s => s.Name == "State A");
 
             // Act
@@ -747,8 +747,8 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("State A", FlowStateCategory.Active, [], admin);
-            flow.AddState("State B", FlowStateCategory.Active, [], admin);
+            flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], admin);
+            flow.AddState("State B", FlowStateCategory.Active, FlowData.Color, [], admin);
             FlowState stateB = flow.States.Single(s => s.Name == "State B");
 
             // Act
@@ -764,9 +764,9 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("State A", FlowStateCategory.Active, [], admin);
-            flow.AddState("State B", FlowStateCategory.Active, [], admin);
-            flow.AddState("State C", FlowStateCategory.Active, [], admin);
+            flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], admin);
+            flow.AddState("State B", FlowStateCategory.Active, FlowData.Color, [], admin);
+            flow.AddState("State C", FlowStateCategory.Active, FlowData.Color, [], admin);
             FlowState stateB = flow.States.Single(s => s.Name == "State B");
             FlowState stateC = flow.States.Single(s => s.Name == "State C");
 
@@ -783,9 +783,9 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("State A", FlowStateCategory.Active, [], admin);
-            flow.AddState("State B", FlowStateCategory.Active, [], admin);
-            flow.AddState("State C", FlowStateCategory.Active, [], admin);
+            flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], admin);
+            flow.AddState("State B", FlowStateCategory.Active, FlowData.Color, [], admin);
+            flow.AddState("State C", FlowStateCategory.Active, FlowData.Color, [], admin);
             FlowState stateA = flow.States.Single(s => s.Name == "State A");
             FlowState stateB = flow.States.Single(s => s.Name == "State B");
             FlowState stateC = flow.States.Single(s => s.Name == "State C");
@@ -803,7 +803,7 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("State A", FlowStateCategory.Active, [], admin);
+            flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], admin);
             FlowState state = flow.States.Single();
             User nonAdmin = UserData.GetActiveUser();
 
@@ -865,7 +865,7 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("Done", FlowStateCategory.Completed, [], admin);
+            flow.AddState("Done", FlowStateCategory.Completed, FlowData.Color, [], admin);
             FlowState completedState = flow.States.Single(s => s.Category == FlowStateCategory.Completed);
 
             // Act
@@ -882,7 +882,7 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("Cancelled", FlowStateCategory.Cancelled, [], admin);
+            flow.AddState("Cancelled", FlowStateCategory.Cancelled, FlowData.Color, [], admin);
             FlowState cancelledState = flow.States.Single(s => s.Category == FlowStateCategory.Cancelled);
 
             // Act
@@ -902,8 +902,8 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("State A", FlowStateCategory.Active, [], admin);
-            flow.AddState("State B", FlowStateCategory.Active, [], admin);
+            flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], admin);
+            flow.AddState("State B", FlowStateCategory.Active, FlowData.Color, [], admin);
             FlowState stateA = flow.States.Single(s => s.Name == "State A");
             FlowState stateB = flow.States.Single(s => s.Name == "State B");
             FlowTransition transition = flow.Transitions.Single(t => t.FromStateId == stateA.Id && t.ToStateId == stateB.Id);
@@ -922,8 +922,8 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("State A", FlowStateCategory.Active, [], admin);
-            flow.AddState("State B", FlowStateCategory.Active, [], admin);
+            flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], admin);
+            flow.AddState("State B", FlowStateCategory.Active, FlowData.Color, [], admin);
             FlowTransition transition = flow.Transitions.First();
             User nonAdmin = UserData.GetActiveUser();
 
@@ -985,8 +985,8 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("State A", FlowStateCategory.Active, [ProjectRole.Developer], admin);
-            flow.AddState("State B", FlowStateCategory.Active, [ProjectRole.Developer], admin);
+            flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [ProjectRole.Developer], admin);
+            flow.AddState("State B", FlowStateCategory.Active, FlowData.Color, [ProjectRole.Developer], admin);
             FlowState stateA = flow.States.Single(s => s.Name == "State A");
             FlowState stateB = flow.States.Single(s => s.Name == "State B");
             FlowTransition transition = flow.Transitions.Single(t => t.FromStateId == stateA.Id && t.ToStateId == stateB.Id);
@@ -1008,8 +1008,8 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("State A", FlowStateCategory.Active, [ProjectRole.Developer], admin);
-            flow.AddState("State B", FlowStateCategory.Active, [ProjectRole.Developer], admin);
+            flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [ProjectRole.Developer], admin);
+            flow.AddState("State B", FlowStateCategory.Active, FlowData.Color, [ProjectRole.Developer], admin);
             FlowState stateA = flow.States.Single(s => s.Name == "State A");
             FlowState stateB = flow.States.Single(s => s.Name == "State B");
             FlowTransition transition = flow.Transitions.Single(t => t.FromStateId == stateA.Id && t.ToStateId == stateB.Id);
@@ -1028,8 +1028,8 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("State A", FlowStateCategory.Active, [], admin);
-            flow.AddState("State B", FlowStateCategory.Active, [], admin);
+            flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], admin);
+            flow.AddState("State B", FlowStateCategory.Active, FlowData.Color, [], admin);
             FlowTransition transition = flow.Transitions.First();
             User nonAdmin = UserData.GetActiveUser();
 
@@ -1091,8 +1091,8 @@ public sealed class FlowTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Flow flow = FlowData.GetFlow(admin);
-            flow.AddState("State A", FlowStateCategory.Active, [], admin);
-            flow.AddState("State B", FlowStateCategory.Active, [], admin);
+            flow.AddState("State A", FlowStateCategory.Active, FlowData.Color, [], admin);
+            flow.AddState("State B", FlowStateCategory.Active, FlowData.Color, [], admin);
             FlowState stateA = flow.States.Single(s => s.Name == "State A");
             FlowState stateB = flow.States.Single(s => s.Name == "State B");
             FlowTransition transition = flow.Transitions.Single(t => t.FromStateId == stateA.Id && t.ToStateId == stateB.Id);
