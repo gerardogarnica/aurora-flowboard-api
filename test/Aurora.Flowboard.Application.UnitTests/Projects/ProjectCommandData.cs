@@ -5,6 +5,7 @@ internal static class ProjectCommandData
     public const string Name = "Aurora Flowboard";
     public const string? Description = "Project management API";
     public const string Code = "AFB";
+    public static readonly Color Color = Color.Create("white").Value;
     public const string UpdatedName = "Updated Flowboard";
     public const string? UpdatedDescription = "Updated project description";
     public static readonly DateOnly EstimatedCompletionDate = new(2026, 12, 31);
@@ -42,7 +43,7 @@ internal static class ProjectCommandData
     }
 
     public static Project GetDraftProject(User admin) =>
-        Project.Create("Test Project", "Test Description", "TST", null, admin, UtcNow).Value;
+        Project.Create("Test Project", "Test Description", "TST", Color, null, admin, UtcNow).Value;
 
     public static Project GetArchivedProject(User admin)
     {
@@ -59,10 +60,10 @@ internal static class ProjectCommandData
     }
 
     public static CreateProjectCommand GetCreateCommand() =>
-        new(Name, Description, Code, EstimatedCompletionDate);
+        new(Name, Description, Code, Color, EstimatedCompletionDate);
 
     public static UpdateProjectCommand GetUpdateCommand(Guid projectId) =>
-        new(projectId, UpdatedName, UpdatedDescription, EstimatedCompletionDate);
+        new(projectId, UpdatedName, UpdatedDescription, Color, EstimatedCompletionDate);
 
     public static ChangeProjectStatusCommand GetChangeStatusCommand(Guid projectId) =>
         new(projectId, ProjectStatus.Active);
@@ -76,11 +77,11 @@ internal static class ProjectCommandData
     public static SetupProjectFlowDto GetSetupFlowDto() =>
         new("Sprint Flow", null,
         [
-            new("Todo", FlowStateCategory.Active, [ProjectRole.Developer]),
-            new("Done", FlowStateCategory.Completed, [ProjectRole.Developer]),
-            new("Cancelled", FlowStateCategory.Cancelled, [ProjectRole.Developer])
+            new("Todo", FlowStateCategory.Active, "white", [ProjectRole.Developer]),
+            new("Done", FlowStateCategory.Completed, "white", [ProjectRole.Developer]),
+            new("Cancelled", FlowStateCategory.Cancelled, "white", [ProjectRole.Developer])
         ]);
 
     public static SetupProjectCommand GetSetupCommand() =>
-        new(Name, Description, Code, EstimatedCompletionDate, GetSetupFlowDto());
+        new(Name, Description, Code, Color, EstimatedCompletionDate, GetSetupFlowDto());
 }

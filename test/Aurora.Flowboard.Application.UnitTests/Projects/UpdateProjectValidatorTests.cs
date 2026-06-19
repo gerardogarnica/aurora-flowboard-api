@@ -35,7 +35,7 @@ public sealed class UpdateProjectValidatorTests
     public void Should_Fail_When_NameIsEmpty()
     {
         var command = new UpdateProjectCommand(
-            Guid.NewGuid(), string.Empty, null, null);
+            Guid.NewGuid(), string.Empty, null, ProjectCommandData.Color, null);
 
         var result = _validator.Validate(command);
 
@@ -47,7 +47,7 @@ public sealed class UpdateProjectValidatorTests
     {
         string longName = new('A', Project.MaxNameLength + 1);
         var command = new UpdateProjectCommand(
-            Guid.NewGuid(), longName, null, null);
+            Guid.NewGuid(), longName, null, ProjectCommandData.Color, null);
 
         var result = _validator.Validate(command);
 
@@ -59,7 +59,7 @@ public sealed class UpdateProjectValidatorTests
     {
         string longDescription = new('A', Project.MaxDescriptionLength + 1);
         var command = new UpdateProjectCommand(
-            Guid.NewGuid(), ProjectCommandData.UpdatedName, longDescription, null);
+            Guid.NewGuid(), ProjectCommandData.UpdatedName, longDescription, ProjectCommandData.Color, null);
 
         var result = _validator.Validate(command);
 
@@ -71,7 +71,7 @@ public sealed class UpdateProjectValidatorTests
     {
         DateOnly pastDate = ProjectCommandData.Today.AddDays(-1);
         var command = new UpdateProjectCommand(
-            Guid.NewGuid(), ProjectCommandData.UpdatedName, null, pastDate);
+            Guid.NewGuid(), ProjectCommandData.UpdatedName, null, ProjectCommandData.Color, pastDate);
 
         var result = _validator.Validate(command);
 
@@ -82,7 +82,7 @@ public sealed class UpdateProjectValidatorTests
     public void Should_Pass_When_EstimatedCompletionDateIsToday()
     {
         var command = new UpdateProjectCommand(
-            Guid.NewGuid(), ProjectCommandData.UpdatedName, null, ProjectCommandData.Today);
+            Guid.NewGuid(), ProjectCommandData.UpdatedName, null, ProjectCommandData.Color, ProjectCommandData.Today);
 
         var result = _validator.Validate(command);
 
@@ -93,7 +93,7 @@ public sealed class UpdateProjectValidatorTests
     public void Should_Pass_When_EstimatedCompletionDateIsNull()
     {
         var command = new UpdateProjectCommand(
-            Guid.NewGuid(), ProjectCommandData.UpdatedName, null, null);
+            Guid.NewGuid(), ProjectCommandData.UpdatedName, null, ProjectCommandData.Color, null);
 
         var result = _validator.Validate(command);
 

@@ -9,6 +9,7 @@ internal static class FlowCommandData
     public const string UpdatedName = "Updated Sprint Flow";
     public const string? UpdatedDescription = "Updated sprint workflow";
     public const string StateName = "In Review";
+    public const string StateColor = "white";
     public static readonly DateTime UtcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
     public static User GetAdmin()
@@ -25,7 +26,7 @@ internal static class FlowCommandData
 
     public static Project GetActiveProject(User admin)
     {
-        Project project = Project.Create("My Project", "Desc", "MYP", null, admin, UtcNow).Value;
+        Project project = Project.Create("My Project", "Desc", "MYP", Color.Create("white").Value, null, admin, UtcNow).Value;
         project.ChangeStatus(ProjectStatus.Active, admin, UtcNow);
         return project;
     }
@@ -42,9 +43,10 @@ internal static class FlowCommandData
         Flow flow = Flow.Create(FlowName, FlowDescription, project, false, admin, UtcNow).Value;
 
         ProjectRole[] allRoles = [ProjectRole.Admin, ProjectRole.Developer];
-        flow.AddState("Todo", FlowStateCategory.Active, allRoles, admin);
-        flow.AddState("Done", FlowStateCategory.Completed, allRoles, admin);
-        flow.AddState("Cancelled", FlowStateCategory.Cancelled, allRoles, admin);
+        Color stateColor = Color.Create(StateColor).Value;
+        flow.AddState("Todo", FlowStateCategory.Active, stateColor, allRoles, admin);
+        flow.AddState("Done", FlowStateCategory.Completed, stateColor, allRoles, admin);
+        flow.AddState("Cancelled", FlowStateCategory.Cancelled, stateColor, allRoles, admin);
 
         foreach (FlowState state in flow.States)
         {

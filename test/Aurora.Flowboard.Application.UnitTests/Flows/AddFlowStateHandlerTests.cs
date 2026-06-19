@@ -26,7 +26,7 @@ public sealed class AddFlowStateHandlerTests
         _dbContext.Flows.Returns(flowsMock);
         _dbContext.Users.Returns(usersMock);
 
-        AddFlowStateCommand command = new(flow.Id, FlowCommandData.StateName, FlowStateCategory.Active, [ProjectRole.Developer]);
+        AddFlowStateCommand command = new(flow.Id, FlowCommandData.StateName, FlowStateCategory.Active, FlowCommandData.StateColor, [ProjectRole.Developer]);
 
         // Act
         Result result = await _handler.Handle(command, CancellationToken.None);
@@ -48,7 +48,7 @@ public sealed class AddFlowStateHandlerTests
         _dbContext.Flows.Returns(flowsMock);
         _dbContext.Users.Returns(usersMock);
 
-        AddFlowStateCommand command = new(flow.Id, FlowCommandData.StateName, FlowStateCategory.Active, [ProjectRole.Developer]);
+        AddFlowStateCommand command = new(flow.Id, FlowCommandData.StateName, FlowStateCategory.Active, FlowCommandData.StateColor, [ProjectRole.Developer]);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -64,7 +64,7 @@ public sealed class AddFlowStateHandlerTests
         DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Flow>());
         _dbContext.Flows.Returns(flowsMock);
 
-        AddFlowStateCommand command = new(Guid.NewGuid(), FlowCommandData.StateName, FlowStateCategory.Active, [ProjectRole.Developer]);
+        AddFlowStateCommand command = new(Guid.NewGuid(), FlowCommandData.StateName, FlowStateCategory.Active, FlowCommandData.StateColor, [ProjectRole.Developer]);
 
         // Act
         Result result = await _handler.Handle(command, CancellationToken.None);
@@ -81,7 +81,7 @@ public sealed class AddFlowStateHandlerTests
         DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Flow>());
         _dbContext.Flows.Returns(flowsMock);
 
-        AddFlowStateCommand command = new(Guid.NewGuid(), FlowCommandData.StateName, FlowStateCategory.Active, [ProjectRole.Developer]);
+        AddFlowStateCommand command = new(Guid.NewGuid(), FlowCommandData.StateName, FlowStateCategory.Active, FlowCommandData.StateColor, [ProjectRole.Developer]);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -103,7 +103,7 @@ public sealed class AddFlowStateHandlerTests
         _dbContext.Flows.Returns(flowsMock);
         _dbContext.Users.Returns(usersMock);
 
-        AddFlowStateCommand command = new(flow.Id, FlowCommandData.StateName, FlowStateCategory.Active, [ProjectRole.Developer]);
+        AddFlowStateCommand command = new(flow.Id, FlowCommandData.StateName, FlowStateCategory.Active, FlowCommandData.StateColor, [ProjectRole.Developer]);
 
         // Act
         Result result = await _handler.Handle(command, CancellationToken.None);
@@ -127,7 +127,7 @@ public sealed class AddFlowStateHandlerTests
         _dbContext.Flows.Returns(flowsMock);
         _dbContext.Users.Returns(usersMock);
 
-        AddFlowStateCommand command = new(flow.Id, FlowCommandData.StateName, FlowStateCategory.Active, [ProjectRole.Developer]);
+        AddFlowStateCommand command = new(flow.Id, FlowCommandData.StateName, FlowStateCategory.Active, FlowCommandData.StateColor, [ProjectRole.Developer]);
 
         // Act
         Result result = await _handler.Handle(command, CancellationToken.None);
@@ -143,7 +143,7 @@ public sealed class AddFlowStateHandlerTests
         // Arrange
         User admin = FlowCommandData.GetAdmin();
         Flow flow = FlowCommandData.GetFlow(admin);
-        flow.AddState("Existing State", FlowStateCategory.Active, [ProjectRole.Admin], admin);
+        flow.AddState("Existing State", FlowStateCategory.Active, Color.Create("white").Value, [ProjectRole.Admin], admin);
         _userContext.UserId.Returns(admin.Id);
 
         DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet([flow]);
@@ -151,7 +151,7 @@ public sealed class AddFlowStateHandlerTests
         _dbContext.Flows.Returns(flowsMock);
         _dbContext.Users.Returns(usersMock);
 
-        AddFlowStateCommand command = new(flow.Id, "Existing State", FlowStateCategory.Active, [ProjectRole.Developer]);
+        AddFlowStateCommand command = new(flow.Id, "Existing State", FlowStateCategory.Active, FlowCommandData.StateColor, [ProjectRole.Developer]);
 
         // Act
         Result result = await _handler.Handle(command, CancellationToken.None);
@@ -175,7 +175,7 @@ public sealed class AddFlowStateHandlerTests
         _dbContext.Flows.Returns(flowsMock);
         _dbContext.Users.Returns(usersMock);
 
-        AddFlowStateCommand command = new(flow.Id, FlowCommandData.StateName, FlowStateCategory.Active, [ProjectRole.Developer]);
+        AddFlowStateCommand command = new(flow.Id, FlowCommandData.StateName, FlowStateCategory.Active, FlowCommandData.StateColor, [ProjectRole.Developer]);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);

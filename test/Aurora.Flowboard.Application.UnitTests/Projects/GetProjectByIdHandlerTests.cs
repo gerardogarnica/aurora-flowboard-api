@@ -3,18 +3,21 @@ namespace Aurora.Flowboard.Application.UnitTests.Projects;
 public sealed class GetProjectByIdHandlerTests
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserContext _userContext;
     private readonly GetProjectByIdHandler _handler;
 
     public GetProjectByIdHandlerTests()
     {
         _dbContext = Substitute.For<IApplicationDbContext>();
-        _handler = new GetProjectByIdHandler(_dbContext);
+        _userContext = Substitute.For<IUserContext>();
+        _handler = new GetProjectByIdHandler(_dbContext, _userContext);
     }
 
     [Fact]
     public async Task Should_ReturnNotFoundError_When_ProjectDoesNotExist()
     {
         // Arrange
+        _userContext.UserId.Returns(Guid.NewGuid());
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
         _dbContext.Projects.Returns(projectsMock);
 
@@ -28,11 +31,32 @@ public sealed class GetProjectByIdHandlerTests
     }
 
     [Fact]
+    public async Task Should_ReturnNotFoundError_When_UserIsNotMember()
+    {
+        // Arrange
+        User admin = ProjectQueryData.GetAdminUser();
+        User other = ProjectQueryData.GetOtherUser();
+        Project project = ProjectQueryData.GetProjectWithNavProperties(admin);
+        _userContext.UserId.Returns(other.Id);
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        _dbContext.Projects.Returns(projectsMock);
+
+        // Act
+        Result<ProjectResponse> result =
+            await _handler.Handle(new GetProjectByIdQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(ProjectErrors.NotFound);
+    }
+
+    [Fact]
     public async Task Should_ReturnSuccess_When_ProjectExists()
     {
         // Arrange
         User admin = ProjectQueryData.GetAdminUser();
         Project project = ProjectQueryData.GetProjectWithNavProperties(admin);
+        _userContext.UserId.Returns(admin.Id);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
         _dbContext.Projects.Returns(projectsMock);
 
@@ -50,6 +74,7 @@ public sealed class GetProjectByIdHandlerTests
         // Arrange
         User admin = ProjectQueryData.GetAdminUser();
         Project project = ProjectQueryData.GetProjectWithNavProperties(admin);
+        _userContext.UserId.Returns(admin.Id);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
         _dbContext.Projects.Returns(projectsMock);
 
@@ -68,6 +93,8 @@ public sealed class GetProjectByIdHandlerTests
         response.CreatedByFullName.Should().Be(admin.FullName);
         response.CreatedOnUtc.Should().Be(project.CreatedOnUtc);
         response.UpdatedOnUtc.Should().Be(project.UpdatedOnUtc);
+        response.OpenWorkItems.Should().Be(0);
+        response.ClosedWorkItems.Should().Be(0);
     }
 
     [Fact]
@@ -77,6 +104,7 @@ public sealed class GetProjectByIdHandlerTests
         User admin = ProjectQueryData.GetAdminUser();
         User member = ProjectQueryData.GetMemberUser();
         Project project = ProjectQueryData.GetProjectWithMemberNavProperties(admin, member);
+        _userContext.UserId.Returns(admin.Id);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
         _dbContext.Projects.Returns(projectsMock);
 
@@ -87,7 +115,10 @@ public sealed class GetProjectByIdHandlerTests
         // Assert
         result.Value.Members.Should().HaveCount(2);
         ProjectMemberResponse developer = result.Value.Members.Single(m => m.UserId == member.Id);
+        developer.FirstName.Should().Be(member.FirstName);
+        developer.LastName.Should().Be(member.LastName);
         developer.FullName.Should().Be(member.FullName);
+        developer.Initials.Should().Be(member.Initials);
         developer.Role.Should().Be(ProjectRole.Developer);
         developer.JoinedOnUtc.Should().Be(ProjectQueryData.UtcNow);
     }
@@ -99,6 +130,7 @@ public sealed class GetProjectByIdHandlerTests
         User admin = ProjectQueryData.GetAdminUser();
         User member = ProjectQueryData.GetMemberUser();
         Project project = ProjectQueryData.GetProjectWithMemberNavProperties(admin, member);
+        _userContext.UserId.Returns(admin.Id);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
         _dbContext.Projects.Returns(projectsMock);
 
@@ -114,6 +146,26 @@ public sealed class GetProjectByIdHandlerTests
     }
 
     [Fact]
+    public async Task Should_CountOpenAndClosedWorkItems_When_ProjectHasWorkItems()
+    {
+        // Arrange
+        User admin = ProjectQueryData.GetAdminUser();
+        Project project = ProjectQueryData.GetProjectWithWorkItemCounts(admin, openCount: 4, closedCount: 1, cancelledCount: 2);
+        _userContext.UserId.Returns(admin.Id);
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        _dbContext.Projects.Returns(projectsMock);
+
+        // Act
+        Result<ProjectResponse> result =
+            await _handler.Handle(new GetProjectByIdQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        result.Value.OpenWorkItems.Should().Be(4);
+        result.Value.ClosedWorkItems.Should().Be(1);
+    }
+
+    [Fact]
     public async Task Should_ReturnMembersOrderedByFullName()
     {
         // Arrange
@@ -121,6 +173,7 @@ public sealed class GetProjectByIdHandlerTests
         User alpha = ProjectQueryData.GetAlphaUser();   // "Alpha User"
         User zeta = ProjectQueryData.GetZetaUser();     // "Zeta User"
         Project project = ProjectQueryData.GetProjectWithOrderedMembers(admin, alpha, zeta);
+        _userContext.UserId.Returns(admin.Id);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
         _dbContext.Projects.Returns(projectsMock);
 
@@ -140,6 +193,7 @@ public sealed class GetProjectByIdHandlerTests
         User admin = ProjectQueryData.GetAdminUser();
         User member = ProjectQueryData.GetMemberUser();
         Project project = ProjectQueryData.GetProjectWithOrderedChangeLogs(admin, member);
+        _userContext.UserId.Returns(admin.Id);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
         _dbContext.Projects.Returns(projectsMock);
 

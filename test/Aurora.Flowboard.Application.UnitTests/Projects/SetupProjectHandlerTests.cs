@@ -118,7 +118,7 @@ public sealed class SetupProjectHandlerTests
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
         _dbContext.Users.Returns(usersMock);
 
-        var command = new SetupProjectCommand(string.Empty, null, ProjectCommandData.Code, null, ProjectCommandData.GetSetupFlowDto());
+        var command = new SetupProjectCommand(string.Empty, null, ProjectCommandData.Code, ProjectCommandData.Color, null, ProjectCommandData.GetSetupFlowDto());
 
         // Act
         Result<Guid> result = await _handler.Handle(command, CancellationToken.None);
@@ -139,7 +139,7 @@ public sealed class SetupProjectHandlerTests
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
         _dbContext.Users.Returns(usersMock);
 
-        var command = new SetupProjectCommand(string.Empty, null, ProjectCommandData.Code, null, ProjectCommandData.GetSetupFlowDto());
+        var command = new SetupProjectCommand(string.Empty, null, ProjectCommandData.Code, ProjectCommandData.Color, null, ProjectCommandData.GetSetupFlowDto());
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -163,7 +163,7 @@ public sealed class SetupProjectHandlerTests
         _dbContext.Projects.Returns(projectsMock);
 
         var invalidFlow = new SetupProjectFlowDto(string.Empty, null, []);
-        var command = new SetupProjectCommand(ProjectCommandData.Name, null, ProjectCommandData.Code, null, invalidFlow);
+        var command = new SetupProjectCommand(ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null, invalidFlow);
 
         // Act
         Result<Guid> result = await _handler.Handle(command, CancellationToken.None);
@@ -187,7 +187,7 @@ public sealed class SetupProjectHandlerTests
         _dbContext.Projects.Returns(projectsMock);
 
         var invalidFlow = new SetupProjectFlowDto(string.Empty, null, []);
-        var command = new SetupProjectCommand(ProjectCommandData.Name, null, ProjectCommandData.Code, null, invalidFlow);
+        var command = new SetupProjectCommand(ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null, invalidFlow);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -214,12 +214,12 @@ public sealed class SetupProjectHandlerTests
 
         var flowWithDuplicateState = new SetupProjectFlowDto("Sprint Flow", null,
         [
-            new("Todo", FlowStateCategory.Active, [ProjectRole.Developer]),
-            new("Todo", FlowStateCategory.Active, [ProjectRole.Developer]),
-            new("Done", FlowStateCategory.Completed, [ProjectRole.Developer]),
-            new("Cancelled", FlowStateCategory.Cancelled, [ProjectRole.Developer])
+            new("Todo", FlowStateCategory.Active, "white", [ProjectRole.Developer]),
+            new("Todo", FlowStateCategory.Active, "white", [ProjectRole.Developer]),
+            new("Done", FlowStateCategory.Completed, "white", [ProjectRole.Developer]),
+            new("Cancelled", FlowStateCategory.Cancelled, "white", [ProjectRole.Developer])
         ]);
-        var command = new SetupProjectCommand(ProjectCommandData.Name, null, ProjectCommandData.Code, null, flowWithDuplicateState);
+        var command = new SetupProjectCommand(ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null, flowWithDuplicateState);
 
         // Act
         Result<Guid> result = await _handler.Handle(command, CancellationToken.None);
@@ -246,12 +246,12 @@ public sealed class SetupProjectHandlerTests
 
         var flowWithDuplicateState = new SetupProjectFlowDto("Sprint Flow", null,
         [
-            new("Todo", FlowStateCategory.Active, [ProjectRole.Developer]),
-            new("Todo", FlowStateCategory.Active, [ProjectRole.Developer]),
-            new("Done", FlowStateCategory.Completed, [ProjectRole.Developer]),
-            new("Cancelled", FlowStateCategory.Cancelled, [ProjectRole.Developer])
+            new("Todo", FlowStateCategory.Active, "white", [ProjectRole.Developer]),
+            new("Todo", FlowStateCategory.Active, "white", [ProjectRole.Developer]),
+            new("Done", FlowStateCategory.Completed, "white", [ProjectRole.Developer]),
+            new("Cancelled", FlowStateCategory.Cancelled, "white", [ProjectRole.Developer])
         ]);
-        var command = new SetupProjectCommand(ProjectCommandData.Name, null, ProjectCommandData.Code, null, flowWithDuplicateState);
+        var command = new SetupProjectCommand(ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null, flowWithDuplicateState);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);

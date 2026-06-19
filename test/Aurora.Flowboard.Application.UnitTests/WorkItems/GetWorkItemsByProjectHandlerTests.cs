@@ -19,7 +19,7 @@ public sealed class GetWorkItemsByProjectHandlerTests
         _dbContext.Projects.Returns(projectsMock);
 
         // Act
-        Result<IReadOnlyCollection<WorkItemSummaryResponse>> result =
+        Result<IReadOnlyCollection<FlowStateBoardResponse>> result =
             await _handler.Handle(new GetWorkItemsByProjectQuery(Guid.NewGuid()), CancellationToken.None);
 
         // Assert
@@ -28,117 +28,281 @@ public sealed class GetWorkItemsByProjectHandlerTests
     }
 
     [Fact]
-    public async Task Should_ReturnEmptyList_When_ProjectHasNoWorkItems()
+    public async Task Should_ReturnFlowNotFoundError_When_ProjectHasNoDefaultFlow()
     {
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
-        (Project project, WorkItem _) = WorkItemQueryData.GetProjectAndWorkItem(admin);
+        (Project project, Flow _) = WorkItemQueryData.GetProjectWithDefaultFlow(admin);
+
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Flow>());
+        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Flows.Returns(flowsMock);
+
+        // Act
+        Result<IReadOnlyCollection<FlowStateBoardResponse>> result =
+            await _handler.Handle(new GetWorkItemsByProjectQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(FlowErrors.NotFound);
+    }
+
+    [Fact]
+    public async Task Should_ReturnFlowDeactivatedError_When_DefaultFlowIsInactive()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        (Project project, Flow flow) = WorkItemQueryData.GetProjectWithDefaultFlow(admin);
+        WorkItemQueryData.DeactivateFlow(flow);
+
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet([flow]);
+        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Flows.Returns(flowsMock);
+
+        // Act
+        Result<IReadOnlyCollection<FlowStateBoardResponse>> result =
+            await _handler.Handle(new GetWorkItemsByProjectQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(FlowErrors.Deactivated);
+    }
+
+    [Fact]
+    public async Task Should_ReturnAllStatesWithEmptyWorkItems_When_ProjectHasNoWorkItems()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        (Project project, Flow flow) = WorkItemQueryData.GetProjectWithDefaultFlow(admin);
+
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet([flow]);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(flow.States);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
         _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Flows.Returns(flowsMock);
+        _dbContext.FlowStates.Returns(statesMock);
         _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Users.Returns(usersMock);
 
         // Act
-        Result<IReadOnlyCollection<WorkItemSummaryResponse>> result =
+        Result<IReadOnlyCollection<FlowStateBoardResponse>> result =
             await _handler.Handle(new GetWorkItemsByProjectQuery(project.Id), CancellationToken.None);
 
         // Assert
         result.IsSuccessful.Should().BeTrue();
-        result.Value.Should().BeEmpty();
+        result.Value.Should().HaveCount(3);
+        result.Value.Should().AllSatisfy(s => s.WorkItems.Should().BeEmpty());
     }
 
     [Fact]
-    public async Task Should_ReturnOnlyWorkItemsForProject_When_MultipleProjectsExist()
+    public async Task Should_GroupWorkItemsByFlowState()
     {
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
-        (Project project1, WorkItem wi1, WorkItem wi2) = WorkItemQueryData.GetProjectWithTwoWorkItems(admin);
-        (Project _, WorkItem wi3) = WorkItemQueryData.GetProjectAndWorkItem(admin); // different project
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project1]);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([wi1, wi2, wi3]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
+        (Project project, Flow flow) = WorkItemQueryData.GetProjectWithDefaultFlow(admin);
+        FlowState todoState = flow.States.Single(s => s.Name == "Todo");
+        FlowState doneState = flow.States.Single(s => s.Name == "Done");
 
-        // Act
-        Result<IReadOnlyCollection<WorkItemSummaryResponse>> result =
-            await _handler.Handle(new GetWorkItemsByProjectQuery(project1.Id), CancellationToken.None);
+        WorkItem wi1 = WorkItem.Create("Item 1", null, WorkItemType.Story, Priority.Medium, project, flow, admin, null, null, WorkItemQueryData.UtcNow).Value;
+        WorkItem wi2 = WorkItem.Create("Item 2", null, WorkItemType.Bug, Priority.High, project, flow, admin, null, null, WorkItemQueryData.UtcNow.AddHours(1)).Value;
+        WorkItemQueryData.SetWorkItemFlowState(wi2, doneState.Id);
 
-        // Assert
-        result.IsSuccessful.Should().BeTrue();
-        result.Value.Should().HaveCount(2);
-        result.Value.Should().AllSatisfy(w => w.WorkItemId.Should().NotBe(wi3.Id));
-    }
-
-    [Fact]
-    public async Task Should_ReturnWorkItemsOrderedByCreatedOnUtc()
-    {
-        // Arrange
-        User admin = WorkItemQueryData.GetAdminUser();
-        (Project project, WorkItem wi1, WorkItem wi2) = WorkItemQueryData.GetProjectWithTwoWorkItems(admin);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([wi2, wi1]); // reversed order
+        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet([flow]);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(flow.States);
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([wi1, wi2]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
         _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Flows.Returns(flowsMock);
+        _dbContext.FlowStates.Returns(statesMock);
         _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Users.Returns(usersMock);
 
         // Act
-        Result<IReadOnlyCollection<WorkItemSummaryResponse>> result =
+        Result<IReadOnlyCollection<FlowStateBoardResponse>> result =
             await _handler.Handle(new GetWorkItemsByProjectQuery(project.Id), CancellationToken.None);
 
         // Assert
         result.IsSuccessful.Should().BeTrue();
-        result.Value.Select(w => w.CreatedOnUtc).Should().BeInAscendingOrder();
-        result.Value.First().Title.Should().Be("Alpha Item");
+        FlowStateBoardResponse todoBoard = result.Value.Single(s => s.FlowStateId == todoState.Id);
+        FlowStateBoardResponse doneBoard = result.Value.Single(s => s.FlowStateId == doneState.Id);
+        todoBoard.WorkItems.Should().ContainSingle(w => w.WorkItemId == wi1.Id);
+        doneBoard.WorkItems.Should().ContainSingle(w => w.WorkItemId == wi2.Id);
     }
 
     [Fact]
-    public async Task Should_MapAllResponseFields_When_WorkItemExists()
+    public async Task Should_SortStates_ActiveFirst_ThenCompleted_ThenCancelled()
     {
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
-        (Project project, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItem(admin);
+        (Project project, Flow flow) = WorkItemQueryData.GetProjectWithDefaultFlow(admin);
+
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet([flow]);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(flow.States);
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
+        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Flows.Returns(flowsMock);
+        _dbContext.FlowStates.Returns(statesMock);
+        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Users.Returns(usersMock);
+
+        // Act
+        Result<IReadOnlyCollection<FlowStateBoardResponse>> result =
+            await _handler.Handle(new GetWorkItemsByProjectQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        List<FlowStateBoardResponse> states = result.Value.ToList();
+        states[0].Category.Should().Be(FlowStateCategory.Active);
+        states[1].Category.Should().Be(FlowStateCategory.Completed);
+        states[2].Category.Should().Be(FlowStateCategory.Cancelled);
+    }
+
+    [Fact]
+    public async Task Should_SortWorkItems_ByPriorityDescThenCreatedOnUtcAsc()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        (Project project, Flow flow) = WorkItemQueryData.GetProjectWithDefaultFlow(admin);
+        FlowState todoState = flow.States.Single(s => s.Name == "Todo");
+
+        WorkItem lowPriority = WorkItem.Create("Low", null, WorkItemType.Story, Priority.Low, project, flow, admin, null, null, WorkItemQueryData.UtcNow).Value;
+        WorkItem criticalEarly = WorkItem.Create("Critical Early", null, WorkItemType.Story, Priority.Critical, project, flow, admin, null, null, WorkItemQueryData.UtcNow.AddHours(1)).Value;
+        WorkItem criticalLate = WorkItem.Create("Critical Late", null, WorkItemType.Story, Priority.Critical, project, flow, admin, null, null, WorkItemQueryData.UtcNow.AddHours(2)).Value;
+        WorkItem highPriority = WorkItem.Create("High", null, WorkItemType.Story, Priority.High, project, flow, admin, null, null, WorkItemQueryData.UtcNow.AddHours(3)).Value;
+
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet([flow]);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(flow.States);
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([lowPriority, criticalLate, highPriority, criticalEarly]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
+        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Flows.Returns(flowsMock);
+        _dbContext.FlowStates.Returns(statesMock);
+        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Users.Returns(usersMock);
+
+        // Act
+        Result<IReadOnlyCollection<FlowStateBoardResponse>> result =
+            await _handler.Handle(new GetWorkItemsByProjectQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        IReadOnlyCollection<WorkItemSummaryResponse> items = result.Value.Single(s => s.FlowStateId == todoState.Id).WorkItems;
+        items.Select(w => w.Priority).Should().ContainInOrder(
+            Priority.Critical, Priority.Critical, Priority.High, Priority.Low);
+        items.Where(w => w.Priority == Priority.Critical)
+            .Select(w => w.CreatedOnUtc)
+            .Should().BeInAscendingOrder();
+    }
+
+    [Fact]
+    public async Task Should_MapAssigneeInitialsAndFullName_When_WorkItemIsAssigned()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        User assignee = WorkItemQueryData.GetAssigneeUser();
+        (Project project, Flow flow) = WorkItemQueryData.GetProjectWithDefaultFlow(admin);
+        project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemQueryData.UtcNow);
+        WorkItem workItem = WorkItem.Create("Item", null, WorkItemType.Story, Priority.Medium, project, flow, admin, null, null, WorkItemQueryData.UtcNow, assignee).Value;
+
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet([flow]);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(flow.States);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([assignee]);
         _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Flows.Returns(flowsMock);
+        _dbContext.FlowStates.Returns(statesMock);
         _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Users.Returns(usersMock);
 
         // Act
-        Result<IReadOnlyCollection<WorkItemSummaryResponse>> result =
+        Result<IReadOnlyCollection<FlowStateBoardResponse>> result =
             await _handler.Handle(new GetWorkItemsByProjectQuery(project.Id), CancellationToken.None);
 
         // Assert
         result.IsSuccessful.Should().BeTrue();
-        WorkItemSummaryResponse summary = result.Value.Single();
+        WorkItemSummaryResponse summary = result.Value.SelectMany(s => s.WorkItems).Single();
+        summary.AssigneeId.Should().Be(assignee.Id);
+        summary.AssigneeInitials.Should().Be("WA");
+        summary.AssigneeFullName.Should().Be("Work Assignee");
+    }
+
+    [Fact]
+    public async Task Should_ReturnNullAssigneeFields_When_WorkItemHasNoAssignee()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        (Project project, Flow flow) = WorkItemQueryData.GetProjectWithDefaultFlow(admin);
+        WorkItem workItem = WorkItem.Create("Item", null, WorkItemType.Story, Priority.Medium, project, flow, admin, null, null, WorkItemQueryData.UtcNow).Value;
+
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet([flow]);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(flow.States);
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
+        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Flows.Returns(flowsMock);
+        _dbContext.FlowStates.Returns(statesMock);
+        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Users.Returns(usersMock);
+
+        // Act
+        Result<IReadOnlyCollection<FlowStateBoardResponse>> result =
+            await _handler.Handle(new GetWorkItemsByProjectQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        WorkItemSummaryResponse summary = result.Value.SelectMany(s => s.WorkItems).Single();
+        summary.AssigneeId.Should().BeNull();
+        summary.AssigneeInitials.Should().BeNull();
+        summary.AssigneeFullName.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Should_MapAllWorkItemFields_When_WorkItemExists()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        (Project project, Flow flow) = WorkItemQueryData.GetProjectWithDefaultFlow(admin);
+        FlowState todoState = flow.States.Single(s => s.Name == "Todo");
+        WorkItem workItem = WorkItem.Create("Test Work Item", null, WorkItemType.Story, Priority.Medium, project, flow, admin, null, null, WorkItemQueryData.UtcNow).Value;
+        workItem.AddComment(admin, WorkItemQueryData.CommentContent, WorkItemQueryData.UtcNow);
+        workItem.LogTime(admin, 1.5m, null, WorkItemQueryData.UtcNow, WorkItemQueryData.UtcNow);
+
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet([flow]);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(flow.States);
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
+        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Flows.Returns(flowsMock);
+        _dbContext.FlowStates.Returns(statesMock);
+        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Users.Returns(usersMock);
+
+        // Act
+        Result<IReadOnlyCollection<FlowStateBoardResponse>> result =
+            await _handler.Handle(new GetWorkItemsByProjectQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        WorkItemSummaryResponse summary = result.Value.Single(s => s.FlowStateId == todoState.Id).WorkItems.Single();
         summary.WorkItemId.Should().Be(workItem.Id);
         summary.Title.Should().Be("Test Work Item");
         summary.Type.Should().Be(WorkItemType.Story);
         summary.Priority.Should().Be(Priority.Medium);
-        summary.FlowStateId.Should().Be(workItem.FlowStateId);
+        summary.FlowStateId.Should().Be(todoState.Id);
         summary.FlowStateName.Should().Be("Todo");
         summary.AssigneeId.Should().BeNull();
         summary.CreatedOnUtc.Should().Be(WorkItemQueryData.UtcNow);
-        summary.CommentCount.Should().Be(0);
-        summary.TimeEntryCount.Should().Be(0);
-    }
-
-    [Fact]
-    public async Task Should_MapCommentAndTimeEntryCounts_When_WorkItemHasCollections()
-    {
-        // Arrange
-        User admin = WorkItemQueryData.GetAdminUser();
-        (Project project, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithComment(admin);
-        workItem.LogTime(admin, 1.5m, null, WorkItemQueryData.UtcNow, WorkItemQueryData.UtcNow);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
-
-        // Act
-        Result<IReadOnlyCollection<WorkItemSummaryResponse>> result =
-            await _handler.Handle(new GetWorkItemsByProjectQuery(project.Id), CancellationToken.None);
-
-        // Assert
-        result.IsSuccessful.Should().BeTrue();
-        WorkItemSummaryResponse summary = result.Value.Single();
         summary.CommentCount.Should().Be(1);
         summary.TimeEntryCount.Should().Be(1);
     }

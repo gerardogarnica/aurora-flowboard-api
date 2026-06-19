@@ -25,7 +25,7 @@ public sealed class SetupProjectValidatorTests
     public void Should_Fail_When_NameIsEmpty()
     {
         var command = new SetupProjectCommand(
-            string.Empty, null, ProjectCommandData.Code, null, ProjectCommandData.GetSetupFlowDto());
+            string.Empty, null, ProjectCommandData.Code, ProjectCommandData.Color, null, ProjectCommandData.GetSetupFlowDto());
 
         var result = _validator.Validate(command);
 
@@ -37,7 +37,7 @@ public sealed class SetupProjectValidatorTests
     {
         string longName = new('A', Project.MaxNameLength + 1);
         var command = new SetupProjectCommand(
-            longName, null, ProjectCommandData.Code, null, ProjectCommandData.GetSetupFlowDto());
+            longName, null, ProjectCommandData.Code, ProjectCommandData.Color, null, ProjectCommandData.GetSetupFlowDto());
 
         var result = _validator.Validate(command);
 
@@ -48,7 +48,7 @@ public sealed class SetupProjectValidatorTests
     public void Should_Fail_When_CodeIsEmpty()
     {
         var command = new SetupProjectCommand(
-            ProjectCommandData.Name, null, string.Empty, null, ProjectCommandData.GetSetupFlowDto());
+            ProjectCommandData.Name, null, string.Empty, ProjectCommandData.Color, null, ProjectCommandData.GetSetupFlowDto());
 
         var result = _validator.Validate(command);
 
@@ -60,7 +60,7 @@ public sealed class SetupProjectValidatorTests
     {
         string longCode = new('A', ProjectCode.MaxLength + 1);
         var command = new SetupProjectCommand(
-            ProjectCommandData.Name, null, longCode, null, ProjectCommandData.GetSetupFlowDto());
+            ProjectCommandData.Name, null, longCode, ProjectCommandData.Color, null, ProjectCommandData.GetSetupFlowDto());
 
         var result = _validator.Validate(command);
 
@@ -71,7 +71,7 @@ public sealed class SetupProjectValidatorTests
     public void Should_Fail_When_CodeContainsNonAlphabeticCharacters()
     {
         var command = new SetupProjectCommand(
-            ProjectCommandData.Name, null, "A1B", null, ProjectCommandData.GetSetupFlowDto());
+            ProjectCommandData.Name, null, "A1B", ProjectCommandData.Color, null, ProjectCommandData.GetSetupFlowDto());
 
         var result = _validator.Validate(command);
 
@@ -83,7 +83,7 @@ public sealed class SetupProjectValidatorTests
     {
         string longDescription = new('A', Project.MaxDescriptionLength + 1);
         var command = new SetupProjectCommand(
-            ProjectCommandData.Name, longDescription, ProjectCommandData.Code, null, ProjectCommandData.GetSetupFlowDto());
+            ProjectCommandData.Name, longDescription, ProjectCommandData.Code, ProjectCommandData.Color, null, ProjectCommandData.GetSetupFlowDto());
 
         var result = _validator.Validate(command);
 
@@ -95,7 +95,7 @@ public sealed class SetupProjectValidatorTests
     {
         DateOnly pastDate = ProjectCommandData.Today.AddDays(-1);
         var command = new SetupProjectCommand(
-            ProjectCommandData.Name, null, ProjectCommandData.Code, pastDate, ProjectCommandData.GetSetupFlowDto());
+            ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, pastDate, ProjectCommandData.GetSetupFlowDto());
 
         var result = _validator.Validate(command);
 
@@ -106,7 +106,7 @@ public sealed class SetupProjectValidatorTests
     public void Should_Pass_When_EstimatedCompletionDateIsNull()
     {
         var command = new SetupProjectCommand(
-            ProjectCommandData.Name, null, ProjectCommandData.Code, null, ProjectCommandData.GetSetupFlowDto());
+            ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null, ProjectCommandData.GetSetupFlowDto());
 
         var result = _validator.Validate(command);
 
@@ -118,7 +118,7 @@ public sealed class SetupProjectValidatorTests
     {
         var flow = new SetupProjectFlowDto(string.Empty, null, ProjectCommandData.GetSetupFlowDto().States);
         var command = new SetupProjectCommand(
-            ProjectCommandData.Name, null, ProjectCommandData.Code, null, flow);
+            ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null, flow);
 
         var result = _validator.Validate(command);
 
@@ -131,7 +131,7 @@ public sealed class SetupProjectValidatorTests
         string longName = new('A', Flow.MaxNameLength + 1);
         var flow = new SetupProjectFlowDto(longName, null, ProjectCommandData.GetSetupFlowDto().States);
         var command = new SetupProjectCommand(
-            ProjectCommandData.Name, null, ProjectCommandData.Code, null, flow);
+            ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null, flow);
 
         var result = _validator.Validate(command);
 
@@ -144,7 +144,7 @@ public sealed class SetupProjectValidatorTests
         string longDescription = new('A', Flow.MaxDescriptionLength + 1);
         var flow = new SetupProjectFlowDto("Sprint Flow", longDescription, ProjectCommandData.GetSetupFlowDto().States);
         var command = new SetupProjectCommand(
-            ProjectCommandData.Name, null, ProjectCommandData.Code, null, flow);
+            ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null, flow);
 
         var result = _validator.Validate(command);
 
@@ -156,7 +156,7 @@ public sealed class SetupProjectValidatorTests
     {
         var flow = new SetupProjectFlowDto("Sprint Flow", null, []);
         var command = new SetupProjectCommand(
-            ProjectCommandData.Name, null, ProjectCommandData.Code, null, flow);
+            ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null, flow);
 
         var result = _validator.Validate(command);
 
@@ -168,11 +168,11 @@ public sealed class SetupProjectValidatorTests
     {
         var flow = new SetupProjectFlowDto("Sprint Flow", null,
         [
-            new("Todo", FlowStateCategory.Active, [ProjectRole.Developer]),
-            new("Cancelled", FlowStateCategory.Cancelled, [ProjectRole.Developer])
+            new("Todo", FlowStateCategory.Active, "white", [ProjectRole.Developer]),
+            new("Cancelled", FlowStateCategory.Cancelled, "white", [ProjectRole.Developer])
         ]);
         var command = new SetupProjectCommand(
-            ProjectCommandData.Name, null, ProjectCommandData.Code, null, flow);
+            ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null, flow);
 
         var result = _validator.Validate(command);
 
@@ -184,11 +184,11 @@ public sealed class SetupProjectValidatorTests
     {
         var flow = new SetupProjectFlowDto("Sprint Flow", null,
         [
-            new("Todo", FlowStateCategory.Active, [ProjectRole.Developer]),
-            new("Done", FlowStateCategory.Completed, [ProjectRole.Developer])
+            new("Todo", FlowStateCategory.Active, "white", [ProjectRole.Developer]),
+            new("Done", FlowStateCategory.Completed, "white", [ProjectRole.Developer])
         ]);
         var command = new SetupProjectCommand(
-            ProjectCommandData.Name, null, ProjectCommandData.Code, null, flow);
+            ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null, flow);
 
         var result = _validator.Validate(command);
 
@@ -200,12 +200,12 @@ public sealed class SetupProjectValidatorTests
     {
         var flow = new SetupProjectFlowDto("Sprint Flow", null,
         [
-            new("Done", FlowStateCategory.Completed, [ProjectRole.Developer]),
-            new("Todo", FlowStateCategory.Active, [ProjectRole.Developer]),
-            new("Cancelled", FlowStateCategory.Cancelled, [ProjectRole.Developer])
+            new("Done", FlowStateCategory.Completed, "white", [ProjectRole.Developer]),
+            new("Todo", FlowStateCategory.Active, "white", [ProjectRole.Developer]),
+            new("Cancelled", FlowStateCategory.Cancelled, "white", [ProjectRole.Developer])
         ]);
         var command = new SetupProjectCommand(
-            ProjectCommandData.Name, null, ProjectCommandData.Code, null, flow);
+            ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null, flow);
 
         var result = _validator.Validate(command);
 
@@ -217,12 +217,12 @@ public sealed class SetupProjectValidatorTests
     {
         var flow = new SetupProjectFlowDto("Sprint Flow", null,
         [
-            new(string.Empty, FlowStateCategory.Active, [ProjectRole.Developer]),
-            new("Done", FlowStateCategory.Completed, [ProjectRole.Developer]),
-            new("Cancelled", FlowStateCategory.Cancelled, [ProjectRole.Developer])
+            new(string.Empty, FlowStateCategory.Active, "white", [ProjectRole.Developer]),
+            new("Done", FlowStateCategory.Completed, "white", [ProjectRole.Developer]),
+            new("Cancelled", FlowStateCategory.Cancelled, "white", [ProjectRole.Developer])
         ]);
         var command = new SetupProjectCommand(
-            ProjectCommandData.Name, null, ProjectCommandData.Code, null, flow);
+            ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null, flow);
 
         var result = _validator.Validate(command);
 
@@ -235,12 +235,12 @@ public sealed class SetupProjectValidatorTests
         string longStateName = new('A', FlowState.MaxNameLength + 1);
         var flow = new SetupProjectFlowDto("Sprint Flow", null,
         [
-            new(longStateName, FlowStateCategory.Active, [ProjectRole.Developer]),
-            new("Done", FlowStateCategory.Completed, [ProjectRole.Developer]),
-            new("Cancelled", FlowStateCategory.Cancelled, [ProjectRole.Developer])
+            new(longStateName, FlowStateCategory.Active, "white", [ProjectRole.Developer]),
+            new("Done", FlowStateCategory.Completed, "white", [ProjectRole.Developer]),
+            new("Cancelled", FlowStateCategory.Cancelled, "white", [ProjectRole.Developer])
         ]);
         var command = new SetupProjectCommand(
-            ProjectCommandData.Name, null, ProjectCommandData.Code, null, flow);
+            ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null, flow);
 
         var result = _validator.Validate(command);
 
@@ -252,12 +252,12 @@ public sealed class SetupProjectValidatorTests
     {
         var flow = new SetupProjectFlowDto("Sprint Flow", null,
         [
-            new("Todo", FlowStateCategory.Active, []),
-            new("Done", FlowStateCategory.Completed, [ProjectRole.Developer]),
-            new("Cancelled", FlowStateCategory.Cancelled, [ProjectRole.Developer])
+            new("Todo", FlowStateCategory.Active, "white", []),
+            new("Done", FlowStateCategory.Completed, "white", [ProjectRole.Developer]),
+            new("Cancelled", FlowStateCategory.Cancelled, "white", [ProjectRole.Developer])
         ]);
         var command = new SetupProjectCommand(
-            ProjectCommandData.Name, null, ProjectCommandData.Code, null, flow);
+            ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null, flow);
 
         var result = _validator.Validate(command);
 

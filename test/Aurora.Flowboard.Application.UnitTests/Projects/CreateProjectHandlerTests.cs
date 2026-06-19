@@ -108,7 +108,7 @@ public sealed class CreateProjectHandlerTests
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
         _dbContext.Users.Returns(usersMock);
 
-        var command = new CreateProjectCommand(string.Empty, null, ProjectCommandData.Code, null);
+        var command = new CreateProjectCommand(string.Empty, null, ProjectCommandData.Code, ProjectCommandData.Color, null);
 
         // Act
         Result<Guid> result = await _handler.Handle(command, CancellationToken.None);
@@ -129,7 +129,7 @@ public sealed class CreateProjectHandlerTests
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
         _dbContext.Users.Returns(usersMock);
 
-        var command = new CreateProjectCommand(string.Empty, null, ProjectCommandData.Code, null);
+        var command = new CreateProjectCommand(string.Empty, null, ProjectCommandData.Code, ProjectCommandData.Color, null);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);

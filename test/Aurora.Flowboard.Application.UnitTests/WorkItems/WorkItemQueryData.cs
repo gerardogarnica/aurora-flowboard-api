@@ -66,19 +66,47 @@ internal static class WorkItemQueryData
 
     private static (Project, Flow) GetActiveProjectWithFlow(User admin)
     {
-        Project project = Project.Create("WI Project", "Desc", "WIP", null, admin, UtcNow).Value;
+        Project project = Project.Create("WI Project", "Desc", "WIP", Color.Create("white").Value, null, admin, UtcNow).Value;
         project.ChangeStatus(ProjectStatus.Active, admin, UtcNow);
         Flow flow = Flow.Create("Sprint Flow", null, project, false, admin, UtcNow).Value;
         ProjectRole[] allRoles = [ProjectRole.Admin, ProjectRole.Developer];
-        flow.AddState("Todo", FlowStateCategory.Active, allRoles, admin);
-        flow.AddState("Done", FlowStateCategory.Completed, allRoles, admin);
-        flow.AddState("Cancelled", FlowStateCategory.Cancelled, allRoles, admin);
+        Color stateColor = Color.Create("white").Value;
+        flow.AddState("Todo", FlowStateCategory.Active, stateColor, allRoles, admin);
+        flow.AddState("Done", FlowStateCategory.Completed, stateColor, allRoles, admin);
+        flow.AddState("Cancelled", FlowStateCategory.Cancelled, stateColor, allRoles, admin);
         foreach (FlowState state in flow.States)
         {
             SetFlowNavProperty(state, flow);
         }
         return (project, flow);
     }
+
+    public static (Project Project, Flow DefaultFlow) GetProjectWithDefaultFlow(User admin)
+    {
+        Project project = Project.Create("WI Project", "Desc", "WIP", Color.Create("white").Value, null, admin, UtcNow).Value;
+        project.ChangeStatus(ProjectStatus.Active, admin, UtcNow);
+        Flow flow = Flow.Create("Default Flow", null, project, true, admin, UtcNow).Value;
+        ProjectRole[] allRoles = [ProjectRole.Admin, ProjectRole.Developer];
+        Color stateColor = Color.Create("white").Value;
+        flow.AddState("Todo", FlowStateCategory.Active, stateColor, allRoles, admin);
+        flow.AddState("Done", FlowStateCategory.Completed, stateColor, allRoles, admin);
+        flow.AddState("Cancelled", FlowStateCategory.Cancelled, stateColor, allRoles, admin);
+        foreach (FlowState state in flow.States)
+        {
+            SetFlowNavProperty(state, flow);
+        }
+        return (project, flow);
+    }
+
+    public static void DeactivateFlow(Flow flow) =>
+        typeof(Flow)
+            .GetField("<IsActive>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance)
+            ?.SetValue(flow, false);
+
+    public static void SetWorkItemFlowState(WorkItem workItem, Guid flowStateId) =>
+        typeof(WorkItem)
+            .GetField("<FlowStateId>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance)
+            ?.SetValue(workItem, flowStateId);
 
     private static void SetFlowNavProperty(FlowState state, Flow flow) =>
         typeof(FlowState)

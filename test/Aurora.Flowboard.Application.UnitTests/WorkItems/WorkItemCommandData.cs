@@ -33,16 +33,17 @@ internal static class WorkItemCommandData
 
     public static (Project Project, Flow Flow) GetActiveProjectWithFlow(User admin)
     {
-        Project project = Project.Create("My Project", "Desc", "MYP", null, admin, UtcNow).Value;
+        Project project = Project.Create("My Project", "Desc", "MYP", Color.Create("white").Value, null, admin, UtcNow).Value;
         project.ChangeStatus(ProjectStatus.Active, admin, UtcNow);
 
         Flow flow = Flow.Create("Sprint Flow", "Standard sprint workflow", project, false, admin, UtcNow).Value;
 
         ProjectRole[] allRoles = [ProjectRole.Admin, ProjectRole.Developer];
-        flow.AddState("Todo", FlowStateCategory.Active, allRoles, admin);
-        flow.AddState("In Progress", FlowStateCategory.Active, allRoles, admin);
-        flow.AddState("Done", FlowStateCategory.Completed, allRoles, admin);
-        flow.AddState("Cancelled", FlowStateCategory.Cancelled, allRoles, admin);
+        Color stateColor = Color.Create("white").Value;
+        flow.AddState("Todo", FlowStateCategory.Active, stateColor, allRoles, admin);
+        flow.AddState("In Progress", FlowStateCategory.Active, stateColor, allRoles, admin);
+        flow.AddState("Done", FlowStateCategory.Completed, stateColor, allRoles, admin);
+        flow.AddState("Cancelled", FlowStateCategory.Cancelled, stateColor, allRoles, admin);
 
         foreach (FlowState state in flow.States)
         {

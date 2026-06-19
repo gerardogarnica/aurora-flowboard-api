@@ -15,7 +15,7 @@ internal static class FlowQueryData
 
     public static Project GetActiveProject(User admin)
     {
-        Project project = Project.Create("Flow Project", "Desc", "FLQ", null, admin, UtcNow).Value;
+        Project project = Project.Create("Flow Project", "Desc", "FLQ", Color.Create("white").Value, null, admin, UtcNow).Value;
         project.ChangeStatus(ProjectStatus.Active, admin, UtcNow);
         return project;
     }
@@ -58,9 +58,10 @@ internal static class FlowQueryData
     private static void AddStatesAndSetNavProps(Flow flow, User admin)
     {
         ProjectRole[] allRoles = [ProjectRole.Admin, ProjectRole.Developer];
-        flow.AddState("Todo", FlowStateCategory.Active, allRoles, admin);
-        flow.AddState("Done", FlowStateCategory.Completed, allRoles, admin);
-        flow.AddState("Cancelled", FlowStateCategory.Cancelled, allRoles, admin);
+        Color stateColor = Color.Create("white").Value;
+        flow.AddState("Todo", FlowStateCategory.Active, stateColor, allRoles, admin);
+        flow.AddState("Done", FlowStateCategory.Completed, stateColor, allRoles, admin);
+        flow.AddState("Cancelled", FlowStateCategory.Cancelled, stateColor, allRoles, admin);
         foreach (FlowState state in flow.States)
         {
             SetFlowNavProperty(state, flow);
