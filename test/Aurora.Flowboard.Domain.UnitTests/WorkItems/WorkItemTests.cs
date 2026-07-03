@@ -827,6 +827,24 @@ public sealed class WorkItemTests
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(UserErrors.Inactive);
         }
+
+        [Fact]
+        public void Should_Fail_When_WorkItemStateIsCancelled()
+        {
+            // Arrange
+            var (workItem, project, flow, admin) = WorkItemData.GetWorkItemWithContext();
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            FlowState cancelledState = flow.States.Single(s => s.Name == "Cancelled");
+            workItem.Move(cancelledState, admin, null, WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.Assign(assignee, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.CancelledWorkItemCannotBeModified);
+        }
     }
 
     public sealed class Unassign : BaseTest
@@ -942,6 +960,27 @@ public sealed class WorkItemTests
             // Assert
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(UserErrors.Inactive);
+        }
+
+        [Fact]
+        public void Should_Fail_When_WorkItemStateIsCancelled()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            WorkItem workItem = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
+            FlowState cancelledState = flow.States.Single(s => s.Name == "Cancelled");
+            workItem.Move(cancelledState, admin, null, WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.Unassign(admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.CancelledWorkItemCannotBeModified);
         }
     }
 

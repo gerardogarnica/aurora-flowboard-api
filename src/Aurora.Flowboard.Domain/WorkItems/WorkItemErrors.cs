@@ -81,4 +81,8 @@ public static class WorkItemErrors
     public static readonly BaseError DuplicateTagName = BaseError.Conflict(
         "WorkItem.DuplicateTagName",
         "A tag with this name already exists on this work item");
+
+    public static readonly BaseError CancelledWorkItemCannotBeModified = BaseError.Validation(
+        "WorkItem.CancelledWorkItemCannotBeModified",
+        "A work item in a cancelled state cannot be assigned or unassigned");
 }

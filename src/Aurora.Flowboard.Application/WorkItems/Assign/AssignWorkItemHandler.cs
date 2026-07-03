@@ -13,6 +13,7 @@ internal sealed class AssignWorkItemHandler(
             .WorkItems
             .Include(w => w.Project)
             .ThenInclude(p => p.Members)
+            .Include(w => w.FlowState)
             .AsSplitQuery()
             .SingleOrDefaultAsync(w => w.Id == command.Id, cancellationToken);
 

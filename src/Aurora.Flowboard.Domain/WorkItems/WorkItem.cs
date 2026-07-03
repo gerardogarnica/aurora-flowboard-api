@@ -34,7 +34,7 @@ public sealed class WorkItem : BaseEntity
     public DateTime? CompletedOnUtc { get; private set; }
 
     public Project Project { get; init; } = null!;
-    public FlowState FlowState { get; init; } = null!;
+    public FlowState FlowState { get; private set; } = null!;
     public IReadOnlyCollection<Comment> Comments => _comments.AsReadOnly();
     public IReadOnlyCollection<TimeEntry> TimeEntries => _timeEntries.AsReadOnly();
     public IReadOnlyCollection<StateTransitionHistory> StateHistory => _stateHistory.AsReadOnly();
@@ -260,6 +260,7 @@ public sealed class WorkItem : BaseEntity
             changedOnUtc));
 
         FlowStateId = toState.Id;
+        FlowState = toState;
         UpdatedOnUtc = changedOnUtc;
 
         if (toState.Category is FlowStateCategory.Completed or FlowStateCategory.Cancelled)
@@ -284,6 +285,11 @@ public sealed class WorkItem : BaseEntity
         if (!Project.IsMember(assignee.Id))
         {
             return Result.Fail(WorkItemErrors.AssigneeNotProjectMember);
+        }
+
+        if (FlowState.Category == FlowStateCategory.Cancelled)
+        {
+            return Result.Fail(WorkItemErrors.CancelledWorkItemCannotBeModified);
         }
 
         if (!changedBy.IsActive)
@@ -316,6 +322,11 @@ public sealed class WorkItem : BaseEntity
         if (!Project.IsMember(changedBy.Id))
         {
             return Result.Fail(WorkItemErrors.UserNotProjectMember);
+        }
+
+        if (FlowState.Category == FlowStateCategory.Cancelled)
+        {
+            return Result.Fail(WorkItemErrors.CancelledWorkItemCannotBeModified);
         }
 
         if (!changedBy.IsActive)
