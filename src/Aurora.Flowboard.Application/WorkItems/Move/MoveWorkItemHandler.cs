@@ -26,7 +26,6 @@ internal sealed class MoveWorkItemHandler(
 
         FlowState? toState = await dbContext
             .FlowStates
-            .AsNoTracking()
             .SingleOrDefaultAsync(s => s.Id == command.ToStateId, cancellationToken);
 
         if (toState is null)
