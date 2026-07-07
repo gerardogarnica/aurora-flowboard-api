@@ -1,3 +1,5 @@
+using Aurora.Flowboard.Application.Flows.GetById;
+
 namespace Aurora.Flowboard.Application.WorkItems.GetById;
 
 internal sealed class GetWorkItemByIdHandler(
@@ -12,6 +14,7 @@ internal sealed class GetWorkItemByIdHandler(
             .Where(w => w.Id == query.WorkItemId)
             .Select(w => new WorkItemResponse(
                 w.Id,
+                w.Code,
                 w.Title,
                 w.Description,
                 w.Type,
@@ -53,6 +56,18 @@ internal sealed class GetWorkItemByIdHandler(
                 w.ChangeLogs
                     .OrderBy(c => c.ChangedOnUtc)
                     .Select(c => new WorkItemChangeLogResponse(c.Id, c.ChangedById, c.ChangeType, c.AffectedEntityId, c.ChangedOnUtc))
+                    .ToList(),
+                (from t in dbContext.FlowTransitions
+                 join s in dbContext.FlowStates on t.ToStateId equals s.Id
+                 where t.FromStateId == w.FlowStateId
+                 orderby s.Name
+                 select new FlowTransitionResponse(
+                     t.Id,
+                     t.FromStateId,
+                     w.FlowState.Name,
+                     t.ToStateId,
+                     s.Name,
+                     t.AllowedRoles))
                     .ToList()))
             .AsNoTracking()
             .SingleOrDefaultAsync(cancellationToken);

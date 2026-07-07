@@ -86,8 +86,8 @@ internal sealed class GetWorkItemsByProjectHandler(
                     .ThenBy(w => w.CreatedOnUtc)
                     .Select(w => new WorkItemSummaryResponse(
                         w.Id,
-                        w.Title,
                         w.Code,
+                        w.Title,
                         w.Type,
                         w.Priority,
                         w.FlowStateId,

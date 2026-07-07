@@ -1,7 +1,10 @@
+using Aurora.Flowboard.Application.Flows.GetById;
+
 namespace Aurora.Flowboard.Application.WorkItems.GetById;
 
 public sealed record WorkItemResponse(
     Guid WorkItemId,
+    string Code,
     string Title,
     string? Description,
     WorkItemType Type,
@@ -23,7 +26,8 @@ public sealed record WorkItemResponse(
     IReadOnlyCollection<WorkItemCommentResponse> Comments,
     IReadOnlyCollection<WorkItemTimeEntryResponse> TimeEntries,
     IReadOnlyCollection<WorkItemStateTransitionResponse> StateHistory,
-    IReadOnlyCollection<WorkItemChangeLogResponse> ChangeLogs);
+    IReadOnlyCollection<WorkItemChangeLogResponse> ChangeLogs,
+    IReadOnlyCollection<FlowTransitionResponse> AvailableTransitions);
 
 public sealed record WorkItemTagResponse(
     Guid TagId,

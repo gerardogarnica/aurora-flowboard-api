@@ -2,8 +2,8 @@ namespace Aurora.Flowboard.Application.WorkItems.GetByProject;
 
 public sealed record WorkItemSummaryResponse(
     Guid WorkItemId,
-    string Title,
     string Code,
+    string Title,
     WorkItemType Type,
     Priority Priority,
     Guid FlowStateId,
