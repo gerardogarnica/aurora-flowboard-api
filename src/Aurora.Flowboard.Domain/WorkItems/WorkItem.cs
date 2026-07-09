@@ -196,6 +196,11 @@ public sealed class WorkItem : BaseEntity
             return Result.Fail(WorkItemErrors.DescriptionTooLong);
         }
 
+        if (!Project.CanAddOrUpdateWorkItem())
+        {
+            return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
         if (!Project.IsMember(changedBy.Id))
         {
             return Result.Fail(WorkItemErrors.UserNotProjectMember);
@@ -220,6 +225,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result Move(FlowState toState, User changedBy, string? reason, DateTime changedOnUtc)
     {
+        if (!Project.CanAddOrUpdateWorkItem())
+        {
+            return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
         if (!Project.IsMember(changedBy.Id))
         {
             return Result.Fail(WorkItemErrors.UserNotProjectMember);
@@ -277,6 +287,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result Assign(User assignee, User changedBy, DateTime updatedOnUtc)
     {
+        if (!Project.CanAddOrUpdateWorkItem())
+        {
+            return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
         if (!Project.IsMember(changedBy.Id))
         {
             return Result.Fail(WorkItemErrors.UserNotProjectMember);
@@ -314,6 +329,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result Unassign(User changedBy, DateTime updatedOnUtc)
     {
+        if (!Project.CanAddOrUpdateWorkItem())
+        {
+            return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
         if (AssigneeId is null)
         {
             return Result.Fail(WorkItemErrors.NotAssigned);
@@ -346,6 +366,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result AddComment(User author, string content, DateTime createdOnUtc)
     {
+        if (!Project.CanAddOrUpdateWorkItem())
+        {
+            return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
         if (!Project.IsMember(author.Id))
         {
             return Result.Fail(WorkItemErrors.UserNotProjectMember);
@@ -373,6 +398,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result UpdateComment(Guid commentId, User changedBy, string content, DateTime updatedOnUtc)
     {
+        if (!Project.CanAddOrUpdateWorkItem())
+        {
+            return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
         if (!Project.IsMember(changedBy.Id))
         {
             return Result.Fail(WorkItemErrors.UserNotProjectMember);
@@ -404,6 +434,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result RemoveComment(Guid commentId, User changedBy, DateTime updatedOnUtc)
     {
+        if (!Project.CanAddOrUpdateWorkItem())
+        {
+            return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
         if (!Project.IsMember(changedBy.Id))
         {
             return Result.Fail(WorkItemErrors.UserNotProjectMember);
@@ -435,6 +470,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result LogTime(User user, decimal hours, string? description, DateTime loggedOnUtc, DateTime createdOnUtc)
     {
+        if (!Project.CanAddOrUpdateWorkItem())
+        {
+            return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
         if (!Project.IsMember(user.Id))
         {
             return Result.Fail(WorkItemErrors.UserNotProjectMember);
@@ -462,6 +502,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result AddTag(string name, User changedBy, DateTime updatedOnUtc)
     {
+        if (!Project.CanAddOrUpdateWorkItem())
+        {
+            return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
         if (!Project.IsMember(changedBy.Id))
         {
             return Result.Fail(WorkItemErrors.UserNotProjectMember);
@@ -502,6 +547,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result RemoveTag(Guid tagId, User changedBy, DateTime updatedOnUtc)
     {
+        if (!Project.CanAddOrUpdateWorkItem())
+        {
+            return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
         if (!Project.IsMember(changedBy.Id))
         {
             return Result.Fail(WorkItemErrors.UserNotProjectMember);

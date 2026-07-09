@@ -95,6 +95,8 @@ public sealed class GetProjectByIdHandlerTests
         response.UpdatedOnUtc.Should().Be(project.UpdatedOnUtc);
         response.OpenWorkItems.Should().Be(0);
         response.ClosedWorkItems.Should().Be(0);
+        response.CanAddOrUpdateFlows.Should().BeTrue();
+        response.CanAddOrUpdateWorkItems.Should().BeFalse();
     }
 
     [Fact]
@@ -142,6 +144,7 @@ public sealed class GetProjectByIdHandlerTests
         result.Value.ChangeLogs.Should().HaveCount(2);
         ProjectChangeLogResponse firstLog = result.Value.ChangeLogs.First();
         firstLog.ChangedByFullName.Should().Be(admin.FullName);
+        firstLog.ChangedByInitials.Should().Be(admin.Initials);
         firstLog.ChangeType.Should().Be(ProjectChangeType.Created);
     }
 

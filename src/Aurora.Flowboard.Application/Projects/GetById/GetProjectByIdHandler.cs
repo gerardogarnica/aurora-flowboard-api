@@ -33,11 +33,30 @@ internal sealed class GetProjectByIdHandler(
             project.Status,
             project.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Active),
             project.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Completed),
+            project.CanAddOrUpdateFlow(),
+            project.CanAddOrUpdateWorkItem(),
             project.CreatedBy,
             project.Creator.FullName,
             project.CreatedOnUtc,
             project.UpdatedOnUtc,
-            [.. project.Members.OrderBy(m => m.User.FullName).Select(m => new ProjectMemberResponse(m.UserId, m.User.FirstName, m.User.LastName, m.User.FullName, m.User.Initials, m.Role, m.JoinedOnUtc))],
-            [.. project.ChangeLogs.OrderBy(cl => cl.ChangedOnUtc).Select(cl => new ProjectChangeLogResponse(cl.Id, cl.ChangedById, cl.ChangedBy.FullName, cl.ChangeType, cl.AffectedEntityId, cl.NewStatus, cl.ChangedOnUtc))]);
+            [.. project.Members.OrderBy(m => m.User.FullName).Select(
+                m => new ProjectMemberResponse(
+                    m.UserId,
+                    m.User.FirstName,
+                    m.User.LastName,
+                    m.User.FullName,
+                    m.User.Initials,
+                    m.Role,
+                    m.JoinedOnUtc))],
+            [.. project.ChangeLogs.OrderBy(cl => cl.ChangedOnUtc).Select(
+                cl => new ProjectChangeLogResponse(
+                    cl.Id,
+                    cl.ChangedById,
+                    cl.ChangedBy.FullName,
+                    cl.ChangedBy.Initials,
+                    cl.ChangeType,
+                    cl.AffectedEntityId,
+                    cl.NewStatus,
+                    cl.ChangedOnUtc))]);
     }
 }

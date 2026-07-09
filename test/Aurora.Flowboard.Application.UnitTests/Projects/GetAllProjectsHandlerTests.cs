@@ -147,9 +147,32 @@ public sealed class GetAllProjectsHandlerTests
         summary.Members.Single().UserId.Should().Be(admin.Id);
         summary.Members.Single().FullName.Should().Be(admin.FullName);
         summary.Members.Single().Initials.Should().Be(admin.Initials);
+        summary.Members.Single().Role.Should().Be(ProjectRole.Admin);
         summary.Flows.Should().BeEmpty();
         summary.OpenWorkItems.Should().Be(0);
         summary.ClosedWorkItems.Should().Be(0);
+        summary.CanAddOrUpdateFlows.Should().BeTrue();
+        summary.CanAddOrUpdateWorkItems.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Should_AllowFlowsAndWorkItems_When_ProjectIsActive()
+    {
+        // Arrange
+        User admin = ProjectQueryData.GetAdminUser();
+        Project activeProject = ProjectQueryData.GetActiveProjectForGetAll("Active Project", admin);
+        _userContext.UserId.Returns(admin.Id);
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([activeProject]);
+        _dbContext.Projects.Returns(projectsMock);
+
+        // Act
+        Result<IReadOnlyCollection<ProjectSummaryResponse>> result =
+            await _handler.Handle(new GetAllProjectsQuery(null), CancellationToken.None);
+
+        // Assert
+        ProjectSummaryResponse summary = result.Value.Single();
+        summary.CanAddOrUpdateFlows.Should().BeTrue();
+        summary.CanAddOrUpdateWorkItems.Should().BeTrue();
     }
 
     [Fact]

@@ -31,8 +31,21 @@ internal sealed class GetAllProjectsHandler(
                 p.Status,
                 p.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Active),
                 p.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Completed),
-                [.. p.Members.OrderBy(m => m.User.FullName).Select(m => new ProjectMemberSummaryResponse(m.UserId, m.User.FullName, m.User.Initials))],
-                [.. p.Flows.Select(f => new ProjectFlowSummaryResponse(f.Id, f.Name, f.Description, f.IsDefault, f.IsActive)).OrderByDescending(f => f.IsDefault)]))
+                p.CanAddOrUpdateFlow(),
+                p.CanAddOrUpdateWorkItem(),
+                [.. p.Members.OrderBy(m => m.User.FullName).Select(
+                    m => new ProjectMemberSummaryResponse(
+                        m.UserId,
+                        m.User.FullName,
+                        m.User.Initials,
+                        m.Role))],
+                [.. p.Flows.OrderByDescending(f => f.IsDefault).Select(
+                    f => new ProjectFlowSummaryResponse(
+                        f.Id,
+                        f.Name,
+                        f.Description,
+                        f.IsDefault,
+                        f.IsActive))]))
             .ToList();
     }
 }

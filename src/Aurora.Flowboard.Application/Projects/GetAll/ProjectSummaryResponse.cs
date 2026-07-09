@@ -10,13 +10,16 @@ public sealed record ProjectSummaryResponse(
     ProjectStatus Status,
     int OpenWorkItems,
     int ClosedWorkItems,
+    bool CanAddOrUpdateFlows,
+    bool CanAddOrUpdateWorkItems,
     IReadOnlyCollection<ProjectMemberSummaryResponse> Members,
     IReadOnlyCollection<ProjectFlowSummaryResponse> Flows);
 
 public sealed record ProjectMemberSummaryResponse(
     Guid UserId,
     string FullName,
-    string Initials);
+    string Initials,
+    ProjectRole Role);
 
 public sealed record ProjectFlowSummaryResponse(
     Guid FlowId,

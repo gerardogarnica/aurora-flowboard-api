@@ -514,6 +514,21 @@ public sealed class WorkItemTests
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(UserErrors.Inactive);
         }
+
+        [Fact]
+        public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.Update(WorkItemData.Title, null, Priority.Low, null, null, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
     }
 
     public sealed class Move : BaseTest
@@ -707,6 +722,22 @@ public sealed class WorkItemTests
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(WorkItemErrors.TransitionRoleNotAllowed);
         }
+
+        [Fact]
+        public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
+        {
+            // Arrange
+            var (workItem, project, flow, admin) = WorkItemData.GetWorkItemWithContext();
+            FlowState toState = flow.States.Single(s => s.Name == "In Progress");
+            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.Move(toState, admin, null, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
     }
 
     public sealed class Assign : BaseTest
@@ -845,6 +876,23 @@ public sealed class WorkItemTests
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(WorkItemErrors.CancelledWorkItemCannotBeModified);
         }
+
+        [Fact]
+        public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.Assign(assignee, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
     }
 
     public sealed class Unassign : BaseTest
@@ -982,6 +1030,26 @@ public sealed class WorkItemTests
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(WorkItemErrors.CancelledWorkItemCannotBeModified);
         }
+
+        [Fact]
+        public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
+        {
+            // Arrange
+            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            WorkItem workItem = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
+            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.Unassign(admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
     }
 
     public sealed class AddComment : BaseTest
@@ -1087,6 +1155,21 @@ public sealed class WorkItemTests
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(WorkItemErrors.CommentContentRequired);
         }
+
+        [Fact]
+        public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.AddComment(admin, "This is a comment", WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
     }
 
     public sealed class UpdateComment : BaseTest
@@ -1186,6 +1269,23 @@ public sealed class WorkItemTests
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(WorkItemErrors.CommentContentRequired);
         }
+
+        [Fact]
+        public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            workItem.AddComment(admin, "Original content", WorkItemData.CreatedOnUtc);
+            Guid commentId = workItem.Comments.Single().Id;
+            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.UpdateComment(commentId, admin, "Updated content", WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
     }
 
     public sealed class RemoveComment : BaseTest
@@ -1268,6 +1368,23 @@ public sealed class WorkItemTests
             // Assert
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(WorkItemErrors.CommentNotOwnedByUser);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            workItem.AddComment(admin, "A comment", WorkItemData.CreatedOnUtc);
+            Guid commentId = workItem.Comments.Single().Id;
+            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.RemoveComment(commentId, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
     }
 
@@ -1376,6 +1493,21 @@ public sealed class WorkItemTests
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(WorkItemErrors.TimeEntryHoursInvalid);
         }
+
+        [Fact]
+        public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.LogTime(admin, 1m, null, WorkItemData.UpdatedOnUtc, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
     }
 
     public sealed class AddTag : BaseTest
@@ -1481,6 +1613,21 @@ public sealed class WorkItemTests
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(UserErrors.Inactive);
         }
+
+        [Fact]
+        public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.AddTag("backend", admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
     }
 
     public sealed class RemoveTag : BaseTest
@@ -1549,6 +1696,23 @@ public sealed class WorkItemTests
             // Assert
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(UserErrors.Inactive);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            workItem.AddTag("backend", admin, WorkItemData.UpdatedOnUtc);
+            Guid tagId = workItem.Tags.First().Id;
+            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.RemoveTag(tagId, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
     }
 }
