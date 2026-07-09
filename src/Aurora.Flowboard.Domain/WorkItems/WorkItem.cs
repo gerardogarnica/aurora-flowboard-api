@@ -223,6 +223,50 @@ public sealed class WorkItem : BaseEntity
         return Result.Ok();
     }
 
+    public Result UpdateTitle(string title, User changedBy, DateTime updatedOnUtc)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return Result.Fail(WorkItemErrors.TitleRequired);
+        }
+
+        if (title.Length > MaxTitleLength)
+        {
+            return Result.Fail(WorkItemErrors.TitleTooLong);
+        }
+
+        if (!Project.CanAddOrUpdateWorkItem())
+        {
+            return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
+        if (!Project.IsMember(changedBy.Id))
+        {
+            return Result.Fail(WorkItemErrors.UserNotProjectMember);
+        }
+
+        if (!changedBy.IsActive)
+        {
+            return Result.Fail(UserErrors.Inactive);
+        }
+
+        string trimmedTitle = title.Trim();
+
+        if (trimmedTitle == Title)
+        {
+            return Result.Ok();
+        }
+
+        Title = trimmedTitle;
+        UpdatedOnUtc = updatedOnUtc;
+
+        _changeLogs.Add(WorkItemChangeLog.Create(this, changedBy, WorkItemChangeType.TitleUpdated, null, updatedOnUtc));
+
+        AddDomainEvent(new WorkItemTitleUpdatedDomainEvent(Id, trimmedTitle));
+
+        return Result.Ok();
+    }
+
     public Result Move(FlowState toState, User changedBy, string? reason, DateTime changedOnUtc)
     {
         if (!Project.CanAddOrUpdateWorkItem())

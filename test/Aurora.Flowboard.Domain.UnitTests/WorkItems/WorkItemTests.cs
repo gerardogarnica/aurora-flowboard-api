@@ -531,6 +531,172 @@ public sealed class WorkItemTests
         }
     }
 
+    public sealed class UpdateTitle : BaseTest
+    {
+        [Fact]
+        public void Should_UpdateTitle_When_DataIsValid()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            const string newTitle = "Updated title";
+
+            // Act
+            Result result = workItem.UpdateTitle(newTitle, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.Title.Should().Be(newTitle);
+            workItem.UpdatedOnUtc.Should().Be(WorkItemData.UpdatedOnUtc);
+        }
+
+        [Fact]
+        public void Should_TrimTitle_When_Updated()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            workItem.UpdateTitle("  New Title  ", admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.Title.Should().Be("New Title");
+        }
+
+        [Fact]
+        public void Should_CreateTitleUpdatedChangeLog_When_Updated()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            workItem.UpdateTitle("New Title", admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.ChangeLogs.Should().Contain(c => c.ChangeType == WorkItemChangeType.TitleUpdated);
+        }
+
+        [Fact]
+        public void Should_RaiseWorkItemTitleUpdatedDomainEvent_When_Updated()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            workItem.UpdateTitle("New Title", admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            WorkItemTitleUpdatedDomainEvent domainEvent = AssertDomainEventWasPublished<WorkItemTitleUpdatedDomainEvent>(workItem);
+            domainEvent.WorkItemId.Should().Be(workItem.Id);
+            domainEvent.NewTitle.Should().Be("New Title");
+        }
+
+        [Fact]
+        public void Should_BeNoOp_When_TitleIsUnchanged()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.UpdateTitle(WorkItemData.Title, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.UpdatedOnUtc.Should().BeNull();
+            workItem.ChangeLogs.Should().NotContain(c => c.ChangeType == WorkItemChangeType.TitleUpdated);
+            workItem.DomainEvents.OfType<WorkItemTitleUpdatedDomainEvent>().Should().BeEmpty();
+        }
+
+        [Fact]
+        public void Should_Fail_When_TitleIsEmpty()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.UpdateTitle(string.Empty, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.TitleRequired);
+        }
+
+        [Fact]
+        public void Should_Fail_When_TitleIsWhitespace()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.UpdateTitle("   ", admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.TitleRequired);
+        }
+
+        [Fact]
+        public void Should_Fail_When_TitleExceedsMaxLength()
+        {
+            // Arrange
+            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            string longTitle = new('A', WorkItem.MaxTitleLength + 1);
+
+            // Act
+            Result result = workItem.UpdateTitle(longTitle, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.TitleTooLong);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ChangedByIsNotProjectMember()
+        {
+            // Arrange
+            var (workItem, _, _, _) = WorkItemData.GetWorkItemWithContext();
+            User nonMember = UserData.GetActiveUser();
+
+            // Act
+            Result result = workItem.UpdateTitle("New Title", nonMember, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ChangedByIsInactive()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            User user = UserData.GetActiveUser();
+            project.AddMember(user, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            user.Deactivate(WorkItemData.CreatedOnUtc);
+
+            // Act
+            Result result = workItem.UpdateTitle("New Title", user, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(UserErrors.Inactive);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
+        {
+            // Arrange
+            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.UpdateTitle("New Title", admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+    }
+
     public sealed class Move : BaseTest
     {
         [Fact]

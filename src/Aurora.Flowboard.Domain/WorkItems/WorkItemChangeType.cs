@@ -12,5 +12,6 @@ public enum WorkItemChangeType
     CommentRemoved = 7,
     TimeLogged = 8,
     TagAdded = 9,
-    TagRemoved = 10
+    TagRemoved = 10,
+    TitleUpdated = 11
 }
