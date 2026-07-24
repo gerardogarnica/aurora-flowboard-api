@@ -29,18 +29,21 @@ app.MapEndpoints(routeGroup);
 
 app.MapHealthCheckEndpoints();
 
-app.UseSwagger();
-app.UseSwaggerUI(options =>
-{
-    options.DocumentTitle = "Flowboard API";
-});
-
 if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
 {
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.DocumentTitle = "Flowboard API";
+    });
+
     await app.ApplyMigrationsAsync();
 }
 
-app.UseHttpsRedirection();
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseCors(CorsExtensions.FrontendPolicy);
 
