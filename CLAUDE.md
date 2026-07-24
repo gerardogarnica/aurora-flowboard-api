@@ -54,7 +54,7 @@ Tests live under `test/`:
 
 **Minimal APIs** — endpoints implement `IBaseEndpoint`, auto-registered via Scrutor. All routes grouped under `/api/v1/flowboard`.
 
-**EF Core** — one `IEntityTypeConfiguration<T>` per entity in `Infrastructure/Configurations/`. Schema `flowboard`, snake_case naming. Private field navigation (`_members`, `_changeLogs`, etc.) mapped explicitly. Migrations auto-apply on startup in Development/Staging only (`Extensions/MigrationServiceExtensions.cs`), never in Production.
+**EF Core** — one `IEntityTypeConfiguration<T>` per entity in `Infrastructure/Configurations/`. Schema `flowboard`, snake_case naming. Private field navigation (`_members`, `_changeLogs`, etc.) mapped explicitly. Migrations auto-apply on startup in every environment, including Production, controlled by the `Database:ApplyMigrationsOnStartup` config flag (default `true`; `Extensions/MigrationServiceExtensions.cs`). Set `Database__ApplyMigrationsOnStartup=false` to disable and apply migrations manually instead.
 
 **Domain entities** — private setters, static factory methods, domain events via `BaseEntity`. Enum types belong in their owning aggregate folder.
 

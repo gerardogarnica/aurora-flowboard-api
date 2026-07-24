@@ -36,7 +36,10 @@ if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
     {
         options.DocumentTitle = "Flowboard API";
     });
+}
 
+if (app.Configuration.GetValue("Database:ApplyMigrationsOnStartup", true))
+{
     await app.ApplyMigrationsAsync();
 }
 
