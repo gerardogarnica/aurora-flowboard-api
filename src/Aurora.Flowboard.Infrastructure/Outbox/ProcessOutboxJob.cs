@@ -19,7 +19,7 @@ internal sealed class ProcessOutboxJob(
     {
         logger.LogInformation("Starting to process Flowboard outbox messages.");
 
-        await using var transaction = await dbContext.Database.BeginTransactionAsync();
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(CancellationToken.None);
 
         var messages = GetOutboxMessages();
 
@@ -33,7 +33,7 @@ internal sealed class ProcessOutboxJob(
                     outboxMessage.Content,
                     SerializerSettings.Instance)!;
 
-                await domainEventsDispatcher.DispatchAsync([domainEvent]);
+                await domainEventsDispatcher.DispatchAsync([domainEvent], CancellationToken.None);
             }
             catch (Exception processException)
             {
@@ -45,7 +45,7 @@ internal sealed class ProcessOutboxJob(
             await UpdateOutboxMessageAsync(outboxMessage, exception);
         }
 
-        await transaction.CommitAsync();
+        await transaction.CommitAsync(CancellationToken.None);
 
         logger.LogInformation("Completed processing Flowboard outbox messages.");
     }
