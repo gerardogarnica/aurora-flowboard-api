@@ -1,5 +1,5 @@
 {
   "appHost": {
-    "path": "Aurora Flowboard.AppHost/Aurora Flowboard.AppHost.csproj"
+    "path": "Aurora.Flowboard.AppHost/Aurora.Flowboard.AppHost.csproj"
   }
 }

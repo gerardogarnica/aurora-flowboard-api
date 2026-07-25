@@ -11,6 +11,6 @@ public abstract class BaseTest
 
         domainEvent.Should().NotBeNull();
 
-        return domainEvent!;
+        return domainEvent;
     }
 }

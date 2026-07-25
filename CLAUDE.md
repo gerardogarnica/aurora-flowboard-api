@@ -9,21 +9,28 @@ Aurora Flowboard is a .NET 10 internal REST API for software project management.
 ## Tech stack
 - .NET 10 / C#
 - ASP.NET Core (Minimal APIs)
+- .NET Aspire for local orchestration (Postgres container) and service defaults
 - Entity Framework Core + Npgsql (PostgreSQL) + EFCore.NamingConventions (snake_case)
 - FluentValidation
-- Redis for caching
 - Scrutor for DI assembly scanning
-- Serilog for logging
+- OpenTelemetry (tracing, metrics, logging) — no Serilog
 - Swashbuckle (Swagger/OpenAPI)
+- JWT bearer authentication (custom `ITokenProvider`) + RBAC (`Administrator`, `Member`)
+
+> Note: the README currently also lists Redis and Serilog — neither is present in the code or `Directory.Packages.props`. Treat this file as the source of truth over the README until it's reconciled.
 
 ## Architecture
 
 ```
-Aurora.Flowboard.Api            → Minimal API endpoints, middleware, DI composition root
-Aurora.Flowboard.Application    → CQRS handlers, validators, behavior pipeline
-Aurora.Flowboard.Domain         → Entities, value objects, domain events, Result type
-Aurora.Flowboard.Infrastructure → EF Core, PostgreSQL, repositories, auth, time
+Aurora.Flowboard.AppHost         → .NET Aspire orchestration (Postgres + Api resource wiring)
+Aurora.Flowboard.ServiceDefaults → Shared Aspire defaults (OpenTelemetry, health checks, resilience)
+Aurora.Flowboard.Api             → Minimal API endpoints, middleware, DI composition root
+Aurora.Flowboard.Application     → CQRS handlers, validators, behavior pipeline
+Aurora.Flowboard.Domain          → Entities, value objects, domain events, Result type
+Aurora.Flowboard.Infrastructure  → EF Core, PostgreSQL, migrations, auth (JWT, password hashing), time
 ```
+
+All project folder/file names use the dot-separated `Aurora.Flowboard.*` convention. Do not reintroduce a space in a project name: a space in a `ProjectReference`'s target breaks the .NET SDK's publish-time copy-local resolution for that project's *transitive* `PackageReference`s — `dotnet build` copies them fine, but `dotnet publish` silently drops them, which only surfaces as a `FileNotFoundException` at runtime in the published/container image.
 
 Tests live under `test/`:
 - `Aurora.Flowboard.Domain.UnitTests`
@@ -33,11 +40,11 @@ Tests live under `test/`:
 
 | Aggregate    | Key entities                                                              |
 |--------------|---------------------------------------------------------------------------|
-| Projects     | `Project`, `ProjectMember`, `ProjectChangeLog`, `ProjectCode` (VO)       |
-| Flows        | `Flow`, `FlowState`, `FlowTransition`                                     |
+| Projects     | `Project` (has `Color`), `ProjectMember`, `ProjectChangeLog`, `ProjectCode` (VO) |
+| Flows        | `Flow`, `FlowState` (has `Color`), `FlowTransition`                       |
 | WorkItems    | `WorkItem`, `Comment`, `TimeEntry`, `WorkItemTag`, `StateTransitionHistory`, `WorkItemChangeLog` |
-| Users        | `User`                                                                    |
-| Shared       | `Email` (VO)                                                              |
+| Users        | `User`, `UserToken` (issued access/refresh token pair), `Password` (VO), `Role` (closed value type: `Administrator`/`Member`, not a DB entity) |
+| Shared       | `Email` (VO), `Color` (VO)                                                |
 
 ## Key patterns
 
@@ -47,9 +54,13 @@ Tests live under `test/`:
 
 **Minimal APIs** — endpoints implement `IBaseEndpoint`, auto-registered via Scrutor. All routes grouped under `/api/v1/flowboard`.
 
-**EF Core** — one `IEntityTypeConfiguration<T>` per entity in `Infrastructure/Configurations/`. Schema `flowboard`, snake_case naming. Private field navigation (`_members`, `_changeLogs`, etc.) mapped explicitly.
+**EF Core** — one `IEntityTypeConfiguration<T>` per entity in `Infrastructure/Configurations/`. Schema `flowboard`, snake_case naming. Private field navigation (`_members`, `_changeLogs`, etc.) mapped explicitly. Migrations auto-apply on startup in every environment, including Production, controlled by the `Database:ApplyMigrationsOnStartup` config flag (default `true`; `Extensions/MigrationServiceExtensions.cs`). Set `Database__ApplyMigrationsOnStartup=false` to disable and apply migrations manually instead.
 
 **Domain entities** — private setters, static factory methods, domain events via `BaseEntity`. Enum types belong in their owning aggregate folder.
+
+**Authentication & authorization** — `POST auth/login` (anonymous) issues a JWT access token + opaque refresh token via `ITokenProvider`/`JwtTokenProvider`; passwords are hashed with PBKDF2 (`PasswordHasher`, not BCrypt/ASP.NET Identity). Protected endpoints use `RequireAuthorization()`; admin-only endpoints use `RequireAuthorization(policy => policy.RequireRole(Role.Administrator.Name))` (e.g. `POST users`). `IUserContext` exposes the current user's id/claims to handlers.
+
+**Work item board response** — `GET projects/{projectId:guid}/work-items` returns work items grouped by the project's default flow's `FlowState`s (Kanban board shape), not a flat list.
 
 ## Workflow
 1. Ask clarifying questions if requirements are unclear.
@@ -78,8 +89,15 @@ Tests live under `test/`:
 dotnet build
 dotnet test
 dotnet test --filter "FullyQualifiedName~TestClassName"
-dotnet ef migrations add <Name> --project src/Aurora.Flowboard.Infrastructure
-dotnet ef database update --project src/Aurora.Flowboard.Infrastructure
+dotnet ef migrations add <Name> --project src/Aurora.Flowboard.Infrastructure --startup-project src/Aurora.Flowboard.Api
+dotnet ef database update --project src/Aurora.Flowboard.Infrastructure --startup-project src/Aurora.Flowboard.Api
+
+# Run locally via Aspire (provisions Postgres, wires connection string, sets up dashboard)
+dotnet run --project "src/Aurora.Flowboard.AppHost"
+
+# Build and run the API image directly (no Aspire, requires an external Postgres via ConnectionStrings__Database)
+docker build -f src/Aurora.Flowboard.Api/Dockerfile -t aurora-flowboard-api .
+docker run -p 8080:8080 aurora-flowboard-api
 ```
 
 Solution file: `Aurora Flowboard.slnx`

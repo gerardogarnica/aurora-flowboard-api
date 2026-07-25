@@ -1,6 +1,9 @@
 ﻿using Aurora.Flowboard.Api.Middlewares;
 using Npgsql;
+using OpenTelemetry;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 namespace Aurora.Flowboard.Api;
 
@@ -46,7 +49,26 @@ internal static class DependencyInjection
             .ConfigureResource(cfg => cfg
                 .AddService(builder.Environment.ApplicationName))
             .WithTracing(cfg => cfg
-                .AddNpgsql());
+                .AddHttpClientInstrumentation()
+                .AddAspNetCoreInstrumentation()
+                .AddNpgsql())
+            .WithMetrics(cfg => cfg
+                .AddHttpClientInstrumentation()
+                .AddAspNetCoreInstrumentation()
+                .AddRuntimeInstrumentation());
+
+        builder.Logging.AddOpenTelemetry(cfg =>
+        {
+            cfg.IncludeScopes = true;
+            cfg.IncludeFormattedMessage = true;
+        });
+
+        return builder;
+    }
+
+    internal static WebApplicationBuilder AddHealthCheckServices(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddHealthChecks();
 
         return builder;
     }

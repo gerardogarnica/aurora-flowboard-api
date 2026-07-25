@@ -24,27 +24,27 @@ Aurora Flowboard is an internal REST API for software project management that he
 
 - **.NET 10**: Modern, high-performance backend framework.
 - **C# 14**: Latest language features (records, primary constructors, etc.).
+- **.NET Aspire**: Local orchestration (Postgres container provisioning) and shared service defaults.
 - **Entity Framework Core**: ORM for data access and persistence with PostgreSQL.
 - **PostgreSQL**: Robust, open-source relational database (snake_case schema via EFCore.NamingConventions).
 - **FluentValidation**: Command validation and consistent error handling.
-- **Redis**: Distributed caching with stampede protection.
-- **JWT**: Authentication with access and refresh tokens and role-based authorization (RBAC).
+- **JWT**: Authentication with access and refresh tokens (PBKDF2 password hashing) and role-based authorization (RBAC).
 - **Swagger/OpenAPI**: Interactive API documentation via Swashbuckle.
-- **Serilog**: Structured logging with configurable sinks.
+- **OpenTelemetry**: Structured logging, tracing, and metrics.
 - **Scrutor**: Assembly scanning for automatic DI registration.
 - **Clean Architecture**: Clear separation of concerns (Domain, Application, Infrastructure, API).
 - **Outbox pattern**: Reliable domain event publishing for async processing and consistency.
-- **Automated migrations**: EF Core to keep the database schema up to date.
+- **Automated migrations**: EF Core migrations auto-apply on startup in Development/Staging.
 
 ## Features
 
 ### Authentication and Users
 
-- **Register** (`POST /api/v1/flowboard/auth/register`): Create new user accounts.
-- **Login** (`POST /api/v1/flowboard/auth/login`): Sign in and receive JWT access and refresh tokens.
-- **Refresh token** (`POST /api/v1/flowboard/auth/refresh`): Renew access tokens using a valid refresh token.
-- **Change password** (`PUT /api/v1/flowboard/auth/change-password`): Securely update the current user's password.
-- Role-based authorization (RBAC) enforced across all protected endpoints.
+- **Login** (`POST /api/v1/flowboard/auth/login`): Sign in and receive a JWT access token and refresh token.
+- **Create user** (`POST /api/v1/flowboard/users`): Administrator-only endpoint to create new user accounts.
+- **Get my profile** (`GET /api/v1/flowboard/users/me`): Retrieve the authenticated user's profile.
+- Role-based authorization (RBAC) with two roles, `Administrator` and `Member`, enforced across all protected endpoints.
+- Refresh-token renewal and self-service password change are modeled in the domain (`User.IssueToken`, `RevokeToken`, `ChangePassword`) but not yet exposed as endpoints.
 
 ### Projects
 
@@ -68,7 +68,7 @@ Aurora Flowboard is an internal REST API for software project management that he
 ### Work Items
 
 - **Create work item** (`POST /api/v1/flowboard/workitems`): Open a new work item with title, description, type, and priority.
-- **List work items** (`GET /api/v1/flowboard/workitems`): Filter by project, flow state, assignee, tag, and more.
+- **Board view** (`GET /api/v1/flowboard/projects/{projectId}/work-items`): Work items for a project grouped by the project's default flow states (Kanban board shape), ordered by state and priority.
 - **Get work item** (`GET /api/v1/flowboard/workitems/{id}`): Full detail view including comments, time entries, tags, and transition history.
 - **Update work item** (`PUT /api/v1/flowboard/workitems/{id}`): Edit title, description, priority, and assignee.
 - **Transition state** (`PUT /api/v1/flowboard/workitems/{id}/transition`): Move a work item to the next state following flow transition rules.
@@ -92,11 +92,12 @@ Aurora Flowboard is an internal REST API for software project management that he
 ### Requirements
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
-- PostgreSQL (local or container)
-- Redis (local or container)
-- Optional: Docker and Docker Compose to run the full stack
+- PostgreSQL (local or container) — not needed if running via Aspire, which provisions it automatically
+- Optional: Docker, to run the API image directly or let Aspire provision Postgres in a container
 
-### Steps (local development)
+### Option A — Run via .NET Aspire (recommended for local development)
+
+Aspire provisions a Postgres container, wires the connection string automatically, and opens the Aspire dashboard.
 
 1. **Clone the repository**
 
@@ -105,38 +106,59 @@ Aurora Flowboard is an internal REST API for software project management that he
    cd aurora-flowboard-api
    ```
 
-2. **Restore dependencies**
+2. **Run the AppHost**
 
    ```bash
+   dotnet run --project "src/Aurora.Flowboard.AppHost"
+   ```
+
+Migrations apply automatically on startup in Development. The Api project's URL and Swagger link are shown in the Aspire dashboard.
+
+### Option B — Run the API directly
+
+1. **Clone the repository and restore dependencies**
+
+   ```bash
+   git clone https://github.com/gerardogarnica/aurora-flowboard-api.git
+   cd aurora-flowboard-api
    dotnet restore
    ```
 
-3. **Configure user secrets**
+2. **Configure user secrets**
 
-   Set the JWT signing key and connection strings via user secrets so nothing sensitive is committed:
+   Set the JWT signing key and connection string via user secrets so nothing sensitive is committed:
 
    ```bash
    dotnet user-secrets set "Jwt:Key" "<your-256-bit-key>" --project src/Aurora.Flowboard.Api
    dotnet user-secrets set "ConnectionStrings:Database" "Host=localhost;Database=flowboard;Username=postgres;Password=postgres" --project src/Aurora.Flowboard.Api
    ```
 
-4. **Apply database migrations**
+3. **Apply database migrations**
 
    ```bash
    dotnet ef database update --project src/Aurora.Flowboard.Infrastructure --startup-project src/Aurora.Flowboard.Api
    ```
 
-5. **Run the API**
+4. **Run the API**
 
    ```bash
    dotnet run --project src/Aurora.Flowboard.Api
    ```
 
+### Option C — Run via Docker
+
+Requires an external Postgres reachable via `ConnectionStrings__Database`.
+
+```bash
+docker build -f src/Aurora.Flowboard.Api/Dockerfile -t aurora-flowboard-api .
+docker run -p 8080:8080 -e ConnectionStrings__Database="Host=host.docker.internal;Database=flowboard;Username=postgres;Password=postgres" aurora-flowboard-api
+```
+
 ## Usage
 
-1. Open in your browser: **http://localhost:5000/swagger** (or the URL shown in the terminal).
+1. Open in your browser: **http://localhost:5000/swagger** (or the URL shown in the terminal / Aspire dashboard).
 2. Use the Swagger documentation to explore and test endpoints under the `/api/v1/flowboard/` prefix.
-3. For protected endpoints, call `auth/register` or `auth/login` first, then include the token in `Authorization: Bearer <token>`.
+3. For protected endpoints, call `auth/login` first, then include the token in `Authorization: Bearer <token>`.
 
 ## Project Structure
 
@@ -146,11 +168,15 @@ Aurora Flowboard follows Clean Architecture with a modular monolith approach:
 |-------|---------|----------|
 | **Domain** | `Aurora.Flowboard.Domain` | Entities, value objects, business rules, domain events, enums, `Result` type. |
 | **Application** | `Aurora.Flowboard.Application` | CQRS handlers, DTOs, FluentValidation validators, behavior pipeline, infrastructure interfaces. |
-| **Infrastructure** | `Aurora.Flowboard.Infrastructure` | EF Core `DbContext`, Fluent API configurations, migrations, JWT, Redis caching, Outbox, time and encryption services. |
+| **Infrastructure** | `Aurora.Flowboard.Infrastructure` | EF Core `DbContext`, Fluent API configurations, migrations, JWT, password hashing, Outbox, time services. |
 | **API** | `Aurora.Flowboard.Api` | Minimal API endpoints, middleware, Swagger, DI composition root. |
+| **Orchestration** | `Aurora.Flowboard.AppHost` | .NET Aspire orchestration — provisions Postgres and wires the Api project for local development. |
+| **Orchestration** | `Aurora.Flowboard.ServiceDefaults` | Shared Aspire defaults — OpenTelemetry, health checks, resilience. |
 
 ```
 src/
+├── Aurora.Flowboard.AppHost/
+├── Aurora.Flowboard.ServiceDefaults/
 ├── Aurora.Flowboard.Api/
 ├── Aurora.Flowboard.Application/
 ├── Aurora.Flowboard.Domain/
@@ -166,6 +192,7 @@ Planned features and improvements for future versions:
 
 ### Upcoming releases
 
+- **Refresh token and change password endpoints**: Expose the existing `User.IssueToken`, `RevokeToken`, and `ChangePassword` domain behavior via `auth/refresh` and `auth/change-password` endpoints.
 - **Dashboards and reporting**: Summary views per project — velocity, cycle time, work item distribution by state and assignee.
 - **Notifications**: In-app or webhook notifications on work item assignment, state transitions, and comments.
 - **Attachments**: File attachments on work items stored in object storage.

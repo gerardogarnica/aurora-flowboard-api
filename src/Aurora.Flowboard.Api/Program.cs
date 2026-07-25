@@ -11,7 +11,9 @@ builder.AddServiceDefaults();
 builder
     .AddApiServices()
     .AddErrorHandling()
-    .AddObservability();
+    .AddObservability()
+    .AddHealthCheckServices()
+    .AddCorsServices();
 
 builder.Services
     .AddApplicationServices()
@@ -25,21 +27,31 @@ app.MapDefaultEndpoints();
 RouteGroupBuilder routeGroup = app.MapGroup("/api/v1/flowboard");
 app.MapEndpoints(routeGroup);
 
-app.UseSwagger();
-app.UseSwaggerUI(options =>
-{
-    options.DocumentTitle = "Flowboard API";
-});
+app.MapHealthCheckEndpoints();
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.DocumentTitle = "Flowboard API";
+    });
+}
+
+if (app.Configuration.GetValue("Database:ApplyMigrationsOnStartup", true))
 {
     await app.ApplyMigrationsAsync();
 }
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
+app.UseCors(CorsExtensions.FrontendPolicy);
+
 app.UseExceptionHandler();
 app.UseStatusCodePages();
-
-app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
