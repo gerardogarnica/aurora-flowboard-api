@@ -22,15 +22,15 @@ Aurora Flowboard is a .NET 10 internal REST API for software project management.
 ## Architecture
 
 ```
-Aurora Flowboard.AppHost         → .NET Aspire orchestration (Postgres + Api resource wiring)
-Aurora Flowboard.ServiceDefaults → Shared Aspire defaults (OpenTelemetry, health checks, resilience)
+Aurora.Flowboard.AppHost         → .NET Aspire orchestration (Postgres + Api resource wiring)
+Aurora.Flowboard.ServiceDefaults → Shared Aspire defaults (OpenTelemetry, health checks, resilience)
 Aurora.Flowboard.Api             → Minimal API endpoints, middleware, DI composition root
 Aurora.Flowboard.Application     → CQRS handlers, validators, behavior pipeline
 Aurora.Flowboard.Domain          → Entities, value objects, domain events, Result type
 Aurora.Flowboard.Infrastructure  → EF Core, PostgreSQL, migrations, auth (JWT, password hashing), time
 ```
 
-`Aurora Flowboard.AppHost` and `Aurora Flowboard.ServiceDefaults` have a **space** in their project/folder name (unlike the dot-separated `Aurora.Flowboard.*` layers) — quote paths when referencing them.
+All project folder/file names use the dot-separated `Aurora.Flowboard.*` convention. Do not reintroduce a space in a project name: a space in a `ProjectReference`'s target breaks the .NET SDK's publish-time copy-local resolution for that project's *transitive* `PackageReference`s — `dotnet build` copies them fine, but `dotnet publish` silently drops them, which only surfaces as a `FileNotFoundException` at runtime in the published/container image.
 
 Tests live under `test/`:
 - `Aurora.Flowboard.Domain.UnitTests`
@@ -93,7 +93,7 @@ dotnet ef migrations add <Name> --project src/Aurora.Flowboard.Infrastructure --
 dotnet ef database update --project src/Aurora.Flowboard.Infrastructure --startup-project src/Aurora.Flowboard.Api
 
 # Run locally via Aspire (provisions Postgres, wires connection string, sets up dashboard)
-dotnet run --project "src/Aurora Flowboard.AppHost"
+dotnet run --project "src/Aurora.Flowboard.AppHost"
 
 # Build and run the API image directly (no Aspire, requires an external Postgres via ConnectionStrings__Database)
 docker build -f src/Aurora.Flowboard.Api/Dockerfile -t aurora-flowboard-api .

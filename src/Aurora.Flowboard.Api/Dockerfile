@@ -12,7 +12,7 @@ WORKDIR /src
 COPY ["Directory.Packages.props", "."]
 COPY ["Directory.Build.props", "."]
 COPY ["src/Aurora.Flowboard.Api/Aurora.Flowboard.Api.csproj", "src/Aurora.Flowboard.Api/"]
-COPY ["src/Aurora Flowboard.ServiceDefaults/Aurora Flowboard.ServiceDefaults.csproj", "src/Aurora Flowboard.ServiceDefaults/"]
+COPY ["src/Aurora.Flowboard.ServiceDefaults/Aurora.Flowboard.ServiceDefaults.csproj", "src/Aurora.Flowboard.ServiceDefaults/"]
 COPY ["src/Aurora.Flowboard.Infrastructure/Aurora.Flowboard.Infrastructure.csproj", "src/Aurora.Flowboard.Infrastructure/"]
 COPY ["src/Aurora.Flowboard.Application/Aurora.Flowboard.Application.csproj", "src/Aurora.Flowboard.Application/"]
 COPY ["src/Aurora.Flowboard.Domain/Aurora.Flowboard.Domain.csproj", "src/Aurora.Flowboard.Domain/"]

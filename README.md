@@ -109,7 +109,7 @@ Aspire provisions a Postgres container, wires the connection string automaticall
 2. **Run the AppHost**
 
    ```bash
-   dotnet run --project "src/Aurora Flowboard.AppHost"
+   dotnet run --project "src/Aurora.Flowboard.AppHost"
    ```
 
 Migrations apply automatically on startup in Development. The Api project's URL and Swagger link are shown in the Aspire dashboard.
@@ -170,15 +170,13 @@ Aurora Flowboard follows Clean Architecture with a modular monolith approach:
 | **Application** | `Aurora.Flowboard.Application` | CQRS handlers, DTOs, FluentValidation validators, behavior pipeline, infrastructure interfaces. |
 | **Infrastructure** | `Aurora.Flowboard.Infrastructure` | EF Core `DbContext`, Fluent API configurations, migrations, JWT, password hashing, Outbox, time services. |
 | **API** | `Aurora.Flowboard.Api` | Minimal API endpoints, middleware, Swagger, DI composition root. |
-| **Orchestration** | `Aurora Flowboard.AppHost` | .NET Aspire orchestration — provisions Postgres and wires the Api project for local development. |
-| **Orchestration** | `Aurora Flowboard.ServiceDefaults` | Shared Aspire defaults — OpenTelemetry, health checks, resilience. |
-
-> Note: `Aurora Flowboard.AppHost` and `Aurora Flowboard.ServiceDefaults` have a **space** in their project/folder name, unlike the dot-separated `Aurora.Flowboard.*` layers.
+| **Orchestration** | `Aurora.Flowboard.AppHost` | .NET Aspire orchestration — provisions Postgres and wires the Api project for local development. |
+| **Orchestration** | `Aurora.Flowboard.ServiceDefaults` | Shared Aspire defaults — OpenTelemetry, health checks, resilience. |
 
 ```
 src/
-├── Aurora Flowboard.AppHost/
-├── Aurora Flowboard.ServiceDefaults/
+├── Aurora.Flowboard.AppHost/
+├── Aurora.Flowboard.ServiceDefaults/
 ├── Aurora.Flowboard.Api/
 ├── Aurora.Flowboard.Application/
 ├── Aurora.Flowboard.Domain/
