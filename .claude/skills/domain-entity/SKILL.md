@@ -6,7 +6,7 @@ argument-hint: <entity and its fields, e.g. "WorkItemTemplate with a name, prior
 
 # Domain entity
 
-Steps 1–2 of the feature workflow: write the domain type, then map it. An entity that is never mapped is never persisted, so both steps belong together.
+Write the domain type, then map it. An entity that is never mapped is never persisted, so both steps belong together.
 
 Once the entity exists, continue with the `create-feature` skill for the use case and endpoint.
 
