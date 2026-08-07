@@ -6,5 +6,5 @@ public enum ProjectRole
     Analyst,
     Developer,
     QA,
-    Support
+    Viewer
 }
