@@ -90,5 +90,14 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.Navigation(x => x.WorkItems)
             .HasField("_workItems")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasMany(x => x.Components)
+            .WithOne()
+            .HasForeignKey(x => x.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.Components)
+            .HasField("_components")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

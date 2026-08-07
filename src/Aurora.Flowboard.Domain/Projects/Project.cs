@@ -30,6 +30,7 @@ public sealed class Project : BaseEntity
     private readonly List<ProjectChangeLog> _changeLogs = [];
     private readonly List<Flow> _flows = [];
     private readonly List<WorkItem> _workItems = [];
+    private readonly List<Component> _components = [];
 
     public string Name { get; private set; }
     public string? Description { get; private set; }
@@ -49,6 +50,7 @@ public sealed class Project : BaseEntity
     public IReadOnlyCollection<ProjectChangeLog> ChangeLogs => _changeLogs.AsReadOnly();
     public IReadOnlyCollection<Flow> Flows => _flows.AsReadOnly();
     public IReadOnlyCollection<WorkItem> WorkItems => _workItems.AsReadOnly();
+    public IReadOnlyCollection<Component> Components => _components.AsReadOnly();
 
     private bool IsModifiable => Status is ProjectStatus.Active or ProjectStatus.Maintenance;
 
@@ -282,6 +284,100 @@ public sealed class Project : BaseEntity
         _changeLogs.Add(ProjectChangeLog.Create(this, changedBy, ProjectChangeType.MemberRemoved, userId, updatedOnUtc));
 
         AddDomainEvent(new ProjectMemberRemovedDomainEvent(Id, userId));
+
+        return Result.Ok();
+    }
+
+    public Result AddComponent(string name, User createdBy, DateTime createdOnUtc)
+    {
+        if (!IsAdmin(createdBy.Id))
+        {
+            return Result.Fail(ProjectErrors.OnlyAdminCanAddComponent);
+        }
+
+        if (!string.IsNullOrWhiteSpace(name) &&
+            _components.Any(c => string.Equals(c.Name, name.Trim(), StringComparison.OrdinalIgnoreCase)))
+        {
+            return Result.Fail(ProjectErrors.DuplicateComponentName);
+        }
+
+        Result<Component> componentResult = Component.Create(Id, name, createdOnUtc);
+
+        if (!componentResult.IsSuccessful)
+        {
+            return Result.Fail(componentResult.Error);
+        }
+
+        Component component = componentResult.Value;
+        _components.Add(component);
+
+        _changeLogs.Add(ProjectChangeLog.Create(this, createdBy, ProjectChangeType.ComponentAdded, component.Id, createdOnUtc));
+
+        AddDomainEvent(new ComponentCreatedDomainEvent(Id, component.Id, component.Name));
+
+        return Result.Ok();
+    }
+
+    public Result RenameComponent(Guid componentId, string newName, User changedBy, DateTime updatedOnUtc)
+    {
+        if (!IsAdmin(changedBy.Id))
+        {
+            return Result.Fail(ProjectErrors.OnlyAdminCanRenameComponent);
+        }
+
+        Component? component = _components.FirstOrDefault(c => c.Id == componentId);
+
+        if (component is null)
+        {
+            return Result.Fail(ProjectErrors.ComponentNotFound);
+        }
+
+        if (!string.IsNullOrWhiteSpace(newName) &&
+            _components.Any(c => c.Id != componentId && string.Equals(c.Name, newName.Trim(), StringComparison.OrdinalIgnoreCase)))
+        {
+            return Result.Fail(ProjectErrors.DuplicateComponentName);
+        }
+
+        string oldName = component.Name;
+
+        Result renameResult = component.Rename(newName, updatedOnUtc);
+
+        if (!renameResult.IsSuccessful)
+        {
+            return renameResult;
+        }
+
+        _changeLogs.Add(ProjectChangeLog.Create(this, changedBy, ProjectChangeType.ComponentRenamed, componentId, updatedOnUtc));
+
+        AddDomainEvent(new ComponentRenamedDomainEvent(Id, componentId, oldName, component.Name));
+
+        return Result.Ok();
+    }
+
+    public Result RetireComponent(Guid componentId, User changedBy, DateTime updatedOnUtc)
+    {
+        if (!IsAdmin(changedBy.Id))
+        {
+            return Result.Fail(ProjectErrors.OnlyAdminCanRetireComponent);
+        }
+
+        Component? component = _components.FirstOrDefault(c => c.Id == componentId);
+
+        if (component is null)
+        {
+            return Result.Fail(ProjectErrors.ComponentNotFound);
+        }
+
+        Result retireResult = component.Retire(updatedOnUtc);
+
+        if (!retireResult.IsSuccessful)
+        {
+            return retireResult;
+        }
+
+        _changeLogs.Add(ProjectChangeLog.Create(this, changedBy, ProjectChangeType.ComponentRetired, componentId, updatedOnUtc));
+
+        AddDomainEvent(new ComponentRetiredDomainEvent(Id, componentId));
 
         return Result.Ok();
     }
