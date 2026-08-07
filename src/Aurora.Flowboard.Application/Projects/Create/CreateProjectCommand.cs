@@ -5,5 +5,4 @@ public sealed record CreateProjectCommand(
     string? Description,
     string Code,
     ProjectKind Kind,
-    string Color,
-    DateOnly? EstimatedCompletionDate) : ICommand<Guid>;
+    string Color) : ICommand<Guid>;

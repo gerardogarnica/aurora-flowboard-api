@@ -36,7 +36,6 @@ internal sealed class SetupProjectHandler(
             command.Code,
             command.Kind,
             projectColorResult.Value,
-            command.EstimatedCompletionDate,
             createdBy,
             dateTimeProvider.UtcNow);
 

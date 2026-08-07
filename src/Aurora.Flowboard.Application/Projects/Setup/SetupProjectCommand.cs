@@ -6,7 +6,6 @@ public sealed record SetupProjectCommand(
     string Code,
     ProjectKind Kind,
     string Color,
-    DateOnly? EstimatedCompletionDate,
     SetupProjectFlowDto Flow) : ICommand<Guid>;
 
 public sealed record SetupProjectFlowDto(

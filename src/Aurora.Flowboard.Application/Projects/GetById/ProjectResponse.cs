@@ -6,7 +6,6 @@ public sealed record ProjectResponse(
     string? Description,
     string Code,
     string Color,
-    DateOnly? EstimatedCompletionDate,
     ProjectStatus Status,
     int OpenWorkItems,
     int ClosedWorkItems,

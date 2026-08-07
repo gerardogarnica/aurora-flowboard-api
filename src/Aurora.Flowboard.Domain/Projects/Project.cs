@@ -28,7 +28,6 @@ public sealed class Project : BaseEntity
     public string? Description { get; private set; }
     public string Code { get; private set; }
     public Color Color { get; private set; }
-    public DateOnly? EstimatedCompletionDate { get; private set; }
     public ProjectKind Kind { get; private set; }
     public ProjectStatus Status { get; private set; }
     public int WorkItemCounter { get; private set; }
@@ -55,7 +54,6 @@ public sealed class Project : BaseEntity
         string code,
         ProjectKind kind,
         Color color,
-        DateOnly? estimatedCompletionDate,
         Guid createdBy,
         DateTime createdOnUtc) : base(id)
     {
@@ -64,7 +62,6 @@ public sealed class Project : BaseEntity
         Code = code;
         Kind = kind;
         Color = color;
-        EstimatedCompletionDate = estimatedCompletionDate;
         WorkItemCounter = 0;
         LastActivityDate = createdOnUtc;
         Status = ProjectStatus.Draft;
@@ -78,7 +75,6 @@ public sealed class Project : BaseEntity
         string code,
         ProjectKind kind,
         Color color,
-        DateOnly? estimatedCompletionDate,
         User createdBy,
         DateTime createdOnUtc)
     {
@@ -110,7 +106,6 @@ public sealed class Project : BaseEntity
             codeResult.Value.Value,
             kind,
             color,
-            estimatedCompletionDate,
             createdBy.Id,
             createdOnUtc);
 
@@ -128,7 +123,6 @@ public sealed class Project : BaseEntity
         string name,
         string? description,
         Color color,
-        DateOnly? estimatedCompletionDate,
         User changedBy,
         DateTime updatedOnUtc)
     {
@@ -160,7 +154,6 @@ public sealed class Project : BaseEntity
         Name = name.Trim();
         Description = description?.Trim();
         Color = color;
-        EstimatedCompletionDate = estimatedCompletionDate;
         UpdatedOnUtc = updatedOnUtc;
 
         _changeLogs.Add(ProjectChangeLog.Create(this, changedBy, ProjectChangeType.Updated, null, updatedOnUtc));

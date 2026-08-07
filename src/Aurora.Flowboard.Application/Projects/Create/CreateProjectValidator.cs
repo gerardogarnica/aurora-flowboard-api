@@ -2,7 +2,7 @@ namespace Aurora.Flowboard.Application.Projects.Create;
 
 internal sealed class CreateProjectValidator : AbstractValidator<CreateProjectCommand>
 {
-    public CreateProjectValidator(IDateTimeProvider dateTimeProvider)
+    public CreateProjectValidator()
     {
         RuleFor(x => x.Name)
             .NotEmpty()
@@ -22,9 +22,5 @@ internal sealed class CreateProjectValidator : AbstractValidator<CreateProjectCo
         RuleFor(x => x.Color)
             .NotEmpty()
             .MaximumLength(Color.MaxLength);
-
-        RuleFor(x => x.EstimatedCompletionDate)
-            .GreaterThanOrEqualTo(_ => dateTimeProvider.Today)
-            .When(x => x.EstimatedCompletionDate.HasValue);
     }
 }

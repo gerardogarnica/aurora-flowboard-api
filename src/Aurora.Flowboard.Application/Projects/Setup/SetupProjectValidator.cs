@@ -2,7 +2,7 @@ namespace Aurora.Flowboard.Application.Projects.Setup;
 
 internal sealed class SetupProjectValidator : AbstractValidator<SetupProjectCommand>
 {
-    public SetupProjectValidator(IDateTimeProvider dateTimeProvider)
+    public SetupProjectValidator()
     {
         RuleFor(x => x.Name)
             .NotEmpty()
@@ -22,10 +22,6 @@ internal sealed class SetupProjectValidator : AbstractValidator<SetupProjectComm
         RuleFor(x => x.Color)
             .NotEmpty()
             .MaximumLength(Color.MaxLength);
-
-        RuleFor(x => x.EstimatedCompletionDate)
-            .GreaterThanOrEqualTo(_ => dateTimeProvider.Today)
-            .When(x => x.EstimatedCompletionDate.HasValue);
 
         RuleFor(x => x.Flow)
             .NotNull();

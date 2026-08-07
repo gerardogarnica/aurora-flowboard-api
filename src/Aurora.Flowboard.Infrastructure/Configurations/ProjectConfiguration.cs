@@ -31,8 +31,6 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
                 .HasMaxLength(Color.MaxLength);
         });
 
-        builder.Property(x => x.EstimatedCompletionDate);
-
         builder.Property(x => x.Kind)
             .IsRequired()
             .HasConversion<string>();
