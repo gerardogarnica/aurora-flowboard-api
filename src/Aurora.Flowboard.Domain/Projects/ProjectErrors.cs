@@ -54,21 +54,21 @@ public static class ProjectErrors
         "Project.OnlyAdminCanChangeStatus",
         "Only admin members can change the project status");
 
-    public static readonly BaseError CodeRequired = BaseError.Validation(
-        "Project.CodeRequired",
-        "Project code is required");
+    public static readonly BaseError PrefixRequired = BaseError.Validation(
+        "Project.PrefixRequired",
+        "Project prefix is required");
 
-    public static readonly BaseError CodeTooLong = BaseError.Validation(
-        "Project.CodeTooLong",
-        "Project code cannot exceed 3 characters");
+    public static readonly BaseError PrefixTooLong = BaseError.Validation(
+        "Project.PrefixTooLong",
+        "Project prefix cannot exceed 3 characters");
 
-    public static readonly BaseError CodeInvalidCharacters = BaseError.Validation(
-        "Project.CodeInvalidCharacters",
-        "Project code must contain only alphabetic characters");
+    public static readonly BaseError PrefixInvalidCharacters = BaseError.Validation(
+        "Project.PrefixInvalidCharacters",
+        "Project prefix must contain only alphabetic characters");
 
-    public static readonly BaseError CodeAlreadyExists = BaseError.Conflict(
-        "Project.CodeAlreadyExists",
-        "A project with the specified code already exists");
+    public static readonly BaseError PrefixAlreadyExists = BaseError.Conflict(
+        "Project.PrefixAlreadyExists",
+        "A project with the specified prefix already exists");
 
     public static readonly BaseError KindUnchanged = BaseError.Validation(
         "Project.KindUnchanged",

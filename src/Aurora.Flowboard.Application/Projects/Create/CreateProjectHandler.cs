@@ -25,25 +25,25 @@ internal sealed class CreateProjectHandler(
             return Result.Fail<Guid>(colorResult.Error);
         }
 
-        Result<ProjectCode> codeResult = ProjectCode.Create(command.Code);
-        if (!codeResult.IsSuccessful)
+        Result<ProjectCode> prefixResult = ProjectCode.Create(command.Prefix);
+        if (!prefixResult.IsSuccessful)
         {
-            return Result.Fail<Guid>(codeResult.Error);
+            return Result.Fail<Guid>(prefixResult.Error);
         }
 
-        bool codeInUse = await dbContext
+        bool prefixInUse = await dbContext
             .Projects
-            .AnyAsync(p => p.Code == codeResult.Value.Value, cancellationToken);
+            .AnyAsync(p => p.Prefix.Value == prefixResult.Value.Value, cancellationToken);
 
-        if (codeInUse)
+        if (prefixInUse)
         {
-            return Result.Fail<Guid>(ProjectErrors.CodeAlreadyExists);
+            return Result.Fail<Guid>(ProjectErrors.PrefixAlreadyExists);
         }
 
         Result<Project> result = Project.Create(
             command.Name,
             command.Description,
-            command.Code,
+            prefixResult.Value,
             command.Kind,
             colorResult.Value,
             createdBy,

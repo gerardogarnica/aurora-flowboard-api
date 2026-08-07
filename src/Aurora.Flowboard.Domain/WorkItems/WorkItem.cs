@@ -138,7 +138,7 @@ public sealed class WorkItem : BaseEntity
         }
 
         int sequenceNumber = project.IncrementWorkItemCounter();
-        string code = $"{project.Code}-{sequenceNumber}";
+        string code = $"{project.Prefix}-{sequenceNumber}";
 
         var workItem = new WorkItem(
             Guid.NewGuid(),

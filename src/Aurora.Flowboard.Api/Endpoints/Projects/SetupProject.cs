@@ -18,7 +18,7 @@ public sealed class SetupProject : IBaseEndpoint
                 var command = new SetupProjectCommand(
                     request.Name,
                     request.Description,
-                    request.Code,
+                    request.Prefix,
                     request.Kind,
                     request.Color,
                     new SetupProjectFlowDto(
@@ -45,7 +45,7 @@ public sealed class SetupProject : IBaseEndpoint
     internal sealed record SetupProjectRequest(
         string Name,
         string? Description,
-        string Code,
+        string Prefix,
         ProjectKind Kind,
         string Color,
         SetupProjectFlowRequest Flow);

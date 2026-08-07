@@ -4,7 +4,7 @@ public sealed record ProjectResponse(
     Guid ProjectId,
     string Name,
     string? Description,
-    string Code,
+    string Prefix,
     string Color,
     ProjectStatus Status,
     int OpenWorkItems,

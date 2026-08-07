@@ -26,7 +26,7 @@ public sealed class Project : BaseEntity
 
     public string Name { get; private set; }
     public string? Description { get; private set; }
-    public string Code { get; private set; }
+    public ProjectCode Prefix { get; private set; }
     public Color Color { get; private set; }
     public ProjectKind Kind { get; private set; }
     public ProjectStatus Status { get; private set; }
@@ -51,7 +51,7 @@ public sealed class Project : BaseEntity
         Guid id,
         string name,
         string? description,
-        string code,
+        ProjectCode prefix,
         ProjectKind kind,
         Color color,
         Guid createdBy,
@@ -59,7 +59,7 @@ public sealed class Project : BaseEntity
     {
         Name = name;
         Description = description;
-        Code = code;
+        Prefix = prefix;
         Kind = kind;
         Color = color;
         WorkItemCounter = 0;
@@ -72,7 +72,7 @@ public sealed class Project : BaseEntity
     public static Result<Project> Create(
         string name,
         string? description,
-        string code,
+        ProjectCode prefix,
         ProjectKind kind,
         Color color,
         User createdBy,
@@ -88,12 +88,6 @@ public sealed class Project : BaseEntity
             return Result.Fail<Project>(ProjectErrors.NameTooLong);
         }
 
-        Result<ProjectCode> codeResult = ProjectCode.Create(code);
-        if (!codeResult.IsSuccessful)
-        {
-            return Result.Fail<Project>(codeResult.Error);
-        }
-
         if (description?.Length > MaxDescriptionLength)
         {
             return Result.Fail<Project>(ProjectErrors.DescriptionTooLong);
@@ -103,7 +97,7 @@ public sealed class Project : BaseEntity
             Guid.NewGuid(),
             name.Trim(),
             description?.Trim(),
-            codeResult.Value.Value,
+            prefix,
             kind,
             color,
             createdBy.Id,

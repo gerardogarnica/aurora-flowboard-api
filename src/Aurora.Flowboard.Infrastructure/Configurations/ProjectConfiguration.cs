@@ -19,9 +19,16 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.Property(x => x.Description)
             .HasMaxLength(Project.MaxDescriptionLength);
 
-        builder.Property(x => x.Code)
-            .IsRequired()
-            .HasMaxLength(ProjectCode.MaxLength);
+        builder.OwnsOne(x => x.Prefix, prefix =>
+        {
+            prefix.Property(p => p.Value)
+                .HasColumnName("prefix")
+                .IsRequired()
+                .HasMaxLength(ProjectCode.MaxLength);
+
+            prefix.HasIndex(p => p.Value)
+                .IsUnique();
+        });
 
         builder.OwnsOne(x => x.Color, color =>
         {
@@ -83,8 +90,5 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.Navigation(x => x.WorkItems)
             .HasField("_workItems")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
-
-        builder.HasIndex(x => x.Code)
-            .IsUnique();
     }
 }

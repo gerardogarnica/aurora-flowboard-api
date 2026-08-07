@@ -8,7 +8,7 @@ internal sealed class SetupProjectValidator : AbstractValidator<SetupProjectComm
             .NotEmpty()
             .MaximumLength(Project.MaxNameLength);
 
-        RuleFor(x => x.Code)
+        RuleFor(x => x.Prefix)
             .NotEmpty()
             .MaximumLength(ProjectCode.MaxLength)
             .Matches("^[A-Za-z]+$");

@@ -25,7 +25,7 @@ internal sealed class GetAllProjectsHandler(
                 p.Id,
                 p.Name,
                 p.Description,
-                p.Code,
+                p.Prefix.Value,
                 p.Color,
                 p.Status,
                 p.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Active),

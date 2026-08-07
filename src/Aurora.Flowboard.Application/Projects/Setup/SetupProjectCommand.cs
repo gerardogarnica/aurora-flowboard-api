@@ -3,7 +3,7 @@ namespace Aurora.Flowboard.Application.Projects.Setup;
 public sealed record SetupProjectCommand(
     string Name,
     string? Description,
-    string Code,
+    string Prefix,
     ProjectKind Kind,
     string Color,
     SetupProjectFlowDto Flow) : ICommand<Guid>;

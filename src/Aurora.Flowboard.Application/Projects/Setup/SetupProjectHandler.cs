@@ -30,27 +30,27 @@ internal sealed class SetupProjectHandler(
             return Result.Fail<Guid>(projectColorResult.Error);
         }
 
-        Result<ProjectCode> projectCodeResult = ProjectCode.Create(command.Code);
-        if (!projectCodeResult.IsSuccessful)
+        Result<ProjectCode> projectPrefixResult = ProjectCode.Create(command.Prefix);
+        if (!projectPrefixResult.IsSuccessful)
         {
             await transaction.RollbackAsync(cancellationToken);
-            return Result.Fail<Guid>(projectCodeResult.Error);
+            return Result.Fail<Guid>(projectPrefixResult.Error);
         }
 
-        bool codeInUse = await dbContext
+        bool prefixInUse = await dbContext
             .Projects
-            .AnyAsync(p => p.Code == projectCodeResult.Value.Value, cancellationToken);
+            .AnyAsync(p => p.Prefix.Value == projectPrefixResult.Value.Value, cancellationToken);
 
-        if (codeInUse)
+        if (prefixInUse)
         {
             await transaction.RollbackAsync(cancellationToken);
-            return Result.Fail<Guid>(ProjectErrors.CodeAlreadyExists);
+            return Result.Fail<Guid>(ProjectErrors.PrefixAlreadyExists);
         }
 
         Result<Project> projectResult = Project.Create(
             command.Name,
             command.Description,
-            command.Code,
+            projectPrefixResult.Value,
             command.Kind,
             projectColorResult.Value,
             createdBy,
