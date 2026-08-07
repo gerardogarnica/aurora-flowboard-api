@@ -6,6 +6,7 @@ public sealed record ProjectResponse(
     string? Description,
     string Prefix,
     string Color,
+    ProjectKind Kind,
     ProjectStatus Status,
     int OpenWorkItems,
     int ClosedWorkItems,
