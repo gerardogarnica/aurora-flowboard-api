@@ -19,12 +19,6 @@ internal sealed class CreateProjectHandler(
             return Result.Fail<Guid>(UserErrors.NotFound);
         }
 
-        Result<Color> colorResult = Color.Create(command.Color);
-        if (!colorResult.IsSuccessful)
-        {
-            return Result.Fail<Guid>(colorResult.Error);
-        }
-
         Result<ProjectCode> prefixResult = ProjectCode.Create(command.Prefix);
         if (!prefixResult.IsSuccessful)
         {
@@ -38,6 +32,12 @@ internal sealed class CreateProjectHandler(
         if (prefixInUse)
         {
             return Result.Fail<Guid>(ProjectErrors.PrefixAlreadyExists);
+        }
+
+        Result<Color> colorResult = Color.Create(command.Color);
+        if (!colorResult.IsSuccessful)
+        {
+            return Result.Fail<Guid>(colorResult.Error);
         }
 
         Result<Project> result = Project.Create(
