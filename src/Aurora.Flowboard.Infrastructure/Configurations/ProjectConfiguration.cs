@@ -33,6 +33,10 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
 
         builder.Property(x => x.EstimatedCompletionDate);
 
+        builder.Property(x => x.Kind)
+            .IsRequired()
+            .HasConversion<string>();
+
         builder.Property(x => x.Status)
             .IsRequired()
             .HasConversion<int>();

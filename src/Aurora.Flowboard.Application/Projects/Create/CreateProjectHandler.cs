@@ -29,6 +29,7 @@ internal sealed class CreateProjectHandler(
             command.Name,
             command.Description,
             command.Code,
+            command.Kind,
             colorResult.Value,
             command.EstimatedCompletionDate,
             createdBy,

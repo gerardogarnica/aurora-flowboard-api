@@ -19,6 +19,7 @@ public sealed class SetupProject : IBaseEndpoint
                     request.Name,
                     request.Description,
                     request.Code,
+                    request.Kind,
                     request.Color,
                     request.EstimatedCompletionDate,
                     new SetupProjectFlowDto(
@@ -46,6 +47,7 @@ public sealed class SetupProject : IBaseEndpoint
         string Name,
         string? Description,
         string Code,
+        ProjectKind Kind,
         string Color,
         DateOnly? EstimatedCompletionDate,
         SetupProjectFlowRequest Flow);

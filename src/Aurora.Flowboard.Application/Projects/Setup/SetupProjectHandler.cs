@@ -34,6 +34,7 @@ internal sealed class SetupProjectHandler(
             command.Name,
             command.Description,
             command.Code,
+            command.Kind,
             projectColorResult.Value,
             command.EstimatedCompletionDate,
             createdBy,

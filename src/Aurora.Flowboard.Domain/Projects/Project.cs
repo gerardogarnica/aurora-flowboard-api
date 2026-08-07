@@ -29,6 +29,7 @@ public sealed class Project : BaseEntity
     public string Code { get; private set; }
     public Color Color { get; private set; }
     public DateOnly? EstimatedCompletionDate { get; private set; }
+    public ProjectKind Kind { get; private set; }
     public ProjectStatus Status { get; private set; }
     public int WorkItemCounter { get; private set; }
     public DateTime LastActivityDate { get; private set; }
@@ -52,6 +53,7 @@ public sealed class Project : BaseEntity
         string name,
         string? description,
         string code,
+        ProjectKind kind,
         Color color,
         DateOnly? estimatedCompletionDate,
         Guid createdBy,
@@ -60,6 +62,7 @@ public sealed class Project : BaseEntity
         Name = name;
         Description = description;
         Code = code;
+        Kind = kind;
         Color = color;
         EstimatedCompletionDate = estimatedCompletionDate;
         WorkItemCounter = 0;
@@ -73,6 +76,7 @@ public sealed class Project : BaseEntity
         string name,
         string? description,
         string code,
+        ProjectKind kind,
         Color color,
         DateOnly? estimatedCompletionDate,
         User createdBy,
@@ -104,6 +108,7 @@ public sealed class Project : BaseEntity
             name.Trim(),
             description?.Trim(),
             codeResult.Value.Value,
+            kind,
             color,
             estimatedCompletionDate,
             createdBy.Id,
@@ -161,6 +166,34 @@ public sealed class Project : BaseEntity
         _changeLogs.Add(ProjectChangeLog.Create(this, changedBy, ProjectChangeType.Updated, null, updatedOnUtc));
 
         AddDomainEvent(new ProjectUpdatedDomainEvent(Id));
+
+        return Result.Ok();
+    }
+
+    public Result ChangeKind(ProjectKind newKind, User changedBy, DateTime updatedOnUtc)
+    {
+        if (!IsAdmin(changedBy.Id))
+        {
+            return Result.Fail(ProjectErrors.OnlyAdminCanChangeKind);
+        }
+
+        if (!IsModifiable)
+        {
+            return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
+        if (newKind == Kind)
+        {
+            return Result.Fail(ProjectErrors.KindUnchanged);
+        }
+
+        ProjectKind oldKind = Kind;
+        Kind = newKind;
+        UpdatedOnUtc = updatedOnUtc;
+
+        _changeLogs.Add(ProjectChangeLog.Create(this, changedBy, ProjectChangeType.KindChanged, null, updatedOnUtc, newKind: newKind));
+
+        AddDomainEvent(new ProjectKindChangedDomainEvent(Id, oldKind, newKind));
 
         return Result.Ok();
     }

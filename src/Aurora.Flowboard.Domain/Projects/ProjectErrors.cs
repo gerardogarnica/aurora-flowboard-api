@@ -65,4 +65,12 @@ public static class ProjectErrors
     public static readonly BaseError CodeInvalidCharacters = BaseError.Validation(
         "Project.CodeInvalidCharacters",
         "Project code must contain only alphabetic characters");
+
+    public static readonly BaseError KindUnchanged = BaseError.Validation(
+        "Project.KindUnchanged",
+        "The project already has the specified kind");
+
+    public static readonly BaseError OnlyAdminCanChangeKind = BaseError.Forbidden(
+        "Project.OnlyAdminCanChangeKind",
+        "Only admin members can change the project kind");
 }

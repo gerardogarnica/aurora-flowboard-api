@@ -13,6 +13,9 @@ internal sealed class SetupProjectValidator : AbstractValidator<SetupProjectComm
             .MaximumLength(ProjectCode.MaxLength)
             .Matches("^[A-Za-z]+$");
 
+        RuleFor(x => x.Kind)
+            .IsInEnum();
+
         RuleFor(x => x.Description)
             .MaximumLength(Project.MaxDescriptionLength);
 
