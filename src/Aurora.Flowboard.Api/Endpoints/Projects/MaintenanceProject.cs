@@ -3,18 +3,18 @@ using Aurora.Flowboard.Domain.Projects;
 
 namespace Aurora.Flowboard.Api.Endpoints.Projects;
 
-public sealed class HoldProject : IBaseEndpoint
+public sealed class MaintenanceProject : IBaseEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPatch(
-            "projects/{id:guid}/hold",
+            "projects/{id:guid}/maintenance",
             async (
                 Guid id,
                 ICommandHandler<ChangeProjectStatusCommand> handler,
                 CancellationToken cancellationToken) =>
             {
-                var command = new ChangeProjectStatusCommand(id, ProjectStatus.OnHold);
+                var command = new ChangeProjectStatusCommand(id, ProjectStatus.Maintenance);
 
                 Result result = await handler.Handle(command, cancellationToken);
 
@@ -23,7 +23,7 @@ public sealed class HoldProject : IBaseEndpoint
                     ApiResponses.Problem);
             })
             .RequireAuthorization()
-            .WithName("HoldProject")
+            .WithName("MaintenanceProject")
             .WithTags(EndpointTags.Projects)
             .Produces(StatusCodes.Status202Accepted)
             .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)

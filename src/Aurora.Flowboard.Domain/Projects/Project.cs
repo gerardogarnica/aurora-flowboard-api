@@ -10,12 +10,19 @@ public sealed class Project : BaseEntity
     public const int MaxNameLength = 100;
     public const int MaxDescriptionLength = 500;
 
-    private static readonly Dictionary<ProjectStatus, ProjectStatus[]> ValidTransitions = new()
+    private static readonly Dictionary<ProjectStatus, ProjectStatus[]> ContinuousTransitions = new()
     {
-        [ProjectStatus.Draft] = [ProjectStatus.Active, ProjectStatus.Archived],
-        [ProjectStatus.Active] = [ProjectStatus.OnHold, ProjectStatus.Completed, ProjectStatus.Archived],
-        [ProjectStatus.OnHold] = [ProjectStatus.Active, ProjectStatus.Archived],
+        [ProjectStatus.Active] = [ProjectStatus.Maintenance, ProjectStatus.Archived],
+        [ProjectStatus.Maintenance] = [ProjectStatus.Active, ProjectStatus.Archived],
         [ProjectStatus.Completed] = [ProjectStatus.Archived],
+        [ProjectStatus.Archived] = []
+    };
+
+    private static readonly Dictionary<ProjectStatus, ProjectStatus[]> TimeboxedTransitions = new()
+    {
+        [ProjectStatus.Active] = [ProjectStatus.Completed, ProjectStatus.Archived],
+        [ProjectStatus.Completed] = [ProjectStatus.Archived],
+        [ProjectStatus.Maintenance] = [ProjectStatus.Archived],
         [ProjectStatus.Archived] = []
     };
 
@@ -43,7 +50,7 @@ public sealed class Project : BaseEntity
     public IReadOnlyCollection<Flow> Flows => _flows.AsReadOnly();
     public IReadOnlyCollection<WorkItem> WorkItems => _workItems.AsReadOnly();
 
-    private bool IsModifiable => Status is ProjectStatus.Draft or ProjectStatus.Active or ProjectStatus.OnHold;
+    private bool IsModifiable => Status is ProjectStatus.Active or ProjectStatus.Maintenance;
 
     private Project() : base(Guid.Empty) { } // EF Core
 
@@ -64,7 +71,7 @@ public sealed class Project : BaseEntity
         Color = color;
         WorkItemCounter = 0;
         LastActivityDate = createdOnUtc;
-        Status = ProjectStatus.Draft;
+        Status = ProjectStatus.Active;
         CreatedBy = createdBy;
         CreatedOnUtc = createdOnUtc;
     }
@@ -287,12 +294,12 @@ public sealed class Project : BaseEntity
 
     public bool CanAddOrUpdateFlow()
     {
-        return Status is ProjectStatus.Draft or ProjectStatus.Active;
+        return Status is ProjectStatus.Active or ProjectStatus.Maintenance;
     }
 
     public bool CanAddOrUpdateWorkItem()
     {
-        return Status is ProjectStatus.Active;
+        return Status is ProjectStatus.Active or ProjectStatus.Maintenance;
     }
 
     internal bool IsAdmin(Guid userId) =>
@@ -304,6 +311,11 @@ public sealed class Project : BaseEntity
     internal ProjectRole? GetRole(Guid userId) =>
         _members.FirstOrDefault(m => m.UserId == userId)?.Role;
 
-    private static bool IsValidTransition(ProjectStatus from, ProjectStatus to) =>
-        ValidTransitions.TryGetValue(from, out ProjectStatus[]? targets) && targets.Contains(to);
+    private bool IsValidTransition(ProjectStatus from, ProjectStatus to)
+    {
+        Dictionary<ProjectStatus, ProjectStatus[]> transitions =
+            Kind is ProjectKind.Product or ProjectKind.Internal ? ContinuousTransitions : TimeboxedTransitions;
+
+        return transitions.TryGetValue(from, out ProjectStatus[]? targets) && targets.Contains(to);
+    }
 }

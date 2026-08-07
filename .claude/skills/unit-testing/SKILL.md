@@ -174,25 +174,24 @@ internal static class ProjectData
     public static readonly DateTime CreatedOnUtc = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     public static readonly DateTime UpdatedOnUtc = new(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc);
 
-    public static Project GetDraftProject(User? creator = null)
+    public static Project GetProject(User? creator = null)
     {
         User user = creator ?? UserData.GetActiveUser();
         return Project.Create(Name, Description, Code, Color, EstimatedCompletionDate, user, CreatedOnUtc).Value;
     }
 
-    // A builder per state the tests need, driven through the aggregate's own methods
+    // A builder per state the tests need, driven through the aggregate's own methods.
+    // A project is born Active, so only non-initial states need a transition.
     public static Project GetProjectWithStatus(ProjectStatus status, User? admin = null)
     {
         User user = admin ?? UserData.GetActiveUser();
-        Project project = GetDraftProject(user);
+        Project project = GetProject(user);
 
         switch (status)
         {
             case ProjectStatus.Active:
-                project.ChangeStatus(ProjectStatus.Active, user, UpdatedOnUtc);
                 break;
             case ProjectStatus.Archived:
-                project.ChangeStatus(ProjectStatus.Active, user, UpdatedOnUtc);
                 project.ChangeStatus(ProjectStatus.Archived, user, UpdatedOnUtc);
                 break;
         }
