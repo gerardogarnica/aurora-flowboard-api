@@ -30,6 +30,23 @@ internal sealed class SetupProjectHandler(
             return Result.Fail<Guid>(projectColorResult.Error);
         }
 
+        Result<ProjectCode> projectCodeResult = ProjectCode.Create(command.Code);
+        if (!projectCodeResult.IsSuccessful)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return Result.Fail<Guid>(projectCodeResult.Error);
+        }
+
+        bool codeInUse = await dbContext
+            .Projects
+            .AnyAsync(p => p.Code == projectCodeResult.Value.Value, cancellationToken);
+
+        if (codeInUse)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return Result.Fail<Guid>(ProjectErrors.CodeAlreadyExists);
+        }
+
         Result<Project> projectResult = Project.Create(
             command.Name,
             command.Description,

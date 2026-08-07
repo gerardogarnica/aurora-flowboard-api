@@ -25,6 +25,21 @@ internal sealed class CreateProjectHandler(
             return Result.Fail<Guid>(colorResult.Error);
         }
 
+        Result<ProjectCode> codeResult = ProjectCode.Create(command.Code);
+        if (!codeResult.IsSuccessful)
+        {
+            return Result.Fail<Guid>(codeResult.Error);
+        }
+
+        bool codeInUse = await dbContext
+            .Projects
+            .AnyAsync(p => p.Code == codeResult.Value.Value, cancellationToken);
+
+        if (codeInUse)
+        {
+            return Result.Fail<Guid>(ProjectErrors.CodeAlreadyExists);
+        }
+
         Result<Project> result = Project.Create(
             command.Name,
             command.Description,

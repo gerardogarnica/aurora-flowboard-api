@@ -66,6 +66,10 @@ public static class ProjectErrors
         "Project.CodeInvalidCharacters",
         "Project code must contain only alphabetic characters");
 
+    public static readonly BaseError CodeAlreadyExists = BaseError.Conflict(
+        "Project.CodeAlreadyExists",
+        "A project with the specified code already exists");
+
     public static readonly BaseError KindUnchanged = BaseError.Validation(
         "Project.KindUnchanged",
         "The project already has the specified kind");
