@@ -1,6 +1,6 @@
 using Aurora.Flowboard.Application.Components.Create;
 
-namespace Aurora.Flowboard.Api.Endpoints.Projects;
+namespace Aurora.Flowboard.Api.Endpoints.Components;
 
 public sealed class CreateComponent : IBaseEndpoint
 {
@@ -24,7 +24,7 @@ public sealed class CreateComponent : IBaseEndpoint
             })
             .RequireAuthorization()
             .WithName("CreateComponent")
-            .WithTags(EndpointTags.Projects)
+            .WithTags(EndpointTags.Components)
             .Produces<Guid>(StatusCodes.Status201Created)
             .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
             .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)

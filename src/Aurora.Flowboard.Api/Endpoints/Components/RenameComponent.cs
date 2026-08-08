@@ -1,6 +1,6 @@
 using Aurora.Flowboard.Application.Components.Rename;
 
-namespace Aurora.Flowboard.Api.Endpoints.Projects;
+namespace Aurora.Flowboard.Api.Endpoints.Components;
 
 public sealed class RenameComponent : IBaseEndpoint
 {
@@ -24,7 +24,7 @@ public sealed class RenameComponent : IBaseEndpoint
             })
             .RequireAuthorization()
             .WithName("RenameComponent")
-            .WithTags(EndpointTags.Projects)
+            .WithTags(EndpointTags.Components)
             .Produces(StatusCodes.Status202Accepted)
             .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
             .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
