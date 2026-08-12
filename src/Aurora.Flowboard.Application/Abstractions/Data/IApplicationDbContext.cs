@@ -10,6 +10,7 @@ public interface IApplicationDbContext : IAsyncDisposable
     DbSet<Flow> Flows { get; }
     DbSet<FlowState> FlowStates { get; }
     DbSet<FlowTransition> FlowTransitions { get; }
+    DbSet<Milestone> Milestones { get; }
     DbSet<WorkItem> WorkItems { get; }
     DbSet<Comment> Comments { get; }
     DbSet<TimeEntry> TimeEntries { get; }
