@@ -1,4 +1,4 @@
-namespace Aurora.Flowboard.Domain.Projects;
+namespace Aurora.Flowboard.Domain.Components;
 
 public enum ComponentStatus
 {

@@ -7,8 +7,5 @@ public enum ProjectChangeType
     KindChanged = 2,
     StatusChanged = 3,
     MemberAdded = 4,
-    MemberRemoved = 5,
-    ComponentAdded = 6,
-    ComponentRenamed = 7,
-    ComponentRetired = 8
+    MemberRemoved = 5
 }

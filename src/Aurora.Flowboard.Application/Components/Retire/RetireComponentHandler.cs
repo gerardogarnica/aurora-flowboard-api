@@ -9,14 +9,15 @@ internal sealed class RetireComponentHandler(
         RetireComponentCommand command,
         CancellationToken cancellationToken)
     {
-        Project? project = await dbContext
-            .Projects
-            .Include(p => p.Components)
-            .SingleOrDefaultAsync(p => p.Components.Any(c => c.Id == command.ComponentId), cancellationToken);
+        Component? component = await dbContext
+            .Components
+            .Include(c => c.Project)
+            .ThenInclude(p => p.Members)
+            .SingleOrDefaultAsync(c => c.Id == command.ComponentId, cancellationToken);
 
-        if (project is null)
+        if (component is null)
         {
-            return Result.Fail(ProjectErrors.ComponentNotFound);
+            return Result.Fail(ComponentErrors.NotFound);
         }
 
         User? changedBy = await dbContext.Users
@@ -28,7 +29,7 @@ internal sealed class RetireComponentHandler(
             return Result.Fail(UserErrors.NotFound);
         }
 
-        Result result = project.RetireComponent(command.ComponentId, changedBy, dateTimeProvider.UtcNow);
+        Result result = component.Retire(changedBy, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {

@@ -19,15 +19,15 @@ internal sealed class GetComponentsByProjectHandler(
         }
 
         List<ComponentResponse> components = await dbContext
-            .Projects
+            .Components
             .AsNoTracking()
-            .Where(p => p.Id == query.ProjectId)
-            .SelectMany(p => p.Components)
+            .Where(c => c.ProjectId == query.ProjectId)
             .OrderBy(c => c.Name)
             .Select(c => new ComponentResponse(
                 c.Id,
                 c.Name,
                 c.Status,
+                c.CreatedBy,
                 c.CreatedOnUtc,
                 c.UpdatedOnUtc))
             .ToListAsync(cancellationToken);

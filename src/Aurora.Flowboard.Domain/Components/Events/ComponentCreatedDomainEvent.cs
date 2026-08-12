@@ -1,11 +1,11 @@
-namespace Aurora.Flowboard.Domain.Projects.Events;
+namespace Aurora.Flowboard.Domain.Components.Events;
 
 public sealed class ComponentCreatedDomainEvent(
-    Guid projectId,
     Guid componentId,
+    Guid projectId,
     string name) : DomainEvent
 {
-    public Guid ProjectId { get; init; } = projectId;
     public Guid ComponentId { get; init; } = componentId;
+    public Guid ProjectId { get; init; } = projectId;
     public string Name { get; init; } = name;
 }

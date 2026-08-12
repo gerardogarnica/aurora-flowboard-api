@@ -77,36 +77,4 @@ public static class ProjectErrors
     public static readonly BaseError OnlyAdminCanChangeKind = BaseError.Forbidden(
         "Project.OnlyAdminCanChangeKind",
         "Only admin members can change the project kind");
-
-    public static readonly BaseError ComponentNotFound = BaseError.NotFound(
-        "Project.ComponentNotFound",
-        "The component was not found in this project");
-
-    public static readonly BaseError ComponentNameRequired = BaseError.Validation(
-        "Project.ComponentNameRequired",
-        "Component name is required");
-
-    public static readonly BaseError ComponentNameTooLong = BaseError.Validation(
-        "Project.ComponentNameTooLong",
-        "Component name cannot exceed 50 characters");
-
-    public static readonly BaseError ComponentAlreadyRetired = BaseError.Validation(
-        "Project.ComponentAlreadyRetired",
-        "The component is already retired");
-
-    public static readonly BaseError DuplicateComponentName = BaseError.Conflict(
-        "Project.DuplicateComponentName",
-        "A component with this name already exists in this project");
-
-    public static readonly BaseError OnlyAdminCanAddComponent = BaseError.Forbidden(
-        "Project.OnlyAdminCanAddComponent",
-        "Only admin members can add components to the project");
-
-    public static readonly BaseError OnlyAdminCanRenameComponent = BaseError.Forbidden(
-        "Project.OnlyAdminCanRenameComponent",
-        "Only admin members can rename components in the project");
-
-    public static readonly BaseError OnlyAdminCanRetireComponent = BaseError.Forbidden(
-        "Project.OnlyAdminCanRetireComponent",
-        "Only admin members can retire components in the project");
 }

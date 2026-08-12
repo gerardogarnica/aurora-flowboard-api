@@ -1,4 +1,5 @@
-using Aurora.Flowboard.Domain.Projects;
+using Aurora.Flowboard.Domain.Components;
+using Aurora.Flowboard.Domain.Users;
 
 namespace Aurora.Flowboard.Infrastructure.Configurations;
 
@@ -21,10 +22,18 @@ internal sealed class ComponentConfiguration : IEntityTypeConfiguration<Componen
             .IsRequired()
             .HasConversion<string>();
 
+        builder.Property(x => x.CreatedBy)
+            .IsRequired();
+
         builder.Property(x => x.CreatedOnUtc)
             .IsRequired();
 
         builder.Property(x => x.UpdatedOnUtc);
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(x => x.CreatedBy)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(x => x.ProjectId);
 

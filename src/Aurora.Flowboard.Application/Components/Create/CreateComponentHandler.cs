@@ -11,7 +11,9 @@ internal sealed class CreateComponentHandler(
     {
         Project? project = await dbContext
             .Projects
+            .Include(p => p.Members)
             .Include(p => p.Components)
+            .AsSplitQuery()
             .SingleOrDefaultAsync(p => p.Id == command.ProjectId, cancellationToken);
 
         if (project is null)
@@ -29,14 +31,16 @@ internal sealed class CreateComponentHandler(
             return Result.Fail<Guid>(UserErrors.NotFound);
         }
 
-        Result result = project.AddComponent(command.Name, createdBy, dateTimeProvider.UtcNow);
+        Result<Component> result = Component.Create(command.Name, project, createdBy, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {
             return Result.Fail<Guid>(result.Error);
         }
 
-        Component component = project.Components.Last();
+        Component component = result.Value;
+
+        dbContext.Components.Add(component);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 

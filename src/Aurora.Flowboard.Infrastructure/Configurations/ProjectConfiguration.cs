@@ -92,7 +92,7 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         builder.HasMany(x => x.Components)
-            .WithOne()
+            .WithOne(c => c.Project)
             .HasForeignKey(x => x.ProjectId)
             .OnDelete(DeleteBehavior.Cascade);
 
