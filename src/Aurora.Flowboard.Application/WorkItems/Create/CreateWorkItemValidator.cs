@@ -22,6 +22,16 @@ internal sealed class CreateWorkItemValidator : AbstractValidator<CreateWorkItem
             .NotEmpty()
             .When(x => x.AssigneeId.HasValue);
 
+        RuleFor(x => x.MilestoneId)
+            .Must(id => id != Guid.Empty)
+            .When(x => x.MilestoneId.HasValue)
+            .WithMessage("Milestone ID must be a valid identifier");
+
+        RuleFor(x => x.ComponentId)
+            .Must(id => id != Guid.Empty)
+            .When(x => x.ComponentId.HasValue)
+            .WithMessage("Component ID must be a valid identifier");
+
         RuleFor(x => x.EstimatedPoints)
             .GreaterThan(0)
             .When(x => x.EstimatedPoints.HasValue);

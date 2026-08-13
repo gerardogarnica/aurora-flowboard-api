@@ -66,6 +66,38 @@ internal sealed class CreateWorkItemHandler(
             }
         }
 
+        Milestone? milestone = null;
+
+        if (command.MilestoneId.HasValue)
+        {
+            // Tracked (not AsNoTracking): assigned to WorkItem.Milestone below, and an entity
+            // attached to a navigation property must be tracked or EF treats it as a new insert.
+            milestone = await dbContext
+                .Milestones
+                .SingleOrDefaultAsync(m => m.Id == command.MilestoneId.Value, cancellationToken);
+
+            if (milestone is null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return Result.Fail<Guid>(MilestoneErrors.NotFound);
+            }
+        }
+
+        Component? component = null;
+
+        if (command.ComponentId.HasValue)
+        {
+            component = await dbContext
+                .Components
+                .SingleOrDefaultAsync(c => c.Id == command.ComponentId.Value, cancellationToken);
+
+            if (component is null)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return Result.Fail<Guid>(ComponentErrors.NotFound);
+            }
+        }
+
         Result<WorkItem> result = WorkItem.Create(
             command.Title,
             command.Description,
@@ -77,7 +109,9 @@ internal sealed class CreateWorkItemHandler(
             command.EstimatedPoints,
             command.EstimatedCompletionDate,
             dateTimeProvider.UtcNow,
-            assignee);
+            assignee,
+            milestone,
+            component);
 
         if (!result.IsSuccessful)
         {

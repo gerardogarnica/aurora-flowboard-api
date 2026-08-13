@@ -60,6 +60,16 @@ internal sealed class WorkItemConfiguration : IEntityTypeConfiguration<WorkItem>
             .HasForeignKey(x => x.FlowStateId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne(x => x.Component)
+            .WithMany()
+            .HasForeignKey(x => x.ComponentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.Milestone)
+            .WithMany()
+            .HasForeignKey(x => x.MilestoneId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasMany(x => x.Tags)
             .WithOne()
             .HasForeignKey(x => x.WorkItemId)
@@ -108,5 +118,9 @@ internal sealed class WorkItemConfiguration : IEntityTypeConfiguration<WorkItem>
         builder.HasIndex(x => x.Code).IsUnique();
 
         builder.HasIndex(x => x.ProjectId);
+
+        builder.HasIndex(x => x.ComponentId);
+
+        builder.HasIndex(x => x.MilestoneId);
     }
 }

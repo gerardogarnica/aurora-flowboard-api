@@ -1,4 +1,6 @@
+using Aurora.Flowboard.Domain.Components;
 using Aurora.Flowboard.Domain.Flows;
+using Aurora.Flowboard.Domain.Milestones;
 using Aurora.Flowboard.Domain.Projects;
 using Aurora.Flowboard.Domain.Users;
 using Aurora.Flowboard.Domain.WorkItems.Events;
@@ -29,12 +31,16 @@ public sealed class WorkItem : BaseEntity
     public int SequenceNumber { get; private set; }
     public int? EstimatedPoints { get; private set; }
     public DateOnly? EstimatedCompletionDate { get; private set; }
+    public Guid? ComponentId { get; private set; }
+    public Guid? MilestoneId { get; private set; }
     public DateTime CreatedOnUtc { get; private set; }
     public DateTime? UpdatedOnUtc { get; private set; }
     public DateTime? CompletedOnUtc { get; private set; }
 
     public Project Project { get; init; } = null!;
     public FlowState FlowState { get; private set; } = null!;
+    public Component? Component { get; private set; }
+    public Milestone? Milestone { get; private set; }
     public IReadOnlyCollection<Comment> Comments => _comments.AsReadOnly();
     public IReadOnlyCollection<TimeEntry> TimeEntries => _timeEntries.AsReadOnly();
     public IReadOnlyCollection<StateTransitionHistory> StateHistory => _stateHistory.AsReadOnly();
@@ -57,6 +63,8 @@ public sealed class WorkItem : BaseEntity
         int sequenceNumber,
         int? estimatedPoints,
         DateOnly? estimatedCompletionDate,
+        Guid? milestoneId,
+        Guid? componentId,
         DateTime createdOnUtc) : base(id)
     {
         Title = title;
@@ -71,6 +79,8 @@ public sealed class WorkItem : BaseEntity
         SequenceNumber = sequenceNumber;
         EstimatedPoints = estimatedPoints;
         EstimatedCompletionDate = estimatedCompletionDate;
+        MilestoneId = milestoneId;
+        ComponentId = componentId;
         CreatedOnUtc = createdOnUtc;
     }
 
@@ -85,7 +95,9 @@ public sealed class WorkItem : BaseEntity
         int? estimatedPoints,
         DateOnly? estimatedCompletionDate,
         DateTime createdOnUtc,
-        User? assignee = null)
+        User? assignee = null,
+        Milestone? milestone = null,
+        Component? component = null)
     {
         if (string.IsNullOrWhiteSpace(title))
         {
@@ -130,6 +142,32 @@ public sealed class WorkItem : BaseEntity
             }
         }
 
+        if (milestone is not null)
+        {
+            if (milestone.ProjectId != project.Id)
+            {
+                return Result.Fail<WorkItem>(WorkItemErrors.MilestoneNotInProject);
+            }
+
+            if (milestone.Status is MilestoneStatus.Completed or MilestoneStatus.Archived)
+            {
+                return Result.Fail<WorkItem>(WorkItemErrors.MilestoneNotAcceptingAssignments);
+            }
+        }
+
+        if (component is not null)
+        {
+            if (component.ProjectId != project.Id)
+            {
+                return Result.Fail<WorkItem>(WorkItemErrors.ComponentNotInProject);
+            }
+
+            if (component.Status == ComponentStatus.Retired)
+            {
+                return Result.Fail<WorkItem>(WorkItemErrors.ComponentRetired);
+            }
+        }
+
         FlowState? initialState = flow.GetInitialState();
 
         if (initialState is null)
@@ -154,10 +192,14 @@ public sealed class WorkItem : BaseEntity
             sequenceNumber,
             estimatedPoints,
             estimatedCompletionDate,
+            milestone?.Id,
+            component?.Id,
             createdOnUtc)
         {
             Project = project,
-            FlowState = initialState
+            FlowState = initialState,
+            Milestone = milestone,
+            Component = component
         };
 
         workItem._changeLogs.Add(WorkItemChangeLog.Create(workItem, createdBy, WorkItemChangeType.Created, null, createdOnUtc));

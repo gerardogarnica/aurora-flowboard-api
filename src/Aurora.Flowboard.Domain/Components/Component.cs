@@ -107,7 +107,7 @@ public sealed class Component : BaseEntity
         return Result.Ok();
     }
 
-    public Result Retire(User changedBy, DateTime updatedOnUtc)
+    public Result Retire(User changedBy, int openWorkItemCount, DateTime updatedOnUtc)
     {
         if (!Project.IsAdmin(changedBy.Id))
         {
@@ -117,6 +117,11 @@ public sealed class Component : BaseEntity
         if (Status == ComponentStatus.Retired)
         {
             return Result.Fail(ComponentErrors.AlreadyRetired);
+        }
+
+        if (openWorkItemCount > 0)
+        {
+            return Result.Fail(ComponentErrors.CannotRetireWithOpenWorkItems);
         }
 
         Status = ComponentStatus.Retired;

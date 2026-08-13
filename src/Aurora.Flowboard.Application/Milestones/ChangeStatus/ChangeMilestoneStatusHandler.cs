@@ -30,9 +30,14 @@ internal sealed class ChangeMilestoneStatusHandler(
             return Result.Fail(UserErrors.NotFound);
         }
 
-        // WorkItem.MilestoneId does not exist yet, so open work items cannot be counted.
-        // The "no open work items" invariant is a no-op until that wiring lands.
-        Result result = milestone.ChangeStatus(command.NewStatus, changedBy, openWorkItemCount: 0, dateTimeProvider.UtcNow);
+        int openWorkItemCount = await dbContext
+            .WorkItems
+            .Where(w => w.MilestoneId == milestone.Id
+                && w.FlowState.Category != FlowStateCategory.Completed
+                && w.FlowState.Category != FlowStateCategory.Cancelled)
+            .CountAsync(cancellationToken);
+
+        Result result = milestone.ChangeStatus(command.NewStatus, changedBy, openWorkItemCount, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {

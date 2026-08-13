@@ -29,7 +29,14 @@ internal sealed class RetireComponentHandler(
             return Result.Fail(UserErrors.NotFound);
         }
 
-        Result result = component.Retire(changedBy, dateTimeProvider.UtcNow);
+        int openWorkItemCount = await dbContext
+            .WorkItems
+            .Where(w => w.ComponentId == component.Id
+                && w.FlowState.Category != FlowStateCategory.Completed
+                && w.FlowState.Category != FlowStateCategory.Cancelled)
+            .CountAsync(cancellationToken);
+
+        Result result = component.Retire(changedBy, openWorkItemCount, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {

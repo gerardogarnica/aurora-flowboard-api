@@ -23,7 +23,9 @@ public sealed class CreateWorkItem : IBaseEndpoint
                     request.FlowId,
                     request.EstimatedPoints,
                     request.EstimatedCompletionDate,
-                    request.AssigneeId);
+                    request.AssigneeId,
+                    request.MilestoneId,
+                    request.ComponentId);
 
                 Result<Guid> result = await handler.Handle(command, cancellationToken);
 
@@ -50,5 +52,7 @@ public sealed class CreateWorkItem : IBaseEndpoint
         Guid FlowId,
         int? EstimatedPoints,
         DateOnly? EstimatedCompletionDate,
-        Guid? AssigneeId);
+        Guid? AssigneeId,
+        Guid? MilestoneId,
+        Guid? ComponentId);
 }

@@ -25,4 +25,8 @@ public static class ComponentErrors
     public static readonly BaseError OnlyAdminCanManageComponent = BaseError.Forbidden(
         "Component.OnlyAdminCanManageComponent",
         "Only admin members can manage components in the project");
+
+    public static readonly BaseError CannotRetireWithOpenWorkItems = BaseError.Validation(
+        "Component.CannotRetireWithOpenWorkItems",
+        "The component still holds open work items and cannot be retired");
 }

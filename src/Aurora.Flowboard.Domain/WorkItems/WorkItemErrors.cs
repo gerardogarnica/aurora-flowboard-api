@@ -85,4 +85,20 @@ public static class WorkItemErrors
     public static readonly BaseError CancelledWorkItemCannotBeModified = BaseError.Validation(
         "WorkItem.CancelledWorkItemCannotBeModified",
         "A work item in a cancelled state cannot be assigned or unassigned");
+
+    public static readonly BaseError MilestoneNotInProject = BaseError.Validation(
+        "WorkItem.MilestoneNotInProject",
+        "The milestone must belong to the work item's project");
+
+    public static readonly BaseError MilestoneNotAcceptingAssignments = BaseError.Validation(
+        "WorkItem.MilestoneNotAcceptingAssignments",
+        "The milestone is completed or archived and does not accept new work item assignments");
+
+    public static readonly BaseError ComponentNotInProject = BaseError.Validation(
+        "WorkItem.ComponentNotInProject",
+        "The component must belong to the work item's project");
+
+    public static readonly BaseError ComponentRetired = BaseError.Validation(
+        "WorkItem.ComponentRetired",
+        "The component is retired and cannot be assigned to new work items");
 }
