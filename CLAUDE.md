@@ -40,10 +40,18 @@ Tests live under `test/`:
 
 | Aggregate    | Key entities                                                              |
 |--------------|---------------------------------------------------------------------------|
-| Projects     | `Project` (has `Color`), `ProjectMember`, `ProjectChangeLog`, `ProjectCode` (VO), `FlowState` (has `Color`), `FlowTransition`, `FlowStateCategory` |
-| WorkItems    | `WorkItem`, `Comment`, `TimeEntry`, `WorkItemTag`, `StateTransitionHistory`, `WorkItemChangeLog` |
+| Projects     | `Project` (has `Color`, `ProjectKind`, `ProjectStatus`), `ProjectMember` (has `ProjectRole`), `ProjectChangeLog`, `ProjectCode` (VO, exposed as `Prefix`), `FlowState` (has `Color`), `FlowTransition`, `FlowStateCategory` |
+| Milestones   | `Milestone` (own aggregate root, FK `project_id`, has `MilestoneStatus`) |
+| Components   | `Component` (own aggregate root, FK `project_id`, has `ComponentStatus`) |
+| WorkItems    | `WorkItem` (optional FK `milestone_id`, `component_id`), `Comment`, `TimeEntry`, `WorkItemTag`, `StateTransitionHistory`, `WorkItemChangeLog` |
 | Users        | `User`, `UserToken` (issued access/refresh token pair), `Password` (VO), `Role` (closed value type: `Administrator`/`Member`, not a DB entity) |
 | Shared       | `Email` (VO), `Color` (VO)                                                |
+
+`ProjectKind`: `Product`, `Client`, `Research`, `Internal`.
+
+`ProjectStatus`: `Active`, `Maintenance`, `Completed`, `Archived`.
+
+`ProjectRole` (project membership role, distinct from `Role`): `Admin`, `Analyst`, `Developer`, `QA`, `Viewer`.
 
 ## Key patterns
 
@@ -62,6 +70,8 @@ Tests live under `test/`:
 **One flow per project** — there is no `Flow` aggregate. `FlowState` and `FlowTransition` are child entities of `Project` (FK `project_id`), and a work item reaches its transitions via `Project.FindFlowTransition(...)`. Flow operations are exposed under `projects/{id}/flow/...`.
 
 **Work item board response** — `GET projects/{projectId:guid}/work-items` returns work items grouped by the project's `FlowState`s (Kanban board shape), not a flat list. A project with no flow states returns an empty board, not a 404.
+
+**Milestones & Components** — both are project-owned aggregate roots (own `Domain/Milestones` and `Domain/Components` folders, FK `project_id`), not child collections mapped through `Project` the way `FlowState`/`FlowTransition` are. Only a project admin (`Project.IsAdmin`) can create/update/change status. `Milestone` has a status state machine (`Draft → Active/Archived`, `Active → OnHold/Completed/Archived`, `OnHold → Active/Archived`) enforced in `Milestone.ChangeStatus`; closing (`Completed`/`Archived`) or retiring a `Component` is blocked while it has open work items. `WorkItem` optionally references a `Milestone` and/or `Component` via nullable `milestone_id`/`component_id`. Endpoints are under `projects/{id}/milestones/...` and `projects/{id}/components/...`.
 
 ## Workflow
 1. Ask clarifying questions if requirements are unclear.
