@@ -6,12 +6,7 @@ public sealed record SetupProjectCommand(
     string Prefix,
     ProjectKind Kind,
     string Color,
-    SetupProjectFlowDto Flow) : ICommand<Guid>;
-
-public sealed record SetupProjectFlowDto(
-    string Name,
-    string? Description,
-    IReadOnlyCollection<SetupProjectFlowStateDto> States);
+    IReadOnlyCollection<SetupProjectFlowStateDto> FlowStates) : ICommand<Guid>;
 
 public sealed record SetupProjectFlowStateDto(
     string Name,

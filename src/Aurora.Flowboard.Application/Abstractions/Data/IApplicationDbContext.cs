@@ -8,10 +8,9 @@ public interface IApplicationDbContext : IAsyncDisposable
     DbSet<ProjectMember> ProjectMembers { get; }
     DbSet<ProjectChangeLog> ProjectChangeLogs { get; }
     DbSet<Component> Components { get; }
-    DbSet<Flow> Flows { get; }
+    DbSet<Milestone> Milestones { get; }
     DbSet<FlowState> FlowStates { get; }
     DbSet<FlowTransition> FlowTransitions { get; }
-    DbSet<Milestone> Milestones { get; }
     DbSet<WorkItem> WorkItems { get; }
     DbSet<Comment> Comments { get; }
     DbSet<TimeEntry> TimeEntries { get; }

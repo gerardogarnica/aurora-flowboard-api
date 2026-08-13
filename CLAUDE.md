@@ -40,8 +40,7 @@ Tests live under `test/`:
 
 | Aggregate    | Key entities                                                              |
 |--------------|---------------------------------------------------------------------------|
-| Projects     | `Project` (has `Color`), `ProjectMember`, `ProjectChangeLog`, `ProjectCode` (VO) |
-| Flows        | `Flow`, `FlowState` (has `Color`), `FlowTransition`                       |
+| Projects     | `Project` (has `Color`), `ProjectMember`, `ProjectChangeLog`, `ProjectCode` (VO), `FlowState` (has `Color`), `FlowTransition`, `FlowStateCategory` |
 | WorkItems    | `WorkItem`, `Comment`, `TimeEntry`, `WorkItemTag`, `StateTransitionHistory`, `WorkItemChangeLog` |
 | Users        | `User`, `UserToken` (issued access/refresh token pair), `Password` (VO), `Role` (closed value type: `Administrator`/`Member`, not a DB entity) |
 | Shared       | `Email` (VO), `Color` (VO)                                                |
@@ -60,7 +59,9 @@ Tests live under `test/`:
 
 **Authentication & authorization** — `POST auth/login` (anonymous) issues a JWT access token + opaque refresh token via `ITokenProvider`/`JwtTokenProvider`; passwords are hashed with PBKDF2 (`PasswordHasher`, not BCrypt/ASP.NET Identity). Protected endpoints use `RequireAuthorization()`; admin-only endpoints use `RequireAuthorization(policy => policy.RequireRole(Role.Administrator.Name))` (e.g. `POST users`). `IUserContext` exposes the current user's id/claims to handlers.
 
-**Work item board response** — `GET projects/{projectId:guid}/work-items` returns work items grouped by the project's default flow's `FlowState`s (Kanban board shape), not a flat list.
+**One flow per project** — there is no `Flow` aggregate. `FlowState` and `FlowTransition` are child entities of `Project` (FK `project_id`), and a work item reaches its transitions via `Project.FindFlowTransition(...)`. Flow operations are exposed under `projects/{id}/flow/...`.
+
+**Work item board response** — `GET projects/{projectId:guid}/work-items` returns work items grouped by the project's `FlowState`s (Kanban board shape), not a flat list. A project with no flow states returns an empty board, not a 404.
 
 ## Workflow
 1. Ask clarifying questions if requirements are unclear.

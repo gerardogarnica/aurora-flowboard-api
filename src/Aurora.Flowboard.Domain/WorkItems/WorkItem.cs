@@ -1,5 +1,4 @@
 using Aurora.Flowboard.Domain.Components;
-using Aurora.Flowboard.Domain.Flows;
 using Aurora.Flowboard.Domain.Milestones;
 using Aurora.Flowboard.Domain.Projects;
 using Aurora.Flowboard.Domain.Users;
@@ -90,7 +89,6 @@ public sealed class WorkItem : BaseEntity
         WorkItemType type,
         Priority priority,
         Project project,
-        Flow flow,
         User createdBy,
         int? estimatedPoints,
         DateOnly? estimatedCompletionDate,
@@ -168,11 +166,11 @@ public sealed class WorkItem : BaseEntity
             }
         }
 
-        FlowState? initialState = flow.GetInitialState();
+        FlowState? initialState = project.GetInitialFlowState();
 
         if (initialState is null)
         {
-            return Result.Fail<WorkItem>(FlowErrors.NoInitialState);
+            return Result.Fail<WorkItem>(ProjectErrors.NoInitialFlowState);
         }
 
         int sequenceNumber = project.IncrementWorkItemCounter();
@@ -326,12 +324,12 @@ public sealed class WorkItem : BaseEntity
             return Result.Fail(UserErrors.Inactive);
         }
 
-        if (toState.FlowId != FlowState.FlowId)
+        if (toState.ProjectId != ProjectId)
         {
-            return Result.Fail(WorkItemErrors.TargetStateNotInFlow);
+            return Result.Fail(WorkItemErrors.TargetStateNotInProject);
         }
 
-        FlowTransition? transition = FlowState.Flow.FindTransition(FlowStateId, toState.Id);
+        FlowTransition? transition = Project.FindFlowTransition(FlowStateId, toState.Id);
 
         if (transition is null)
         {

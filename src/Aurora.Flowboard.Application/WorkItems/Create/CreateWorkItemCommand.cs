@@ -6,7 +6,6 @@ public sealed record CreateWorkItemCommand(
     WorkItemType Type,
     Priority Priority,
     Guid ProjectId,
-    Guid FlowId,
     int? EstimatedPoints,
     DateOnly? EstimatedCompletionDate,
     Guid? AssigneeId = null,

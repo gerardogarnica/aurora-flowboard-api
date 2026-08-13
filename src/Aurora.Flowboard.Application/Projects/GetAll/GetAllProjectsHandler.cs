@@ -1,3 +1,5 @@
+using Aurora.Flowboard.Application.Projects.GetFlow;
+
 namespace Aurora.Flowboard.Application.Projects.GetAll;
 
 internal sealed class GetAllProjectsHandler(
@@ -10,7 +12,7 @@ internal sealed class GetAllProjectsHandler(
     {
         List<Project> projects = await dbContext
             .Projects
-            .Include(p => p.Flows)
+            .Include(p => p.FlowStates)
             .Include(p => p.Members).ThenInclude(m => m.User)
             .Include(p => p.WorkItems).ThenInclude(wi => wi.FlowState)
             .Where(p => p.Members.Any(m => m.UserId == userContext.UserId))
@@ -31,7 +33,7 @@ internal sealed class GetAllProjectsHandler(
                 p.Status,
                 p.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Active),
                 p.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Completed),
-                p.CanAddOrUpdateFlow(),
+                p.CanModifyFlowStates(),
                 p.CanAddOrUpdateWorkItem(),
                 [.. p.Members.OrderBy(m => m.User.FullName).Select(
                     m => new ProjectMemberSummaryResponse(
@@ -39,13 +41,15 @@ internal sealed class GetAllProjectsHandler(
                         m.User.FullName,
                         m.User.Initials,
                         m.Role))],
-                [.. p.Flows.OrderByDescending(f => f.IsDefault).Select(
-                    f => new ProjectFlowSummaryResponse(
-                        f.Id,
-                        f.Name,
-                        f.Description,
-                        f.IsDefault,
-                        f.IsActive))]))
+                [.. p.FlowStates
+                    .OrderBy(s => s.Category)
+                    .ThenBy(s => s.SortOrder)
+                    .Select(s => new FlowStateResponse(
+                        s.Id,
+                        s.Name,
+                        s.SortOrder,
+                        s.Category,
+                        s.Color.Value))]))
             .ToList();
     }
 }

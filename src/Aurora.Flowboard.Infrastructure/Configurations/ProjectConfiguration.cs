@@ -83,8 +83,24 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
             .HasField("_changeLogs")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
-        builder.Navigation(x => x.Flows)
-            .HasField("_flows")
+        // Cascade is load-bearing, not cosmetic: Project.RemoveFlowState severs states and
+        // transitions from a required relationship, and EF only delete-orphans under Cascade.
+        builder.HasMany(x => x.FlowStates)
+            .WithOne()
+            .HasForeignKey(x => x.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.FlowStates)
+            .HasField("_flowStates")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasMany(x => x.FlowTransitions)
+            .WithOne()
+            .HasForeignKey(x => x.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.FlowTransitions)
+            .HasField("_flowTransitions")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         builder.Navigation(x => x.WorkItems)

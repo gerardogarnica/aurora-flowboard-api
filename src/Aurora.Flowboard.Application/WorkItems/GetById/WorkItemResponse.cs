@@ -1,4 +1,4 @@
-using Aurora.Flowboard.Application.Flows.GetById;
+using Aurora.Flowboard.Application.Projects.GetFlow;
 
 namespace Aurora.Flowboard.Application.WorkItems.GetById;
 

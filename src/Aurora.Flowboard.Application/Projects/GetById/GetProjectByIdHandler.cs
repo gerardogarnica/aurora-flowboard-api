@@ -33,7 +33,7 @@ internal sealed class GetProjectByIdHandler(
             project.Status,
             project.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Active),
             project.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Completed),
-            project.CanAddOrUpdateFlow(),
+            project.CanModifyFlowStates(),
             project.CanAddOrUpdateWorkItem(),
             project.CreatedBy,
             project.Creator.FullName,

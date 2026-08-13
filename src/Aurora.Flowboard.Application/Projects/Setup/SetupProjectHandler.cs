@@ -65,24 +65,7 @@ internal sealed class SetupProjectHandler(
         Project project = projectResult.Value;
         dbContext.Projects.Add(project);
 
-        Result<Flow> flowResult = Flow.Create(
-            command.Flow.Name,
-            command.Flow.Description,
-            project,
-            true,
-            createdBy,
-            dateTimeProvider.UtcNow);
-
-        if (!flowResult.IsSuccessful)
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            return Result.Fail<Guid>(flowResult.Error);
-        }
-
-        Flow flow = flowResult.Value;
-        dbContext.Flows.Add(flow);
-
-        foreach (SetupProjectFlowStateDto state in command.Flow.States)
+        foreach (SetupProjectFlowStateDto state in command.FlowStates)
         {
             Result<Color> stateColorResult = Color.Create(state.Color);
             if (!stateColorResult.IsSuccessful)
@@ -91,7 +74,7 @@ internal sealed class SetupProjectHandler(
                 return Result.Fail<Guid>(stateColorResult.Error);
             }
 
-            Result stateResult = flow.AddState(state.Name, state.Category, stateColorResult.Value, state.Roles, createdBy);
+            Result stateResult = project.AddFlowState(state.Name, state.Category, stateColorResult.Value, state.Roles, createdBy);
 
             if (!stateResult.IsSuccessful)
             {

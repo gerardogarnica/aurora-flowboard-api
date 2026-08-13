@@ -15,9 +15,6 @@ internal sealed class CreateWorkItemValidator : AbstractValidator<CreateWorkItem
         RuleFor(x => x.ProjectId)
             .NotEmpty();
 
-        RuleFor(x => x.FlowId)
-            .NotEmpty();
-
         RuleFor(x => x.AssigneeId)
             .NotEmpty()
             .When(x => x.AssigneeId.HasValue);

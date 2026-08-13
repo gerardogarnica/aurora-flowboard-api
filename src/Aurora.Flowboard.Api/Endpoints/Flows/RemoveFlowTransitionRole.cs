@@ -1,4 +1,4 @@
-using Aurora.Flowboard.Application.Flows.RemoveTransitionRole;
+using Aurora.Flowboard.Application.Projects.RemoveFlowTransitionRole;
 using Aurora.Flowboard.Domain.Projects;
 
 namespace Aurora.Flowboard.Api.Endpoints.Flows;
@@ -8,7 +8,7 @@ public sealed class RemoveFlowTransitionRole : IBaseEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapDelete(
-            "flows/{id:guid}/transitions/{transitionId:guid}/roles",
+            "projects/{id:guid}/flow/transitions/{transitionId:guid}/roles",
             async (
                 Guid id,
                 Guid transitionId,

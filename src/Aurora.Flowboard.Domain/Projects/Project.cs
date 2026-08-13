@@ -1,5 +1,4 @@
 using Aurora.Flowboard.Domain.Components;
-using Aurora.Flowboard.Domain.Flows;
 using Aurora.Flowboard.Domain.Milestones;
 using Aurora.Flowboard.Domain.Projects.Events;
 using Aurora.Flowboard.Domain.Users;
@@ -11,6 +10,7 @@ public sealed class Project : BaseEntity
 {
     public const int MaxNameLength = 100;
     public const int MaxDescriptionLength = 500;
+    public const int MaxActiveFlowStates = 10;
 
     private static readonly Dictionary<ProjectStatus, ProjectStatus[]> ContinuousTransitions = new()
     {
@@ -30,7 +30,8 @@ public sealed class Project : BaseEntity
 
     private readonly List<ProjectMember> _members = [];
     private readonly List<ProjectChangeLog> _changeLogs = [];
-    private readonly List<Flow> _flows = [];
+    private readonly List<FlowState> _flowStates = [];
+    private readonly List<FlowTransition> _flowTransitions = [];
     private readonly List<Component> _components = [];
     private readonly List<Milestone> _milestones = [];
     private readonly List<WorkItem> _workItems = [];
@@ -51,7 +52,8 @@ public sealed class Project : BaseEntity
 
     public IReadOnlyCollection<ProjectMember> Members => _members.AsReadOnly();
     public IReadOnlyCollection<ProjectChangeLog> ChangeLogs => _changeLogs.AsReadOnly();
-    public IReadOnlyCollection<Flow> Flows => _flows.AsReadOnly();
+    public IReadOnlyCollection<FlowState> FlowStates => _flowStates.AsReadOnly();
+    public IReadOnlyCollection<FlowTransition> FlowTransitions => _flowTransitions.AsReadOnly();
     public IReadOnlyCollection<Component> Components => _components.AsReadOnly();
     public IReadOnlyCollection<Milestone> Milestones => _milestones.AsReadOnly();
     public IReadOnlyCollection<WorkItem> WorkItems => _workItems.AsReadOnly();
@@ -298,14 +300,258 @@ public sealed class Project : BaseEntity
         return WorkItemCounter;
     }
 
-    public bool CanAddOrUpdateFlow()
+    public bool CanModifyFlowStates() => IsModifiable;
+
+    public bool CanAddOrUpdateWorkItem() => IsModifiable;
+
+    public Result AddFlowState(
+        string name,
+        FlowStateCategory category,
+        Color color,
+        IReadOnlyCollection<ProjectRole> allowedRoles,
+        User changedBy)
     {
-        return Status is ProjectStatus.Active or ProjectStatus.Maintenance;
+        if (!IsAdmin(changedBy.Id))
+        {
+            return Result.Fail(ProjectErrors.OnlyAdminCanModifyFlow);
+        }
+
+        if (!IsModifiable)
+        {
+            return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
+        if (_flowStates.Any(s => s.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase)))
+        {
+            return Result.Fail(ProjectErrors.DuplicateFlowStateName);
+        }
+
+        if (category == FlowStateCategory.Active && _flowStates.Count(s => s.Category == FlowStateCategory.Active) >= MaxActiveFlowStates)
+        {
+            return Result.Fail(ProjectErrors.MaxActiveFlowStatesReached);
+        }
+
+        List<FlowState> activeStates = [.. _flowStates.Where(s => s.Category == FlowStateCategory.Active)];
+        int nextActiveOrder = activeStates.Count > 0 ? activeStates.Max(s => s.SortOrder) + 1 : 1;
+        int sortOrder = category == FlowStateCategory.Active ? nextActiveOrder : 0;
+
+        Result<FlowState> stateResult = FlowState.Create(this, name, sortOrder, category, color);
+
+        if (!stateResult.IsSuccessful)
+        {
+            return Result.Fail(stateResult.Error);
+        }
+
+        FlowState newState = stateResult.Value;
+        _flowStates.Add(newState);
+
+        AddDomainEvent(new FlowStateAddedDomainEvent(Id, newState.Id));
+
+        AddFlowStateTransitions(newState, allowedRoles);
+
+        return Result.Ok();
     }
 
-    public bool CanAddOrUpdateWorkItem()
+    public Result RemoveFlowState(Guid flowStateId, User changedBy)
     {
-        return Status is ProjectStatus.Active or ProjectStatus.Maintenance;
+        if (!IsAdmin(changedBy.Id))
+        {
+            return Result.Fail(ProjectErrors.OnlyAdminCanModifyFlow);
+        }
+
+        if (!IsModifiable)
+        {
+            return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
+        FlowState? state = _flowStates.FirstOrDefault(s => s.Id == flowStateId);
+
+        if (state is null)
+        {
+            return Result.Fail(ProjectErrors.FlowStateNotFound);
+        }
+
+        if (state.Category == FlowStateCategory.Completed && _flowStates.Count(s => s.Category == FlowStateCategory.Completed) == 1)
+        {
+            return Result.Fail(ProjectErrors.LastCompletedFlowState);
+        }
+
+        if (state.Category == FlowStateCategory.Cancelled && _flowStates.Count(s => s.Category == FlowStateCategory.Cancelled) == 1)
+        {
+            return Result.Fail(ProjectErrors.LastCancelledFlowState);
+        }
+
+        FlowState? previousActiveState = null;
+        FlowState? nextActiveState = null;
+        IReadOnlyCollection<ProjectRole> bridgeRoles = [];
+
+        if (state.Category == FlowStateCategory.Active)
+        {
+            previousActiveState = _flowStates.FirstOrDefault(s => s.Category == FlowStateCategory.Active && s.SortOrder == state.SortOrder - 1);
+            nextActiveState = _flowStates.FirstOrDefault(s => s.Category == FlowStateCategory.Active && s.SortOrder == state.SortOrder + 1);
+
+            if (previousActiveState is not null)
+            {
+                bridgeRoles = _flowTransitions
+                    .FirstOrDefault(t => t.FromStateId == previousActiveState.Id && t.ToStateId == flowStateId)
+                    ?.AllowedRoles ?? [];
+            }
+        }
+
+        _flowTransitions.RemoveAll(t => t.FromStateId == flowStateId || t.ToStateId == flowStateId);
+        _flowStates.Remove(state);
+
+        if (state.Category == FlowStateCategory.Active)
+        {
+            foreach (FlowState successor in _flowStates.Where(s => s.Category == FlowStateCategory.Active && s.SortOrder > state.SortOrder))
+            {
+                successor.DecrementSortOrder();
+            }
+
+            if (previousActiveState is not null && nextActiveState is not null)
+            {
+                _ = AddFlowTransition(previousActiveState, nextActiveState, bridgeRoles);
+            }
+        }
+
+        return Result.Ok();
+    }
+
+    public Result AddFlowTransitionRole(Guid transitionId, ProjectRole role, User changedBy)
+    {
+        if (!IsAdmin(changedBy.Id))
+        {
+            return Result.Fail(ProjectErrors.OnlyAdminCanModifyFlow);
+        }
+
+        if (!IsModifiable)
+        {
+            return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
+        FlowTransition? transition = _flowTransitions.FirstOrDefault(t => t.Id == transitionId);
+
+        if (transition is null)
+        {
+            return Result.Fail(ProjectErrors.FlowTransitionNotFound);
+        }
+
+        return transition.AddAllowedRole(role);
+    }
+
+    public Result RemoveFlowTransitionRole(Guid transitionId, ProjectRole role, User changedBy)
+    {
+        if (!IsAdmin(changedBy.Id))
+        {
+            return Result.Fail(ProjectErrors.OnlyAdminCanModifyFlow);
+        }
+
+        if (!IsModifiable)
+        {
+            return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
+        FlowTransition? transition = _flowTransitions.FirstOrDefault(t => t.Id == transitionId);
+
+        if (transition is null)
+        {
+            return Result.Fail(ProjectErrors.FlowTransitionNotFound);
+        }
+
+        return transition.RemoveAllowedRole(role);
+    }
+
+    private void AddFlowStateTransitions(FlowState newState, IReadOnlyCollection<ProjectRole> allowedRoles)
+    {
+        switch (newState.Category)
+        {
+            case FlowStateCategory.Active:
+            default:
+                {
+                    FlowState? previousState = _flowStates
+                        .FirstOrDefault(s => s.SortOrder == newState.SortOrder - 1 && s.Category == FlowStateCategory.Active);
+                    if (previousState is not null)
+                    {
+                        _ = AddFlowTransition(previousState, newState, allowedRoles);
+                        _ = AddFlowTransition(newState, previousState, allowedRoles);
+                    }
+
+                    RerouteCompletedTransitionsToNewActiveFlowState(newState);
+
+                    break;
+                }
+
+            case FlowStateCategory.Completed:
+                {
+                    FlowState? lastActiveState = _flowStates
+                        .Where(s => s.Category == FlowStateCategory.Active && s.Id != newState.Id)
+                        .MaxBy(s => s.SortOrder);
+                    if (lastActiveState is not null)
+                    {
+                        _ = AddFlowTransition(lastActiveState, newState, allowedRoles);
+                    }
+
+                    break;
+                }
+
+            case FlowStateCategory.Cancelled:
+                {
+                    foreach (FlowState activeState in _flowStates.Where(s => s.Category == FlowStateCategory.Active && s.Id != newState.Id))
+                    {
+                        _ = AddFlowTransition(activeState, newState, allowedRoles);
+                    }
+
+                    break;
+                }
+        }
+    }
+
+    private void RerouteCompletedTransitionsToNewActiveFlowState(FlowState newActiveState)
+    {
+        List<Guid> completedStateIds = [.. _flowStates
+            .Where(s => s.Category == FlowStateCategory.Completed)
+            .Select(s => s.Id)];
+
+        if (completedStateIds.Count == 0)
+        {
+            return;
+        }
+
+        List<FlowTransition> transitionsToReroute = [.. _flowTransitions.Where(t => completedStateIds.Contains(t.ToStateId))];
+
+        foreach (FlowTransition transition in transitionsToReroute)
+        {
+            FlowState completedState = _flowStates.First(s => s.Id == transition.ToStateId);
+            IReadOnlyCollection<ProjectRole> existingRoles = transition.AllowedRoles;
+
+            _flowTransitions.Remove(transition);
+            _ = AddFlowTransition(newActiveState, completedState, existingRoles);
+        }
+    }
+
+    private Result AddFlowTransition(FlowState fromState, FlowState toState, IReadOnlyCollection<ProjectRole> allowedRoles)
+    {
+        if (!_flowStates.Any(s => s.Id == fromState.Id))
+        {
+            return Result.Fail(ProjectErrors.FlowTransitionFromStateNotFound);
+        }
+
+        if (!_flowStates.Any(s => s.Id == toState.Id))
+        {
+            return Result.Fail(ProjectErrors.FlowTransitionToStateNotFound);
+        }
+
+        if (_flowTransitions.Any(t => t.FromStateId == fromState.Id && t.ToStateId == toState.Id))
+        {
+            return Result.Fail(ProjectErrors.FlowTransitionAlreadyExists);
+        }
+
+        FlowTransition transition = FlowTransition.Create(this, fromState, toState, allowedRoles);
+        _flowTransitions.Add(transition);
+
+        AddDomainEvent(new FlowTransitionAddedDomainEvent(Id, fromState.Id, toState.Id));
+
+        return Result.Ok();
     }
 
     internal void RegisterComponent(Component component) =>
@@ -322,6 +568,14 @@ public sealed class Project : BaseEntity
 
     internal ProjectRole? GetRole(Guid userId) =>
         _members.FirstOrDefault(m => m.UserId == userId)?.Role;
+
+    internal FlowState? GetInitialFlowState() =>
+        _flowStates
+            .Where(s => s.Category == FlowStateCategory.Active)
+            .MinBy(s => s.SortOrder);
+
+    internal FlowTransition? FindFlowTransition(Guid fromStateId, Guid toStateId) =>
+        _flowTransitions.FirstOrDefault(t => t.FromStateId == fromStateId && t.ToStateId == toStateId);
 
     private bool IsValidTransition(ProjectStatus from, ProjectStatus to)
     {

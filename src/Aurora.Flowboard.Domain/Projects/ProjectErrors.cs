@@ -77,4 +77,64 @@ public static class ProjectErrors
     public static readonly BaseError OnlyAdminCanChangeKind = BaseError.Forbidden(
         "Project.OnlyAdminCanChangeKind",
         "Only admin members can change the project kind");
+
+    public static readonly BaseError OnlyAdminCanModifyFlow = BaseError.Forbidden(
+        "Project.OnlyAdminCanModifyFlow",
+        "Only project administrators can modify the flow");
+
+    public static readonly BaseError FlowStateNameRequired = BaseError.Validation(
+        "Project.FlowStateNameRequired",
+        "Flow state name is required");
+
+    public static readonly BaseError FlowStateNameTooLong = BaseError.Validation(
+        "Project.FlowStateNameTooLong",
+        "Flow state name cannot exceed 50 characters");
+
+    public static readonly BaseError DuplicateFlowStateName = BaseError.Conflict(
+        "Project.DuplicateFlowStateName",
+        "A flow state with this name already exists in the project");
+
+    public static readonly BaseError FlowStateNotFound = BaseError.NotFound(
+        "Project.FlowStateNotFound",
+        "The flow state with the specified identifier was not found");
+
+    public static readonly BaseError MaxActiveFlowStatesReached = BaseError.Validation(
+        "Project.MaxActiveFlowStatesReached",
+        "Cannot add more active flow states to the project as it has reached the maximum limit of 10");
+
+    public static readonly BaseError LastCompletedFlowState = BaseError.Validation(
+        "Project.LastCompletedFlowState",
+        "Cannot remove the last completed flow state from the project");
+
+    public static readonly BaseError LastCancelledFlowState = BaseError.Validation(
+        "Project.LastCancelledFlowState",
+        "Cannot remove the last cancelled flow state from the project");
+
+    public static readonly BaseError NoInitialFlowState = BaseError.Validation(
+        "Project.NoInitialFlowState",
+        "The project has no active flow state that can be used as the initial state");
+
+    public static readonly BaseError FlowTransitionAlreadyExists = BaseError.Conflict(
+        "Project.FlowTransitionAlreadyExists",
+        "A transition between these flow states already exists in the project");
+
+    public static readonly BaseError FlowTransitionNotFound = BaseError.NotFound(
+        "Project.FlowTransitionNotFound",
+        "The flow transition with the specified identifier was not found");
+
+    public static readonly BaseError FlowTransitionRoleAlreadyAllowed = BaseError.Conflict(
+        "Project.FlowTransitionRoleAlreadyAllowed",
+        "The role is already allowed for this flow transition");
+
+    public static readonly BaseError FlowTransitionRoleNotAllowed = BaseError.Validation(
+        "Project.FlowTransitionRoleNotAllowed",
+        "The role is not allowed for this flow transition");
+
+    public static readonly BaseError FlowTransitionFromStateNotFound = BaseError.Validation(
+        "Project.FlowTransitionFromStateNotFound",
+        "The source flow state does not belong to this project");
+
+    public static readonly BaseError FlowTransitionToStateNotFound = BaseError.Validation(
+        "Project.FlowTransitionToStateNotFound",
+        "The destination flow state does not belong to this project");
 }

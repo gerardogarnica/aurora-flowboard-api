@@ -10,7 +10,7 @@ public sealed record ProjectResponse(
     ProjectStatus Status,
     int OpenWorkItems,
     int ClosedWorkItems,
-    bool CanAddOrUpdateFlows,
+    bool CanModifyFlowStates,
     bool CanAddOrUpdateWorkItems,
     Guid CreatedById,
     string CreatedByFullName,

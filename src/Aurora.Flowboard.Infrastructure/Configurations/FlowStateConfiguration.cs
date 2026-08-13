@@ -1,4 +1,4 @@
-using Aurora.Flowboard.Domain.Flows;
+using Aurora.Flowboard.Domain.Projects;
 using Aurora.Flowboard.Domain.Shared;
 
 namespace Aurora.Flowboard.Infrastructure.Configurations;
@@ -11,7 +11,7 @@ internal sealed class FlowStateConfiguration : IEntityTypeConfiguration<FlowStat
 
         builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.FlowId)
+        builder.Property(x => x.ProjectId)
             .IsRequired();
 
         builder.Property(x => x.Name)
@@ -33,6 +33,6 @@ internal sealed class FlowStateConfiguration : IEntityTypeConfiguration<FlowStat
                 .HasMaxLength(Color.MaxLength);
         });
 
-        builder.HasIndex(x => x.FlowId);
+        builder.HasIndex(x => x.ProjectId);
     }
 }

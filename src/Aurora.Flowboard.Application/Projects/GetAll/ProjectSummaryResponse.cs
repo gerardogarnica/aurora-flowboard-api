@@ -1,3 +1,5 @@
+using Aurora.Flowboard.Application.Projects.GetFlow;
+
 namespace Aurora.Flowboard.Application.Projects.GetAll;
 
 public sealed record ProjectSummaryResponse(
@@ -10,20 +12,13 @@ public sealed record ProjectSummaryResponse(
     ProjectStatus Status,
     int OpenWorkItems,
     int ClosedWorkItems,
-    bool CanAddOrUpdateFlows,
+    bool CanModifyFlowStates,
     bool CanAddOrUpdateWorkItems,
     IReadOnlyCollection<ProjectMemberSummaryResponse> Members,
-    IReadOnlyCollection<ProjectFlowSummaryResponse> Flows);
+    IReadOnlyCollection<FlowStateResponse> FlowStates);
 
 public sealed record ProjectMemberSummaryResponse(
     Guid UserId,
     string FullName,
     string Initials,
     ProjectRole Role);
-
-public sealed record ProjectFlowSummaryResponse(
-    Guid FlowId,
-    string Name,
-    string? Description,
-    bool IsDefault,
-    bool IsActive);

@@ -46,9 +46,9 @@ public static class WorkItemErrors
         "WorkItem.TimeEntryHoursInvalid",
         "Logged hours must be greater than zero");
 
-    public static readonly BaseError TargetStateNotInFlow = BaseError.Validation(
-        "WorkItem.TargetStateNotInFlow",
-        "The target state does not belong to the work item's flow");
+    public static readonly BaseError TargetStateNotInProject = BaseError.Validation(
+        "WorkItem.TargetStateNotInProject",
+        "The target state does not belong to the work item's project");
 
     public static readonly BaseError TransitionNotAllowed = BaseError.Validation(
         "WorkItem.TransitionNotAllowed",

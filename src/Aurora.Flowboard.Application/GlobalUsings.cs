@@ -5,7 +5,6 @@ global using Aurora.Flowboard.Application.Abstractions.Time;
 global using Aurora.Flowboard.Application.Abstractions.Validations;
 global using Aurora.Flowboard.Domain.Abstractions;
 global using Aurora.Flowboard.Domain.Components;
-global using Aurora.Flowboard.Domain.Flows;
 global using Aurora.Flowboard.Domain.Milestones;
 global using Aurora.Flowboard.Domain.Projects;
 global using Aurora.Flowboard.Domain.Shared;

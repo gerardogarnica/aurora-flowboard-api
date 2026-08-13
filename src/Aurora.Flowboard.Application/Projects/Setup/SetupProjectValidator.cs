@@ -23,38 +23,25 @@ internal sealed class SetupProjectValidator : AbstractValidator<SetupProjectComm
             .NotEmpty()
             .MaximumLength(Color.MaxLength);
 
-        RuleFor(x => x.Flow)
-            .NotNull();
+        RuleFor(x => x.FlowStates)
+            .NotEmpty();
 
-        RuleFor(x => x.Flow.Name)
-            .NotEmpty()
-            .MaximumLength(Flow.MaxNameLength)
-            .When(x => x.Flow is not null);
-
-        RuleFor(x => x.Flow.Description)
-            .MaximumLength(Flow.MaxDescriptionLength)
-            .When(x => x.Flow is not null);
-
-        RuleFor(x => x.Flow.States)
-            .NotEmpty()
-            .When(x => x.Flow is not null);
-
-        RuleFor(x => x.Flow.States)
+        RuleFor(x => x.FlowStates)
             .Must(states => states.Any(s => s.Category == FlowStateCategory.Completed))
             .WithMessage("Flow must include at least one Completed state.")
-            .When(x => x.Flow?.States is { Count: > 0 });
+            .When(x => x.FlowStates is { Count: > 0 });
 
-        RuleFor(x => x.Flow.States)
+        RuleFor(x => x.FlowStates)
             .Must(states => states.Any(s => s.Category == FlowStateCategory.Cancelled))
             .WithMessage("Flow must include at least one Cancelled state.")
-            .When(x => x.Flow?.States is { Count: > 0 });
+            .When(x => x.FlowStates is { Count: > 0 });
 
-        RuleFor(x => x.Flow.States)
+        RuleFor(x => x.FlowStates)
             .Must(StatesAreInCategoryOrder)
             .WithMessage("Active states must appear before Completed and Cancelled states, and Completed states must appear before Cancelled states.")
-            .When(x => x.Flow?.States is { Count: > 0 });
+            .When(x => x.FlowStates is { Count: > 0 });
 
-        RuleForEach(x => x.Flow.States)
+        RuleForEach(x => x.FlowStates)
             .ChildRules(state =>
             {
                 state.RuleFor(s => s.Name)
@@ -71,7 +58,7 @@ internal sealed class SetupProjectValidator : AbstractValidator<SetupProjectComm
                 state.RuleFor(s => s.Roles)
                     .NotEmpty();
             })
-            .When(x => x.Flow?.States is not null);
+            .When(x => x.FlowStates is not null);
     }
 
     private static bool StatesAreInCategoryOrder(IReadOnlyCollection<SetupProjectFlowStateDto> states)

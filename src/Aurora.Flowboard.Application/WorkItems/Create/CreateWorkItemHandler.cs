@@ -14,29 +14,20 @@ internal sealed class CreateWorkItemHandler(
 
         // Pessimistic row-level lock prevents duplicate sequence numbers under concurrency.
         // Table/column names must match the EF Core Infrastructure configuration.
+        // Tracked (not AsNoTracking): IncrementWorkItemCounter mutates the project, and the initial
+        // FlowState assigned to WorkItem.FlowState below must be tracked or EF inserts a duplicate.
+        // Single query (no AsSplitQuery): splitting would re-execute the FOR UPDATE subquery per split.
         Project? project = await dbContext
             .Projects
             .FromSqlRaw("SELECT * FROM flowboard.projects WHERE id = {0} FOR UPDATE", command.ProjectId)
             .Include(p => p.Members)
+            .Include(p => p.FlowStates)
             .SingleOrDefaultAsync(cancellationToken);
 
         if (project is null)
         {
             await transaction.RollbackAsync(cancellationToken);
             return Result.Fail<Guid>(ProjectErrors.NotFound);
-        }
-
-        Flow? flow = await dbContext
-            .Flows
-            .AsNoTracking()
-            .Include(f => f.States)
-            .AsSplitQuery()
-            .SingleOrDefaultAsync(f => f.Id == command.FlowId && f.ProjectId == command.ProjectId, cancellationToken);
-
-        if (flow is null)
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            return Result.Fail<Guid>(FlowErrors.NotFound);
         }
 
         User? createdBy = await dbContext
@@ -104,7 +95,6 @@ internal sealed class CreateWorkItemHandler(
             command.Type,
             command.Priority,
             project,
-            flow,
             createdBy,
             command.EstimatedPoints,
             command.EstimatedCompletionDate,
@@ -121,7 +111,6 @@ internal sealed class CreateWorkItemHandler(
 
         WorkItem workItem = result.Value;
 
-        dbContext.FlowStates.Attach(workItem.FlowState);
         dbContext.WorkItems.Add(workItem);
 
         await dbContext.SaveChangesAsync(cancellationToken);

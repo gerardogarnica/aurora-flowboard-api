@@ -1,4 +1,4 @@
-using Aurora.Flowboard.Domain.Flows;
+using Aurora.Flowboard.Domain.Projects;
 using Aurora.Flowboard.Domain.Users;
 
 namespace Aurora.Flowboard.Domain.WorkItems;
