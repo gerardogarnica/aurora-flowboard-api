@@ -1,5 +1,6 @@
 using Aurora.Flowboard.Domain.Components;
 using Aurora.Flowboard.Domain.Flows;
+using Aurora.Flowboard.Domain.Milestones;
 using Aurora.Flowboard.Domain.Projects.Events;
 using Aurora.Flowboard.Domain.Users;
 using Aurora.Flowboard.Domain.WorkItems;
@@ -30,8 +31,9 @@ public sealed class Project : BaseEntity
     private readonly List<ProjectMember> _members = [];
     private readonly List<ProjectChangeLog> _changeLogs = [];
     private readonly List<Flow> _flows = [];
-    private readonly List<WorkItem> _workItems = [];
     private readonly List<Component> _components = [];
+    private readonly List<Milestone> _milestones = [];
+    private readonly List<WorkItem> _workItems = [];
 
     public string Name { get; private set; }
     public string? Description { get; private set; }
@@ -50,8 +52,9 @@ public sealed class Project : BaseEntity
     public IReadOnlyCollection<ProjectMember> Members => _members.AsReadOnly();
     public IReadOnlyCollection<ProjectChangeLog> ChangeLogs => _changeLogs.AsReadOnly();
     public IReadOnlyCollection<Flow> Flows => _flows.AsReadOnly();
-    public IReadOnlyCollection<WorkItem> WorkItems => _workItems.AsReadOnly();
     public IReadOnlyCollection<Component> Components => _components.AsReadOnly();
+    public IReadOnlyCollection<Milestone> Milestones => _milestones.AsReadOnly();
+    public IReadOnlyCollection<WorkItem> WorkItems => _workItems.AsReadOnly();
 
     private bool IsModifiable => Status is ProjectStatus.Active or ProjectStatus.Maintenance;
 
@@ -307,6 +310,9 @@ public sealed class Project : BaseEntity
 
     internal void RegisterComponent(Component component) =>
         _components.Add(component);
+
+    internal void RegisterMilestone(Milestone milestone) =>
+        _milestones.Add(milestone);
 
     internal bool IsAdmin(Guid userId) =>
         _members.Any(m => m.UserId == userId && m.Role == ProjectRole.Admin);

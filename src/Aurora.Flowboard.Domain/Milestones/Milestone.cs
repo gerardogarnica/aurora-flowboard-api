@@ -63,6 +63,11 @@ public sealed class Milestone : BaseEntity
         User createdBy,
         DateTime createdOnUtc)
     {
+        if (!project.IsAdmin(createdBy.Id))
+        {
+            return Result.Fail<Milestone>(MilestoneErrors.OnlyAdminCanManageMilestone);
+        }
+
         if (string.IsNullOrWhiteSpace(name))
         {
             return Result.Fail<Milestone>(MilestoneErrors.NameRequired);
@@ -71,6 +76,11 @@ public sealed class Milestone : BaseEntity
         if (name.Length > MaxNameLength)
         {
             return Result.Fail<Milestone>(MilestoneErrors.NameTooLong);
+        }
+
+        if (project.Milestones.Any(m => string.Equals(m.Name, name.Trim(), StringComparison.OrdinalIgnoreCase)))
+        {
+            return Result.Fail<Milestone>(MilestoneErrors.DuplicateName);
         }
 
         if (description?.Length > MaxDescriptionLength)
@@ -96,6 +106,8 @@ public sealed class Milestone : BaseEntity
             Project = project
         };
 
+        project.RegisterMilestone(milestone);
+
         milestone.AddDomainEvent(new MilestoneCreatedDomainEvent(milestone.Id, milestone.ProjectId));
 
         return milestone;
@@ -106,8 +118,14 @@ public sealed class Milestone : BaseEntity
         string? description,
         DateOnly? targetStartDate,
         DateOnly? targetEndDate,
+        User changedBy,
         DateTime updatedOnUtc)
     {
+        if (!Project.IsAdmin(changedBy.Id))
+        {
+            return Result.Fail(MilestoneErrors.OnlyAdminCanManageMilestone);
+        }
+
         if (!IsModifiable)
         {
             return Result.Fail(MilestoneErrors.OperationNotAllowedInCurrentStatus);
@@ -144,8 +162,13 @@ public sealed class Milestone : BaseEntity
         return Result.Ok();
     }
 
-    public Result ChangeStatus(MilestoneStatus newStatus, int openWorkItemCount, DateTime updatedOnUtc)
+    public Result ChangeStatus(MilestoneStatus newStatus, User changedBy, int openWorkItemCount, DateTime updatedOnUtc)
     {
+        if (!Project.IsAdmin(changedBy.Id))
+        {
+            return Result.Fail(MilestoneErrors.OnlyAdminCanManageMilestone);
+        }
+
         if (!IsValidTransition(Status, newStatus))
         {
             return Result.Fail(MilestoneErrors.InvalidStatusTransition);

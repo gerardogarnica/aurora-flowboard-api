@@ -11,6 +11,9 @@ internal sealed class MilestoneConfiguration : IEntityTypeConfiguration<Mileston
 
         builder.HasKey(x => x.Id);
 
+        builder.Property(x => x.ProjectId)
+            .IsRequired();
+
         builder.Property(x => x.Name)
             .IsRequired()
             .HasMaxLength(Milestone.MaxNameLength);
@@ -34,15 +37,12 @@ internal sealed class MilestoneConfiguration : IEntityTypeConfiguration<Mileston
 
         builder.Property(x => x.UpdatedOnUtc);
 
-        builder.HasOne(x => x.Project)
-            .WithMany()
-            .HasForeignKey(x => x.ProjectId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(x => x.CreatedBy)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => x.ProjectId);
 
         builder.HasIndex(x => new { x.ProjectId, x.Name })
             .IsUnique();

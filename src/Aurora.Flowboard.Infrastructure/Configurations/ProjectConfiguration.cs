@@ -99,5 +99,14 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.Navigation(x => x.Components)
             .HasField("_components")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasMany(x => x.Milestones)
+            .WithOne(m => m.Project)
+            .HasForeignKey(x => x.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.Milestones)
+            .HasField("_milestones")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
