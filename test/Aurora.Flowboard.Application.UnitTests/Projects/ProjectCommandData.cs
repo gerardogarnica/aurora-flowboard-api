@@ -62,7 +62,17 @@ internal static class ProjectCommandData
     }
 
     public static CreateProjectCommand GetCreateCommand() =>
-        new(Name, Description, Prefix, Kind, Color);
+        new(Name, Description, Prefix, Kind, Color, []);
+
+    public static CreateProjectCommand GetCreateCommand(IReadOnlyCollection<CreateProjectState> flowStates) =>
+        new(Name, Description, Prefix, Kind, Color, flowStates);
+
+    public static IReadOnlyCollection<CreateProjectState> GetValidCreateProjectStates() =>
+    [
+        new CreateProjectState("Backlog", FlowStateCategory.Active, FlowStateColor, [ProjectRole.Admin]),
+        new CreateProjectState("Done", FlowStateCategory.Completed, FlowStateColor, [ProjectRole.Admin]),
+        new CreateProjectState("Cancelled", FlowStateCategory.Cancelled, FlowStateColor, [ProjectRole.Admin])
+    ];
 
     public static UpdateProjectCommand GetUpdateCommand(Guid projectId) =>
         new(projectId, UpdatedName, UpdatedDescription, Color);
