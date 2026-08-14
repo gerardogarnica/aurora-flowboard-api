@@ -5,4 +5,11 @@ public sealed record CreateProjectCommand(
     string? Description,
     string Prefix,
     ProjectKind Kind,
-    string Color) : ICommand<Guid>;
+    string Color,
+    IReadOnlyCollection<CreateProjectState> FlowStates) : ICommand<Guid>;
+
+public sealed record CreateProjectState(
+    string Name,
+    FlowStateCategory Category,
+    string Color,
+    IReadOnlyCollection<ProjectRole> AllowedRoles);

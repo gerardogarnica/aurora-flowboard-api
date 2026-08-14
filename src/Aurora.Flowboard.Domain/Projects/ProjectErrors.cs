@@ -137,4 +137,16 @@ public static class ProjectErrors
     public static readonly BaseError FlowTransitionToStateNotFound = BaseError.Validation(
         "Project.FlowTransitionToStateNotFound",
         "The destination flow state does not belong to this project");
+
+    public static readonly BaseError InitialFlowStatesMissingActiveState = BaseError.Validation(
+        "Project.InitialFlowStatesMissingActiveState",
+        "The initial flow states must include at least one state with the Active category");
+
+    public static readonly BaseError InitialFlowStatesMissingCompletedState = BaseError.Validation(
+        "Project.InitialFlowStatesMissingCompletedState",
+        "The initial flow states must include at least one state with the Completed category");
+
+    public static readonly BaseError InitialFlowStatesMissingCancelledState = BaseError.Validation(
+        "Project.InitialFlowStatesMissingCancelledState",
+        "The initial flow states must include at least one state with the Cancelled category");
 }

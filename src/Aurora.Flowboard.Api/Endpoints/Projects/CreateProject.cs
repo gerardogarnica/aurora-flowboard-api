@@ -14,12 +14,20 @@ public sealed class CreateProject : IBaseEndpoint
                 ICommandHandler<CreateProjectCommand, Guid> handler,
                 CancellationToken cancellationToken) =>
             {
+                IReadOnlyCollection<CreateProjectState> flowStates = [.. (request.FlowStates ?? []).Select(
+                    s => new CreateProjectState(
+                        s.Name,
+                        s.Category,
+                        s.Color,
+                        s.AllowedRoles))];
+
                 var command = new CreateProjectCommand(
                     request.Name,
                     request.Description,
                     request.Prefix,
                     request.Kind,
-                    request.Color);
+                    request.Color,
+                    flowStates);
 
                 Result<Guid> result = await handler.Handle(command, cancellationToken);
 
@@ -42,5 +50,12 @@ public sealed class CreateProject : IBaseEndpoint
         string? Description,
         string Prefix,
         ProjectKind Kind,
-        string Color);
+        string Color,
+        IReadOnlyCollection<CreateProjectStateRequest>? FlowStates = null);
+
+    internal sealed record CreateProjectStateRequest(
+        string Name,
+        FlowStateCategory Category,
+        string Color,
+        IReadOnlyCollection<ProjectRole> AllowedRoles);
 }

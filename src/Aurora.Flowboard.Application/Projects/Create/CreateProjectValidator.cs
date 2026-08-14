@@ -22,5 +22,25 @@ internal sealed class CreateProjectValidator : AbstractValidator<CreateProjectCo
         RuleFor(x => x.Color)
             .NotEmpty()
             .MaximumLength(Color.MaxLength);
+
+        RuleForEach(x => x.FlowStates).ChildRules(state =>
+        {
+            state.RuleFor(s => s.Name)
+                .NotEmpty()
+                .MaximumLength(FlowState.MaxNameLength);
+
+            state.RuleFor(s => s.Category)
+                .IsInEnum();
+
+            state.RuleFor(s => s.Color)
+                .NotEmpty()
+                .MaximumLength(Color.MaxLength);
+
+            state.RuleFor(s => s.AllowedRoles)
+                .NotEmpty();
+
+            state.RuleForEach(s => s.AllowedRoles)
+                .IsInEnum();
+        });
     }
 }
