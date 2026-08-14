@@ -29,10 +29,8 @@ public sealed class SetupProjectHandlerTests
 
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Flow>());
         _dbContext.Users.Returns(usersMock);
         _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Flows.Returns(flowsMock);
 
         SetupProjectCommand command = ProjectCommandData.GetSetupCommand();
 
@@ -54,10 +52,8 @@ public sealed class SetupProjectHandlerTests
 
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Flow>());
         _dbContext.Users.Returns(usersMock);
         _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Flows.Returns(flowsMock);
 
         SetupProjectCommand command = ProjectCommandData.GetSetupCommand();
 
@@ -116,9 +112,11 @@ public sealed class SetupProjectHandlerTests
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
         _dbContext.Users.Returns(usersMock);
+        _dbContext.Projects.Returns(projectsMock);
 
-        var command = new SetupProjectCommand(string.Empty, null, ProjectCommandData.Code, ProjectCommandData.Color, null, ProjectCommandData.GetSetupFlowDto());
+        var command = new SetupProjectCommand(string.Empty, null, ProjectCommandData.Prefix, ProjectCommandData.Kind, ProjectCommandData.Color, ProjectCommandData.GetSetupFlowStateDtos());
 
         // Act
         Result<Guid> result = await _handler.Handle(command, CancellationToken.None);
@@ -137,9 +135,11 @@ public sealed class SetupProjectHandlerTests
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
         _dbContext.Users.Returns(usersMock);
+        _dbContext.Projects.Returns(projectsMock);
 
-        var command = new SetupProjectCommand(string.Empty, null, ProjectCommandData.Code, ProjectCommandData.Color, null, ProjectCommandData.GetSetupFlowDto());
+        var command = new SetupProjectCommand(string.Empty, null, ProjectCommandData.Prefix, ProjectCommandData.Kind, ProjectCommandData.Color, ProjectCommandData.GetSetupFlowStateDtos());
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -150,44 +150,46 @@ public sealed class SetupProjectHandlerTests
     }
 
     [Fact]
-    public async Task Should_ReturnDomainError_When_FlowCreationFails()
+    public async Task Should_ReturnPrefixAlreadyExistsError_When_PrefixIsInUse()
     {
         // Arrange
         User user = ProjectCommandData.GetUser();
         _userContext.UserId.Returns(user.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
+        Project existingProject = ProjectCommandData.GetExistingProjectWithPrefix(user);
+
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([existingProject]);
         _dbContext.Users.Returns(usersMock);
         _dbContext.Projects.Returns(projectsMock);
 
-        var invalidFlow = new SetupProjectFlowDto(string.Empty, null, []);
-        var command = new SetupProjectCommand(ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null, invalidFlow);
+        SetupProjectCommand command = ProjectCommandData.GetSetupCommand();
 
         // Act
         Result<Guid> result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccessful.Should().BeFalse();
-        result.Error.Should().Be(FlowErrors.NameRequired);
+        result.Error.Should().Be(ProjectErrors.PrefixAlreadyExists);
     }
 
     [Fact]
-    public async Task Should_RollbackAndNotPersist_When_FlowCreationFails()
+    public async Task Should_RollbackAndNotPersist_When_PrefixIsInUse()
     {
         // Arrange
         User user = ProjectCommandData.GetUser();
         _userContext.UserId.Returns(user.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
+        Project existingProject = ProjectCommandData.GetExistingProjectWithPrefix(user);
+
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([existingProject]);
         _dbContext.Users.Returns(usersMock);
         _dbContext.Projects.Returns(projectsMock);
 
-        var invalidFlow = new SetupProjectFlowDto(string.Empty, null, []);
-        var command = new SetupProjectCommand(ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null, invalidFlow);
+        SetupProjectCommand command = ProjectCommandData.GetSetupCommand();
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -207,26 +209,24 @@ public sealed class SetupProjectHandlerTests
 
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Flow>());
         _dbContext.Users.Returns(usersMock);
         _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Flows.Returns(flowsMock);
 
-        var flowWithDuplicateState = new SetupProjectFlowDto("Sprint Flow", null,
+        IReadOnlyCollection<SetupProjectFlowStateDto> statesWithDuplicate =
         [
             new("Todo", FlowStateCategory.Active, "white", [ProjectRole.Developer]),
             new("Todo", FlowStateCategory.Active, "white", [ProjectRole.Developer]),
             new("Done", FlowStateCategory.Completed, "white", [ProjectRole.Developer]),
             new("Cancelled", FlowStateCategory.Cancelled, "white", [ProjectRole.Developer])
-        ]);
-        var command = new SetupProjectCommand(ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null, flowWithDuplicateState);
+        ];
+        var command = new SetupProjectCommand(ProjectCommandData.Name, null, ProjectCommandData.Prefix, ProjectCommandData.Kind, ProjectCommandData.Color, statesWithDuplicate);
 
         // Act
         Result<Guid> result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccessful.Should().BeFalse();
-        result.Error.Should().Be(FlowErrors.DuplicateStateName);
+        result.Error.Should().Be(ProjectErrors.DuplicateFlowStateName);
     }
 
     [Fact]
@@ -239,19 +239,17 @@ public sealed class SetupProjectHandlerTests
 
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Flow>());
         _dbContext.Users.Returns(usersMock);
         _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Flows.Returns(flowsMock);
 
-        var flowWithDuplicateState = new SetupProjectFlowDto("Sprint Flow", null,
+        IReadOnlyCollection<SetupProjectFlowStateDto> statesWithDuplicate =
         [
             new("Todo", FlowStateCategory.Active, "white", [ProjectRole.Developer]),
             new("Todo", FlowStateCategory.Active, "white", [ProjectRole.Developer]),
             new("Done", FlowStateCategory.Completed, "white", [ProjectRole.Developer]),
             new("Cancelled", FlowStateCategory.Cancelled, "white", [ProjectRole.Developer])
-        ]);
-        var command = new SetupProjectCommand(ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null, flowWithDuplicateState);
+        ];
+        var command = new SetupProjectCommand(ProjectCommandData.Name, null, ProjectCommandData.Prefix, ProjectCommandData.Kind, ProjectCommandData.Color, statesWithDuplicate);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);

@@ -41,8 +41,8 @@ public sealed class GetWorkItemByIdHandlerTests
         (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItem(admin);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(workItem.FlowState.Flow.Transitions);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.FlowState.Flow.States);
+        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowTransitions);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowStates);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
         _dbContext.FlowTransitions.Returns(transitionsMock);
@@ -64,8 +64,8 @@ public sealed class GetWorkItemByIdHandlerTests
         (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItem(admin);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(workItem.FlowState.Flow.Transitions);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.FlowState.Flow.States);
+        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowTransitions);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowStates);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
         _dbContext.FlowTransitions.Returns(transitionsMock);
@@ -99,8 +99,8 @@ public sealed class GetWorkItemByIdHandlerTests
         (Project project, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItem(admin);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(workItem.FlowState.Flow.Transitions);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.FlowState.Flow.States);
+        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowTransitions);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowStates);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
         _dbContext.FlowTransitions.Returns(transitionsMock);
@@ -112,7 +112,7 @@ public sealed class GetWorkItemByIdHandlerTests
 
         // Assert
         result.Value.ProjectName.Should().Be(project.Name);
-        result.Value.FlowStateName.Should().Be("Todo");
+        result.Value.FlowStateName.Should().Be("Backlog");
     }
 
     [Fact]
@@ -124,8 +124,8 @@ public sealed class GetWorkItemByIdHandlerTests
         (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithAssignee(admin, assignee);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin, assignee]);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(workItem.FlowState.Flow.Transitions);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.FlowState.Flow.States);
+        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowTransitions);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowStates);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
         _dbContext.FlowTransitions.Returns(transitionsMock);
@@ -148,8 +148,8 @@ public sealed class GetWorkItemByIdHandlerTests
         (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithComment(admin);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(workItem.FlowState.Flow.Transitions);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.FlowState.Flow.States);
+        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowTransitions);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowStates);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
         _dbContext.FlowTransitions.Returns(transitionsMock);
@@ -175,8 +175,8 @@ public sealed class GetWorkItemByIdHandlerTests
         (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItem(admin);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(workItem.FlowState.Flow.Transitions);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.FlowState.Flow.States);
+        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowTransitions);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowStates);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
         _dbContext.FlowTransitions.Returns(transitionsMock);
@@ -200,12 +200,12 @@ public sealed class GetWorkItemByIdHandlerTests
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
         (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItem(admin);
-        Guid cancelledStateId = workItem.FlowState.Flow.States.Single(s => s.Name == "Cancelled").Id;
+        Guid cancelledStateId = workItem.Project.FlowStates.Single(s => s.Name == "Cancelled").Id;
         WorkItemQueryData.SetWorkItemFlowState(workItem, cancelledStateId);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(workItem.FlowState.Flow.Transitions);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.FlowState.Flow.States);
+        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowTransitions);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowStates);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
         _dbContext.FlowTransitions.Returns(transitionsMock);

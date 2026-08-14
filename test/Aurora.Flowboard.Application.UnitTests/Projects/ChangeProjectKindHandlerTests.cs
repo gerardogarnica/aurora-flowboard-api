@@ -1,18 +1,18 @@
 namespace Aurora.Flowboard.Application.UnitTests.Projects;
 
-public sealed class UpdateProjectHandlerTests
+public sealed class ChangeProjectKindHandlerTests
 {
     private readonly IApplicationDbContext _dbContext;
     private readonly IDateTimeProvider _dateTimeProvider;
     private readonly IUserContext _userContext;
-    private readonly UpdateProjectHandler _handler;
+    private readonly ChangeProjectKindHandler _handler;
 
-    public UpdateProjectHandlerTests()
+    public ChangeProjectKindHandlerTests()
     {
         _dbContext = Substitute.For<IApplicationDbContext>();
         _dateTimeProvider = Substitute.For<IDateTimeProvider>();
         _userContext = Substitute.For<IUserContext>();
-        _handler = new UpdateProjectHandler(_dbContext, _dateTimeProvider, _userContext);
+        _handler = new ChangeProjectKindHandler(_dbContext, _dateTimeProvider, _userContext);
     }
 
     [Fact]
@@ -29,7 +29,7 @@ public sealed class UpdateProjectHandlerTests
         _dbContext.Projects.Returns(projectsMock);
         _dbContext.Users.Returns(usersMock);
 
-        UpdateProjectCommand command = ProjectCommandData.GetUpdateCommand(project.Id);
+        ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(project.Id);
 
         // Act
         Result result = await _handler.Handle(command, CancellationToken.None);
@@ -52,7 +52,7 @@ public sealed class UpdateProjectHandlerTests
         _dbContext.Projects.Returns(projectsMock);
         _dbContext.Users.Returns(usersMock);
 
-        UpdateProjectCommand command = ProjectCommandData.GetUpdateCommand(project.Id);
+        ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(project.Id);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -68,7 +68,7 @@ public sealed class UpdateProjectHandlerTests
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
         _dbContext.Projects.Returns(projectsMock);
 
-        UpdateProjectCommand command = ProjectCommandData.GetUpdateCommand(Guid.NewGuid());
+        ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(Guid.NewGuid());
 
         // Act
         Result result = await _handler.Handle(command, CancellationToken.None);
@@ -85,7 +85,7 @@ public sealed class UpdateProjectHandlerTests
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
         _dbContext.Projects.Returns(projectsMock);
 
-        UpdateProjectCommand command = ProjectCommandData.GetUpdateCommand(Guid.NewGuid());
+        ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(Guid.NewGuid());
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -107,7 +107,7 @@ public sealed class UpdateProjectHandlerTests
         _dbContext.Projects.Returns(projectsMock);
         _dbContext.Users.Returns(usersMock);
 
-        UpdateProjectCommand command = ProjectCommandData.GetUpdateCommand(project.Id);
+        ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(project.Id);
 
         // Act
         Result result = await _handler.Handle(command, CancellationToken.None);
@@ -130,7 +130,7 @@ public sealed class UpdateProjectHandlerTests
         _dbContext.Projects.Returns(projectsMock);
         _dbContext.Users.Returns(usersMock);
 
-        UpdateProjectCommand command = ProjectCommandData.GetUpdateCommand(project.Id);
+        ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(project.Id);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -154,18 +154,18 @@ public sealed class UpdateProjectHandlerTests
         _dbContext.Projects.Returns(projectsMock);
         _dbContext.Users.Returns(usersMock);
 
-        UpdateProjectCommand command = ProjectCommandData.GetUpdateCommand(project.Id);
+        ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(project.Id);
 
         // Act
         Result result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccessful.Should().BeFalse();
-        result.Error.Should().Be(ProjectErrors.OnlyAdminCanUpdateProject);
+        result.Error.Should().Be(ProjectErrors.OnlyAdminCanChangeKind);
     }
 
     [Fact]
-    public async Task Should_NotPersist_When_UpdateFails()
+    public async Task Should_NotPersist_When_UserIsNotProjectAdmin()
     {
         // Arrange
         User admin = ProjectCommandData.GetAdmin();
@@ -179,7 +179,101 @@ public sealed class UpdateProjectHandlerTests
         _dbContext.Projects.Returns(projectsMock);
         _dbContext.Users.Returns(usersMock);
 
-        UpdateProjectCommand command = ProjectCommandData.GetUpdateCommand(project.Id);
+        ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(project.Id);
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Should_ReturnDomainError_When_KindIsUnchanged()
+    {
+        // Arrange
+        User admin = ProjectCommandData.GetAdmin();
+        Project project = ProjectCommandData.GetProject(admin);
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
+
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
+        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Users.Returns(usersMock);
+
+        var command = new ChangeProjectKindCommand(project.Id, ProjectCommandData.Kind);
+
+        // Act
+        Result result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(ProjectErrors.KindUnchanged);
+    }
+
+    [Fact]
+    public async Task Should_NotPersist_When_KindIsUnchanged()
+    {
+        // Arrange
+        User admin = ProjectCommandData.GetAdmin();
+        Project project = ProjectCommandData.GetProject(admin);
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
+
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
+        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Users.Returns(usersMock);
+
+        var command = new ChangeProjectKindCommand(project.Id, ProjectCommandData.Kind);
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Should_ReturnDomainError_When_ProjectIsArchived()
+    {
+        // Arrange
+        User admin = ProjectCommandData.GetAdmin();
+        Project project = ProjectCommandData.GetArchivedProject(admin);
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
+
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
+        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Users.Returns(usersMock);
+
+        ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(project.Id);
+
+        // Act
+        Result result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+    }
+
+    [Fact]
+    public async Task Should_NotPersist_When_ProjectIsArchived()
+    {
+        // Arrange
+        User admin = ProjectCommandData.GetAdmin();
+        Project project = ProjectCommandData.GetArchivedProject(admin);
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
+
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
+        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Users.Returns(usersMock);
+
+        ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(project.Id);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);

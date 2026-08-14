@@ -106,9 +106,11 @@ public sealed class CreateProjectHandlerTests
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
         _dbContext.Users.Returns(usersMock);
+        _dbContext.Projects.Returns(projectsMock);
 
-        var command = new CreateProjectCommand(string.Empty, null, ProjectCommandData.Code, ProjectCommandData.Color, null);
+        var command = new CreateProjectCommand(string.Empty, null, ProjectCommandData.Prefix, ProjectCommandData.Kind, ProjectCommandData.Color);
 
         // Act
         Result<Guid> result = await _handler.Handle(command, CancellationToken.None);
@@ -127,9 +129,60 @@ public sealed class CreateProjectHandlerTests
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
         _dbContext.Users.Returns(usersMock);
+        _dbContext.Projects.Returns(projectsMock);
 
-        var command = new CreateProjectCommand(string.Empty, null, ProjectCommandData.Code, ProjectCommandData.Color, null);
+        var command = new CreateProjectCommand(string.Empty, null, ProjectCommandData.Prefix, ProjectCommandData.Kind, ProjectCommandData.Color);
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Should_ReturnPrefixAlreadyExistsError_When_PrefixIsInUse()
+    {
+        // Arrange
+        User user = ProjectCommandData.GetUser();
+        _userContext.UserId.Returns(user.Id);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
+
+        Project existingProject = ProjectCommandData.GetExistingProjectWithPrefix(user);
+
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([existingProject]);
+        _dbContext.Users.Returns(usersMock);
+        _dbContext.Projects.Returns(projectsMock);
+
+        CreateProjectCommand command = ProjectCommandData.GetCreateCommand();
+
+        // Act
+        Result<Guid> result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(ProjectErrors.PrefixAlreadyExists);
+    }
+
+    [Fact]
+    public async Task Should_NotPersist_When_PrefixIsInUse()
+    {
+        // Arrange
+        User user = ProjectCommandData.GetUser();
+        _userContext.UserId.Returns(user.Id);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
+
+        Project existingProject = ProjectCommandData.GetExistingProjectWithPrefix(user);
+
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([existingProject]);
+        _dbContext.Users.Returns(usersMock);
+        _dbContext.Projects.Returns(projectsMock);
+
+        CreateProjectCommand command = ProjectCommandData.GetCreateCommand();
 
         // Act
         await _handler.Handle(command, CancellationToken.None);

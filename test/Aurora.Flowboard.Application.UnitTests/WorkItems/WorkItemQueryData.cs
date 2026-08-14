@@ -22,16 +22,16 @@ internal static class WorkItemQueryData
 
     public static (Project Project, WorkItem WorkItem) GetProjectAndWorkItem(User admin)
     {
-        (Project project, Flow flow) = GetActiveProjectWithFlow(admin);
-        WorkItem workItem = WorkItem.Create("Test Work Item", null, WorkItemType.Story, Priority.Medium, project, flow, admin, null, null, UtcNow).Value;
+        Project project = GetActiveProjectWithFlow(admin);
+        WorkItem workItem = WorkItem.Create("Test Work Item", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, UtcNow).Value;
         return (project, workItem);
     }
 
     public static (Project Project, WorkItem WorkItem) GetProjectAndWorkItemWithAssignee(User admin, User assignee)
     {
-        (Project project, Flow flow) = GetActiveProjectWithFlow(admin);
+        Project project = GetActiveProjectWithFlow(admin);
         project.AddMember(assignee, ProjectRole.Developer, admin, UtcNow);
-        WorkItem workItem = WorkItem.Create("Test Work Item", null, WorkItemType.Story, Priority.Medium, project, flow, admin, null, null, UtcNow, assignee).Value;
+        WorkItem workItem = WorkItem.Create("Test Work Item", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, UtcNow, assignee).Value;
         return (project, workItem);
     }
 
@@ -58,58 +58,25 @@ internal static class WorkItemQueryData
 
     public static (Project Project, WorkItem WorkItem1, WorkItem WorkItem2) GetProjectWithTwoWorkItems(User admin)
     {
-        (Project project, Flow flow) = GetActiveProjectWithFlow(admin);
-        WorkItem workItem1 = WorkItem.Create("Alpha Item", null, WorkItemType.Story, Priority.Low, project, flow, admin, null, null, UtcNow).Value;
-        WorkItem workItem2 = WorkItem.Create("Beta Item", null, WorkItemType.Bug, Priority.High, project, flow, admin, null, null, UtcNow.AddHours(1)).Value;
+        Project project = GetActiveProjectWithFlow(admin);
+        WorkItem workItem1 = WorkItem.Create("Alpha Item", null, WorkItemType.Story, Priority.Low, project, admin, null, null, UtcNow).Value;
+        WorkItem workItem2 = WorkItem.Create("Beta Item", null, WorkItemType.Bug, Priority.High, project, admin, null, null, UtcNow.AddHours(1)).Value;
         return (project, workItem1, workItem2);
     }
 
-    private static (Project, Flow) GetActiveProjectWithFlow(User admin)
+    public static Project GetActiveProjectWithFlow(User admin)
     {
-        Project project = Project.Create("WI Project", "Desc", "WIP", Color.Create("white").Value, null, admin, UtcNow).Value;
-        project.ChangeStatus(ProjectStatus.Active, admin, UtcNow);
-        Flow flow = Flow.Create("Sprint Flow", null, project, false, admin, UtcNow).Value;
+        Project project = Project.Create("WI Project", "Desc", ProjectCode.Create("WIP").Value, ProjectKind.Product, Color.Create("white").Value, admin, UtcNow).Value;
         ProjectRole[] allRoles = [ProjectRole.Admin, ProjectRole.Developer];
         Color stateColor = Color.Create("white").Value;
-        flow.AddState("Todo", FlowStateCategory.Active, stateColor, allRoles, admin);
-        flow.AddState("Done", FlowStateCategory.Completed, stateColor, allRoles, admin);
-        flow.AddState("Cancelled", FlowStateCategory.Cancelled, stateColor, allRoles, admin);
-        foreach (FlowState state in flow.States)
-        {
-            SetFlowNavProperty(state, flow);
-        }
-        return (project, flow);
+        project.AddFlowState("Backlog", FlowStateCategory.Active, stateColor, allRoles, admin);
+        project.AddFlowState("Done", FlowStateCategory.Completed, stateColor, allRoles, admin);
+        project.AddFlowState("Cancelled", FlowStateCategory.Cancelled, stateColor, allRoles, admin);
+        return project;
     }
-
-    public static (Project Project, Flow DefaultFlow) GetProjectWithDefaultFlow(User admin)
-    {
-        Project project = Project.Create("WI Project", "Desc", "WIP", Color.Create("white").Value, null, admin, UtcNow).Value;
-        project.ChangeStatus(ProjectStatus.Active, admin, UtcNow);
-        Flow flow = Flow.Create("Default Flow", null, project, true, admin, UtcNow).Value;
-        ProjectRole[] allRoles = [ProjectRole.Admin, ProjectRole.Developer];
-        Color stateColor = Color.Create("white").Value;
-        flow.AddState("Todo", FlowStateCategory.Active, stateColor, allRoles, admin);
-        flow.AddState("Done", FlowStateCategory.Completed, stateColor, allRoles, admin);
-        flow.AddState("Cancelled", FlowStateCategory.Cancelled, stateColor, allRoles, admin);
-        foreach (FlowState state in flow.States)
-        {
-            SetFlowNavProperty(state, flow);
-        }
-        return (project, flow);
-    }
-
-    public static void DeactivateFlow(Flow flow) =>
-        typeof(Flow)
-            .GetField("<IsActive>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance)
-            ?.SetValue(flow, false);
 
     public static void SetWorkItemFlowState(WorkItem workItem, Guid flowStateId) =>
         typeof(WorkItem)
             .GetField("<FlowStateId>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance)
             ?.SetValue(workItem, flowStateId);
-
-    private static void SetFlowNavProperty(FlowState state, Flow flow) =>
-        typeof(FlowState)
-            .GetField("<Flow>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance)
-            ?.SetValue(state, flow);
 }

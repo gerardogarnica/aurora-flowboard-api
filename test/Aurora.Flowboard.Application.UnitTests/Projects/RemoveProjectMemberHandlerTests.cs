@@ -101,7 +101,7 @@ public sealed class RemoveProjectMemberHandlerTests
     {
         // Arrange
         User admin = ProjectCommandData.GetAdmin();
-        Project project = ProjectCommandData.GetDraftProject(admin);
+        Project project = ProjectCommandData.GetProject(admin);
         _userContext.UserId.Returns(admin.Id);
 
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
@@ -124,7 +124,7 @@ public sealed class RemoveProjectMemberHandlerTests
     {
         // Arrange
         User admin = ProjectCommandData.GetAdmin();
-        Project project = ProjectCommandData.GetDraftProject(admin);
+        Project project = ProjectCommandData.GetProject(admin);
         _userContext.UserId.Returns(admin.Id);
 
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
@@ -245,7 +245,7 @@ public sealed class RemoveProjectMemberHandlerTests
         // Arrange
         User admin = ProjectCommandData.GetAdmin();
         User nonMember = ProjectCommandData.GetMember();
-        Project project = ProjectCommandData.GetDraftProject(admin);
+        Project project = ProjectCommandData.GetProject(admin);
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 

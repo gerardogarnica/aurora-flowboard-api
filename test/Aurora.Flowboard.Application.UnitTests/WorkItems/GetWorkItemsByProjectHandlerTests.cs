@@ -28,62 +28,17 @@ public sealed class GetWorkItemsByProjectHandlerTests
     }
 
     [Fact]
-    public async Task Should_ReturnFlowNotFoundError_When_ProjectHasNoDefaultFlow()
-    {
-        // Arrange
-        User admin = WorkItemQueryData.GetAdminUser();
-        (Project project, Flow _) = WorkItemQueryData.GetProjectWithDefaultFlow(admin);
-
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Flow>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Flows.Returns(flowsMock);
-
-        // Act
-        Result<IReadOnlyCollection<FlowStateBoardResponse>> result =
-            await _handler.Handle(new GetWorkItemsByProjectQuery(project.Id), CancellationToken.None);
-
-        // Assert
-        result.IsSuccessful.Should().BeFalse();
-        result.Error.Should().Be(FlowErrors.NotFound);
-    }
-
-    [Fact]
-    public async Task Should_ReturnFlowDeactivatedError_When_DefaultFlowIsInactive()
-    {
-        // Arrange
-        User admin = WorkItemQueryData.GetAdminUser();
-        (Project project, Flow flow) = WorkItemQueryData.GetProjectWithDefaultFlow(admin);
-        WorkItemQueryData.DeactivateFlow(flow);
-
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet([flow]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Flows.Returns(flowsMock);
-
-        // Act
-        Result<IReadOnlyCollection<FlowStateBoardResponse>> result =
-            await _handler.Handle(new GetWorkItemsByProjectQuery(project.Id), CancellationToken.None);
-
-        // Assert
-        result.IsSuccessful.Should().BeFalse();
-        result.Error.Should().Be(FlowErrors.Deactivated);
-    }
-
-    [Fact]
     public async Task Should_ReturnAllStatesWithEmptyWorkItems_When_ProjectHasNoWorkItems()
     {
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
-        (Project project, Flow flow) = WorkItemQueryData.GetProjectWithDefaultFlow(admin);
+        Project project = WorkItemQueryData.GetActiveProjectWithFlow(admin);
 
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet([flow]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(flow.States);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
         _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Flows.Returns(flowsMock);
         _dbContext.FlowStates.Returns(statesMock);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
@@ -103,21 +58,19 @@ public sealed class GetWorkItemsByProjectHandlerTests
     {
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
-        (Project project, Flow flow) = WorkItemQueryData.GetProjectWithDefaultFlow(admin);
-        FlowState todoState = flow.States.Single(s => s.Name == "Todo");
-        FlowState doneState = flow.States.Single(s => s.Name == "Done");
+        Project project = WorkItemQueryData.GetActiveProjectWithFlow(admin);
+        FlowState todoState = project.FlowStates.Single(s => s.Name == "Backlog");
+        FlowState doneState = project.FlowStates.Single(s => s.Name == "Done");
 
-        WorkItem wi1 = WorkItem.Create("Item 1", null, WorkItemType.Story, Priority.Medium, project, flow, admin, null, null, WorkItemQueryData.UtcNow).Value;
-        WorkItem wi2 = WorkItem.Create("Item 2", null, WorkItemType.Bug, Priority.High, project, flow, admin, null, null, WorkItemQueryData.UtcNow.AddHours(1)).Value;
+        WorkItem wi1 = WorkItem.Create("Item 1", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, WorkItemQueryData.UtcNow).Value;
+        WorkItem wi2 = WorkItem.Create("Item 2", null, WorkItemType.Bug, Priority.High, project, admin, null, null, WorkItemQueryData.UtcNow.AddHours(1)).Value;
         WorkItemQueryData.SetWorkItemFlowState(wi2, doneState.Id);
 
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet([flow]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(flow.States);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([wi1, wi2]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
         _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Flows.Returns(flowsMock);
         _dbContext.FlowStates.Returns(statesMock);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
@@ -139,15 +92,13 @@ public sealed class GetWorkItemsByProjectHandlerTests
     {
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
-        (Project project, Flow flow) = WorkItemQueryData.GetProjectWithDefaultFlow(admin);
+        Project project = WorkItemQueryData.GetActiveProjectWithFlow(admin);
 
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet([flow]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(flow.States);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
         _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Flows.Returns(flowsMock);
         _dbContext.FlowStates.Returns(statesMock);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
@@ -169,21 +120,19 @@ public sealed class GetWorkItemsByProjectHandlerTests
     {
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
-        (Project project, Flow flow) = WorkItemQueryData.GetProjectWithDefaultFlow(admin);
-        FlowState todoState = flow.States.Single(s => s.Name == "Todo");
+        Project project = WorkItemQueryData.GetActiveProjectWithFlow(admin);
+        FlowState todoState = project.FlowStates.Single(s => s.Name == "Backlog");
 
-        WorkItem lowPriority = WorkItem.Create("Low", null, WorkItemType.Story, Priority.Low, project, flow, admin, null, null, WorkItemQueryData.UtcNow).Value;
-        WorkItem criticalEarly = WorkItem.Create("Critical Early", null, WorkItemType.Story, Priority.Critical, project, flow, admin, null, null, WorkItemQueryData.UtcNow.AddHours(1)).Value;
-        WorkItem criticalLate = WorkItem.Create("Critical Late", null, WorkItemType.Story, Priority.Critical, project, flow, admin, null, null, WorkItemQueryData.UtcNow.AddHours(2)).Value;
-        WorkItem highPriority = WorkItem.Create("High", null, WorkItemType.Story, Priority.High, project, flow, admin, null, null, WorkItemQueryData.UtcNow.AddHours(3)).Value;
+        WorkItem lowPriority = WorkItem.Create("Low", null, WorkItemType.Story, Priority.Low, project, admin, null, null, WorkItemQueryData.UtcNow).Value;
+        WorkItem criticalEarly = WorkItem.Create("Critical Early", null, WorkItemType.Story, Priority.Critical, project, admin, null, null, WorkItemQueryData.UtcNow.AddHours(1)).Value;
+        WorkItem criticalLate = WorkItem.Create("Critical Late", null, WorkItemType.Story, Priority.Critical, project, admin, null, null, WorkItemQueryData.UtcNow.AddHours(2)).Value;
+        WorkItem highPriority = WorkItem.Create("High", null, WorkItemType.Story, Priority.High, project, admin, null, null, WorkItemQueryData.UtcNow.AddHours(3)).Value;
 
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet([flow]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(flow.States);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([lowPriority, criticalLate, highPriority, criticalEarly]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
         _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Flows.Returns(flowsMock);
         _dbContext.FlowStates.Returns(statesMock);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
@@ -208,17 +157,15 @@ public sealed class GetWorkItemsByProjectHandlerTests
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
         User assignee = WorkItemQueryData.GetAssigneeUser();
-        (Project project, Flow flow) = WorkItemQueryData.GetProjectWithDefaultFlow(admin);
+        Project project = WorkItemQueryData.GetActiveProjectWithFlow(admin);
         project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemQueryData.UtcNow);
-        WorkItem workItem = WorkItem.Create("Item", null, WorkItemType.Story, Priority.Medium, project, flow, admin, null, null, WorkItemQueryData.UtcNow, assignee).Value;
+        WorkItem workItem = WorkItem.Create("Item", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, WorkItemQueryData.UtcNow, assignee).Value;
 
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet([flow]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(flow.States);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([assignee]);
         _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Flows.Returns(flowsMock);
         _dbContext.FlowStates.Returns(statesMock);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
@@ -240,16 +187,14 @@ public sealed class GetWorkItemsByProjectHandlerTests
     {
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
-        (Project project, Flow flow) = WorkItemQueryData.GetProjectWithDefaultFlow(admin);
-        WorkItem workItem = WorkItem.Create("Item", null, WorkItemType.Story, Priority.Medium, project, flow, admin, null, null, WorkItemQueryData.UtcNow).Value;
+        Project project = WorkItemQueryData.GetActiveProjectWithFlow(admin);
+        WorkItem workItem = WorkItem.Create("Item", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, WorkItemQueryData.UtcNow).Value;
 
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet([flow]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(flow.States);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
         _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Flows.Returns(flowsMock);
         _dbContext.FlowStates.Returns(statesMock);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
@@ -271,19 +216,17 @@ public sealed class GetWorkItemsByProjectHandlerTests
     {
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
-        (Project project, Flow flow) = WorkItemQueryData.GetProjectWithDefaultFlow(admin);
-        FlowState todoState = flow.States.Single(s => s.Name == "Todo");
-        WorkItem workItem = WorkItem.Create("Test Work Item", null, WorkItemType.Story, Priority.Medium, project, flow, admin, null, null, WorkItemQueryData.UtcNow).Value;
+        Project project = WorkItemQueryData.GetActiveProjectWithFlow(admin);
+        FlowState todoState = project.FlowStates.Single(s => s.Name == "Backlog");
+        WorkItem workItem = WorkItem.Create("Test Work Item", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, WorkItemQueryData.UtcNow).Value;
         workItem.AddComment(admin, WorkItemQueryData.CommentContent, WorkItemQueryData.UtcNow);
         workItem.LogTime(admin, 1.5m, null, WorkItemQueryData.UtcNow, WorkItemQueryData.UtcNow);
 
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<Flow> flowsMock = MockDbSetHelper.CreateMockDbSet([flow]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(flow.States);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
         _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Flows.Returns(flowsMock);
         _dbContext.FlowStates.Returns(statesMock);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
@@ -300,7 +243,7 @@ public sealed class GetWorkItemsByProjectHandlerTests
         summary.Type.Should().Be(WorkItemType.Story);
         summary.Priority.Should().Be(Priority.Medium);
         summary.FlowStateId.Should().Be(todoState.Id);
-        summary.FlowStateName.Should().Be("Todo");
+        summary.FlowStateName.Should().Be("Backlog");
         summary.AssigneeId.Should().BeNull();
         summary.CreatedOnUtc.Should().Be(WorkItemQueryData.UtcNow);
         summary.CommentCount.Should().Be(1);

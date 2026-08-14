@@ -1,4 +1,3 @@
-using System.Reflection;
 
 namespace Aurora.Flowboard.Application.UnitTests.WorkItems;
 
@@ -31,31 +30,23 @@ internal static class WorkItemCommandData
         return User.Create("Assignee", "User", email, Password.Create("hashed_password_789").Value, UtcNow).Value;
     }
 
-    public static (Project Project, Flow Flow) GetActiveProjectWithFlow(User admin)
+    public static Project GetActiveProjectWithFlow(User admin)
     {
-        Project project = Project.Create("My Project", "Desc", "MYP", Color.Create("white").Value, null, admin, UtcNow).Value;
-        project.ChangeStatus(ProjectStatus.Active, admin, UtcNow);
-
-        Flow flow = Flow.Create("Sprint Flow", "Standard sprint workflow", project, false, admin, UtcNow).Value;
+        Project project = Project.Create("My Project", "Desc", ProjectCode.Create("MYP").Value, ProjectKind.Product, Color.Create("white").Value, admin, UtcNow).Value;
 
         ProjectRole[] allRoles = [ProjectRole.Admin, ProjectRole.Developer];
         Color stateColor = Color.Create("white").Value;
-        flow.AddState("Todo", FlowStateCategory.Active, stateColor, allRoles, admin);
-        flow.AddState("In Progress", FlowStateCategory.Active, stateColor, allRoles, admin);
-        flow.AddState("Done", FlowStateCategory.Completed, stateColor, allRoles, admin);
-        flow.AddState("Cancelled", FlowStateCategory.Cancelled, stateColor, allRoles, admin);
+        project.AddFlowState("Backlog", FlowStateCategory.Active, stateColor, allRoles, admin);
+        project.AddFlowState("In Progress", FlowStateCategory.Active, stateColor, allRoles, admin);
+        project.AddFlowState("Done", FlowStateCategory.Completed, stateColor, allRoles, admin);
+        project.AddFlowState("Cancelled", FlowStateCategory.Cancelled, stateColor, allRoles, admin);
 
-        foreach (FlowState state in flow.States)
-        {
-            SetFlowNavProperty(state, flow);
-        }
-
-        return (project, flow);
+        return project;
     }
 
     public static WorkItem GetWorkItem(User admin)
     {
-        (Project project, Flow flow) = GetActiveProjectWithFlow(admin);
+        Project project = GetActiveProjectWithFlow(admin);
 
         return WorkItem.Create(
             Title,
@@ -63,7 +54,7 @@ internal static class WorkItemCommandData
             WorkItemType.Story,
             Priority.Medium,
             project,
-            flow,
+
             admin,
             null,
             null,
@@ -88,7 +79,7 @@ internal static class WorkItemCommandData
 
     public static WorkItem GetWorkItemWithAssignee(User admin, User assignee)
     {
-        (Project project, Flow flow) = GetActiveProjectWithFlow(admin);
+        Project project = GetActiveProjectWithFlow(admin);
         project.AddMember(assignee, ProjectRole.Developer, admin, UtcNow);
 
         return WorkItem.Create(
@@ -97,7 +88,7 @@ internal static class WorkItemCommandData
             WorkItemType.Story,
             Priority.Medium,
             project,
-            flow,
+
             admin,
             null,
             null,
@@ -107,7 +98,7 @@ internal static class WorkItemCommandData
 
     public static (WorkItem WorkItem, FlowState ToState) GetWorkItemForMove(User admin)
     {
-        (Project project, Flow flow) = GetActiveProjectWithFlow(admin);
+        Project project = GetActiveProjectWithFlow(admin);
 
         WorkItem workItem = WorkItem.Create(
             Title,
@@ -115,21 +106,21 @@ internal static class WorkItemCommandData
             WorkItemType.Story,
             Priority.Medium,
             project,
-            flow,
+
             admin,
             null,
             null,
             UtcNow).Value;
 
         // workItem starts at the first active state; toState is "In Progress"
-        FlowState toState = flow.States.First(s => s.Name == "In Progress");
+        FlowState toState = project.FlowStates.First(s => s.Name == "In Progress");
 
         return (workItem, toState);
     }
 
     public static (WorkItem WorkItem, User Assignee) GetWorkItemForAssign(User admin)
     {
-        (Project project, Flow flow) = GetActiveProjectWithFlow(admin);
+        Project project = GetActiveProjectWithFlow(admin);
 
         User assignee = GetAssignee();
         project.AddMember(assignee, ProjectRole.Developer, admin, UtcNow);
@@ -140,7 +131,7 @@ internal static class WorkItemCommandData
             WorkItemType.Story,
             Priority.Medium,
             project,
-            flow,
+
             admin,
             null,
             null,
@@ -148,9 +139,4 @@ internal static class WorkItemCommandData
 
         return (workItem, assignee);
     }
-
-    private static void SetFlowNavProperty(FlowState state, Flow flow) =>
-        typeof(FlowState)
-            .GetField("<Flow>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance)
-            ?.SetValue(state, flow);
 }

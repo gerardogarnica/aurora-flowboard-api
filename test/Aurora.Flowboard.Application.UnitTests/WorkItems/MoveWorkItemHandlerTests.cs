@@ -117,7 +117,7 @@ public sealed class MoveWorkItemHandlerTests
 
         // Assert
         result.IsSuccessful.Should().BeFalse();
-        result.Error.Should().Be(FlowErrors.StateNotFound);
+        result.Error.Should().Be(ProjectErrors.FlowStateNotFound);
     }
 
     [Fact]
@@ -197,7 +197,7 @@ public sealed class MoveWorkItemHandlerTests
         User admin = WorkItemCommandData.GetAdmin();
         (WorkItem workItem, _) = WorkItemCommandData.GetWorkItemForMove(admin);
         // "Done" state has no valid transition from the initial state
-        FlowState doneState = workItem.FlowState.Flow.States.First(s => s.Name == "Done");
+        FlowState doneState = workItem.Project.FlowStates.First(s => s.Name == "Done");
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
@@ -224,7 +224,7 @@ public sealed class MoveWorkItemHandlerTests
         // Arrange
         User admin = WorkItemCommandData.GetAdmin();
         (WorkItem workItem, _) = WorkItemCommandData.GetWorkItemForMove(admin);
-        FlowState doneState = workItem.FlowState.Flow.States.First(s => s.Name == "Done");
+        FlowState doneState = workItem.Project.FlowStates.First(s => s.Name == "Done");
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 

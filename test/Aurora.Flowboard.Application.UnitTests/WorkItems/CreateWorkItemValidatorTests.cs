@@ -21,7 +21,6 @@ public sealed class CreateWorkItemValidatorTests
             WorkItemType.Story,
             Priority.Medium,
             Guid.NewGuid(),
-            Guid.NewGuid(),
             5,
             WorkItemCommandData.EstimatedCompletionDate);
 
@@ -38,7 +37,6 @@ public sealed class CreateWorkItemValidatorTests
             null,
             WorkItemType.Story,
             Priority.Medium,
-            Guid.NewGuid(),
             Guid.NewGuid(),
             null,
             null);
@@ -58,7 +56,6 @@ public sealed class CreateWorkItemValidatorTests
             WorkItemType.Story,
             Priority.Medium,
             Guid.NewGuid(),
-            Guid.NewGuid(),
             null,
             null);
 
@@ -77,7 +74,6 @@ public sealed class CreateWorkItemValidatorTests
             WorkItemType.Story,
             Priority.Medium,
             Guid.NewGuid(),
-            Guid.NewGuid(),
             null,
             null);
 
@@ -94,7 +90,6 @@ public sealed class CreateWorkItemValidatorTests
             null,
             WorkItemType.Story,
             Priority.Medium,
-            Guid.NewGuid(),
             Guid.NewGuid(),
             null,
             null);
@@ -113,25 +108,6 @@ public sealed class CreateWorkItemValidatorTests
             WorkItemType.Story,
             Priority.Medium,
             Guid.Empty,
-            Guid.NewGuid(),
-            null,
-            null);
-
-        var result = _validator.Validate(command);
-
-        result.IsValid.Should().BeFalse();
-    }
-
-    [Fact]
-    public void Should_Fail_When_FlowIdIsEmpty()
-    {
-        CreateWorkItemCommand command = new(
-            WorkItemCommandData.Title,
-            null,
-            WorkItemType.Story,
-            Priority.Medium,
-            Guid.NewGuid(),
-            Guid.Empty,
             null,
             null);
 
@@ -149,7 +125,6 @@ public sealed class CreateWorkItemValidatorTests
             WorkItemType.Story,
             Priority.Medium,
             Guid.NewGuid(),
-            Guid.NewGuid(),
             0,
             null);
 
@@ -166,7 +141,6 @@ public sealed class CreateWorkItemValidatorTests
             null,
             WorkItemType.Story,
             Priority.Medium,
-            Guid.NewGuid(),
             Guid.NewGuid(),
             5,
             null);
@@ -186,7 +160,6 @@ public sealed class CreateWorkItemValidatorTests
             WorkItemType.Story,
             Priority.Medium,
             Guid.NewGuid(),
-            Guid.NewGuid(),
             null,
             pastDate);
 
@@ -203,7 +176,6 @@ public sealed class CreateWorkItemValidatorTests
             null,
             WorkItemType.Story,
             Priority.Medium,
-            Guid.NewGuid(),
             Guid.NewGuid(),
             null,
             WorkItemCommandData.Today);
@@ -222,7 +194,6 @@ public sealed class CreateWorkItemValidatorTests
             WorkItemType.Story,
             Priority.Medium,
             Guid.NewGuid(),
-            Guid.NewGuid(),
             null,
             null,
             null);
@@ -230,5 +201,77 @@ public sealed class CreateWorkItemValidatorTests
         var result = _validator.Validate(command);
 
         result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Should_Pass_When_MilestoneIdIsNotProvided()
+    {
+        CreateWorkItemCommand command = new(
+            WorkItemCommandData.Title,
+            null,
+            WorkItemType.Story,
+            Priority.Medium,
+            Guid.NewGuid(),
+            null,
+            null,
+            MilestoneId: null);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Should_Fail_When_MilestoneIdIsEmpty()
+    {
+        CreateWorkItemCommand command = new(
+            WorkItemCommandData.Title,
+            null,
+            WorkItemType.Story,
+            Priority.Medium,
+            Guid.NewGuid(),
+            null,
+            null,
+            MilestoneId: Guid.Empty);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Should_Pass_When_ComponentIdIsNotProvided()
+    {
+        CreateWorkItemCommand command = new(
+            WorkItemCommandData.Title,
+            null,
+            WorkItemType.Story,
+            Priority.Medium,
+            Guid.NewGuid(),
+            null,
+            null,
+            ComponentId: null);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Should_Fail_When_ComponentIdIsEmpty()
+    {
+        CreateWorkItemCommand command = new(
+            WorkItemCommandData.Title,
+            null,
+            WorkItemType.Story,
+            Priority.Medium,
+            Guid.NewGuid(),
+            null,
+            null,
+            ComponentId: Guid.Empty);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.Should().BeFalse();
     }
 }
