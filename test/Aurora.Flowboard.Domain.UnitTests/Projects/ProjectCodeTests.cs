@@ -36,6 +36,17 @@ public sealed class ProjectCodeTests
     }
 
     [Fact]
+    public void Should_ReturnValue_When_ConvertedToString()
+    {
+        // Arrange
+        ProjectCode prefix = ProjectCode.Create("AFB").Value;
+
+        // Act & Assert
+        prefix.ToString().Should().Be("AFB");
+        ((string)prefix).Should().Be("AFB");
+    }
+
+    [Fact]
     public void Should_Fail_When_CodeIsEmpty()
     {
         // Act
@@ -43,7 +54,7 @@ public sealed class ProjectCodeTests
 
         // Assert
         result.IsSuccessful.Should().BeFalse();
-        result.Error.Should().Be(ProjectErrors.CodeRequired);
+        result.Error.Should().Be(ProjectErrors.PrefixRequired);
     }
 
     [Fact]
@@ -54,7 +65,7 @@ public sealed class ProjectCodeTests
 
         // Assert
         result.IsSuccessful.Should().BeFalse();
-        result.Error.Should().Be(ProjectErrors.CodeRequired);
+        result.Error.Should().Be(ProjectErrors.PrefixRequired);
     }
 
     [Fact]
@@ -65,7 +76,7 @@ public sealed class ProjectCodeTests
 
         // Assert
         result.IsSuccessful.Should().BeFalse();
-        result.Error.Should().Be(ProjectErrors.CodeTooLong);
+        result.Error.Should().Be(ProjectErrors.PrefixTooLong);
     }
 
     [Fact]
@@ -76,7 +87,7 @@ public sealed class ProjectCodeTests
 
         // Assert
         result.IsSuccessful.Should().BeFalse();
-        result.Error.Should().Be(ProjectErrors.CodeInvalidCharacters);
+        result.Error.Should().Be(ProjectErrors.PrefixInvalidCharacters);
     }
 
     [Fact]
@@ -87,6 +98,6 @@ public sealed class ProjectCodeTests
 
         // Assert
         result.IsSuccessful.Should().BeFalse();
-        result.Error.Should().Be(ProjectErrors.CodeInvalidCharacters);
+        result.Error.Should().Be(ProjectErrors.PrefixInvalidCharacters);
     }
 }

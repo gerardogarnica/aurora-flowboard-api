@@ -8,7 +8,7 @@ public sealed class WorkItemTests
         public void Should_CreateWorkItem_When_DataIsValid()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
 
             // Act
             Result<WorkItem> result = WorkItem.Create(
@@ -17,7 +17,7 @@ public sealed class WorkItemTests
                 WorkItemData.Type,
                 WorkItemData.Priority,
                 project,
-                flow,
+                
                 admin,
                 WorkItemData.EstimatedPoints,
                 WorkItemData.EstimatedCompletionDate,
@@ -41,7 +41,7 @@ public sealed class WorkItemTests
         public void Should_GenerateCode_When_Created()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
             int expectedSequence = project.WorkItemCounter + 1;
 
             // Act
@@ -51,14 +51,14 @@ public sealed class WorkItemTests
                 WorkItemData.Type,
                 WorkItemData.Priority,
                 project,
-                flow,
+                
                 admin,
                 null,
                 null,
                 WorkItemData.CreatedOnUtc);
 
             // Assert
-            result.Value.Code.Should().Be($"{project.Code}-{expectedSequence}");
+            result.Value.Code.Should().Be($"{project.Prefix}-{expectedSequence}");
             result.Value.SequenceNumber.Should().Be(expectedSequence);
         }
 
@@ -66,12 +66,12 @@ public sealed class WorkItemTests
         public void Should_IncrementProjectWorkItemCounter_When_Created()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
             int counterBefore = project.WorkItemCounter;
 
             // Act
             WorkItem.Create(WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+                project, admin, null, null, WorkItemData.CreatedOnUtc);
 
             // Assert
             project.WorkItemCounter.Should().Be(counterBefore + 1);
@@ -81,15 +81,15 @@ public sealed class WorkItemTests
         public void Should_SetInitialFlowState_When_Created()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
-            FlowState expectedInitialState = flow.States
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
+            FlowState expectedInitialState = project.FlowStates
                 .Where(s => s.Category == FlowStateCategory.Active)
                 .MinBy(s => s.SortOrder)!;
 
             // Act
             Result<WorkItem> result = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+                project, admin, null, null, WorkItemData.CreatedOnUtc);
 
             // Assert
             result.Value.FlowStateId.Should().Be(expectedInitialState.Id);
@@ -99,7 +99,7 @@ public sealed class WorkItemTests
         public void Should_TrimTitleAndDescription_When_Created()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
 
             // Act
             Result<WorkItem> result = WorkItem.Create(
@@ -108,7 +108,7 @@ public sealed class WorkItemTests
                 WorkItemData.Type,
                 WorkItemData.Priority,
                 project,
-                flow,
+                
                 admin,
                 null,
                 null,
@@ -123,12 +123,12 @@ public sealed class WorkItemTests
         public void Should_CreateChangeLog_When_Created()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
 
             // Act
             Result<WorkItem> result = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+                project, admin, null, null, WorkItemData.CreatedOnUtc);
 
             // Assert
             result.Value.ChangeLogs.Should().ContainSingle(c => c.ChangeType == WorkItemChangeType.Created);
@@ -138,12 +138,12 @@ public sealed class WorkItemTests
         public void Should_RaiseWorkItemCreatedDomainEvent_When_Created()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
 
             // Act
             Result<WorkItem> result = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+                project, admin, null, null, WorkItemData.CreatedOnUtc);
 
             // Assert
             WorkItemCreatedDomainEvent domainEvent = AssertDomainEventWasPublished<WorkItemCreatedDomainEvent>(result.Value);
@@ -154,14 +154,14 @@ public sealed class WorkItemTests
         public void Should_CreateWithAssignee_When_AssigneeIsProjectMemberAndActive()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
             User assignee = UserData.GetActiveUser();
             project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
 
             // Act
             Result<WorkItem> result = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee);
+                project, admin, null, null, WorkItemData.CreatedOnUtc, assignee);
 
             // Assert
             result.IsSuccessful.Should().BeTrue();
@@ -172,14 +172,14 @@ public sealed class WorkItemTests
         public void Should_RaiseWorkItemAssignedDomainEvent_When_CreatedWithAssignee()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
             User assignee = UserData.GetActiveUser();
             project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
 
             // Act
             Result<WorkItem> result = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee);
+                project, admin, null, null, WorkItemData.CreatedOnUtc, assignee);
 
             // Assert
             WorkItemAssignedDomainEvent domainEvent = AssertDomainEventWasPublished<WorkItemAssignedDomainEvent>(result.Value);
@@ -191,14 +191,14 @@ public sealed class WorkItemTests
         public void Should_CreateAssignedChangeLog_When_CreatedWithAssignee()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
             User assignee = UserData.GetActiveUser();
             project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
 
             // Act
             Result<WorkItem> result = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee);
+                project, admin, null, null, WorkItemData.CreatedOnUtc, assignee);
 
             // Assert
             result.Value.ChangeLogs.Should().Contain(c => c.ChangeType == WorkItemChangeType.Assigned);
@@ -208,12 +208,12 @@ public sealed class WorkItemTests
         public void Should_Fail_When_TitleIsEmpty()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
 
             // Act
             Result<WorkItem> result = WorkItem.Create(
                 string.Empty, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+                project, admin, null, null, WorkItemData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -224,12 +224,12 @@ public sealed class WorkItemTests
         public void Should_Fail_When_TitleIsWhitespace()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
 
             // Act
             Result<WorkItem> result = WorkItem.Create(
                 "   ", null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+                project, admin, null, null, WorkItemData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -240,13 +240,13 @@ public sealed class WorkItemTests
         public void Should_Fail_When_TitleExceedsMaxLength()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
             string longTitle = new('A', 201);
 
             // Act
             Result<WorkItem> result = WorkItem.Create(
                 longTitle, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+                project, admin, null, null, WorkItemData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -257,13 +257,13 @@ public sealed class WorkItemTests
         public void Should_Fail_When_DescriptionExceedsMaxLength()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
             string longDescription = new('A', 4001);
 
             // Act
             Result<WorkItem> result = WorkItem.Create(
                 WorkItemData.Title, longDescription, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+                project, admin, null, null, WorkItemData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -274,13 +274,13 @@ public sealed class WorkItemTests
         public void Should_Fail_When_CreatorIsNotProjectMember()
         {
             // Arrange
-            var (project, flow, _) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, _) = WorkItemData.GetActiveProjectWithFlow();
             User nonMember = UserData.GetActiveUser();
 
             // Act
             Result<WorkItem> result = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, nonMember, null, null, WorkItemData.CreatedOnUtc);
+                project, nonMember, null, null, WorkItemData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -292,14 +292,14 @@ public sealed class WorkItemTests
         {
             // Arrange
             User admin = UserData.GetActiveUser();
-            Project draftProject = ProjectData.GetDraftProject(admin);
-            Flow flow = Flow.Create(FlowData.Name, null, draftProject, true, admin, FlowData.CreatedOnUtc).Value;
-            flow.AddState("Todo", FlowStateCategory.Active, FlowData.Color, [ProjectRole.Admin], admin);
+            Project blockedProject = ProjectData.GetProject(admin);
+            blockedProject.AddFlowState("Backlog", FlowStateCategory.Active, ProjectData.FlowStateColor, [ProjectRole.Admin], admin);
+            blockedProject.ChangeStatus(ProjectStatus.Archived, admin, ProjectData.UpdatedOnUtc);
 
             // Act
             Result<WorkItem> result = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                draftProject, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+                blockedProject, admin, null, null, WorkItemData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -310,7 +310,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_CreatorIsInactive()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
             User creator = UserData.GetActiveUser();
             project.AddMember(creator, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
             creator.Deactivate(WorkItemData.CreatedOnUtc);
@@ -318,7 +318,7 @@ public sealed class WorkItemTests
             // Act
             Result<WorkItem> result = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, creator, null, null, WorkItemData.CreatedOnUtc);
+                project, creator, null, null, WorkItemData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -330,32 +330,30 @@ public sealed class WorkItemTests
         {
             // Arrange
             User admin = UserData.GetActiveUser();
-            Project project = ProjectData.GetDraftProject(admin);
-            project.ChangeStatus(ProjectStatus.Active, admin, ProjectData.UpdatedOnUtc);
-            Flow flow = Flow.Create(FlowData.Name, null, project, true, admin, FlowData.CreatedOnUtc).Value;
-            // No states added - flow has no initial state
+            Project project = ProjectData.GetProject(admin);
+            // No flow states added - the project has no initial state
 
             // Act
             Result<WorkItem> result = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc);
+                project, admin, null, null, WorkItemData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(FlowErrors.NoInitialState);
+            result.Error.Should().Be(ProjectErrors.NoInitialFlowState);
         }
 
         [Fact]
         public void Should_Fail_When_AssigneeIsNotProjectMember()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
             User nonMemberAssignee = UserData.GetActiveUser();
 
             // Act
             Result<WorkItem> result = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, nonMemberAssignee);
+                project, admin, null, null, WorkItemData.CreatedOnUtc, nonMemberAssignee);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -366,7 +364,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_AssigneeIsInactive()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
             User assignee = UserData.GetActiveUser();
             project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
             assignee.Deactivate(WorkItemData.CreatedOnUtc);
@@ -374,7 +372,7 @@ public sealed class WorkItemTests
             // Act
             Result<WorkItem> result = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee);
+                project, admin, null, null, WorkItemData.CreatedOnUtc, assignee);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -388,7 +386,7 @@ public sealed class WorkItemTests
         public void Should_UpdateWorkItem_When_DataIsValid()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             const string newTitle = "Updated title";
             const string newDescription = "Updated description";
 
@@ -416,7 +414,7 @@ public sealed class WorkItemTests
         public void Should_TrimTitleAndDescription_When_Updated()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             workItem.Update("  New Title  ", "  New Desc  ", Priority.Low, null, null, admin, WorkItemData.UpdatedOnUtc);
@@ -430,7 +428,7 @@ public sealed class WorkItemTests
         public void Should_CreateUpdateChangeLog_When_Updated()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             workItem.Update("New Title", null, Priority.Low, null, null, admin, WorkItemData.UpdatedOnUtc);
@@ -443,7 +441,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_TitleIsEmpty()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             Result result = workItem.Update(string.Empty, null, Priority.Low, null, null, admin, WorkItemData.UpdatedOnUtc);
@@ -457,7 +455,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_TitleExceedsMaxLength()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             string longTitle = new('A', 201);
 
             // Act
@@ -472,7 +470,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_DescriptionExceedsMaxLength()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             string longDesc = new('A', 4001);
 
             // Act
@@ -487,7 +485,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ChangedByIsNotProjectMember()
         {
             // Arrange
-            var (workItem, _, _, _) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, _) = WorkItemData.GetWorkItemWithContext();
             User nonMember = UserData.GetActiveUser();
 
             // Act
@@ -502,7 +500,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ChangedByIsInactive()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             User user = UserData.GetActiveUser();
             project.AddMember(user, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
             user.Deactivate(WorkItemData.CreatedOnUtc);
@@ -519,8 +517,8 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
-            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.Update(WorkItemData.Title, null, Priority.Low, null, null, admin, WorkItemData.UpdatedOnUtc);
@@ -537,7 +535,7 @@ public sealed class WorkItemTests
         public void Should_UpdateTitle_When_DataIsValid()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             const string newTitle = "Updated title";
 
             // Act
@@ -553,7 +551,7 @@ public sealed class WorkItemTests
         public void Should_TrimTitle_When_Updated()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             workItem.UpdateTitle("  New Title  ", admin, WorkItemData.UpdatedOnUtc);
@@ -566,7 +564,7 @@ public sealed class WorkItemTests
         public void Should_CreateTitleUpdatedChangeLog_When_Updated()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             workItem.UpdateTitle("New Title", admin, WorkItemData.UpdatedOnUtc);
@@ -579,7 +577,7 @@ public sealed class WorkItemTests
         public void Should_RaiseWorkItemTitleUpdatedDomainEvent_When_Updated()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             workItem.UpdateTitle("New Title", admin, WorkItemData.UpdatedOnUtc);
@@ -594,7 +592,7 @@ public sealed class WorkItemTests
         public void Should_BeNoOp_When_TitleIsUnchanged()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             Result result = workItem.UpdateTitle(WorkItemData.Title, admin, WorkItemData.UpdatedOnUtc);
@@ -610,7 +608,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_TitleIsEmpty()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             Result result = workItem.UpdateTitle(string.Empty, admin, WorkItemData.UpdatedOnUtc);
@@ -624,7 +622,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_TitleIsWhitespace()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             Result result = workItem.UpdateTitle("   ", admin, WorkItemData.UpdatedOnUtc);
@@ -638,7 +636,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_TitleExceedsMaxLength()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             string longTitle = new('A', WorkItem.MaxTitleLength + 1);
 
             // Act
@@ -653,7 +651,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ChangedByIsNotProjectMember()
         {
             // Arrange
-            var (workItem, _, _, _) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, _) = WorkItemData.GetWorkItemWithContext();
             User nonMember = UserData.GetActiveUser();
 
             // Act
@@ -668,7 +666,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ChangedByIsInactive()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             User user = UserData.GetActiveUser();
             project.AddMember(user, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
             user.Deactivate(WorkItemData.CreatedOnUtc);
@@ -685,8 +683,8 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
-            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.UpdateTitle("New Title", admin, WorkItemData.UpdatedOnUtc);
@@ -703,8 +701,8 @@ public sealed class WorkItemTests
         public void Should_MoveToState_When_TransitionIsAllowed()
         {
             // Arrange
-            var (workItem, _, flow, admin) = WorkItemData.GetWorkItemWithContext();
-            FlowState toState = flow.States.Single(s => s.Name == "In Progress");
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            FlowState toState = project.FlowStates.Single(s => s.Name == "In Progress");
 
             // Act
             Result result = workItem.Move(toState, admin, null, WorkItemData.UpdatedOnUtc);
@@ -719,8 +717,8 @@ public sealed class WorkItemTests
         public void Should_RecordStateTransitionHistory_When_Moved()
         {
             // Arrange
-            var (workItem, _, flow, admin) = WorkItemData.GetWorkItemWithContext();
-            FlowState toState = flow.States.Single(s => s.Name == "In Progress");
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            FlowState toState = project.FlowStates.Single(s => s.Name == "In Progress");
 
             // Act
             workItem.Move(toState, admin, "Moving to active work", WorkItemData.UpdatedOnUtc);
@@ -733,8 +731,8 @@ public sealed class WorkItemTests
         public void Should_CreateMoveChangeLog_When_Moved()
         {
             // Arrange
-            var (workItem, _, flow, admin) = WorkItemData.GetWorkItemWithContext();
-            FlowState toState = flow.States.Single(s => s.Name == "In Progress");
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            FlowState toState = project.FlowStates.Single(s => s.Name == "In Progress");
 
             // Act
             workItem.Move(toState, admin, null, WorkItemData.UpdatedOnUtc);
@@ -747,8 +745,8 @@ public sealed class WorkItemTests
         public void Should_RaiseWorkItemMovedDomainEvent_When_Moved()
         {
             // Arrange
-            var (workItem, _, flow, admin) = WorkItemData.GetWorkItemWithContext();
-            FlowState toState = flow.States.Single(s => s.Name == "In Progress");
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            FlowState toState = project.FlowStates.Single(s => s.Name == "In Progress");
             Guid fromStateId = workItem.FlowStateId;
 
             // Act
@@ -765,11 +763,11 @@ public sealed class WorkItemTests
         public void Should_SetCompletedOnUtc_When_MovedToCompletedState()
         {
             // Arrange
-            var (workItem, _, flow, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             // First move to In Progress so we can reach Done
-            FlowState inProgress = flow.States.Single(s => s.Name == "In Progress");
+            FlowState inProgress = project.FlowStates.Single(s => s.Name == "In Progress");
             workItem.Move(inProgress, admin, null, WorkItemData.UpdatedOnUtc);
-            FlowState doneState = flow.States.Single(s => s.Name == "Done");
+            FlowState doneState = project.FlowStates.Single(s => s.Name == "Done");
 
             // Act
             workItem.Move(doneState, admin, null, WorkItemData.UpdatedOnUtc);
@@ -782,8 +780,8 @@ public sealed class WorkItemTests
         public void Should_SetCompletedOnUtc_When_MovedToCancelledState()
         {
             // Arrange
-            var (workItem, _, flow, admin) = WorkItemData.GetWorkItemWithContext();
-            FlowState cancelledState = flow.States.Single(s => s.Name == "Cancelled");
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            FlowState cancelledState = project.FlowStates.Single(s => s.Name == "Cancelled");
 
             // Act
             workItem.Move(cancelledState, admin, null, WorkItemData.UpdatedOnUtc);
@@ -796,9 +794,9 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ChangedByIsNotProjectMember()
         {
             // Arrange
-            var (workItem, _, flow, _) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, _) = WorkItemData.GetWorkItemWithContext();
             User nonMember = UserData.GetActiveUser();
-            FlowState toState = flow.States.Single(s => s.Name == "In Progress");
+            FlowState toState = project.FlowStates.Single(s => s.Name == "In Progress");
 
             // Act
             Result result = workItem.Move(toState, nonMember, null, WorkItemData.UpdatedOnUtc);
@@ -812,11 +810,11 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ChangedByIsInactive()
         {
             // Arrange
-            var (workItem, project, flow, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             User user = UserData.GetActiveUser();
             project.AddMember(user, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
             user.Deactivate(WorkItemData.CreatedOnUtc);
-            FlowState toState = flow.States.Single(s => s.Name == "In Progress");
+            FlowState toState = project.FlowStates.Single(s => s.Name == "In Progress");
 
             // Act
             Result result = workItem.Move(toState, user, null, WorkItemData.UpdatedOnUtc);
@@ -827,28 +825,27 @@ public sealed class WorkItemTests
         }
 
         [Fact]
-        public void Should_Fail_When_TargetStateIsFromDifferentFlow()
+        public void Should_Fail_When_TargetStateIsFromDifferentProject()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
-            Flow otherFlow = Flow.Create("Other Flow", null, project, false, admin, WorkItemData.CreatedOnUtc).Value;
-            otherFlow.AddState("Other Todo", FlowStateCategory.Active, FlowData.Color, [], admin);
-            FlowState otherState = otherFlow.States.Single();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (otherProject, _) = WorkItemData.GetActiveProjectWithFlow();
+            FlowState otherState = otherProject.FlowStates.Single(s => s.Name == "In Progress");
 
             // Act
             Result result = workItem.Move(otherState, admin, null, WorkItemData.UpdatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(WorkItemErrors.TargetStateNotInFlow);
+            result.Error.Should().Be(WorkItemErrors.TargetStateNotInProject);
         }
 
         [Fact]
         public void Should_Fail_When_NoTransitionDefined()
         {
             // Arrange
-            var (workItem, _, flow, admin) = WorkItemData.GetWorkItemWithContext();
-            FlowState doneState = flow.States.Single(s => s.Name == "Done");
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            FlowState doneState = project.FlowStates.Single(s => s.Name == "Done");
 
             // Act
             Result result = workItem.Move(doneState, admin, null, WorkItemData.UpdatedOnUtc);
@@ -862,24 +859,24 @@ public sealed class WorkItemTests
         public void Should_Fail_When_UserRoleNotAllowedForTransition()
         {
             // Arrange
-            var (project, _, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
             User member = UserData.GetActiveUser();
             project.AddMember(member, ProjectRole.QA, admin, WorkItemData.CreatedOnUtc);
 
-            // Add a state only Admin can transition to
-            Flow restrictedFlow = Flow.Create("Restricted", null, project, false, admin, WorkItemData.CreatedOnUtc).Value;
-            restrictedFlow.AddState("Start", FlowStateCategory.Active, FlowData.Color, [ProjectRole.Admin], admin);
-            restrictedFlow.AddState("End", FlowStateCategory.Active, FlowData.Color, [ProjectRole.Admin], admin);
-            foreach (FlowState s in restrictedFlow.States)
-            {
-                WorkItemData.SetFlowNavProperty(s, restrictedFlow);
-            }
-
             WorkItem workItem = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, restrictedFlow, admin, null, null, WorkItemData.CreatedOnUtc).Value;
+                project, admin, null, null, WorkItemData.CreatedOnUtc).Value;
 
-            FlowState endState = restrictedFlow.States.Single(s => s.Name == "End");
+            // Restrict the first transition to Admin only, leaving the QA member without it.
+            FlowState todoState = project.FlowStates.Single(s => s.Name == "Todo");
+            FlowState endState = project.FlowStates.Single(s => s.Name == "In Progress");
+            FlowTransition transition = project.FlowTransitions
+                .Single(t => t.FromStateId == todoState.Id && t.ToStateId == endState.Id);
+
+            foreach (ProjectRole role in transition.AllowedRoles.Where(r => r != ProjectRole.Admin).ToList())
+            {
+                project.RemoveFlowTransitionRole(transition.Id, role, admin);
+            }
 
             // Act
             Result result = workItem.Move(endState, member, null, WorkItemData.UpdatedOnUtc);
@@ -893,9 +890,9 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
         {
             // Arrange
-            var (workItem, project, flow, admin) = WorkItemData.GetWorkItemWithContext();
-            FlowState toState = flow.States.Single(s => s.Name == "In Progress");
-            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            FlowState toState = project.FlowStates.Single(s => s.Name == "In Progress");
+            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.Move(toState, admin, null, WorkItemData.UpdatedOnUtc);
@@ -912,7 +909,7 @@ public sealed class WorkItemTests
         public void Should_AssignUser_When_UserIsProjectMemberAndActive()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             User assignee = UserData.GetActiveUser();
             project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
 
@@ -929,7 +926,7 @@ public sealed class WorkItemTests
         public void Should_CreateAssignedChangeLog_When_Assigned()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             User assignee = UserData.GetActiveUser();
             project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
 
@@ -944,7 +941,7 @@ public sealed class WorkItemTests
         public void Should_RaiseWorkItemAssignedDomainEvent_When_Assigned()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             User assignee = UserData.GetActiveUser();
             project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
 
@@ -961,7 +958,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ChangedByIsNotProjectMember()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             User nonMember = UserData.GetActiveUser();
             User assignee = UserData.GetActiveUser();
             project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
@@ -978,7 +975,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_AssigneeIsNotProjectMember()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             User nonMemberAssignee = UserData.GetActiveUser();
 
             // Act
@@ -993,7 +990,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ChangedByIsInactive()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             User changedBy = UserData.GetActiveUser();
             project.AddMember(changedBy, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
             changedBy.Deactivate(WorkItemData.CreatedOnUtc);
@@ -1012,7 +1009,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_AssigneeIsInactive()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             User assignee = UserData.GetActiveUser();
             project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
             assignee.Deactivate(WorkItemData.CreatedOnUtc);
@@ -1029,10 +1026,10 @@ public sealed class WorkItemTests
         public void Should_Fail_When_WorkItemStateIsCancelled()
         {
             // Arrange
-            var (workItem, project, flow, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             User assignee = UserData.GetActiveUser();
             project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
-            FlowState cancelledState = flow.States.Single(s => s.Name == "Cancelled");
+            FlowState cancelledState = project.FlowStates.Single(s => s.Name == "Cancelled");
             workItem.Move(cancelledState, admin, null, WorkItemData.UpdatedOnUtc);
 
             // Act
@@ -1047,10 +1044,10 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             User assignee = UserData.GetActiveUser();
             project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
-            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.Assign(assignee, admin, WorkItemData.UpdatedOnUtc);
@@ -1067,12 +1064,12 @@ public sealed class WorkItemTests
         public void Should_Unassign_When_WorkItemIsAssigned()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
             User assignee = UserData.GetActiveUser();
             project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
             WorkItem workItem = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
+                project, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
 
             // Act
             Result result = workItem.Unassign(admin, WorkItemData.UpdatedOnUtc);
@@ -1087,12 +1084,12 @@ public sealed class WorkItemTests
         public void Should_CreateUnassignedChangeLog_When_Unassigned()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
             User assignee = UserData.GetActiveUser();
             project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
             WorkItem workItem = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
+                project, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
 
             // Act
             workItem.Unassign(admin, WorkItemData.UpdatedOnUtc);
@@ -1105,12 +1102,12 @@ public sealed class WorkItemTests
         public void Should_RaiseWorkItemUnassignedDomainEvent_When_Unassigned()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
             User assignee = UserData.GetActiveUser();
             project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
             WorkItem workItem = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
+                project, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
 
             // Act
             workItem.Unassign(admin, WorkItemData.UpdatedOnUtc);
@@ -1124,7 +1121,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_WorkItemIsNotAssigned()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             Result result = workItem.Unassign(admin, WorkItemData.UpdatedOnUtc);
@@ -1138,12 +1135,12 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ChangedByIsNotProjectMember()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
             User assignee = UserData.GetActiveUser();
             project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
             WorkItem workItem = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
+                project, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
             User nonMember = UserData.GetActiveUser();
 
             // Act
@@ -1158,12 +1155,12 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ChangedByIsInactive()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
             User assignee = UserData.GetActiveUser();
             project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
             WorkItem workItem = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
+                project, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
             User changedBy = UserData.GetActiveUser();
             project.AddMember(changedBy, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
             changedBy.Deactivate(WorkItemData.CreatedOnUtc);
@@ -1180,13 +1177,13 @@ public sealed class WorkItemTests
         public void Should_Fail_When_WorkItemStateIsCancelled()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
             User assignee = UserData.GetActiveUser();
             project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
             WorkItem workItem = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
-            FlowState cancelledState = flow.States.Single(s => s.Name == "Cancelled");
+                project, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
+            FlowState cancelledState = project.FlowStates.Single(s => s.Name == "Cancelled");
             workItem.Move(cancelledState, admin, null, WorkItemData.UpdatedOnUtc);
 
             // Act
@@ -1201,13 +1198,13 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
         {
             // Arrange
-            var (project, flow, admin) = WorkItemData.GetActiveProjectWithFlow();
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
             User assignee = UserData.GetActiveUser();
             project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
             WorkItem workItem = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
-                project, flow, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
-            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+                project, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
+            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.Unassign(admin, WorkItemData.UpdatedOnUtc);
@@ -1224,7 +1221,7 @@ public sealed class WorkItemTests
         public void Should_AddComment_When_DataIsValid()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             const string content = "This is a comment";
 
             // Act
@@ -1239,7 +1236,7 @@ public sealed class WorkItemTests
         public void Should_CreateCommentAddedChangeLog_When_CommentAdded()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             workItem.AddComment(admin, "A comment", WorkItemData.CreatedOnUtc);
@@ -1252,7 +1249,7 @@ public sealed class WorkItemTests
         public void Should_RaiseWorkItemCommentAddedDomainEvent_When_CommentAdded()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             workItem.AddComment(admin, "A comment", WorkItemData.CreatedOnUtc);
@@ -1266,7 +1263,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_AuthorIsNotProjectMember()
         {
             // Arrange
-            var (workItem, _, _, _) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, _) = WorkItemData.GetWorkItemWithContext();
             User nonMember = UserData.GetActiveUser();
 
             // Act
@@ -1281,7 +1278,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_AuthorIsInactive()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             User author = UserData.GetActiveUser();
             project.AddMember(author, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
             author.Deactivate(WorkItemData.CreatedOnUtc);
@@ -1298,7 +1295,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ContentIsEmpty()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             Result result = workItem.AddComment(admin, string.Empty, WorkItemData.CreatedOnUtc);
@@ -1312,7 +1309,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ContentIsWhitespace()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             Result result = workItem.AddComment(admin, "   ", WorkItemData.CreatedOnUtc);
@@ -1326,8 +1323,8 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
-            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.AddComment(admin, "This is a comment", WorkItemData.CreatedOnUtc);
@@ -1344,7 +1341,7 @@ public sealed class WorkItemTests
         public void Should_UpdateComment_When_AuthorUpdatesOwnComment()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             workItem.AddComment(admin, "Original content", WorkItemData.CreatedOnUtc);
             Guid commentId = workItem.Comments.Single().Id;
 
@@ -1360,7 +1357,7 @@ public sealed class WorkItemTests
         public void Should_CreateCommentUpdatedChangeLog_When_CommentUpdated()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             workItem.AddComment(admin, "Original content", WorkItemData.CreatedOnUtc);
             Guid commentId = workItem.Comments.Single().Id;
 
@@ -1375,7 +1372,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ChangedByIsNotProjectMember()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             workItem.AddComment(admin, "Original content", WorkItemData.CreatedOnUtc);
             Guid commentId = workItem.Comments.Single().Id;
             User nonMember = UserData.GetActiveUser();
@@ -1392,7 +1389,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_CommentNotFound()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             Result result = workItem.UpdateComment(Guid.NewGuid(), admin, "Updated content", WorkItemData.UpdatedOnUtc);
@@ -1406,7 +1403,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_UserIsNotCommentAuthor()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             workItem.AddComment(admin, "Original content", WorkItemData.CreatedOnUtc);
             Guid commentId = workItem.Comments.Single().Id;
             User otherMember = UserData.GetActiveUser();
@@ -1424,7 +1421,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_UpdatedContentIsEmpty()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             workItem.AddComment(admin, "Original content", WorkItemData.CreatedOnUtc);
             Guid commentId = workItem.Comments.Single().Id;
 
@@ -1440,10 +1437,10 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             workItem.AddComment(admin, "Original content", WorkItemData.CreatedOnUtc);
             Guid commentId = workItem.Comments.Single().Id;
-            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.UpdateComment(commentId, admin, "Updated content", WorkItemData.UpdatedOnUtc);
@@ -1460,7 +1457,7 @@ public sealed class WorkItemTests
         public void Should_RemoveComment_When_AuthorRemovesOwnComment()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             workItem.AddComment(admin, "A comment", WorkItemData.CreatedOnUtc);
             Guid commentId = workItem.Comments.Single().Id;
 
@@ -1476,7 +1473,7 @@ public sealed class WorkItemTests
         public void Should_CreateCommentRemovedChangeLog_When_CommentRemoved()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             workItem.AddComment(admin, "A comment", WorkItemData.CreatedOnUtc);
             Guid commentId = workItem.Comments.Single().Id;
 
@@ -1491,7 +1488,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ChangedByIsNotProjectMember()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             workItem.AddComment(admin, "A comment", WorkItemData.CreatedOnUtc);
             Guid commentId = workItem.Comments.Single().Id;
             User nonMember = UserData.GetActiveUser();
@@ -1508,7 +1505,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_CommentNotFound()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             Result result = workItem.RemoveComment(Guid.NewGuid(), admin, WorkItemData.UpdatedOnUtc);
@@ -1522,7 +1519,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_UserIsNotCommentAuthor()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             workItem.AddComment(admin, "A comment", WorkItemData.CreatedOnUtc);
             Guid commentId = workItem.Comments.Single().Id;
             User otherMember = UserData.GetActiveUser();
@@ -1540,10 +1537,10 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             workItem.AddComment(admin, "A comment", WorkItemData.CreatedOnUtc);
             Guid commentId = workItem.Comments.Single().Id;
-            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.RemoveComment(commentId, admin, WorkItemData.UpdatedOnUtc);
@@ -1560,7 +1557,7 @@ public sealed class WorkItemTests
         public void Should_LogTime_When_DataIsValid()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             const decimal hours = 2.5m;
 
             // Act
@@ -1575,7 +1572,7 @@ public sealed class WorkItemTests
         public void Should_CreateTimeLoggedChangeLog_When_TimeLogged()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             workItem.LogTime(admin, 1m, null, WorkItemData.UpdatedOnUtc, WorkItemData.CreatedOnUtc);
@@ -1588,7 +1585,7 @@ public sealed class WorkItemTests
         public void Should_RaiseWorkItemTimeLoggedDomainEvent_When_TimeLogged()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             const decimal hours = 3m;
 
             // Act
@@ -1604,7 +1601,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_UserIsNotProjectMember()
         {
             // Arrange
-            var (workItem, _, _, _) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, _) = WorkItemData.GetWorkItemWithContext();
             User nonMember = UserData.GetActiveUser();
 
             // Act
@@ -1619,7 +1616,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_UserIsInactive()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             User user = UserData.GetActiveUser();
             project.AddMember(user, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
             user.Deactivate(WorkItemData.CreatedOnUtc);
@@ -1636,7 +1633,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_HoursIsZero()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             Result result = workItem.LogTime(admin, 0m, null, WorkItemData.UpdatedOnUtc, WorkItemData.CreatedOnUtc);
@@ -1650,7 +1647,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_HoursIsNegative()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             Result result = workItem.LogTime(admin, -1m, null, WorkItemData.UpdatedOnUtc, WorkItemData.CreatedOnUtc);
@@ -1664,8 +1661,8 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
-            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.LogTime(admin, 1m, null, WorkItemData.UpdatedOnUtc, WorkItemData.CreatedOnUtc);
@@ -1682,7 +1679,7 @@ public sealed class WorkItemTests
         public void Should_AddTag_When_DataIsValid()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             Result result = workItem.AddTag("backend", admin, WorkItemData.UpdatedOnUtc);
@@ -1697,7 +1694,7 @@ public sealed class WorkItemTests
         public void Should_NormalizeName_When_TagAdded()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             workItem.AddTag("  Backend  ", admin, WorkItemData.UpdatedOnUtc);
@@ -1710,7 +1707,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_TagNameIsEmpty()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             Result result = workItem.AddTag(string.Empty, admin, WorkItemData.UpdatedOnUtc);
@@ -1724,7 +1721,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_TagNameTooLong()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             string longName = new('x', WorkItemTag.MaxNameLength + 1);
 
             // Act
@@ -1739,7 +1736,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_DuplicateTagName()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             workItem.AddTag("backend", admin, WorkItemData.UpdatedOnUtc);
 
             // Act
@@ -1754,7 +1751,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_UserNotProjectMember()
         {
             // Arrange
-            var (workItem, _, _, _) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, _) = WorkItemData.GetWorkItemWithContext();
             User nonMember = UserData.GetActiveUser();
 
             // Act
@@ -1769,7 +1766,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_UserIsInactive()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             admin.Deactivate(WorkItemData.UpdatedOnUtc);
 
             // Act
@@ -1784,8 +1781,8 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
-            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.AddTag("backend", admin, WorkItemData.UpdatedOnUtc);
@@ -1802,7 +1799,7 @@ public sealed class WorkItemTests
         public void Should_RemoveTag_When_TagExists()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             workItem.AddTag("backend", admin, WorkItemData.UpdatedOnUtc);
             Guid tagId = workItem.Tags.First().Id;
             workItem.ClearDomainEvents();
@@ -1820,7 +1817,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_TagNotFound()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
 
             // Act
             Result result = workItem.RemoveTag(Guid.NewGuid(), admin, WorkItemData.UpdatedOnUtc);
@@ -1834,7 +1831,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_UserNotProjectMember()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             workItem.AddTag("backend", admin, WorkItemData.UpdatedOnUtc);
             Guid tagId = workItem.Tags.First().Id;
             User nonMember = UserData.GetActiveUser();
@@ -1851,7 +1848,7 @@ public sealed class WorkItemTests
         public void Should_Fail_When_UserIsInactive()
         {
             // Arrange
-            var (workItem, _, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
             workItem.AddTag("backend", admin, WorkItemData.UpdatedOnUtc);
             Guid tagId = workItem.Tags.First().Id;
             admin.Deactivate(WorkItemData.UpdatedOnUtc);
@@ -1868,10 +1865,10 @@ public sealed class WorkItemTests
         public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
         {
             // Arrange
-            var (workItem, project, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             workItem.AddTag("backend", admin, WorkItemData.UpdatedOnUtc);
             Guid tagId = workItem.Tags.First().Id;
-            project.ChangeStatus(ProjectStatus.OnHold, admin, WorkItemData.UpdatedOnUtc);
+            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.RemoveTag(tagId, admin, WorkItemData.UpdatedOnUtc);
