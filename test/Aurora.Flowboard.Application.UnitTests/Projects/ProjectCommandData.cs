@@ -79,16 +79,6 @@ internal static class ProjectCommandData
     public static RemoveProjectMemberCommand GetRemoveCommand(Guid projectId, Guid userId) =>
         new(projectId, userId);
 
-    public static IReadOnlyCollection<SetupProjectFlowStateDto> GetSetupFlowStateDtos() =>
-        [
-            new("Backlog", FlowStateCategory.Active, "white", [ProjectRole.Developer]),
-            new("Done", FlowStateCategory.Completed, "white", [ProjectRole.Developer]),
-            new("Cancelled", FlowStateCategory.Cancelled, "white", [ProjectRole.Developer])
-        ];
-
-    public static SetupProjectCommand GetSetupCommand() =>
-        new(Name, Description, Prefix, Kind, Color, GetSetupFlowStateDtos());
-
     public const string FlowStateName = "In Review";
     public const string FlowStateColor = "white";
 

@@ -21,7 +21,6 @@ global using Aurora.Flowboard.Application.Projects.GetFlow;
 global using Aurora.Flowboard.Application.Projects.RemoveFlowState;
 global using Aurora.Flowboard.Application.Projects.RemoveFlowTransitionRole;
 global using Aurora.Flowboard.Application.Projects.RemoveMember;
-global using Aurora.Flowboard.Application.Projects.Setup;
 global using Aurora.Flowboard.Application.Projects.Update;
 global using Aurora.Flowboard.Application.UnitTests.Abstractions;
 global using Aurora.Flowboard.Application.WorkItems.AddComment;
