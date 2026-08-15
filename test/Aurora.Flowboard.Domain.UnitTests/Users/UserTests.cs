@@ -547,6 +547,72 @@ public sealed class UserTests
         }
     }
 
+    public sealed class RevokeAllActiveTokens : BaseTest
+    {
+        [Fact]
+        public void Should_RevokeAllActiveTokens_When_TokensExist()
+        {
+            // Arrange
+            User user = UserData.GetUserWithTwoTokens(out _, out _);
+
+            // Act
+            Result result = user.RevokeAllActiveTokens();
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            user.Tokens.Should().OnlyContain(t => t.IsRevoked);
+        }
+
+        [Fact]
+        public void Should_RaiseUserTokenRevokedDomainEventPerToken_When_TokensRevoked()
+        {
+            // Arrange
+            User user = UserData.GetUserWithTwoTokens(out Guid firstTokenId, out Guid secondTokenId);
+
+            // Act
+            user.RevokeAllActiveTokens();
+
+            // Assert
+            List<UserTokenRevokedDomainEvent> domainEvents = user.DomainEvents
+                .OfType<UserTokenRevokedDomainEvent>()
+                .ToList();
+
+            domainEvents.Should().HaveCount(2);
+            domainEvents.Select(e => e.UserTokenId).Should().BeEquivalentTo([firstTokenId, secondTokenId]);
+        }
+
+        [Fact]
+        public void Should_NotAffectAlreadyRevokedTokens_When_SomeTokensAlreadyRevoked()
+        {
+            // Arrange
+            User user = UserData.GetUserWithTwoTokens(out Guid firstTokenId, out Guid secondTokenId);
+            user.RevokeToken(firstTokenId);
+            user.ClearDomainEvents();
+
+            // Act
+            Result result = user.RevokeAllActiveTokens();
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            user.DomainEvents.OfType<UserTokenRevokedDomainEvent>()
+                .Should().ContainSingle(e => e.UserTokenId == secondTokenId);
+        }
+
+        [Fact]
+        public void Should_Succeed_When_NoTokensExist()
+        {
+            // Arrange
+            User user = UserData.GetActiveUser();
+
+            // Act
+            Result result = user.RevokeAllActiveTokens();
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            user.DomainEvents.OfType<UserTokenRevokedDomainEvent>().Should().BeEmpty();
+        }
+    }
+
     public sealed class AssignRole : BaseTest
     {
         [Fact]

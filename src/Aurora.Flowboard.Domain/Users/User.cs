@@ -167,6 +167,18 @@ public sealed class User : BaseEntity
         return Result.Ok();
     }
 
+    public Result RevokeAllActiveTokens()
+    {
+        foreach (UserToken token in _tokens.Where(t => !t.IsRevoked))
+        {
+            token.Revoke();
+
+            AddDomainEvent(new UserTokenRevokedDomainEvent(Id, token.UserTokenId));
+        }
+
+        return Result.Ok();
+    }
+
     public Result AssignRole(Role role)
     {
         ArgumentNullException.ThrowIfNull(role);
