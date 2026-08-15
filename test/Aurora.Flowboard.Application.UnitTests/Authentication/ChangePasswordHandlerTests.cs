@@ -144,28 +144,4 @@ public sealed class ChangePasswordHandlerTests
         await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public async Task Should_ReturnNewPasswordMustDiffer_When_NewPasswordEqualsCurrentPassword()
-    {
-        // Arrange
-        User user = ChangePasswordCommandData.GetUser();
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
-        _userContext.UserId.Returns(user.Id);
-
-        _passwordHasher
-            .VerifyHashedPassword(ChangePasswordCommandData.CurrentPasswordHash, ChangePasswordCommandData.CurrentPlainPassword)
-            .Returns(true);
-
-        ChangePasswordCommand command = ChangePasswordCommandData.GetCommand(
-            newPassword: ChangePasswordCommandData.CurrentPlainPassword);
-
-        // Act
-        Result result = await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.IsSuccessful.Should().BeFalse();
-        result.Error.Should().Be(AuthenticationErrors.NewPasswordMustDiffer);
-        await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
-    }
 }

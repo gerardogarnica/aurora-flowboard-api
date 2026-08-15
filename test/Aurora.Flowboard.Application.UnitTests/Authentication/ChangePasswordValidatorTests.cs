@@ -1,3 +1,4 @@
+using Aurora.Flowboard.Application.Authentication;
 using Aurora.Flowboard.Application.Authentication.ChangePassword;
 
 namespace Aurora.Flowboard.Application.UnitTests.Authentication;
@@ -90,5 +91,17 @@ public sealed class ChangePasswordValidatorTests
         var result = _validator.Validate(command);
 
         result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Should_FailWithNewPasswordMustDifferErrorCode_When_NewPasswordEqualsCurrentPassword()
+    {
+        ChangePasswordCommand command = ChangePasswordCommandData.GetCommand(
+            newPassword: ChangePasswordCommandData.CurrentPlainPassword);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.ErrorCode == AuthenticationErrors.NewPasswordMustDiffer.Code);
     }
 }

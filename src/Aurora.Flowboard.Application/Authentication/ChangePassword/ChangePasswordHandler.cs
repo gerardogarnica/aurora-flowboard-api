@@ -30,11 +30,6 @@ internal sealed class ChangePasswordHandler(
             return Result.Fail(AuthenticationErrors.InvalidCredentials);
         }
 
-        if (command.NewPassword == command.CurrentPassword)
-        {
-            return Result.Fail(AuthenticationErrors.NewPasswordMustDiffer);
-        }
-
         string passwordHash = passwordHasher.HashPassword(command.NewPassword);
 
         Result<Password> passwordResult = Password.Create(passwordHash);
