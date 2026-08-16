@@ -1,6 +1,8 @@
 global using Aurora.Flowboard.Domain.Abstractions;
 global using Aurora.Flowboard.Domain.Components;
 global using Aurora.Flowboard.Domain.Components.Events;
+global using Aurora.Flowboard.Domain.FlowStateTemplates;
+global using Aurora.Flowboard.Domain.FlowStateTemplates.Events;
 global using Aurora.Flowboard.Domain.Milestones;
 global using Aurora.Flowboard.Domain.Milestones.Events;
 global using Aurora.Flowboard.Domain.Projects;
