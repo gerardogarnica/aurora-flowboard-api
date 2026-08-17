@@ -43,6 +43,8 @@ if (app.Configuration.GetValue("Database:ApplyMigrationsOnStartup", true))
     await app.ApplyMigrationsAsync();
 }
 
+await app.SeedAdministratorAsync();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
