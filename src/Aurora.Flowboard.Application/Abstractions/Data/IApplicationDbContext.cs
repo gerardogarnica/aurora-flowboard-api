@@ -11,6 +11,8 @@ public interface IApplicationDbContext : IAsyncDisposable
     DbSet<Milestone> Milestones { get; }
     DbSet<FlowState> FlowStates { get; }
     DbSet<FlowTransition> FlowTransitions { get; }
+    DbSet<FlowStateTemplate> FlowStateTemplates { get; }
+    DbSet<TemplateFlowState> TemplateFlowStates { get; }
     DbSet<WorkItem> WorkItems { get; }
     DbSet<Comment> Comments { get; }
     DbSet<TimeEntry> TimeEntries { get; }
