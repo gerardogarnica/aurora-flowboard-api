@@ -1,5 +1,5 @@
-using Aurora.Flowboard.Domain.FlowStateTemplates;
 using Aurora.Flowboard.Domain.Shared;
+using Aurora.Flowboard.Domain.TemplateFlows;
 
 namespace Aurora.Flowboard.Infrastructure.Configurations;
 
@@ -11,7 +11,7 @@ internal sealed class TemplateFlowStateConfiguration : IEntityTypeConfiguration<
 
         builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.FlowStateTemplateId)
+        builder.Property(x => x.TemplateFlowId)
             .IsRequired();
 
         builder.Property(x => x.Name)
@@ -33,6 +33,6 @@ internal sealed class TemplateFlowStateConfiguration : IEntityTypeConfiguration<
                 .HasMaxLength(Color.MaxLength);
         });
 
-        builder.HasIndex(x => x.FlowStateTemplateId);
+        builder.HasIndex(x => x.TemplateFlowId);
     }
 }

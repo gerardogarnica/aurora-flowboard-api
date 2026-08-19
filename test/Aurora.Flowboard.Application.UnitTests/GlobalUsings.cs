@@ -46,6 +46,5 @@ global using Aurora.Flowboard.Domain.Users;
 global using Aurora.Flowboard.Domain.WorkItems;
 global using FluentAssertions;
 global using Microsoft.EntityFrameworkCore;
-global using Microsoft.EntityFrameworkCore.Storage;
 global using NSubstitute;
 global using Xunit;

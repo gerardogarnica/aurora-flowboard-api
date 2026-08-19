@@ -1,13 +1,13 @@
 global using Aurora.Flowboard.Domain.Abstractions;
 global using Aurora.Flowboard.Domain.Components;
 global using Aurora.Flowboard.Domain.Components.Events;
-global using Aurora.Flowboard.Domain.FlowStateTemplates;
-global using Aurora.Flowboard.Domain.FlowStateTemplates.Events;
 global using Aurora.Flowboard.Domain.Milestones;
 global using Aurora.Flowboard.Domain.Milestones.Events;
 global using Aurora.Flowboard.Domain.Projects;
 global using Aurora.Flowboard.Domain.Projects.Events;
 global using Aurora.Flowboard.Domain.Shared;
+global using Aurora.Flowboard.Domain.TemplateFlows;
+global using Aurora.Flowboard.Domain.TemplateFlows.Events;
 global using Aurora.Flowboard.Domain.UnitTests.Abstractions;
 global using Aurora.Flowboard.Domain.UnitTests.Projects;
 global using Aurora.Flowboard.Domain.UnitTests.Users;

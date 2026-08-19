@@ -1,9 +1,9 @@
-namespace Aurora.Flowboard.Domain.FlowStateTemplates.Events;
+namespace Aurora.Flowboard.Domain.TemplateFlows.Events;
 
 public sealed class TemplateFlowStateAddedDomainEvent(
-    Guid flowStateTemplateId,
+    Guid templateFlowId,
     Guid templateFlowStateId) : DomainEvent
 {
-    public Guid FlowStateTemplateId { get; init; } = flowStateTemplateId;
+    public Guid TemplateFlowId { get; init; } = templateFlowId;
     public Guid TemplateFlowStateId { get; init; } = templateFlowStateId;
 }

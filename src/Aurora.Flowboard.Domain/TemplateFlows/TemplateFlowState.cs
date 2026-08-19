@@ -1,13 +1,13 @@
 using Aurora.Flowboard.Domain.Projects;
 
-namespace Aurora.Flowboard.Domain.FlowStateTemplates;
+namespace Aurora.Flowboard.Domain.TemplateFlows;
 
 public sealed class TemplateFlowState
 {
     public const int MaxNameLength = 50;
 
     public Guid Id { get; private set; }
-    public Guid FlowStateTemplateId { get; private set; }
+    public Guid TemplateFlowId { get; private set; }
     public string Name { get; private set; }
     public int SortOrder { get; private set; }
     public FlowStateCategory Category { get; private set; }
@@ -17,14 +17,14 @@ public sealed class TemplateFlowState
 
     private TemplateFlowState(
         Guid id,
-        Guid flowStateTemplateId,
+        Guid templateFlowId,
         string name,
         int sortOrder,
         FlowStateCategory category,
         Color color)
     {
         Id = id;
-        FlowStateTemplateId = flowStateTemplateId;
+        TemplateFlowId = templateFlowId;
         Name = name;
         SortOrder = sortOrder;
         Category = category;
@@ -32,7 +32,7 @@ public sealed class TemplateFlowState
     }
 
     internal static Result<TemplateFlowState> Create(
-        FlowStateTemplate template,
+        TemplateFlow template,
         string name,
         int sortOrder,
         FlowStateCategory category,
@@ -40,12 +40,12 @@ public sealed class TemplateFlowState
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            return Result.Fail<TemplateFlowState>(FlowStateTemplateErrors.StateNameRequired);
+            return Result.Fail<TemplateFlowState>(TemplateFlowErrors.StateNameRequired);
         }
 
         if (name.Length > MaxNameLength)
         {
-            return Result.Fail<TemplateFlowState>(FlowStateTemplateErrors.StateNameTooLong);
+            return Result.Fail<TemplateFlowState>(TemplateFlowErrors.StateNameTooLong);
         }
 
         return new TemplateFlowState(
@@ -61,12 +61,12 @@ public sealed class TemplateFlowState
     {
         if (string.IsNullOrWhiteSpace(newName))
         {
-            return Result.Fail(FlowStateTemplateErrors.StateNameRequired);
+            return Result.Fail(TemplateFlowErrors.StateNameRequired);
         }
 
         if (newName.Length > MaxNameLength)
         {
-            return Result.Fail(FlowStateTemplateErrors.StateNameTooLong);
+            return Result.Fail(TemplateFlowErrors.StateNameTooLong);
         }
 
         Name = newName.Trim();

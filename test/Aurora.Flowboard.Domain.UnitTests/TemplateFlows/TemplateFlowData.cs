@@ -1,6 +1,6 @@
-namespace Aurora.Flowboard.Domain.UnitTests.FlowStateTemplates;
+namespace Aurora.Flowboard.Domain.UnitTests.TemplateFlows;
 
-internal static class FlowStateTemplateData
+internal static class TemplateFlowData
 {
     public const string StateName = "In Progress";
     public const string UpdatedStateName = "In Review";
@@ -9,6 +9,6 @@ internal static class FlowStateTemplateData
     public static readonly Color Color = Color.Create("blue").Value;
     public static readonly Color UpdatedColor = Color.Create("green").Value;
 
-    public static FlowStateTemplate GetTemplate(ProjectKind kind = ProjectKind.Product, Guid? createdBy = null) =>
-        FlowStateTemplate.Create(kind, createdBy ?? Guid.NewGuid(), CreatedOnUtc).Value;
+    public static TemplateFlow GetTemplate(ProjectKind kind = ProjectKind.Product, Guid? createdBy = null) =>
+        TemplateFlow.Create(kind, createdBy ?? Guid.NewGuid(), CreatedOnUtc).Value;
 }

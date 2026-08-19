@@ -1,6 +1,6 @@
-namespace Aurora.Flowboard.Domain.UnitTests.FlowStateTemplates;
+namespace Aurora.Flowboard.Domain.UnitTests.TemplateFlows;
 
-public sealed class FlowStateTemplateTests
+public sealed class TemplateFlowTests
 {
     public sealed class Create : BaseTest
     {
@@ -11,25 +11,25 @@ public sealed class FlowStateTemplateTests
             Guid createdBy = Guid.NewGuid();
 
             // Act
-            Result<FlowStateTemplate> result = FlowStateTemplate.Create(ProjectKind.Product, createdBy, FlowStateTemplateData.CreatedOnUtc);
+            Result<TemplateFlow> result = TemplateFlow.Create(ProjectKind.Product, createdBy, TemplateFlowData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeTrue();
             result.Value.Kind.Should().Be(ProjectKind.Product);
             result.Value.CreatedBy.Should().Be(createdBy);
-            result.Value.CreatedOnUtc.Should().Be(FlowStateTemplateData.CreatedOnUtc);
+            result.Value.CreatedOnUtc.Should().Be(TemplateFlowData.CreatedOnUtc);
             result.Value.States.Should().BeEmpty();
         }
 
         [Fact]
-        public void Should_RaiseFlowStateTemplateCreatedDomainEvent_When_Created()
+        public void Should_RaiseTemplateFlowCreatedDomainEvent_When_Created()
         {
             // Arrange & Act
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate(ProjectKind.Client);
+            TemplateFlow template = TemplateFlowData.GetTemplate(ProjectKind.Client);
 
             // Assert
-            FlowStateTemplateCreatedDomainEvent domainEvent = AssertDomainEventWasPublished<FlowStateTemplateCreatedDomainEvent>(template);
-            domainEvent.FlowStateTemplateId.Should().Be(template.Id);
+            TemplateFlowCreatedDomainEvent domainEvent = AssertDomainEventWasPublished<TemplateFlowCreatedDomainEvent>(template);
+            domainEvent.TemplateFlowId.Should().Be(template.Id);
             domainEvent.Kind.Should().Be(ProjectKind.Client);
         }
     }
@@ -40,17 +40,17 @@ public sealed class FlowStateTemplateTests
         public void Should_AddActiveState_When_Valid()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
+            TemplateFlow template = TemplateFlowData.GetTemplate();
 
             // Act
-            Result result = template.AddState(FlowStateTemplateData.StateName, FlowStateCategory.Active, FlowStateTemplateData.Color);
+            Result result = template.AddState(TemplateFlowData.StateName, FlowStateCategory.Active, TemplateFlowData.Color);
 
             // Assert
             result.IsSuccessful.Should().BeTrue();
             TemplateFlowState state = template.States.Should().ContainSingle().Subject;
-            state.Name.Should().Be(FlowStateTemplateData.StateName);
+            state.Name.Should().Be(TemplateFlowData.StateName);
             state.Category.Should().Be(FlowStateCategory.Active);
-            state.Color.Should().Be(FlowStateTemplateData.Color);
+            state.Color.Should().Be(TemplateFlowData.Color);
             state.SortOrder.Should().Be(1);
         }
 
@@ -58,11 +58,11 @@ public sealed class FlowStateTemplateTests
         public void Should_AssignSequentialSortOrder_When_MultipleActiveStatesAdded()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
-            template.AddState("To Do", FlowStateCategory.Active, FlowStateTemplateData.Color);
+            TemplateFlow template = TemplateFlowData.GetTemplate();
+            template.AddState("To Do", FlowStateCategory.Active, TemplateFlowData.Color);
 
             // Act
-            template.AddState("In Progress", FlowStateCategory.Active, FlowStateTemplateData.Color);
+            template.AddState("In Progress", FlowStateCategory.Active, TemplateFlowData.Color);
 
             // Assert
             template.States.Single(s => s.Name == "To Do").SortOrder.Should().Be(1);
@@ -73,10 +73,10 @@ public sealed class FlowStateTemplateTests
         public void Should_AssignZeroSortOrder_When_NonActiveStateAdded()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
+            TemplateFlow template = TemplateFlowData.GetTemplate();
 
             // Act
-            Result result = template.AddState("Done", FlowStateCategory.Completed, FlowStateTemplateData.Color);
+            Result result = template.AddState("Done", FlowStateCategory.Completed, TemplateFlowData.Color);
 
             // Assert
             result.IsSuccessful.Should().BeTrue();
@@ -87,14 +87,14 @@ public sealed class FlowStateTemplateTests
         public void Should_RaiseTemplateFlowStateAddedDomainEvent_When_StateAdded()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
+            TemplateFlow template = TemplateFlowData.GetTemplate();
 
             // Act
-            template.AddState(FlowStateTemplateData.StateName, FlowStateCategory.Active, FlowStateTemplateData.Color);
+            template.AddState(TemplateFlowData.StateName, FlowStateCategory.Active, TemplateFlowData.Color);
 
             // Assert
             TemplateFlowStateAddedDomainEvent domainEvent = AssertDomainEventWasPublished<TemplateFlowStateAddedDomainEvent>(template);
-            domainEvent.FlowStateTemplateId.Should().Be(template.Id);
+            domainEvent.TemplateFlowId.Should().Be(template.Id);
             domainEvent.TemplateFlowStateId.Should().Be(template.States.Single().Id);
         }
 
@@ -102,62 +102,62 @@ public sealed class FlowStateTemplateTests
         public void Should_Fail_When_NameIsEmpty()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
+            TemplateFlow template = TemplateFlowData.GetTemplate();
 
             // Act
-            Result result = template.AddState(string.Empty, FlowStateCategory.Active, FlowStateTemplateData.Color);
+            Result result = template.AddState(string.Empty, FlowStateCategory.Active, TemplateFlowData.Color);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(FlowStateTemplateErrors.StateNameRequired);
+            result.Error.Should().Be(TemplateFlowErrors.StateNameRequired);
         }
 
         [Fact]
         public void Should_Fail_When_NameExceedsMaxLength()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
+            TemplateFlow template = TemplateFlowData.GetTemplate();
             string longName = new('A', TemplateFlowState.MaxNameLength + 1);
 
             // Act
-            Result result = template.AddState(longName, FlowStateCategory.Active, FlowStateTemplateData.Color);
+            Result result = template.AddState(longName, FlowStateCategory.Active, TemplateFlowData.Color);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(FlowStateTemplateErrors.StateNameTooLong);
+            result.Error.Should().Be(TemplateFlowErrors.StateNameTooLong);
         }
 
         [Fact]
         public void Should_Fail_When_DuplicateNameCaseInsensitive()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
-            template.AddState(FlowStateTemplateData.StateName, FlowStateCategory.Active, FlowStateTemplateData.Color);
+            TemplateFlow template = TemplateFlowData.GetTemplate();
+            template.AddState(TemplateFlowData.StateName, FlowStateCategory.Active, TemplateFlowData.Color);
 
             // Act
-            Result result = template.AddState("in progress", FlowStateCategory.Completed, FlowStateTemplateData.Color);
+            Result result = template.AddState("in progress", FlowStateCategory.Completed, TemplateFlowData.Color);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(FlowStateTemplateErrors.DuplicateStateName);
+            result.Error.Should().Be(TemplateFlowErrors.DuplicateStateName);
         }
 
         [Fact]
         public void Should_Fail_When_MaxActiveStatesReached()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
-            for (int i = 0; i < FlowStateTemplate.MaxActiveStates; i++)
+            TemplateFlow template = TemplateFlowData.GetTemplate();
+            for (int i = 0; i < TemplateFlow.MaxActiveStates; i++)
             {
-                template.AddState($"Active {i}", FlowStateCategory.Active, FlowStateTemplateData.Color);
+                template.AddState($"Active {i}", FlowStateCategory.Active, TemplateFlowData.Color);
             }
 
             // Act
-            Result result = template.AddState("One Too Many", FlowStateCategory.Active, FlowStateTemplateData.Color);
+            Result result = template.AddState("One Too Many", FlowStateCategory.Active, TemplateFlowData.Color);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(FlowStateTemplateErrors.MaxActiveStatesReached);
+            result.Error.Should().Be(TemplateFlowErrors.MaxActiveStatesReached);
         }
     }
 
@@ -167,30 +167,30 @@ public sealed class FlowStateTemplateTests
         public void Should_RenameAndChangeColor_When_Valid()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
-            template.AddState(FlowStateTemplateData.StateName, FlowStateCategory.Active, FlowStateTemplateData.Color);
+            TemplateFlow template = TemplateFlowData.GetTemplate();
+            template.AddState(TemplateFlowData.StateName, FlowStateCategory.Active, TemplateFlowData.Color);
             TemplateFlowState state = template.States.Single();
 
             // Act
-            Result result = template.UpdateState(state.Id, FlowStateTemplateData.UpdatedStateName, FlowStateTemplateData.UpdatedColor);
+            Result result = template.UpdateState(state.Id, TemplateFlowData.UpdatedStateName, TemplateFlowData.UpdatedColor);
 
             // Assert
             result.IsSuccessful.Should().BeTrue();
-            state.Name.Should().Be(FlowStateTemplateData.UpdatedStateName);
-            state.Color.Should().Be(FlowStateTemplateData.UpdatedColor);
+            state.Name.Should().Be(TemplateFlowData.UpdatedStateName);
+            state.Color.Should().Be(TemplateFlowData.UpdatedColor);
         }
 
         [Fact]
         public void Should_NotChangeCategoryOrSortOrder_When_Updated()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
-            template.AddState("To Do", FlowStateCategory.Active, FlowStateTemplateData.Color);
-            template.AddState("Done", FlowStateCategory.Completed, FlowStateTemplateData.Color);
+            TemplateFlow template = TemplateFlowData.GetTemplate();
+            template.AddState("To Do", FlowStateCategory.Active, TemplateFlowData.Color);
+            template.AddState("Done", FlowStateCategory.Completed, TemplateFlowData.Color);
             TemplateFlowState done = template.States.Single(s => s.Name == "Done");
 
             // Act
-            Result result = template.UpdateState(done.Id, FlowStateTemplateData.UpdatedStateName, FlowStateTemplateData.UpdatedColor);
+            Result result = template.UpdateState(done.Id, TemplateFlowData.UpdatedStateName, TemplateFlowData.UpdatedColor);
 
             // Assert
             result.IsSuccessful.Should().BeTrue();
@@ -202,16 +202,16 @@ public sealed class FlowStateTemplateTests
         public void Should_RaiseTemplateFlowStateUpdatedDomainEvent_When_Updated()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
-            template.AddState(FlowStateTemplateData.StateName, FlowStateCategory.Active, FlowStateTemplateData.Color);
+            TemplateFlow template = TemplateFlowData.GetTemplate();
+            template.AddState(TemplateFlowData.StateName, FlowStateCategory.Active, TemplateFlowData.Color);
             TemplateFlowState state = template.States.Single();
 
             // Act
-            template.UpdateState(state.Id, FlowStateTemplateData.UpdatedStateName, FlowStateTemplateData.Color);
+            template.UpdateState(state.Id, TemplateFlowData.UpdatedStateName, TemplateFlowData.Color);
 
             // Assert
             TemplateFlowStateUpdatedDomainEvent domainEvent = AssertDomainEventWasPublished<TemplateFlowStateUpdatedDomainEvent>(template);
-            domainEvent.FlowStateTemplateId.Should().Be(template.Id);
+            domainEvent.TemplateFlowId.Should().Be(template.Id);
             domainEvent.TemplateFlowStateId.Should().Be(state.Id);
         }
 
@@ -219,31 +219,31 @@ public sealed class FlowStateTemplateTests
         public void Should_Fail_When_StateNotFound()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
+            TemplateFlow template = TemplateFlowData.GetTemplate();
 
             // Act
-            Result result = template.UpdateState(Guid.NewGuid(), FlowStateTemplateData.StateName, FlowStateTemplateData.Color);
+            Result result = template.UpdateState(Guid.NewGuid(), TemplateFlowData.StateName, TemplateFlowData.Color);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(FlowStateTemplateErrors.StateNotFound);
+            result.Error.Should().Be(TemplateFlowErrors.StateNotFound);
         }
 
         [Fact]
         public void Should_Fail_When_DuplicateNameCaseInsensitive()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
-            template.AddState("To Do", FlowStateCategory.Active, FlowStateTemplateData.Color);
-            template.AddState("In Progress", FlowStateCategory.Active, FlowStateTemplateData.Color);
+            TemplateFlow template = TemplateFlowData.GetTemplate();
+            template.AddState("To Do", FlowStateCategory.Active, TemplateFlowData.Color);
+            template.AddState("In Progress", FlowStateCategory.Active, TemplateFlowData.Color);
             TemplateFlowState state = template.States.Single(s => s.Name == "In Progress");
 
             // Act
-            Result result = template.UpdateState(state.Id, "to do", FlowStateTemplateData.Color);
+            Result result = template.UpdateState(state.Id, "to do", TemplateFlowData.Color);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(FlowStateTemplateErrors.DuplicateStateName);
+            result.Error.Should().Be(TemplateFlowErrors.DuplicateStateName);
         }
     }
 
@@ -253,8 +253,8 @@ public sealed class FlowStateTemplateTests
         public void Should_RemoveState_When_Valid()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
-            template.AddState(FlowStateTemplateData.StateName, FlowStateCategory.Active, FlowStateTemplateData.Color);
+            TemplateFlow template = TemplateFlowData.GetTemplate();
+            template.AddState(TemplateFlowData.StateName, FlowStateCategory.Active, TemplateFlowData.Color);
             TemplateFlowState state = template.States.Single();
 
             // Act
@@ -269,10 +269,10 @@ public sealed class FlowStateTemplateTests
         public void Should_ReshuffleSortOrder_When_ActiveStateRemoved()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
-            template.AddState("To Do", FlowStateCategory.Active, FlowStateTemplateData.Color);
-            template.AddState("In Progress", FlowStateCategory.Active, FlowStateTemplateData.Color);
-            template.AddState("Done", FlowStateCategory.Active, FlowStateTemplateData.Color);
+            TemplateFlow template = TemplateFlowData.GetTemplate();
+            template.AddState("To Do", FlowStateCategory.Active, TemplateFlowData.Color);
+            template.AddState("In Progress", FlowStateCategory.Active, TemplateFlowData.Color);
+            template.AddState("Done", FlowStateCategory.Active, TemplateFlowData.Color);
             TemplateFlowState inProgress = template.States.Single(s => s.Name == "In Progress");
 
             // Act
@@ -288,8 +288,8 @@ public sealed class FlowStateTemplateTests
         public void Should_RaiseTemplateFlowStateRemovedDomainEvent_When_Removed()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
-            template.AddState(FlowStateTemplateData.StateName, FlowStateCategory.Active, FlowStateTemplateData.Color);
+            TemplateFlow template = TemplateFlowData.GetTemplate();
+            template.AddState(TemplateFlowData.StateName, FlowStateCategory.Active, TemplateFlowData.Color);
             TemplateFlowState state = template.States.Single();
 
             // Act
@@ -297,7 +297,7 @@ public sealed class FlowStateTemplateTests
 
             // Assert
             TemplateFlowStateRemovedDomainEvent domainEvent = AssertDomainEventWasPublished<TemplateFlowStateRemovedDomainEvent>(template);
-            domainEvent.FlowStateTemplateId.Should().Be(template.Id);
+            domainEvent.TemplateFlowId.Should().Be(template.Id);
             domainEvent.TemplateFlowStateId.Should().Be(state.Id);
         }
 
@@ -305,14 +305,14 @@ public sealed class FlowStateTemplateTests
         public void Should_Fail_When_StateNotFound()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
+            TemplateFlow template = TemplateFlowData.GetTemplate();
 
             // Act
             Result result = template.RemoveState(Guid.NewGuid());
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(FlowStateTemplateErrors.StateNotFound);
+            result.Error.Should().Be(TemplateFlowErrors.StateNotFound);
         }
     }
 
@@ -322,9 +322,9 @@ public sealed class FlowStateTemplateTests
         public void Should_ReorderActiveStates_When_ValidSetProvided()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
-            template.AddState("To Do", FlowStateCategory.Active, FlowStateTemplateData.Color);
-            template.AddState("In Progress", FlowStateCategory.Active, FlowStateTemplateData.Color);
+            TemplateFlow template = TemplateFlowData.GetTemplate();
+            template.AddState("To Do", FlowStateCategory.Active, TemplateFlowData.Color);
+            template.AddState("In Progress", FlowStateCategory.Active, TemplateFlowData.Color);
             TemplateFlowState toDo = template.States.Single(s => s.Name == "To Do");
             TemplateFlowState inProgress = template.States.Single(s => s.Name == "In Progress");
 
@@ -341,9 +341,9 @@ public sealed class FlowStateTemplateTests
         public void Should_RaiseTemplateFlowStatesReorderedDomainEvent_When_Reordered()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
-            template.AddState("To Do", FlowStateCategory.Active, FlowStateTemplateData.Color);
-            template.AddState("In Progress", FlowStateCategory.Active, FlowStateTemplateData.Color);
+            TemplateFlow template = TemplateFlowData.GetTemplate();
+            template.AddState("To Do", FlowStateCategory.Active, TemplateFlowData.Color);
+            template.AddState("In Progress", FlowStateCategory.Active, TemplateFlowData.Color);
             TemplateFlowState toDo = template.States.Single(s => s.Name == "To Do");
             TemplateFlowState inProgress = template.States.Single(s => s.Name == "In Progress");
 
@@ -352,16 +352,16 @@ public sealed class FlowStateTemplateTests
 
             // Assert
             TemplateFlowStatesReorderedDomainEvent domainEvent = AssertDomainEventWasPublished<TemplateFlowStatesReorderedDomainEvent>(template);
-            domainEvent.FlowStateTemplateId.Should().Be(template.Id);
+            domainEvent.TemplateFlowId.Should().Be(template.Id);
         }
 
         [Fact]
         public void Should_Fail_When_SetIsMissingAnActiveState()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
-            template.AddState("To Do", FlowStateCategory.Active, FlowStateTemplateData.Color);
-            template.AddState("In Progress", FlowStateCategory.Active, FlowStateTemplateData.Color);
+            TemplateFlow template = TemplateFlowData.GetTemplate();
+            template.AddState("To Do", FlowStateCategory.Active, TemplateFlowData.Color);
+            template.AddState("In Progress", FlowStateCategory.Active, TemplateFlowData.Color);
             TemplateFlowState toDo = template.States.Single(s => s.Name == "To Do");
 
             // Act
@@ -369,15 +369,15 @@ public sealed class FlowStateTemplateTests
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(FlowStateTemplateErrors.InvalidReorderSet);
+            result.Error.Should().Be(TemplateFlowErrors.InvalidReorderSet);
         }
 
         [Fact]
         public void Should_Fail_When_SetContainsDuplicateIds()
         {
             // Arrange
-            FlowStateTemplate template = FlowStateTemplateData.GetTemplate();
-            template.AddState("To Do", FlowStateCategory.Active, FlowStateTemplateData.Color);
+            TemplateFlow template = TemplateFlowData.GetTemplate();
+            template.AddState("To Do", FlowStateCategory.Active, TemplateFlowData.Color);
             TemplateFlowState toDo = template.States.Single(s => s.Name == "To Do");
 
             // Act
@@ -385,7 +385,7 @@ public sealed class FlowStateTemplateTests
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(FlowStateTemplateErrors.InvalidReorderSet);
+            result.Error.Should().Be(TemplateFlowErrors.InvalidReorderSet);
         }
     }
 }

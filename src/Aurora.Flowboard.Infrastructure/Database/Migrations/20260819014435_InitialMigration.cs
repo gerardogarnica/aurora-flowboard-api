@@ -52,29 +52,6 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "flow_state_templates",
-                schema: "flowboard",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    kind = table.Column<string>(type: "text", nullable: false),
-                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
-                    created_on_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_on_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_flow_state_templates", x => x.id);
-                    table.ForeignKey(
-                        name: "fk_flow_state_templates_users_created_by",
-                        column: x => x.created_by,
-                        principalSchema: "flowboard",
-                        principalTable: "users",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "projects",
                 schema: "flowboard",
                 columns: table => new
@@ -97,6 +74,29 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                     table.PrimaryKey("pk_projects", x => x.id);
                     table.ForeignKey(
                         name: "fk_projects_users_created_by",
+                        column: x => x.created_by,
+                        principalSchema: "flowboard",
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "template_flows",
+                schema: "flowboard",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    kind = table.Column<string>(type: "text", nullable: false),
+                    created_by = table.Column<Guid>(type: "uuid", nullable: false),
+                    created_on_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    updated_on_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_template_flows", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_template_flows_users_created_by",
                         column: x => x.created_by,
                         principalSchema: "flowboard",
                         principalTable: "users",
@@ -146,30 +146,6 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                         column: x => x.user_id,
                         principalSchema: "flowboard",
                         principalTable: "users",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "template_flow_states",
-                schema: "flowboard",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    flow_state_template_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    sort_order = table.Column<int>(type: "integer", nullable: false),
-                    category = table.Column<string>(type: "text", nullable: false),
-                    color = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_template_flow_states", x => x.id);
-                    table.ForeignKey(
-                        name: "fk_template_flow_states_flow_state_templates_flow_state_templa",
-                        column: x => x.flow_state_template_id,
-                        principalSchema: "flowboard",
-                        principalTable: "flow_state_templates",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -326,6 +302,30 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                         principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "template_flow_states",
+                schema: "flowboard",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    template_flow_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    sort_order = table.Column<int>(type: "integer", nullable: false),
+                    category = table.Column<string>(type: "text", nullable: false),
+                    color = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_template_flow_states", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_template_flow_states_template_flows_template_flow_id",
+                        column: x => x.template_flow_id,
+                        principalSchema: "flowboard",
+                        principalTable: "template_flows",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -576,19 +576,6 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ix_flow_state_templates_created_by",
-                schema: "flowboard",
-                table: "flow_state_templates",
-                column: "created_by");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_flow_state_templates_kind",
-                schema: "flowboard",
-                table: "flow_state_templates",
-                column: "kind",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "ix_flow_states_project_id",
                 schema: "flowboard",
                 table: "flow_states",
@@ -683,10 +670,23 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ix_template_flow_states_flow_state_template_id",
+                name: "ix_template_flow_states_template_flow_id",
                 schema: "flowboard",
                 table: "template_flow_states",
-                column: "flow_state_template_id");
+                column: "template_flow_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_template_flows_created_by",
+                schema: "flowboard",
+                table: "template_flows",
+                column: "created_by");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_template_flows_kind",
+                schema: "flowboard",
+                table: "template_flows",
+                column: "kind",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "ix_user_tokens_refresh_token",
@@ -835,7 +835,7 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                 schema: "flowboard");
 
             migrationBuilder.DropTable(
-                name: "flow_state_templates",
+                name: "template_flows",
                 schema: "flowboard");
 
             migrationBuilder.DropTable(

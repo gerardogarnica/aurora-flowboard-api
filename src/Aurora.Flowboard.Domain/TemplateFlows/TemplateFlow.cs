@@ -1,9 +1,9 @@
-using Aurora.Flowboard.Domain.FlowStateTemplates.Events;
 using Aurora.Flowboard.Domain.Projects;
+using Aurora.Flowboard.Domain.TemplateFlows.Events;
 
-namespace Aurora.Flowboard.Domain.FlowStateTemplates;
+namespace Aurora.Flowboard.Domain.TemplateFlows;
 
-public sealed class FlowStateTemplate : BaseEntity
+public sealed class TemplateFlow : BaseEntity
 {
     public const int MaxActiveStates = Project.MaxActiveFlowStates;
 
@@ -16,9 +16,9 @@ public sealed class FlowStateTemplate : BaseEntity
 
     public IReadOnlyCollection<TemplateFlowState> States => _states.AsReadOnly();
 
-    private FlowStateTemplate() : base(Guid.Empty) { } // EF Core
+    private TemplateFlow() : base(Guid.Empty) { } // EF Core
 
-    private FlowStateTemplate(
+    private TemplateFlow(
         Guid id,
         ProjectKind kind,
         Guid createdBy,
@@ -29,11 +29,11 @@ public sealed class FlowStateTemplate : BaseEntity
         CreatedOnUtc = createdOnUtc;
     }
 
-    public static Result<FlowStateTemplate> Create(ProjectKind kind, Guid createdBy, DateTime createdOnUtc)
+    public static Result<TemplateFlow> Create(ProjectKind kind, Guid createdBy, DateTime createdOnUtc)
     {
-        var template = new FlowStateTemplate(Guid.NewGuid(), kind, createdBy, createdOnUtc);
+        var template = new TemplateFlow(Guid.NewGuid(), kind, createdBy, createdOnUtc);
 
-        template.AddDomainEvent(new FlowStateTemplateCreatedDomainEvent(template.Id, template.Kind));
+        template.AddDomainEvent(new TemplateFlowCreatedDomainEvent(template.Id, template.Kind));
 
         return template;
     }
@@ -42,22 +42,22 @@ public sealed class FlowStateTemplate : BaseEntity
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            return Result.Fail(FlowStateTemplateErrors.StateNameRequired);
+            return Result.Fail(TemplateFlowErrors.StateNameRequired);
         }
 
         if (name.Length > TemplateFlowState.MaxNameLength)
         {
-            return Result.Fail(FlowStateTemplateErrors.StateNameTooLong);
+            return Result.Fail(TemplateFlowErrors.StateNameTooLong);
         }
 
         if (_states.Any(s => s.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase)))
         {
-            return Result.Fail(FlowStateTemplateErrors.DuplicateStateName);
+            return Result.Fail(TemplateFlowErrors.DuplicateStateName);
         }
 
         if (category == FlowStateCategory.Active && ActiveStateCount() >= MaxActiveStates)
         {
-            return Result.Fail(FlowStateTemplateErrors.MaxActiveStatesReached);
+            return Result.Fail(TemplateFlowErrors.MaxActiveStatesReached);
         }
 
         int sortOrder = category == FlowStateCategory.Active ? NextActiveSortOrder() : 0;
@@ -83,22 +83,22 @@ public sealed class FlowStateTemplate : BaseEntity
 
         if (state is null)
         {
-            return Result.Fail(FlowStateTemplateErrors.StateNotFound);
+            return Result.Fail(TemplateFlowErrors.StateNotFound);
         }
 
         if (string.IsNullOrWhiteSpace(name))
         {
-            return Result.Fail(FlowStateTemplateErrors.StateNameRequired);
+            return Result.Fail(TemplateFlowErrors.StateNameRequired);
         }
 
         if (name.Length > TemplateFlowState.MaxNameLength)
         {
-            return Result.Fail(FlowStateTemplateErrors.StateNameTooLong);
+            return Result.Fail(TemplateFlowErrors.StateNameTooLong);
         }
 
         if (_states.Any(s => s.Id != stateId && s.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase)))
         {
-            return Result.Fail(FlowStateTemplateErrors.DuplicateStateName);
+            return Result.Fail(TemplateFlowErrors.DuplicateStateName);
         }
 
         Result renameResult = state.Rename(name);
@@ -121,7 +121,7 @@ public sealed class FlowStateTemplate : BaseEntity
 
         if (state is null)
         {
-            return Result.Fail(FlowStateTemplateErrors.StateNotFound);
+            return Result.Fail(TemplateFlowErrors.StateNotFound);
         }
 
         _states.Remove(state);
@@ -146,7 +146,7 @@ public sealed class FlowStateTemplate : BaseEntity
 
         if (!isSameSet)
         {
-            return Result.Fail(FlowStateTemplateErrors.InvalidReorderSet);
+            return Result.Fail(TemplateFlowErrors.InvalidReorderSet);
         }
 
         for (int index = 0; index < orderedActiveStateIds.Count; index++)
