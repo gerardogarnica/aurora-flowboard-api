@@ -29,7 +29,7 @@ public sealed class GetAllProjectsHandlerTests
 
         // Act
         Result<IReadOnlyCollection<ProjectSummaryResponse>> result =
-            await _handler.Handle(new GetAllProjectsQuery(null), CancellationToken.None);
+            await _handler.Handle(new GetAllProjectsQuery(), CancellationToken.None);
 
         // Assert
         result.IsSuccessful.Should().BeTrue();
@@ -38,7 +38,7 @@ public sealed class GetAllProjectsHandlerTests
     }
 
     [Fact]
-    public async Task Should_ReturnFilteredProjects_When_StatusFilterIsProvided()
+    public async Task Should_ReturnAllMemberProjects_RegardlessOfStatus()
     {
         // Arrange
         User admin = ProjectQueryData.GetAdminUser();
@@ -50,28 +50,7 @@ public sealed class GetAllProjectsHandlerTests
 
         // Act
         Result<IReadOnlyCollection<ProjectSummaryResponse>> result =
-            await _handler.Handle(new GetAllProjectsQuery(ProjectStatus.Active), CancellationToken.None);
-
-        // Assert
-        result.IsSuccessful.Should().BeTrue();
-        result.Value.Should().HaveCount(1);
-        result.Value.Single().Status.Should().Be(ProjectStatus.Active);
-    }
-
-    [Fact]
-    public async Task Should_ReturnAllMemberProjects_When_StatusFilterIsNull()
-    {
-        // Arrange
-        User admin = ProjectQueryData.GetAdminUser();
-        Project archivedProject = ProjectQueryData.GetArchivedProjectForGetAll("Archived Project", admin);
-        Project activeProject = ProjectQueryData.GetActiveProjectForGetAll("Active Project", admin);
-        _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([archivedProject, activeProject]);
-        _dbContext.Projects.Returns(projectsMock);
-
-        // Act
-        Result<IReadOnlyCollection<ProjectSummaryResponse>> result =
-            await _handler.Handle(new GetAllProjectsQuery(null), CancellationToken.None);
+            await _handler.Handle(new GetAllProjectsQuery(), CancellationToken.None);
 
         // Assert
         result.IsSuccessful.Should().BeTrue();
@@ -91,7 +70,7 @@ public sealed class GetAllProjectsHandlerTests
 
         // Act
         Result<IReadOnlyCollection<ProjectSummaryResponse>> result =
-            await _handler.Handle(new GetAllProjectsQuery(null), CancellationToken.None);
+            await _handler.Handle(new GetAllProjectsQuery(), CancellationToken.None);
 
         // Assert
         result.IsSuccessful.Should().BeTrue();
@@ -112,7 +91,7 @@ public sealed class GetAllProjectsHandlerTests
 
         // Act
         Result<IReadOnlyCollection<ProjectSummaryResponse>> result =
-            await _handler.Handle(new GetAllProjectsQuery(null), CancellationToken.None);
+            await _handler.Handle(new GetAllProjectsQuery(), CancellationToken.None);
 
         // Assert
         result.IsSuccessful.Should().BeTrue();
@@ -133,7 +112,7 @@ public sealed class GetAllProjectsHandlerTests
 
         // Act
         Result<IReadOnlyCollection<ProjectSummaryResponse>> result =
-            await _handler.Handle(new GetAllProjectsQuery(null), CancellationToken.None);
+            await _handler.Handle(new GetAllProjectsQuery(), CancellationToken.None);
 
         // Assert
         result.IsSuccessful.Should().BeTrue();
@@ -148,7 +127,6 @@ public sealed class GetAllProjectsHandlerTests
         summary.Members.Single().FullName.Should().Be(admin.FullName);
         summary.Members.Single().Initials.Should().Be(admin.Initials);
         summary.Members.Single().Role.Should().Be(ProjectRole.Admin);
-        summary.FlowStates.Should().BeEmpty();
         summary.OpenWorkItems.Should().Be(0);
         summary.ClosedWorkItems.Should().Be(0);
         summary.CanModifyFlowStates.Should().BeTrue();
@@ -167,35 +145,12 @@ public sealed class GetAllProjectsHandlerTests
 
         // Act
         Result<IReadOnlyCollection<ProjectSummaryResponse>> result =
-            await _handler.Handle(new GetAllProjectsQuery(null), CancellationToken.None);
+            await _handler.Handle(new GetAllProjectsQuery(), CancellationToken.None);
 
         // Assert
         ProjectSummaryResponse summary = result.Value.Single();
         summary.CanModifyFlowStates.Should().BeTrue();
         summary.CanAddOrUpdateWorkItems.Should().BeTrue();
-    }
-
-    [Fact]
-    public async Task Should_IncludeFlowStates_When_ProjectHasFlowStates()
-    {
-        // Arrange
-        User admin = ProjectQueryData.GetAdminUser();
-        Project project = ProjectQueryData.GetProjectForGetAllWithFlowStates("Flow Project", admin);
-        _userContext.UserId.Returns(admin.Id);
-
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        _dbContext.Projects.Returns(projectsMock);
-
-        // Act
-        Result<IReadOnlyCollection<ProjectSummaryResponse>> result =
-            await _handler.Handle(new GetAllProjectsQuery(null), CancellationToken.None);
-
-        // Assert
-        result.IsSuccessful.Should().BeTrue();
-        IReadOnlyCollection<FlowStateResponse> flowStates = result.Value.Single().FlowStates;
-        flowStates.Should().HaveCount(2);
-        flowStates.Should().ContainSingle(s => s.Name == "Backlog" && s.Category == FlowStateCategory.Active);
-        flowStates.Should().ContainSingle(s => s.Name == "Done" && s.Category == FlowStateCategory.Completed);
     }
 
     [Fact]
@@ -210,36 +165,12 @@ public sealed class GetAllProjectsHandlerTests
 
         // Act
         Result<IReadOnlyCollection<ProjectSummaryResponse>> result =
-            await _handler.Handle(new GetAllProjectsQuery(null), CancellationToken.None);
+            await _handler.Handle(new GetAllProjectsQuery(), CancellationToken.None);
 
         // Assert
         result.IsSuccessful.Should().BeTrue();
         ProjectSummaryResponse summary = result.Value.Single();
         summary.OpenWorkItems.Should().Be(3);
         summary.ClosedWorkItems.Should().Be(2);
-    }
-
-    [Fact]
-    public async Task Should_OnlyIncludeFlowStatesForMatchingProject()
-    {
-        // Arrange
-        User admin = ProjectQueryData.GetAdminUser();
-        Project projectA = ProjectQueryData.GetProjectForGetAllWithFlowStates("Project A", admin);
-        Project projectB = ProjectQueryData.GetProjectForGetAll("Project B", admin);
-        _userContext.UserId.Returns(admin.Id);
-
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([projectA, projectB]);
-        _dbContext.Projects.Returns(projectsMock);
-
-        // Act
-        Result<IReadOnlyCollection<ProjectSummaryResponse>> result =
-            await _handler.Handle(new GetAllProjectsQuery(null), CancellationToken.None);
-
-        // Assert
-        result.IsSuccessful.Should().BeTrue();
-        ProjectSummaryResponse summaryA = result.Value.First(p => p.Name == "Project A");
-        ProjectSummaryResponse summaryB = result.Value.First(p => p.Name == "Project B");
-        summaryA.FlowStates.Should().HaveCount(2);
-        summaryB.FlowStates.Should().BeEmpty();
     }
 }

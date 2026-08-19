@@ -1,5 +1,3 @@
-using Aurora.Flowboard.Application.Projects.GetFlow;
-
 namespace Aurora.Flowboard.Application.Projects.GetAll;
 
 internal sealed class GetAllProjectsHandler(
@@ -12,11 +10,9 @@ internal sealed class GetAllProjectsHandler(
     {
         List<Project> projects = await dbContext
             .Projects
-            .Include(p => p.FlowStates)
             .Include(p => p.Members).ThenInclude(m => m.User)
             .Include(p => p.WorkItems).ThenInclude(wi => wi.FlowState)
             .Where(p => p.Members.Any(m => m.UserId == userContext.UserId))
-            .Where(p => query.StatusFilter == null || p.Status == query.StatusFilter)
             .OrderBy(p => p.Name)
             .AsNoTracking()
             .AsSplitQuery()
@@ -40,16 +36,7 @@ internal sealed class GetAllProjectsHandler(
                         m.UserId,
                         m.User.FullName,
                         m.User.Initials,
-                        m.Role))],
-                [.. p.FlowStates
-                    .OrderBy(s => s.Category)
-                    .ThenBy(s => s.SortOrder)
-                    .Select(s => new FlowStateResponse(
-                        s.Id,
-                        s.Name,
-                        s.SortOrder,
-                        s.Category,
-                        s.Color.Value))]))
+                        m.Role))]))
             .ToList();
     }
 }

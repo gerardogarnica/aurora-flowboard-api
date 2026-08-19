@@ -62,17 +62,6 @@ internal static class ProjectQueryData
         return project;
     }
 
-    public static Project GetProjectForGetAllWithFlowStates(string name, User admin)
-    {
-        Project project = GetProjectForGetAll(name, admin);
-        ProjectRole[] allRoles = [ProjectRole.Admin, ProjectRole.Developer];
-
-        project.AddFlowState("Backlog", FlowStateCategory.Active, Color, allRoles, admin);
-        project.AddFlowState("Done", FlowStateCategory.Completed, Color, allRoles, admin);
-
-        return project;
-    }
-
     public static Project GetActiveProjectForGetAll(string name, User admin)
     {
         Project project = Project.Create(name, Description, ProjectCode.Create("QRA").Value, Kind, Color, admin, UtcNow).Value;
