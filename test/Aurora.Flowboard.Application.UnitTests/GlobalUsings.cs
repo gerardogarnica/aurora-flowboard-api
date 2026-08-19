@@ -16,6 +16,7 @@ global using Aurora.Flowboard.Application.Projects.ChangeKind;
 global using Aurora.Flowboard.Application.Projects.ChangeStatus;
 global using Aurora.Flowboard.Application.Projects.Create;
 global using Aurora.Flowboard.Application.Projects.GetAll;
+global using Aurora.Flowboard.Application.Projects.GetBoard;
 global using Aurora.Flowboard.Application.Projects.GetById;
 global using Aurora.Flowboard.Application.Projects.GetFlow;
 global using Aurora.Flowboard.Application.Projects.RemoveFlowState;
