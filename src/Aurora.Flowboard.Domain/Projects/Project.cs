@@ -16,7 +16,6 @@ public sealed class Project : BaseEntity
     {
         [ProjectStatus.Active] = [ProjectStatus.Maintenance, ProjectStatus.Archived],
         [ProjectStatus.Maintenance] = [ProjectStatus.Active, ProjectStatus.Archived],
-        [ProjectStatus.Completed] = [ProjectStatus.Archived],
         [ProjectStatus.Archived] = []
     };
 
@@ -24,7 +23,6 @@ public sealed class Project : BaseEntity
     {
         [ProjectStatus.Active] = [ProjectStatus.Completed, ProjectStatus.Archived],
         [ProjectStatus.Completed] = [ProjectStatus.Archived],
-        [ProjectStatus.Maintenance] = [ProjectStatus.Archived],
         [ProjectStatus.Archived] = []
     };
 

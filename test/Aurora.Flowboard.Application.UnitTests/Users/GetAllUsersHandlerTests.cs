@@ -34,7 +34,9 @@ public sealed class GetAllUsersHandlerTests
     {
         // Arrange
         User first = CreateUserCommandData.GetExistingUser("first@example.com");
+        first.AssignRole(Role.Member);
         User second = CreateUserCommandData.GetExistingUser("second@example.com");
+        second.AssignRole(Role.Member);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([first, second]);
         _dbContext.Users.Returns(usersMock);
 
@@ -52,6 +54,7 @@ public sealed class GetAllUsersHandlerTests
     {
         // Arrange
         User user = CreateUserCommandData.GetExistingUser();
+        user.AssignRole(Role.Member);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
         _dbContext.Users.Returns(usersMock);
 
@@ -68,28 +71,8 @@ public sealed class GetAllUsersHandlerTests
         response.Initials.Should().Be(user.Initials);
         response.Email.Should().Be(user.Email.Value);
         response.IsActive.Should().Be(user.IsActive);
+        response.Role.Should().Be(Role.Member.Name);
         response.CreatedOnUtc.Should().Be(user.CreatedOnUtc);
         response.UpdatedOnUtc.Should().Be(user.UpdatedOnUtc);
-    }
-
-    [Fact]
-    public async Task Should_MapRolesCollection_When_UserHasRoles()
-    {
-        // Arrange
-        User user = CreateUserCommandData.GetExistingUser();
-        user.AssignRole(Role.Member);
-        user.AssignRole(Role.Administrator);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
-
-        // Act
-        Result<IReadOnlyCollection<UserSummaryResponse>> result =
-            await _handler.Handle(new GetAllUsersQuery(), CancellationToken.None);
-
-        // Assert
-        UserSummaryResponse response = result.Value.Single();
-        response.Roles.Should().HaveCount(2);
-        response.Roles.Should().Contain(Role.Member.Name);
-        response.Roles.Should().Contain(Role.Administrator.Name);
     }
 }

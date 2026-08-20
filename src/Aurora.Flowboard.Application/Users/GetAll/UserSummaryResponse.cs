@@ -8,6 +8,6 @@ public sealed record UserSummaryResponse(
     string Initials,
     string Email,
     bool IsActive,
-    IReadOnlyCollection<string> Roles,
+    string Role,
     DateTime CreatedOnUtc,
     DateTime? UpdatedOnUtc);

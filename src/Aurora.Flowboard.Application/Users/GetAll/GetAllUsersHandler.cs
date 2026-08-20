@@ -24,7 +24,7 @@ internal sealed class GetAllUsersHandler(
                 u.Initials,
                 u.Email.Value,
                 u.IsActive,
-                [.. u.Roles.Select(r => r.Name)],
+                u.Roles.First().Name,
                 u.CreatedOnUtc,
                 u.UpdatedOnUtc))
             .ToList();

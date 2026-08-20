@@ -700,11 +700,11 @@ public sealed class ProjectTests
         }
 
         [Fact]
-        public void Should_ChangeStatusToArchived_When_KindChangedWhileInMaintenanceMakesItUnreachableOtherwise()
+        public void Should_FailChangeStatus_When_KindChangedMakesCurrentStatusUnreachableInNewKind()
         {
             // Arrange: a Product project in Maintenance, whose kind is switched to a timeboxed kind
-            // (Client) — Maintenance is not part of the Client path, so Archived must stay reachable
-            // as an escape hatch instead of stranding the project.
+            // (Client) — Maintenance is not a key in TimeboxedTransitions, so the project is stranded
+            // in its current status until it is switched back to a continuous kind.
             User admin = UserData.GetActiveUser();
             Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Maintenance, admin, ProjectKind.Product);
             project.ChangeKind(ProjectKind.Client, admin, ProjectData.UpdatedOnUtc);
@@ -713,8 +713,9 @@ public sealed class ProjectTests
             Result result = project.ChangeStatus(ProjectStatus.Archived, admin, ProjectData.UpdatedOnUtc);
 
             // Assert
-            result.IsSuccessful.Should().BeTrue();
-            project.Status.Should().Be(ProjectStatus.Archived);
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.InvalidStatusTransition);
+            project.Status.Should().Be(ProjectStatus.Maintenance);
         }
     }
 

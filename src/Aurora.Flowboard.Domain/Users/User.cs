@@ -212,4 +212,29 @@ public sealed class User : BaseEntity
 
         return Result.Ok();
     }
+
+    public Result ChangeRole(Role newRole, DateTime updatedOnUtc)
+    {
+        ArgumentNullException.ThrowIfNull(newRole);
+
+        if (_roles.Any(r => r.Name == newRole.Name))
+        {
+            return Result.Fail(UserErrors.RoleAlreadyAssigned);
+        }
+
+        foreach (Role role in _roles.ToList())
+        {
+            RemoveRole(role);
+        }
+
+        Result assignResult = AssignRole(newRole);
+        if (!assignResult.IsSuccessful)
+        {
+            return assignResult;
+        }
+
+        UpdatedOnUtc = updatedOnUtc;
+
+        return Result.Ok();
+    }
 }

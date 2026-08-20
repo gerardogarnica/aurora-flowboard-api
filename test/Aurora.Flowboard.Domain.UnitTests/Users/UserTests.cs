@@ -731,6 +731,108 @@ public sealed class UserTests
         }
     }
 
+    public sealed class ChangeRole : BaseTest
+    {
+        [Fact]
+        public void Should_AssignNewRole_When_UserHasNoRole()
+        {
+            // Arrange
+            User user = UserData.GetActiveUser();
+
+            // Act
+            Result result = user.ChangeRole(Role.Member, UserData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            user.Roles.Should().ContainSingle(r => r.Name == Role.Member.Name);
+        }
+
+        [Fact]
+        public void Should_ReplaceExistingRole_When_UserAlreadyHasADifferentRole()
+        {
+            // Arrange
+            User user = UserData.GetUserWithRole(Role.Member);
+
+            // Act
+            Result result = user.ChangeRole(Role.Administrator, UserData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            user.Roles.Should().ContainSingle(r => r.Name == Role.Administrator.Name);
+        }
+
+        [Fact]
+        public void Should_UpdateUpdatedOnUtc_When_RoleChanged()
+        {
+            // Arrange
+            User user = UserData.GetActiveUser();
+
+            // Act
+            user.ChangeRole(Role.Member, UserData.UpdatedOnUtc);
+
+            // Assert
+            user.UpdatedOnUtc.Should().Be(UserData.UpdatedOnUtc);
+        }
+
+        [Fact]
+        public void Should_RaiseRoleRemovedAndAssignedDomainEvents_When_ReplacingExistingRole()
+        {
+            // Arrange
+            User user = UserData.GetUserWithRole(Role.Member);
+            user.ClearDomainEvents();
+
+            // Act
+            user.ChangeRole(Role.Administrator, UserData.UpdatedOnUtc);
+
+            // Assert
+            UserRoleRemovedDomainEvent removedEvent = AssertDomainEventWasPublished<UserRoleRemovedDomainEvent>(user);
+            removedEvent.RoleName.Should().Be(Role.Member.Name);
+
+            UserRoleAssignedDomainEvent assignedEvent = AssertDomainEventWasPublished<UserRoleAssignedDomainEvent>(user);
+            assignedEvent.RoleName.Should().Be(Role.Administrator.Name);
+        }
+
+        [Fact]
+        public void Should_Fail_When_NewRoleEqualsCurrentRole()
+        {
+            // Arrange
+            User user = UserData.GetUserWithRole(Role.Member);
+
+            // Act
+            Result result = user.ChangeRole(Role.Member, UserData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(UserErrors.RoleAlreadyAssigned);
+        }
+
+        [Fact]
+        public void Should_NotChangeRoles_When_NewRoleEqualsCurrentRole()
+        {
+            // Arrange
+            User user = UserData.GetUserWithRole(Role.Member);
+
+            // Act
+            user.ChangeRole(Role.Member, UserData.UpdatedOnUtc);
+
+            // Assert
+            user.Roles.Should().ContainSingle(r => r.Name == Role.Member.Name);
+        }
+
+        [Fact]
+        public void Should_Throw_When_NewRoleIsNull()
+        {
+            // Arrange
+            User user = UserData.GetActiveUser();
+
+            // Act
+            Action act = () => user.ChangeRole(null!, UserData.UpdatedOnUtc);
+
+            // Assert
+            act.Should().Throw<ArgumentNullException>();
+        }
+    }
+
     public sealed class VerifyPassword : BaseTest
     {
         private sealed class FakePasswordHasher(bool verifyResult) : IPasswordHasher
