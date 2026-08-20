@@ -19,5 +19,8 @@ internal sealed class CreateUserValidator : AbstractValidator<CreateUserCommand>
 
         RuleFor(x => x.Password)
             .MustBeStrongPassword();
+
+        RuleFor(x => x.Role)
+            .NotEmpty();
     }
 }

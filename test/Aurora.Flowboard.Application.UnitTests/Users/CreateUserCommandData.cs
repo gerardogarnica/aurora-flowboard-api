@@ -13,7 +13,7 @@ internal static class CreateUserCommandData
     internal static readonly DateTime UtcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
     internal static CreateUserCommand GetCreateCommand(string? role = null) =>
-        new(FirstName, LastName, EmailAddress, PlainPassword, role);
+        new(FirstName, LastName, EmailAddress, PlainPassword, role ?? Role.Member.Name);
 
     internal static User GetExistingUser(string email = EmailAddress)
     {
