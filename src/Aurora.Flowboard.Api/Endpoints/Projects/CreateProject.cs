@@ -1,5 +1,6 @@
 using Aurora.Flowboard.Application.Projects.Create;
 using Aurora.Flowboard.Domain.Projects;
+using Aurora.Flowboard.Domain.Users;
 
 namespace Aurora.Flowboard.Api.Endpoints.Projects;
 
@@ -35,7 +36,7 @@ public sealed class CreateProject : IBaseEndpoint
                     () => Results.Created(string.Empty, result.Value),
                     ApiResponses.Problem);
             })
-            .RequireAuthorization()
+            .RequireAuthorization(policy => policy.RequireRole(Role.Administrator.Name))
             .WithName("CreateProject")
             .WithTags(EndpointTags.Projects)
             .Produces<Guid>(StatusCodes.Status201Created)
