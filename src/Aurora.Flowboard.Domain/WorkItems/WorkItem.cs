@@ -18,6 +18,7 @@ public sealed class WorkItem : BaseEntity
     private readonly List<WorkItemChangeLog> _changeLogs = [];
     private readonly List<WorkItemTag> _tags = [];
 
+    public string Code { get; private set; }
     public string Title { get; private set; }
     public string? Description { get; private set; }
     public WorkItemType Type { get; private set; }
@@ -26,7 +27,6 @@ public sealed class WorkItem : BaseEntity
     public Guid FlowStateId { get; private set; }
     public Guid? AssigneeId { get; private set; }
     public Guid CreatedById { get; private set; }
-    public string Code { get; private set; }
     public int SequenceNumber { get; private set; }
     public int? EstimatedPoints { get; private set; }
     public DateOnly? EstimatedCompletionDate { get; private set; }
@@ -50,6 +50,7 @@ public sealed class WorkItem : BaseEntity
 
     private WorkItem(
         Guid id,
+        string code,
         string title,
         string? description,
         WorkItemType type,
@@ -58,7 +59,6 @@ public sealed class WorkItem : BaseEntity
         Guid flowStateId,
         Guid createdById,
         Guid? assigneeId,
-        string code,
         int sequenceNumber,
         int? estimatedPoints,
         DateOnly? estimatedCompletionDate,
@@ -66,6 +66,7 @@ public sealed class WorkItem : BaseEntity
         Guid? componentId,
         DateTime createdOnUtc) : base(id)
     {
+        Code = code;
         Title = title;
         Description = description;
         Type = type;
@@ -74,7 +75,6 @@ public sealed class WorkItem : BaseEntity
         FlowStateId = flowStateId;
         CreatedById = createdById;
         AssigneeId = assigneeId;
-        Code = code;
         SequenceNumber = sequenceNumber;
         EstimatedPoints = estimatedPoints;
         EstimatedCompletionDate = estimatedCompletionDate;
@@ -178,6 +178,7 @@ public sealed class WorkItem : BaseEntity
 
         var workItem = new WorkItem(
             Guid.NewGuid(),
+            code,
             title.Trim(),
             description?.Trim(),
             type,
@@ -186,7 +187,6 @@ public sealed class WorkItem : BaseEntity
             initialState.Id,
             createdBy.Id,
             assignee?.Id,
-            code,
             sequenceNumber,
             estimatedPoints,
             estimatedCompletionDate,

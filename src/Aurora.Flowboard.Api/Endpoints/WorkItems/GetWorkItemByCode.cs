@@ -1,26 +1,26 @@
-using Aurora.Flowboard.Application.WorkItems.GetById;
+using Aurora.Flowboard.Application.WorkItems.GetByCode;
 
 namespace Aurora.Flowboard.Api.Endpoints.WorkItems;
 
-public sealed class GetWorkItemById : IBaseEndpoint
+public sealed class GetWorkItemByCode : IBaseEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet(
-            "work-items/{id:guid}",
+            "work-items/{code}",
             async (
-                Guid id,
-                IQueryHandler<GetWorkItemByIdQuery, WorkItemResponse> handler,
+                string code,
+                IQueryHandler<GetWorkItemByCodeQuery, WorkItemResponse> handler,
                 CancellationToken cancellationToken) =>
             {
-                var query = new GetWorkItemByIdQuery(id);
+                var query = new GetWorkItemByCodeQuery(code);
 
                 Result<WorkItemResponse> result = await handler.Handle(query, cancellationToken);
 
                 return result.Match(Results.Ok, ApiResponses.Problem);
             })
             .RequireAuthorization()
-            .WithName("GetWorkItemById")
+            .WithName("GetWorkItemByCode")
             .WithTags(EndpointTags.WorkItems)
             .Produces<WorkItemResponse>(StatusCodes.Status200OK)
             .Produces<ProblemDetails>(StatusCodes.Status404NotFound)

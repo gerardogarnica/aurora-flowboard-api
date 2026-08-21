@@ -20,6 +20,12 @@ internal static class WorkItemQueryData
         return User.Create("Work", "Assignee", email, Password.Create("hashed_password_123").Value, UtcNow).Value;
     }
 
+    public static User GetDeveloperUser()
+    {
+        Email email = Email.Create("wi.developer@test.com").Value;
+        return User.Create("Work", "Developer", email, Password.Create("hashed_password_123").Value, UtcNow).Value;
+    }
+
     public static (Project Project, WorkItem WorkItem) GetProjectAndWorkItem(User admin)
     {
         Project project = GetActiveProjectWithFlow(admin);
@@ -42,6 +48,17 @@ internal static class WorkItemQueryData
         return (project, workItem);
     }
 
+    public static (Project Project, WorkItem WorkItem) GetProjectAndWorkItemWithComponentAndMilestone(User admin)
+    {
+        Project project = GetActiveProjectWithFlow(admin);
+        Component component = Component.Create("Auth Module", project, admin, UtcNow).Value;
+        Milestone milestone = Milestone.Create("Sprint 1", null, null, null, project, admin, UtcNow).Value;
+        WorkItem workItem = WorkItem.Create(
+            "Test Work Item", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, UtcNow,
+            milestone: milestone, component: component).Value;
+        return (project, workItem);
+    }
+
     public static (Project Project, WorkItem WorkItem) GetProjectAndWorkItemWithTag(User admin)
     {
         (Project project, WorkItem workItem) = GetProjectAndWorkItem(admin);
@@ -53,6 +70,20 @@ internal static class WorkItemQueryData
     {
         (Project project, WorkItem workItem) = GetProjectAndWorkItem(admin);
         workItem.LogTime(admin, 2.5m, "Work done", UtcNow, UtcNow);
+        return (project, workItem);
+    }
+
+    public static (Project Project, WorkItem WorkItem) GetProjectAndWorkItemWithRoleRestrictedTransition(User admin, User developer)
+    {
+        Project project = GetActiveProjectWithFlow(admin);
+        project.AddMember(developer, ProjectRole.Developer, admin, UtcNow);
+
+        Guid backlogStateId = project.FlowStates.Single(s => s.Name == "Backlog").Id;
+        Guid doneStateId = project.FlowStates.Single(s => s.Name == "Done").Id;
+        FlowTransition backlogToDone = project.FlowTransitions.Single(t => t.FromStateId == backlogStateId && t.ToStateId == doneStateId);
+        project.RemoveFlowTransitionRole(backlogToDone.Id, ProjectRole.Developer, admin);
+
+        WorkItem workItem = WorkItem.Create("Test Work Item", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, UtcNow).Value;
         return (project, workItem);
     }
 

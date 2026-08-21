@@ -1,6 +1,4 @@
-using Aurora.Flowboard.Application.Projects.GetFlow;
-
-namespace Aurora.Flowboard.Application.WorkItems.GetById;
+namespace Aurora.Flowboard.Application.WorkItems.GetByCode;
 
 public sealed record WorkItemResponse(
     Guid WorkItemId,
@@ -17,6 +15,10 @@ public sealed record WorkItemResponse(
     string? AssigneeFullName,
     Guid CreatedById,
     string CreatedByFullName,
+    Guid? ComponentId,
+    string? ComponentName,
+    Guid? MilestoneId,
+    string? MilestoneName,
     int? EstimatedPoints,
     DateOnly? EstimatedCompletionDate,
     DateTime CreatedOnUtc,
@@ -27,7 +29,7 @@ public sealed record WorkItemResponse(
     IReadOnlyCollection<WorkItemTimeEntryResponse> TimeEntries,
     IReadOnlyCollection<WorkItemStateTransitionResponse> StateHistory,
     IReadOnlyCollection<WorkItemChangeLogResponse> ChangeLogs,
-    IReadOnlyCollection<FlowTransitionResponse> AvailableTransitions);
+    IReadOnlyCollection<WorkItemFlowTransitionResponse> AvailableTransitions);
 
 public sealed record WorkItemTagResponse(
     Guid TagId,
@@ -61,3 +63,7 @@ public sealed record WorkItemChangeLogResponse(
     WorkItemChangeType ChangeType,
     Guid? AffectedEntityId,
     DateTime ChangedOnUtc);
+
+public sealed record WorkItemFlowTransitionResponse(
+    Guid ToStateId,
+    string ToStateName);
