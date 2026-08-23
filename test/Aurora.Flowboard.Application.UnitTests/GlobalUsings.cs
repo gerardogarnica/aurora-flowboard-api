@@ -36,7 +36,6 @@ global using Aurora.Flowboard.Application.WorkItems.Move;
 global using Aurora.Flowboard.Application.WorkItems.RemoveComment;
 global using Aurora.Flowboard.Application.WorkItems.RemoveTag;
 global using Aurora.Flowboard.Application.WorkItems.Unassign;
-global using Aurora.Flowboard.Application.WorkItems.Update;
 global using Aurora.Flowboard.Application.WorkItems.UpdateComment;
 global using Aurora.Flowboard.Application.WorkItems.UpdateTitle;
 global using Aurora.Flowboard.Domain.Abstractions;

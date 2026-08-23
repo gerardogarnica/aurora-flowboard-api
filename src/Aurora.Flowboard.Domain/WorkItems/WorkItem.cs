@@ -212,57 +212,6 @@ public sealed class WorkItem : BaseEntity
         return workItem;
     }
 
-    public Result Update(
-        string title,
-        string? description,
-        Priority priority,
-        int? estimatedPoints,
-        DateOnly? estimatedCompletionDate,
-        User changedBy,
-        DateTime updatedOnUtc)
-    {
-        if (string.IsNullOrWhiteSpace(title))
-        {
-            return Result.Fail(WorkItemErrors.TitleRequired);
-        }
-
-        if (title.Length > MaxTitleLength)
-        {
-            return Result.Fail(WorkItemErrors.TitleTooLong);
-        }
-
-        if (description?.Length > MaxDescriptionLength)
-        {
-            return Result.Fail(WorkItemErrors.DescriptionTooLong);
-        }
-
-        if (!Project.CanAddOrUpdateWorkItem())
-        {
-            return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
-        }
-
-        if (!Project.IsMember(changedBy.Id))
-        {
-            return Result.Fail(WorkItemErrors.UserNotProjectMember);
-        }
-
-        if (!changedBy.IsActive)
-        {
-            return Result.Fail(UserErrors.Inactive);
-        }
-
-        Title = title.Trim();
-        Description = description?.Trim();
-        Priority = priority;
-        EstimatedPoints = estimatedPoints;
-        EstimatedCompletionDate = estimatedCompletionDate;
-        UpdatedOnUtc = updatedOnUtc;
-
-        _changeLogs.Add(WorkItemChangeLog.Create(this, changedBy, WorkItemChangeType.Updated, null, updatedOnUtc));
-
-        return Result.Ok();
-    }
-
     public Result UpdateTitle(string title, User changedBy, DateTime updatedOnUtc)
     {
         if (string.IsNullOrWhiteSpace(title))
