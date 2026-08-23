@@ -680,6 +680,52 @@ public sealed class WorkItemTests
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
+
+        [Fact]
+        public void Should_BeNoOp_When_DescriptionIsAlreadyNullAndNullIsProvidedAgain()
+        {
+            // Arrange
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
+            WorkItem workItem = WorkItem.Create(
+                WorkItemData.Title,
+                null,
+                WorkItemData.Type,
+                WorkItemData.Priority,
+                project,
+                admin,
+                WorkItemData.EstimatedPoints,
+                WorkItemData.EstimatedCompletionDate,
+                WorkItemData.CreatedOnUtc).Value;
+
+            // Act
+            Result result = workItem.UpdateDescription(null, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.UpdatedOnUtc.Should().BeNull();
+            workItem.ChangeLogs.Should().NotContain(c => c.ChangeType == WorkItemChangeType.DescriptionUpdated);
+        }
+
+        [Fact]
+        public void Should_BeNoOp_When_DescriptionOnlyDiffersBySurroundingWhitespace()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+            workItem.UpdateDescription("abc", admin, WorkItemData.UpdatedOnUtc);
+            DateTime? updatedOnUtcAfterFirstUpdate = workItem.UpdatedOnUtc;
+            int changeLogCountAfterFirstUpdate =
+                workItem.ChangeLogs.Count(c => c.ChangeType == WorkItemChangeType.DescriptionUpdated);
+            DateTime laterUpdatedOnUtc = WorkItemData.UpdatedOnUtc.AddDays(1);
+
+            // Act
+            Result result = workItem.UpdateDescription("  abc  ", admin, laterUpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.UpdatedOnUtc.Should().Be(updatedOnUtcAfterFirstUpdate);
+            workItem.ChangeLogs.Count(c => c.ChangeType == WorkItemChangeType.DescriptionUpdated)
+                .Should().Be(changeLogCountAfterFirstUpdate);
+        }
     }
 
     public sealed class UpdateType : BaseTest
@@ -907,6 +953,31 @@ public sealed class WorkItemTests
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(WorkItemErrors.NotFound);
         }
+
+        [Fact]
+        public void Should_BeNoOp_When_EstimatedPointsIsAlreadyNullAndNullIsProvidedAgain()
+        {
+            // Arrange
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
+            WorkItem workItem = WorkItem.Create(
+                WorkItemData.Title,
+                WorkItemData.Description,
+                WorkItemData.Type,
+                WorkItemData.Priority,
+                project,
+                admin,
+                null,
+                WorkItemData.EstimatedCompletionDate,
+                WorkItemData.CreatedOnUtc).Value;
+
+            // Act
+            Result result = workItem.UpdateEstimatedPoints(null, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.UpdatedOnUtc.Should().BeNull();
+            workItem.ChangeLogs.Should().NotContain(c => c.ChangeType == WorkItemChangeType.EstimatedPointsUpdated);
+        }
     }
 
     public sealed class UpdateEstimatedCompletionDate : BaseTest
@@ -985,6 +1056,42 @@ public sealed class WorkItemTests
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(WorkItemErrors.NotFound);
         }
+
+        [Fact]
+        public void Should_Fail_When_DateIsInThePast()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+            DateOnly pastDate = DateOnly.FromDateTime(WorkItemData.UpdatedOnUtc).AddDays(-1);
+
+            // Act
+            Result result = workItem.UpdateEstimatedCompletionDate(pastDate, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.EstimatedCompletionDateInPast);
+        }
+
+        [Fact]
+        public void Should_BeNoOp_When_UnchangedDateIsAlreadyInThePast()
+        {
+            // Arrange — the work item's persisted date has since slipped into the past relative
+            // to "now", but re-submitting the same unchanged value must still be a successful no-op.
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+            DateTime laterUtcNow = WorkItemData.EstimatedCompletionDate
+                .ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)
+                .AddDays(15);
+
+            // Act
+            Result result = workItem.UpdateEstimatedCompletionDate(
+                WorkItemData.EstimatedCompletionDate, admin, laterUtcNow);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.EstimatedCompletionDate.Should().Be(WorkItemData.EstimatedCompletionDate);
+            workItem.UpdatedOnUtc.Should().BeNull();
+            workItem.ChangeLogs.Should().NotContain(c => c.ChangeType == WorkItemChangeType.EstimatedCompletionDateUpdated);
+        }
     }
 
     public sealed class ChangeComponent : BaseTest
@@ -1055,6 +1162,28 @@ public sealed class WorkItemTests
         }
 
         [Fact]
+        public void Should_BeNoOp_When_SameComponentIsPassedAgain()
+        {
+            // Arrange
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            Component component = ComponentData.GetComponent(project, admin);
+            workItem.ChangeComponent(component, admin, WorkItemData.UpdatedOnUtc);
+            DateTime? updatedOnUtcAfterFirstChange = workItem.UpdatedOnUtc;
+            int changeLogCountAfterFirstChange =
+                workItem.ChangeLogs.Count(c => c.ChangeType == WorkItemChangeType.ComponentChanged);
+            DateTime laterUpdatedOnUtc = WorkItemData.UpdatedOnUtc.AddDays(1);
+
+            // Act
+            Result result = workItem.ChangeComponent(component, admin, laterUpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.UpdatedOnUtc.Should().Be(updatedOnUtcAfterFirstChange);
+            workItem.ChangeLogs.Count(c => c.ChangeType == WorkItemChangeType.ComponentChanged)
+                .Should().Be(changeLogCountAfterFirstChange);
+        }
+
+        [Fact]
         public void Should_Fail_When_ComponentBelongsToAnotherProject()
         {
             // Arrange
@@ -1096,6 +1225,24 @@ public sealed class WorkItemTests
 
             // Act
             Result result = workItem.ChangeComponent(component, nonMember, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.NotFound);
+        }
+
+        [Fact]
+        public void Should_ReturnNotFound_When_ChangedByIsNotProjectMemberAndComponentBelongsToAnotherProject()
+        {
+            // Arrange — a non-member must not be able to distinguish "not found" from
+            // "found but the component belongs to a different project" (no 404-not-403 leak).
+            var (workItem, _, _) = WorkItemData.GetWorkItemWithContext();
+            var (otherProject, otherAdmin) = WorkItemData.GetActiveProjectWithFlow();
+            Component foreignComponent = ComponentData.GetComponent(otherProject, otherAdmin);
+            User nonMember = UserData.GetActiveUser();
+
+            // Act
+            Result result = workItem.ChangeComponent(foreignComponent, nonMember, WorkItemData.UpdatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -1171,6 +1318,28 @@ public sealed class WorkItemTests
         }
 
         [Fact]
+        public void Should_BeNoOp_When_SameMilestoneIsPassedAgain()
+        {
+            // Arrange
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            Milestone milestone = MilestoneData.GetMilestone(project, admin);
+            workItem.ChangeMilestone(milestone, admin, WorkItemData.UpdatedOnUtc);
+            DateTime? updatedOnUtcAfterFirstChange = workItem.UpdatedOnUtc;
+            int changeLogCountAfterFirstChange =
+                workItem.ChangeLogs.Count(c => c.ChangeType == WorkItemChangeType.MilestoneChanged);
+            DateTime laterUpdatedOnUtc = WorkItemData.UpdatedOnUtc.AddDays(1);
+
+            // Act
+            Result result = workItem.ChangeMilestone(milestone, admin, laterUpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.UpdatedOnUtc.Should().Be(updatedOnUtcAfterFirstChange);
+            workItem.ChangeLogs.Count(c => c.ChangeType == WorkItemChangeType.MilestoneChanged)
+                .Should().Be(changeLogCountAfterFirstChange);
+        }
+
+        [Fact]
         public void Should_Fail_When_MilestoneBelongsToAnotherProject()
         {
             // Arrange
@@ -1226,6 +1395,24 @@ public sealed class WorkItemTests
 
             // Act
             Result result = workItem.ChangeMilestone(milestone, nonMember, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.NotFound);
+        }
+
+        [Fact]
+        public void Should_ReturnNotFound_When_ChangedByIsNotProjectMemberAndMilestoneBelongsToAnotherProject()
+        {
+            // Arrange — a non-member must not be able to distinguish "not found" from
+            // "found but the milestone belongs to a different project" (no 404-not-403 leak).
+            var (workItem, _, _) = WorkItemData.GetWorkItemWithContext();
+            var (otherProject, otherAdmin) = WorkItemData.GetActiveProjectWithFlow();
+            Milestone foreignMilestone = MilestoneData.GetMilestone(otherProject, otherAdmin);
+            User nonMember = UserData.GetActiveUser();
+
+            // Act
+            Result result = workItem.ChangeMilestone(foreignMilestone, nonMember, WorkItemData.UpdatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();

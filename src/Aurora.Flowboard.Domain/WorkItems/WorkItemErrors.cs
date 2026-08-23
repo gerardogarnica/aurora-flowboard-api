@@ -22,6 +22,10 @@ public static class WorkItemErrors
         "WorkItem.EstimatedPointsInvalid",
         "Estimated points must be greater than zero");
 
+    public static readonly BaseError EstimatedCompletionDateInPast = BaseError.Validation(
+        "WorkItem.EstimatedCompletionDateInPast",
+        "Estimated completion date cannot be earlier than today");
+
     public static readonly BaseError AssigneeNotProjectMember = BaseError.Validation(
         "WorkItem.AssigneeNotProjectMember",
         "The assignee must be a member of the project");

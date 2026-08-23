@@ -535,7 +535,7 @@ POST   /api/v1/flowboard/work-items/{id}/comments
 * `GET /work-items` requires `projectId` **or** `assigneeId`; unscoped listing is not supported.
 * `milestoneId=none` and `componentId=none` filter items with no milestone / no component assignment.
 * `kind=` filters projects and the personal board by `ProjectKind`.
-* `GET /work-items/{idOrCode}` resolves both GUIDs and human codes (`CNL-101`) — this is what makes codes useful in conversation.
+* `GET /work-items/{code}` resolves the work item's human code (`CNL-101`) — this is what makes codes useful in conversation. It does not accept a GUID.
 * Every editable field of a work item has its own `PATCH` route, so each change can be audited independently and the front-end's inline controls can save one field at a time. There is no general update endpoint. A `null` body value clears the field.
 * `PATCH /work-items/{id}/milestone` rejects a target milestone that is `Completed` or `Archived` with `400 Bad Request` (`WorkItem.MilestoneNotAcceptingAssignments`). `POST /work-items` returns the same error for the same reason.
 * `POST /milestones/{id}/archive` and any transition to `Completed` return `409 Conflict` when the milestone still holds open work items, listing the offending item codes so they can be resolved or reassigned (§5.2).

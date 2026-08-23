@@ -3,7 +3,10 @@ namespace Aurora.Flowboard.Domain.WorkItems;
 public enum WorkItemChangeType
 {
     Created = 0,
-    Updated = 1, // legacy — no longer written; historical rows only
+    Updated = 1, // legacy — no longer written; historical rows hold the string 'Updated'
+                 // (WorkItemChangeLogConfiguration maps this enum via .HasConversion<string>().HasMaxLength(40);
+                 // the longest current value, EstimatedCompletionDateUpdated, is 30 chars, so a future
+                 // value over 40 chars would fail at insert time, not at build time)
     Moved = 2,
     Assigned = 3,
     Unassigned = 4,

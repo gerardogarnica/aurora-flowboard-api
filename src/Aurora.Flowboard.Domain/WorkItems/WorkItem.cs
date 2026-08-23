@@ -362,6 +362,11 @@ public sealed class WorkItem : BaseEntity
             return Result.Ok();
         }
 
+        if (estimatedCompletionDate < DateOnly.FromDateTime(updatedOnUtc))
+        {
+            return Result.Fail(WorkItemErrors.EstimatedCompletionDateInPast);
+        }
+
         EstimatedCompletionDate = estimatedCompletionDate;
         UpdatedOnUtc = updatedOnUtc;
 
@@ -372,6 +377,13 @@ public sealed class WorkItem : BaseEntity
 
     public Result ChangeComponent(Component? component, User changedBy, DateTime updatedOnUtc)
     {
+        Result guardResult = EnsureCanBeModifiedBy(changedBy);
+
+        if (!guardResult.IsSuccessful)
+        {
+            return guardResult;
+        }
+
         if (component is not null)
         {
             if (component.ProjectId != ProjectId)
@@ -383,13 +395,6 @@ public sealed class WorkItem : BaseEntity
             {
                 return Result.Fail(WorkItemErrors.ComponentRetired);
             }
-        }
-
-        Result guardResult = EnsureCanBeModifiedBy(changedBy);
-
-        if (!guardResult.IsSuccessful)
-        {
-            return guardResult;
         }
 
         if (component?.Id == ComponentId)
@@ -408,6 +413,13 @@ public sealed class WorkItem : BaseEntity
 
     public Result ChangeMilestone(Milestone? milestone, User changedBy, DateTime updatedOnUtc)
     {
+        Result guardResult = EnsureCanBeModifiedBy(changedBy);
+
+        if (!guardResult.IsSuccessful)
+        {
+            return guardResult;
+        }
+
         if (milestone is not null)
         {
             if (milestone.ProjectId != ProjectId)
@@ -419,13 +431,6 @@ public sealed class WorkItem : BaseEntity
             {
                 return Result.Fail(WorkItemErrors.MilestoneNotAcceptingAssignments);
             }
-        }
-
-        Result guardResult = EnsureCanBeModifiedBy(changedBy);
-
-        if (!guardResult.IsSuccessful)
-        {
-            return guardResult;
         }
 
         if (milestone?.Id == MilestoneId)
