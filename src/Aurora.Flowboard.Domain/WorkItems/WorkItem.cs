@@ -277,6 +277,50 @@ public sealed class WorkItem : BaseEntity
         return Result.Ok();
     }
 
+    public Result UpdateType(WorkItemType type, User changedBy, DateTime updatedOnUtc)
+    {
+        Result guardResult = EnsureCanBeModifiedBy(changedBy);
+
+        if (!guardResult.IsSuccessful)
+        {
+            return guardResult;
+        }
+
+        if (type == Type)
+        {
+            return Result.Ok();
+        }
+
+        Type = type;
+        UpdatedOnUtc = updatedOnUtc;
+
+        _changeLogs.Add(WorkItemChangeLog.Create(this, changedBy, WorkItemChangeType.TypeUpdated, null, updatedOnUtc));
+
+        return Result.Ok();
+    }
+
+    public Result UpdatePriority(Priority priority, User changedBy, DateTime updatedOnUtc)
+    {
+        Result guardResult = EnsureCanBeModifiedBy(changedBy);
+
+        if (!guardResult.IsSuccessful)
+        {
+            return guardResult;
+        }
+
+        if (priority == Priority)
+        {
+            return Result.Ok();
+        }
+
+        Priority = priority;
+        UpdatedOnUtc = updatedOnUtc;
+
+        _changeLogs.Add(WorkItemChangeLog.Create(this, changedBy, WorkItemChangeType.PriorityUpdated, null, updatedOnUtc));
+
+        return Result.Ok();
+    }
+
     public Result Move(FlowState toState, User changedBy, string? reason, DateTime changedOnUtc)
     {
         Result guardResult = EnsureCanBeModifiedBy(changedBy);

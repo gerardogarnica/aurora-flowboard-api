@@ -14,5 +14,7 @@ public enum WorkItemChangeType
     TagAdded = 9,
     TagRemoved = 10,
     TitleUpdated = 11,
-    DescriptionUpdated = 12
+    DescriptionUpdated = 12,
+    TypeUpdated = 13,
+    PriorityUpdated = 14
 }
