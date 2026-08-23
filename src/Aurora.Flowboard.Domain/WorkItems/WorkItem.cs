@@ -114,7 +114,7 @@ public sealed class WorkItem : BaseEntity
 
         if (!project.IsMember(createdBy.Id))
         {
-            return Result.Fail<WorkItem>(WorkItemErrors.UserNotProjectMember);
+            return Result.Fail<WorkItem>(WorkItemErrors.NotFound);
         }
 
         if (!project.CanAddOrUpdateWorkItem())
@@ -224,19 +224,11 @@ public sealed class WorkItem : BaseEntity
             return Result.Fail(WorkItemErrors.TitleTooLong);
         }
 
-        if (!Project.CanAddOrUpdateWorkItem())
-        {
-            return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
-        }
+        Result guardResult = EnsureCanBeModifiedBy(changedBy);
 
-        if (!Project.IsMember(changedBy.Id))
+        if (!guardResult.IsSuccessful)
         {
-            return Result.Fail(WorkItemErrors.UserNotProjectMember);
-        }
-
-        if (!changedBy.IsActive)
-        {
-            return Result.Fail(UserErrors.Inactive);
+            return guardResult;
         }
 
         string trimmedTitle = title.Trim();
@@ -258,19 +250,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result Move(FlowState toState, User changedBy, string? reason, DateTime changedOnUtc)
     {
-        if (!Project.CanAddOrUpdateWorkItem())
-        {
-            return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
-        }
+        Result guardResult = EnsureCanBeModifiedBy(changedBy);
 
-        if (!Project.IsMember(changedBy.Id))
+        if (!guardResult.IsSuccessful)
         {
-            return Result.Fail(WorkItemErrors.UserNotProjectMember);
-        }
-
-        if (!changedBy.IsActive)
-        {
-            return Result.Fail(UserErrors.Inactive);
+            return guardResult;
         }
 
         if (toState.ProjectId != ProjectId)
@@ -327,7 +311,7 @@ public sealed class WorkItem : BaseEntity
 
         if (!Project.IsMember(changedBy.Id))
         {
-            return Result.Fail(WorkItemErrors.UserNotProjectMember);
+            return Result.Fail(WorkItemErrors.NotFound);
         }
 
         if (!Project.IsMember(assignee.Id))
@@ -374,7 +358,7 @@ public sealed class WorkItem : BaseEntity
 
         if (!Project.IsMember(changedBy.Id))
         {
-            return Result.Fail(WorkItemErrors.UserNotProjectMember);
+            return Result.Fail(WorkItemErrors.NotFound);
         }
 
         if (FlowState.Category == FlowStateCategory.Cancelled)
@@ -399,19 +383,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result AddComment(User author, string content, DateTime createdOnUtc)
     {
-        if (!Project.CanAddOrUpdateWorkItem())
-        {
-            return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
-        }
+        Result guardResult = EnsureCanBeModifiedBy(author);
 
-        if (!Project.IsMember(author.Id))
+        if (!guardResult.IsSuccessful)
         {
-            return Result.Fail(WorkItemErrors.UserNotProjectMember);
-        }
-
-        if (!author.IsActive)
-        {
-            return Result.Fail(UserErrors.Inactive);
+            return guardResult;
         }
 
         Result<Comment> commentResult = Comment.Create(this, author, content, createdOnUtc);
@@ -438,7 +414,7 @@ public sealed class WorkItem : BaseEntity
 
         if (!Project.IsMember(changedBy.Id))
         {
-            return Result.Fail(WorkItemErrors.UserNotProjectMember);
+            return Result.Fail(WorkItemErrors.NotFound);
         }
 
         Comment? comment = _comments.FirstOrDefault(c => c.Id == commentId && !c.IsDeleted);
@@ -474,7 +450,7 @@ public sealed class WorkItem : BaseEntity
 
         if (!Project.IsMember(changedBy.Id))
         {
-            return Result.Fail(WorkItemErrors.UserNotProjectMember);
+            return Result.Fail(WorkItemErrors.NotFound);
         }
 
         Comment? comment = _comments.FirstOrDefault(c => c.Id == commentId && !c.IsDeleted);
@@ -503,19 +479,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result LogTime(User user, decimal hours, string? description, DateTime loggedOnUtc, DateTime createdOnUtc)
     {
-        if (!Project.CanAddOrUpdateWorkItem())
-        {
-            return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
-        }
+        Result guardResult = EnsureCanBeModifiedBy(user);
 
-        if (!Project.IsMember(user.Id))
+        if (!guardResult.IsSuccessful)
         {
-            return Result.Fail(WorkItemErrors.UserNotProjectMember);
-        }
-
-        if (!user.IsActive)
-        {
-            return Result.Fail(UserErrors.Inactive);
+            return guardResult;
         }
 
         Result<TimeEntry> entryResult = TimeEntry.Create(this, user, hours, description, loggedOnUtc, createdOnUtc);
@@ -535,19 +503,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result AddTag(string name, User changedBy, DateTime updatedOnUtc)
     {
-        if (!Project.CanAddOrUpdateWorkItem())
-        {
-            return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
-        }
+        Result guardResult = EnsureCanBeModifiedBy(changedBy);
 
-        if (!Project.IsMember(changedBy.Id))
+        if (!guardResult.IsSuccessful)
         {
-            return Result.Fail(WorkItemErrors.UserNotProjectMember);
-        }
-
-        if (!changedBy.IsActive)
-        {
-            return Result.Fail(UserErrors.Inactive);
+            return guardResult;
         }
 
         if (string.IsNullOrWhiteSpace(name))
@@ -580,19 +540,11 @@ public sealed class WorkItem : BaseEntity
 
     public Result RemoveTag(Guid tagId, User changedBy, DateTime updatedOnUtc)
     {
-        if (!Project.CanAddOrUpdateWorkItem())
-        {
-            return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
-        }
+        Result guardResult = EnsureCanBeModifiedBy(changedBy);
 
-        if (!Project.IsMember(changedBy.Id))
+        if (!guardResult.IsSuccessful)
         {
-            return Result.Fail(WorkItemErrors.UserNotProjectMember);
-        }
-
-        if (!changedBy.IsActive)
-        {
-            return Result.Fail(UserErrors.Inactive);
+            return guardResult;
         }
 
         WorkItemTag? tag = _tags.FirstOrDefault(t => t.Id == tagId);
@@ -607,6 +559,26 @@ public sealed class WorkItem : BaseEntity
 
         _changeLogs.Add(WorkItemChangeLog.Create(this, changedBy, WorkItemChangeType.TagRemoved, tagId, updatedOnUtc));
         AddDomainEvent(new WorkItemTagRemovedDomainEvent(Id, tagId));
+
+        return Result.Ok();
+    }
+
+    private Result EnsureCanBeModifiedBy(User changedBy)
+    {
+        if (!Project.CanAddOrUpdateWorkItem())
+        {
+            return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
+        if (!Project.IsMember(changedBy.Id))
+        {
+            return Result.Fail(WorkItemErrors.NotFound);
+        }
+
+        if (!changedBy.IsActive)
+        {
+            return Result.Fail(UserErrors.Inactive);
+        }
 
         return Result.Ok();
     }

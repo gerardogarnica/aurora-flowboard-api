@@ -18,10 +18,6 @@ public static class WorkItemErrors
         "WorkItem.DescriptionTooLong",
         "Work item description cannot exceed 4000 characters");
 
-    public static readonly BaseError UserNotProjectMember = BaseError.Forbidden(
-        "WorkItem.UserNotProjectMember",
-        "Only project members can perform this operation on a work item");
-
     public static readonly BaseError AssigneeNotProjectMember = BaseError.Validation(
         "WorkItem.AssigneeNotProjectMember",
         "The assignee must be a member of the project");

@@ -284,7 +284,7 @@ public sealed class WorkItemTests
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+            result.Error.Should().Be(WorkItemErrors.NotFound);
         }
 
         [Fact]
@@ -510,7 +510,7 @@ public sealed class WorkItemTests
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+            result.Error.Should().Be(WorkItemErrors.NotFound);
         }
 
         [Fact]
@@ -654,7 +654,7 @@ public sealed class WorkItemTests
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+            result.Error.Should().Be(WorkItemErrors.NotFound);
         }
 
         [Fact]
@@ -819,7 +819,7 @@ public sealed class WorkItemTests
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+            result.Error.Should().Be(WorkItemErrors.NotFound);
         }
 
         [Fact]
@@ -999,7 +999,7 @@ public sealed class WorkItemTests
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+            result.Error.Should().Be(WorkItemErrors.NotFound);
         }
 
         [Fact]
@@ -1122,7 +1122,7 @@ public sealed class WorkItemTests
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+            result.Error.Should().Be(WorkItemErrors.NotFound);
         }
 
         [Fact]
@@ -1233,7 +1233,7 @@ public sealed class WorkItemTests
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+            result.Error.Should().Be(WorkItemErrors.NotFound);
         }
 
         [Fact]
@@ -1349,7 +1349,7 @@ public sealed class WorkItemTests
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+            result.Error.Should().Be(WorkItemErrors.NotFound);
         }
 
         [Fact]
@@ -1460,7 +1460,7 @@ public sealed class WorkItemTests
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+            result.Error.Should().Be(WorkItemErrors.NotFound);
         }
 
         [Fact]
@@ -1610,7 +1610,7 @@ public sealed class WorkItemTests
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+            result.Error.Should().Be(WorkItemErrors.NotFound);
         }
 
         [Fact]
@@ -1692,7 +1692,7 @@ public sealed class WorkItemTests
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+            result.Error.Should().Be(WorkItemErrors.NotFound);
         }
 
         [Fact]
