@@ -1103,6 +1103,136 @@ public sealed class WorkItemTests
         }
     }
 
+    public sealed class ChangeMilestone : BaseTest
+    {
+        [Fact]
+        public void Should_SetMilestone_When_DataIsValid()
+        {
+            // Arrange
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            Milestone milestone = MilestoneData.GetMilestone(project, admin);
+
+            // Act
+            Result result = workItem.ChangeMilestone(milestone, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.MilestoneId.Should().Be(milestone.Id);
+            workItem.Milestone.Should().Be(milestone);
+            workItem.UpdatedOnUtc.Should().Be(WorkItemData.UpdatedOnUtc);
+        }
+
+        [Fact]
+        public void Should_ClearMilestone_When_NullIsProvided()
+        {
+            // Arrange
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            Milestone milestone = MilestoneData.GetMilestone(project, admin);
+            workItem.ChangeMilestone(milestone, admin, WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.ChangeMilestone(null, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.MilestoneId.Should().BeNull();
+            workItem.Milestone.Should().BeNull();
+        }
+
+        [Fact]
+        public void Should_CreateMilestoneChangedChangeLog_WithMilestoneIdAsAffectedEntity()
+        {
+            // Arrange
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            Milestone milestone = MilestoneData.GetMilestone(project, admin);
+
+            // Act
+            workItem.ChangeMilestone(milestone, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.ChangeLogs.Should().Contain(c =>
+                c.ChangeType == WorkItemChangeType.MilestoneChanged &&
+                c.AffectedEntityId == milestone.Id);
+        }
+
+        [Fact]
+        public void Should_BeNoOp_When_MilestoneIsUnchanged()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act — the work item was created without a milestone, so null is unchanged
+            Result result = workItem.ChangeMilestone(null, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.UpdatedOnUtc.Should().BeNull();
+            workItem.ChangeLogs.Should().NotContain(c => c.ChangeType == WorkItemChangeType.MilestoneChanged);
+        }
+
+        [Fact]
+        public void Should_Fail_When_MilestoneBelongsToAnotherProject()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (otherProject, otherAdmin) = WorkItemData.GetActiveProjectWithFlow();
+            Milestone foreignMilestone = MilestoneData.GetMilestone(otherProject, otherAdmin);
+
+            // Act
+            Result result = workItem.ChangeMilestone(foreignMilestone, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.MilestoneNotInProject);
+        }
+
+        [Fact]
+        public void Should_Fail_When_MilestoneIsCompleted()
+        {
+            // Arrange
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            Milestone milestone = MilestoneData.GetMilestoneWithStatus(MilestoneStatus.Completed, project, admin);
+
+            // Act
+            Result result = workItem.ChangeMilestone(milestone, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.MilestoneNotAcceptingAssignments);
+        }
+
+        [Fact]
+        public void Should_Fail_When_MilestoneIsArchived()
+        {
+            // Arrange
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            Milestone milestone = MilestoneData.GetMilestoneWithStatus(MilestoneStatus.Archived, project, admin);
+
+            // Act
+            Result result = workItem.ChangeMilestone(milestone, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.MilestoneNotAcceptingAssignments);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ChangedByIsNotProjectMember()
+        {
+            // Arrange
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            Milestone milestone = MilestoneData.GetMilestone(project, admin);
+            User nonMember = UserData.GetActiveUser();
+
+            // Act
+            Result result = workItem.ChangeMilestone(milestone, nonMember, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.NotFound);
+        }
+    }
+
     public sealed class Move : BaseTest
     {
         [Fact]

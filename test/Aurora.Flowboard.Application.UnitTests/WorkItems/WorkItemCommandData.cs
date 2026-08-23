@@ -9,6 +9,9 @@ internal static class WorkItemCommandData
     public const string UpdatedContent = "Updated comment content";
     public const string TagName = "backend";
     public const string ComponentName = "Billing";
+    public const string MilestoneName = "Phase 1 delivery";
+    public static readonly DateOnly MilestoneStartDate = new(2026, 1, 15);
+    public static readonly DateOnly MilestoneEndDate = new(2026, 2, 15);
     public static readonly DateTime UtcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     public static readonly DateOnly Today = DateOnly.FromDateTime(UtcNow);
     public static readonly DateOnly EstimatedCompletionDate = new(2026, 12, 31);
@@ -145,6 +148,30 @@ internal static class WorkItemCommandData
     {
         Project project = GetActiveProjectWithFlow(admin);
         component = Component.Create(ComponentName, project, admin, UtcNow).Value;
+
+        return WorkItem.Create(
+            Title,
+            null,
+            WorkItemType.Story,
+            Priority.Medium,
+            project,
+            admin,
+            null,
+            null,
+            UtcNow).Value;
+    }
+
+    public static WorkItem GetWorkItemWithProjectMilestone(User admin, out Milestone milestone)
+    {
+        Project project = GetActiveProjectWithFlow(admin);
+        milestone = Milestone.Create(
+            MilestoneName,
+            null,
+            MilestoneStartDate,
+            MilestoneEndDate,
+            project,
+            admin,
+            UtcNow).Value;
 
         return WorkItem.Create(
             Title,

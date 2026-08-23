@@ -406,6 +406,42 @@ public sealed class WorkItem : BaseEntity
         return Result.Ok();
     }
 
+    public Result ChangeMilestone(Milestone? milestone, User changedBy, DateTime updatedOnUtc)
+    {
+        if (milestone is not null)
+        {
+            if (milestone.ProjectId != ProjectId)
+            {
+                return Result.Fail(WorkItemErrors.MilestoneNotInProject);
+            }
+
+            if (milestone.Status is MilestoneStatus.Completed or MilestoneStatus.Archived)
+            {
+                return Result.Fail(WorkItemErrors.MilestoneNotAcceptingAssignments);
+            }
+        }
+
+        Result guardResult = EnsureCanBeModifiedBy(changedBy);
+
+        if (!guardResult.IsSuccessful)
+        {
+            return guardResult;
+        }
+
+        if (milestone?.Id == MilestoneId)
+        {
+            return Result.Ok();
+        }
+
+        MilestoneId = milestone?.Id;
+        Milestone = milestone;
+        UpdatedOnUtc = updatedOnUtc;
+
+        _changeLogs.Add(WorkItemChangeLog.Create(this, changedBy, WorkItemChangeType.MilestoneChanged, milestone?.Id, updatedOnUtc));
+
+        return Result.Ok();
+    }
+
     public Result Move(FlowState toState, User changedBy, string? reason, DateTime changedOnUtc)
     {
         Result guardResult = EnsureCanBeModifiedBy(changedBy);
