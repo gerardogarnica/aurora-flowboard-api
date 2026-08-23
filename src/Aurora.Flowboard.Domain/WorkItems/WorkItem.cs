@@ -248,6 +248,35 @@ public sealed class WorkItem : BaseEntity
         return Result.Ok();
     }
 
+    public Result UpdateDescription(string? description, User changedBy, DateTime updatedOnUtc)
+    {
+        if (description?.Length > MaxDescriptionLength)
+        {
+            return Result.Fail(WorkItemErrors.DescriptionTooLong);
+        }
+
+        Result guardResult = EnsureCanBeModifiedBy(changedBy);
+
+        if (!guardResult.IsSuccessful)
+        {
+            return guardResult;
+        }
+
+        string? trimmedDescription = description?.Trim();
+
+        if (trimmedDescription == Description)
+        {
+            return Result.Ok();
+        }
+
+        Description = trimmedDescription;
+        UpdatedOnUtc = updatedOnUtc;
+
+        _changeLogs.Add(WorkItemChangeLog.Create(this, changedBy, WorkItemChangeType.DescriptionUpdated, null, updatedOnUtc));
+
+        return Result.Ok();
+    }
+
     public Result Move(FlowState toState, User changedBy, string? reason, DateTime changedOnUtc)
     {
         Result guardResult = EnsureCanBeModifiedBy(changedBy);

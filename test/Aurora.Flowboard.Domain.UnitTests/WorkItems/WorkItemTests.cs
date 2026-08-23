@@ -546,6 +546,142 @@ public sealed class WorkItemTests
         }
     }
 
+    public sealed class UpdateDescription : BaseTest
+    {
+        [Fact]
+        public void Should_UpdateDescription_When_DataIsValid()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+            const string newDescription = "Updated description";
+
+            // Act
+            Result result = workItem.UpdateDescription(newDescription, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.Description.Should().Be(newDescription);
+            workItem.UpdatedOnUtc.Should().Be(WorkItemData.UpdatedOnUtc);
+        }
+
+        [Fact]
+        public void Should_TrimDescription_When_Updated()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            workItem.UpdateDescription("  New description  ", admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.Description.Should().Be("New description");
+        }
+
+        [Fact]
+        public void Should_ClearDescription_When_NullIsProvided()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.UpdateDescription(null, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.Description.Should().BeNull();
+        }
+
+        [Fact]
+        public void Should_CreateDescriptionUpdatedChangeLog_When_Updated()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            workItem.UpdateDescription("New description", admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.ChangeLogs.Should().Contain(c => c.ChangeType == WorkItemChangeType.DescriptionUpdated);
+        }
+
+        [Fact]
+        public void Should_BeNoOp_When_DescriptionIsUnchanged()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.UpdateDescription(WorkItemData.Description, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.UpdatedOnUtc.Should().BeNull();
+            workItem.ChangeLogs.Should().NotContain(c => c.ChangeType == WorkItemChangeType.DescriptionUpdated);
+        }
+
+        [Fact]
+        public void Should_Fail_When_DescriptionExceedsMaxLength()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+            string longDescription = new('A', WorkItem.MaxDescriptionLength + 1);
+
+            // Act
+            Result result = workItem.UpdateDescription(longDescription, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.DescriptionTooLong);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ChangedByIsNotProjectMember()
+        {
+            // Arrange
+            var (workItem, _, _) = WorkItemData.GetWorkItemWithContext();
+            User nonMember = UserData.GetActiveUser();
+
+            // Act
+            Result result = workItem.UpdateDescription("New description", nonMember, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.NotFound);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ChangedByIsInactive()
+        {
+            // Arrange
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            User user = UserData.GetActiveUser();
+            project.AddMember(user, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            user.Deactivate(WorkItemData.CreatedOnUtc);
+
+            // Act
+            Result result = workItem.UpdateDescription("New description", user, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(UserErrors.Inactive);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ProjectDoesNotAllowWorkItems()
+        {
+            // Arrange
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.UpdateDescription("New description", admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+    }
+
     public sealed class Move : BaseTest
     {
         [Fact]

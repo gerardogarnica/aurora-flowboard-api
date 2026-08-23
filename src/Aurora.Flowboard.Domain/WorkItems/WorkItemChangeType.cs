@@ -3,7 +3,7 @@ namespace Aurora.Flowboard.Domain.WorkItems;
 public enum WorkItemChangeType
 {
     Created = 0,
-    Updated = 1,
+    Updated = 1, // legacy — no longer written; historical rows only
     Moved = 2,
     Assigned = 3,
     Unassigned = 4,
@@ -13,5 +13,6 @@ public enum WorkItemChangeType
     TimeLogged = 8,
     TagAdded = 9,
     TagRemoved = 10,
-    TitleUpdated = 11
+    TitleUpdated = 11,
+    DescriptionUpdated = 12
 }
