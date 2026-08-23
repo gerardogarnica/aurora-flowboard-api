@@ -321,6 +321,55 @@ public sealed class WorkItem : BaseEntity
         return Result.Ok();
     }
 
+    public Result UpdateEstimatedPoints(int? estimatedPoints, User changedBy, DateTime updatedOnUtc)
+    {
+        if (estimatedPoints is <= 0)
+        {
+            return Result.Fail(WorkItemErrors.EstimatedPointsInvalid);
+        }
+
+        Result guardResult = EnsureCanBeModifiedBy(changedBy);
+
+        if (!guardResult.IsSuccessful)
+        {
+            return guardResult;
+        }
+
+        if (estimatedPoints == EstimatedPoints)
+        {
+            return Result.Ok();
+        }
+
+        EstimatedPoints = estimatedPoints;
+        UpdatedOnUtc = updatedOnUtc;
+
+        _changeLogs.Add(WorkItemChangeLog.Create(this, changedBy, WorkItemChangeType.EstimatedPointsUpdated, null, updatedOnUtc));
+
+        return Result.Ok();
+    }
+
+    public Result UpdateEstimatedCompletionDate(DateOnly? estimatedCompletionDate, User changedBy, DateTime updatedOnUtc)
+    {
+        Result guardResult = EnsureCanBeModifiedBy(changedBy);
+
+        if (!guardResult.IsSuccessful)
+        {
+            return guardResult;
+        }
+
+        if (estimatedCompletionDate == EstimatedCompletionDate)
+        {
+            return Result.Ok();
+        }
+
+        EstimatedCompletionDate = estimatedCompletionDate;
+        UpdatedOnUtc = updatedOnUtc;
+
+        _changeLogs.Add(WorkItemChangeLog.Create(this, changedBy, WorkItemChangeType.EstimatedCompletionDateUpdated, null, updatedOnUtc));
+
+        return Result.Ok();
+    }
+
     public Result Move(FlowState toState, User changedBy, string? reason, DateTime changedOnUtc)
     {
         Result guardResult = EnsureCanBeModifiedBy(changedBy);

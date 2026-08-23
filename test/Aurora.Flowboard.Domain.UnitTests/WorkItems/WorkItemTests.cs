@@ -804,6 +804,189 @@ public sealed class WorkItemTests
         }
     }
 
+    public sealed class UpdateEstimatedPoints : BaseTest
+    {
+        private const int NewPoints = 8;
+
+        [Fact]
+        public void Should_UpdateEstimatedPoints_When_DataIsValid()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.UpdateEstimatedPoints(NewPoints, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.EstimatedPoints.Should().Be(NewPoints);
+            workItem.UpdatedOnUtc.Should().Be(WorkItemData.UpdatedOnUtc);
+        }
+
+        [Fact]
+        public void Should_ClearEstimatedPoints_When_NullIsProvided()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.UpdateEstimatedPoints(null, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.EstimatedPoints.Should().BeNull();
+        }
+
+        [Fact]
+        public void Should_CreateEstimatedPointsUpdatedChangeLog_When_Updated()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            workItem.UpdateEstimatedPoints(NewPoints, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.ChangeLogs.Should().Contain(c => c.ChangeType == WorkItemChangeType.EstimatedPointsUpdated);
+        }
+
+        [Fact]
+        public void Should_BeNoOp_When_EstimatedPointsIsUnchanged()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.UpdateEstimatedPoints(WorkItemData.EstimatedPoints, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.UpdatedOnUtc.Should().BeNull();
+            workItem.ChangeLogs.Should().NotContain(c => c.ChangeType == WorkItemChangeType.EstimatedPointsUpdated);
+        }
+
+        [Fact]
+        public void Should_Fail_When_EstimatedPointsIsZero()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.UpdateEstimatedPoints(0, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.EstimatedPointsInvalid);
+        }
+
+        [Fact]
+        public void Should_Fail_When_EstimatedPointsIsNegative()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.UpdateEstimatedPoints(-1, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.EstimatedPointsInvalid);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ChangedByIsNotProjectMember()
+        {
+            // Arrange
+            var (workItem, _, _) = WorkItemData.GetWorkItemWithContext();
+            User nonMember = UserData.GetActiveUser();
+
+            // Act
+            Result result = workItem.UpdateEstimatedPoints(NewPoints, nonMember, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.NotFound);
+        }
+    }
+
+    public sealed class UpdateEstimatedCompletionDate : BaseTest
+    {
+        private static readonly DateOnly NewDate = new(2026, 9, 30);
+
+        [Fact]
+        public void Should_UpdateEstimatedCompletionDate_When_DataIsValid()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.UpdateEstimatedCompletionDate(NewDate, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.EstimatedCompletionDate.Should().Be(NewDate);
+            workItem.UpdatedOnUtc.Should().Be(WorkItemData.UpdatedOnUtc);
+        }
+
+        [Fact]
+        public void Should_ClearEstimatedCompletionDate_When_NullIsProvided()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.UpdateEstimatedCompletionDate(null, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.EstimatedCompletionDate.Should().BeNull();
+        }
+
+        [Fact]
+        public void Should_CreateEstimatedCompletionDateUpdatedChangeLog_When_Updated()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            workItem.UpdateEstimatedCompletionDate(NewDate, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.ChangeLogs.Should().Contain(c => c.ChangeType == WorkItemChangeType.EstimatedCompletionDateUpdated);
+        }
+
+        [Fact]
+        public void Should_BeNoOp_When_EstimatedCompletionDateIsUnchanged()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act
+            Result result = workItem.UpdateEstimatedCompletionDate(
+                WorkItemData.EstimatedCompletionDate, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.UpdatedOnUtc.Should().BeNull();
+            workItem.ChangeLogs.Should().NotContain(c => c.ChangeType == WorkItemChangeType.EstimatedCompletionDateUpdated);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ChangedByIsNotProjectMember()
+        {
+            // Arrange
+            var (workItem, _, _) = WorkItemData.GetWorkItemWithContext();
+            User nonMember = UserData.GetActiveUser();
+
+            // Act
+            Result result = workItem.UpdateEstimatedCompletionDate(NewDate, nonMember, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.NotFound);
+        }
+    }
+
     public sealed class Move : BaseTest
     {
         [Fact]

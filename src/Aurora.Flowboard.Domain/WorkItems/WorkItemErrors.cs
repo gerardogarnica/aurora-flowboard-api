@@ -18,6 +18,10 @@ public static class WorkItemErrors
         "WorkItem.DescriptionTooLong",
         "Work item description cannot exceed 4000 characters");
 
+    public static readonly BaseError EstimatedPointsInvalid = BaseError.Validation(
+        "WorkItem.EstimatedPointsInvalid",
+        "Estimated points must be greater than zero");
+
     public static readonly BaseError AssigneeNotProjectMember = BaseError.Validation(
         "WorkItem.AssigneeNotProjectMember",
         "The assignee must be a member of the project");

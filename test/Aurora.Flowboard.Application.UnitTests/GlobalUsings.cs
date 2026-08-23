@@ -38,6 +38,8 @@ global using Aurora.Flowboard.Application.WorkItems.RemoveTag;
 global using Aurora.Flowboard.Application.WorkItems.Unassign;
 global using Aurora.Flowboard.Application.WorkItems.UpdateComment;
 global using Aurora.Flowboard.Application.WorkItems.UpdateDescription;
+global using Aurora.Flowboard.Application.WorkItems.UpdateEstimatedCompletionDate;
+global using Aurora.Flowboard.Application.WorkItems.UpdateEstimatedPoints;
 global using Aurora.Flowboard.Application.WorkItems.UpdatePriority;
 global using Aurora.Flowboard.Application.WorkItems.UpdateTitle;
 global using Aurora.Flowboard.Application.WorkItems.UpdateType;
