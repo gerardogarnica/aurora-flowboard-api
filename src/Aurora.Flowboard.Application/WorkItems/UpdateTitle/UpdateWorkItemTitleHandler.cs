@@ -3,43 +3,16 @@ namespace Aurora.Flowboard.Application.WorkItems.UpdateTitle;
 internal sealed class UpdateWorkItemTitleHandler(
     IApplicationDbContext dbContext,
     IDateTimeProvider dateTimeProvider,
-    IUserContext userContext) : ICommandHandler<UpdateWorkItemTitleCommand>
+    IUserContext userContext)
+    : WorkItemFieldUpdateHandler<UpdateWorkItemTitleCommand>(dbContext, dateTimeProvider, userContext)
 {
-    public async Task<Result> Handle(
+    protected override Guid GetWorkItemId(UpdateWorkItemTitleCommand command) => command.Id;
+
+    protected override Task<Result> ApplyAsync(
+        WorkItem workItem,
         UpdateWorkItemTitleCommand command,
-        CancellationToken cancellationToken)
-    {
-        WorkItem? workItem = await dbContext
-            .WorkItems
-            .Include(w => w.Project)
-            .ThenInclude(p => p.Members)
-            .AsSplitQuery()
-            .SingleOrDefaultAsync(w => w.Id == command.Id, cancellationToken);
-
-        if (workItem is null)
-        {
-            return Result.Fail(WorkItemErrors.NotFound);
-        }
-
-        User? changedBy = await dbContext
-            .Users
-            .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
-
-        if (changedBy is null)
-        {
-            return Result.Fail(UserErrors.NotFound);
-        }
-
-        Result result = workItem.UpdateTitle(command.Title, changedBy, dateTimeProvider.UtcNow);
-
-        if (!result.IsSuccessful)
-        {
-            return Result.Fail(result.Error);
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return Result.Ok();
-    }
+        User changedBy,
+        DateTime utcNow,
+        CancellationToken cancellationToken) =>
+        Task.FromResult(workItem.UpdateTitle(command.Title, changedBy, utcNow));
 }
