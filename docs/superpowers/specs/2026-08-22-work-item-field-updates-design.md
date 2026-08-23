@@ -246,7 +246,7 @@ Tracking matters: primary keys are configured `ValueGeneratedNever`, so attachin
 
 ## 6. Non-member returns 404
 
-`WorkItemErrors.UserNotProjectMember` is deleted. All twelve call sites in `WorkItem.cs` return `WorkItemErrors.NotFound` instead.
+`WorkItemErrors.UserNotProjectMember` is deleted. All eleven call sites in `WorkItem.cs` return `WorkItemErrors.NotFound` instead.
 
 Flipping the existing error's type to `NotFound` would not be enough. `ApiResponses.Problem` puts `Error.Code` into the response `title` and `Error.Message` into `detail`, so a `404` carrying `"WorkItem.UserNotProjectMember"` and `"Only project members can perform this operation on a work item"` would disclose precisely what the change is meant to hide. A non-member must receive a response byte-identical to the one for a work item that does not exist.
 
@@ -276,7 +276,7 @@ Orphaned builders in `test/.../WorkItems/WorkItemCommandData.cs` and the `Update
 
 - **Domain** — for each of the seven new methods: happy path, each field-specific validation failure, the no-op short-circuit (asserting no changelog entry is appended and `UpdatedOnUtc` is untouched), and the three guard failures. Plus regression coverage that the five methods refactored onto `EnsureCanBeModifiedBy` still fail with the same errors in the same order.
 - **Application** — a handler test class and a validator test class per field, following `UpdateWorkItemTitleHandlerTests` and the `MockDbSetHelper` pattern.
-- **Existing tests to update** — the 14 domain assertions and 4 application assertions on `WorkItemErrors.UserNotProjectMember` now expect `WorkItemErrors.NotFound`.
+- **Existing tests to update** — the 11 domain assertions and 3 application assertions on `WorkItemErrors.UserNotProjectMember` now expect `WorkItemErrors.NotFound`.
 
 Volume is the bulk of the work here; each class is mechanical.
 

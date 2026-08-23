@@ -176,6 +176,7 @@ Components are the durable structural subdivision of a project — its functiona
 * A component belongs to exactly one project and cannot be moved between projects. Component names are unique within a project, not globally.
 * `WorkItem.ComponentId` is **nullable**. Work with no clear home is valid and appears under a "no component" filter.
 * A work item has **at most one** component. Work spanning two surfaces is split into separate work items: an authentication change affecting both the API and the web app becomes two items, one per component, not one item counted twice.
+* A component cannot be `Retired` while it holds **open** work items — items whose flow state is not terminal (§5.7). They must first be finished, cancelled, or removed from the component (§5.5).
 * Components are **not** part of the work item code. The code prefix comes from the project alone (`CNL-412`, never `CNL-API-412`).
 * Components are **not** a security boundary. Authorization remains project-level (§5.4).
 * Components do **not** have their own flows. Every work item in a project moves through the project's single flow (§5.7).
@@ -463,8 +464,9 @@ WorkItem (1) ──── (N) WorkItemTag
 
 | Aggregate root | Contains | Notes |
 |---|---|---|
-| **Project** | Membership, Flow, FlowState, **Component** | Owns code sequence allocation; locked during work item creation. Carries `ProjectKind` |
+| **Project** | Membership, Flow, FlowState | Owns code sequence allocation; locked during work item creation. Carries `ProjectKind` |
 | **Milestone** | — | References Project by ID |
+| **Component** | — | References Project by ID |
 | **WorkItem** | Comment, TimeEntry, WorkItemTag, history entries | References Project and (optionally) Milestone and Component by ID |
 | **User** | UserChangeLog | Referenced by ID from all other aggregates. Owns the audit trail of its own global role changes (§5.11) |
 
@@ -500,7 +502,7 @@ POST   /api/v1/flowboard/milestones/{id}/archive
 GET    /api/v1/flowboard/projects/{id}/components
 POST   /api/v1/flowboard/projects/{id}/components
 PATCH  /api/v1/flowboard/components/{id}
-POST   /api/v1/flowboard/components/{id}/retire
+PATCH  /api/v1/flowboard/components/{id}/retire
 
 GET    /api/v1/flowboard/projects/{id}/board
 GET    /api/v1/flowboard/milestones/{id}/board
@@ -508,8 +510,15 @@ GET    /api/v1/flowboard/me/board?kind=
 
 GET    /api/v1/flowboard/work-items?projectId=&milestoneId=&componentId=&type=&assigneeId=
 POST   /api/v1/flowboard/work-items
-GET    /api/v1/flowboard/work-items/{idOrCode}
+GET    /api/v1/flowboard/work-items/{code}
 PATCH  /api/v1/flowboard/work-items/{id}/move
+PATCH  /api/v1/flowboard/work-items/{id}/title
+PATCH  /api/v1/flowboard/work-items/{id}/description
+PATCH  /api/v1/flowboard/work-items/{id}/type
+PATCH  /api/v1/flowboard/work-items/{id}/priority
+PATCH  /api/v1/flowboard/work-items/{id}/estimated-points
+PATCH  /api/v1/flowboard/work-items/{id}/estimated-completion-date
+PATCH  /api/v1/flowboard/work-items/{id}/component
 PATCH  /api/v1/flowboard/work-items/{id}/milestone
 
 GET    /api/v1/flowboard/projects/{id}/flow
@@ -527,7 +536,8 @@ POST   /api/v1/flowboard/work-items/{id}/comments
 * `milestoneId=none` and `componentId=none` filter items with no milestone / no component assignment.
 * `kind=` filters projects and the personal board by `ProjectKind`.
 * `GET /work-items/{idOrCode}` resolves both GUIDs and human codes (`CNL-101`) — this is what makes codes useful in conversation.
-* `PATCH /work-items/{id}/milestone` is the only way to change milestone assignment; it is deliberately separate from the general update endpoint so it can be audited independently. It rejects a target milestone that is `Completed` or `Archived` with `409 Conflict`.
+* Every editable field of a work item has its own `PATCH` route, so each change can be audited independently and the front-end's inline controls can save one field at a time. There is no general update endpoint. A `null` body value clears the field.
+* `PATCH /work-items/{id}/milestone` rejects a target milestone that is `Completed` or `Archived` with `400 Bad Request` (`WorkItem.MilestoneNotAcceptingAssignments`). `POST /work-items` returns the same error for the same reason.
 * `POST /milestones/{id}/archive` and any transition to `Completed` return `409 Conflict` when the milestone still holds open work items, listing the offending item codes so they can be resolved or reassigned (§5.2).
 * `POST /projects/{id}/archive` and any transition to `Completed` behave the same way (§5.1), except that open items cannot be reassigned out of a project — they must be finished, cancelled, or archived.
 * Every endpoint is scoped to the caller's project memberships; a non-member receives `404`, not `403`, so that project existence is not disclosed.
