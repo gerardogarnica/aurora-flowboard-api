@@ -987,6 +987,122 @@ public sealed class WorkItemTests
         }
     }
 
+    public sealed class ChangeComponent : BaseTest
+    {
+        [Fact]
+        public void Should_SetComponent_When_DataIsValid()
+        {
+            // Arrange
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            Component component = ComponentData.GetComponent(project, admin);
+
+            // Act
+            Result result = workItem.ChangeComponent(component, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.ComponentId.Should().Be(component.Id);
+            workItem.Component.Should().Be(component);
+            workItem.UpdatedOnUtc.Should().Be(WorkItemData.UpdatedOnUtc);
+        }
+
+        [Fact]
+        public void Should_ClearComponent_When_NullIsProvided()
+        {
+            // Arrange
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            Component component = ComponentData.GetComponent(project, admin);
+            workItem.ChangeComponent(component, admin, WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.ChangeComponent(null, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.ComponentId.Should().BeNull();
+            workItem.Component.Should().BeNull();
+        }
+
+        [Fact]
+        public void Should_CreateComponentChangedChangeLog_WithComponentIdAsAffectedEntity()
+        {
+            // Arrange
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            Component component = ComponentData.GetComponent(project, admin);
+
+            // Act
+            workItem.ChangeComponent(component, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.ChangeLogs.Should().Contain(c =>
+                c.ChangeType == WorkItemChangeType.ComponentChanged &&
+                c.AffectedEntityId == component.Id);
+        }
+
+        [Fact]
+        public void Should_BeNoOp_When_ComponentIsUnchanged()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+
+            // Act — the work item was created without a component, so null is unchanged
+            Result result = workItem.ChangeComponent(null, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.UpdatedOnUtc.Should().BeNull();
+            workItem.ChangeLogs.Should().NotContain(c => c.ChangeType == WorkItemChangeType.ComponentChanged);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ComponentBelongsToAnotherProject()
+        {
+            // Arrange
+            var (workItem, _, admin) = WorkItemData.GetWorkItemWithContext();
+            var (otherProject, otherAdmin) = WorkItemData.GetActiveProjectWithFlow();
+            Component foreignComponent = ComponentData.GetComponent(otherProject, otherAdmin);
+
+            // Act
+            Result result = workItem.ChangeComponent(foreignComponent, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.ComponentNotInProject);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ComponentIsRetired()
+        {
+            // Arrange
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            Component component = ComponentData.GetComponent(project, admin);
+            component.Retire(admin, 0, WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.ChangeComponent(component, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.ComponentRetired);
+        }
+
+        [Fact]
+        public void Should_Fail_When_ChangedByIsNotProjectMember()
+        {
+            // Arrange
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            Component component = ComponentData.GetComponent(project, admin);
+            User nonMember = UserData.GetActiveUser();
+
+            // Act
+            Result result = workItem.ChangeComponent(component, nonMember, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.NotFound);
+        }
+    }
+
     public sealed class Move : BaseTest
     {
         [Fact]

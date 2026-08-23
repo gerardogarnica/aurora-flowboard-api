@@ -18,5 +18,6 @@ public enum WorkItemChangeType
     TypeUpdated = 13,
     PriorityUpdated = 14,
     EstimatedPointsUpdated = 15,
-    EstimatedCompletionDateUpdated = 16
+    EstimatedCompletionDateUpdated = 16,
+    ComponentChanged = 17
 }

@@ -370,6 +370,42 @@ public sealed class WorkItem : BaseEntity
         return Result.Ok();
     }
 
+    public Result ChangeComponent(Component? component, User changedBy, DateTime updatedOnUtc)
+    {
+        if (component is not null)
+        {
+            if (component.ProjectId != ProjectId)
+            {
+                return Result.Fail(WorkItemErrors.ComponentNotInProject);
+            }
+
+            if (component.Status == ComponentStatus.Retired)
+            {
+                return Result.Fail(WorkItemErrors.ComponentRetired);
+            }
+        }
+
+        Result guardResult = EnsureCanBeModifiedBy(changedBy);
+
+        if (!guardResult.IsSuccessful)
+        {
+            return guardResult;
+        }
+
+        if (component?.Id == ComponentId)
+        {
+            return Result.Ok();
+        }
+
+        ComponentId = component?.Id;
+        Component = component;
+        UpdatedOnUtc = updatedOnUtc;
+
+        _changeLogs.Add(WorkItemChangeLog.Create(this, changedBy, WorkItemChangeType.ComponentChanged, component?.Id, updatedOnUtc));
+
+        return Result.Ok();
+    }
+
     public Result Move(FlowState toState, User changedBy, string? reason, DateTime changedOnUtc)
     {
         Result guardResult = EnsureCanBeModifiedBy(changedBy);

@@ -8,6 +8,7 @@ internal static class WorkItemCommandData
     public const string Content = "This is a test comment";
     public const string UpdatedContent = "Updated comment content";
     public const string TagName = "backend";
+    public const string ComponentName = "Billing";
     public static readonly DateTime UtcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     public static readonly DateOnly Today = DateOnly.FromDateTime(UtcNow);
     public static readonly DateOnly EstimatedCompletionDate = new(2026, 12, 31);
@@ -138,5 +139,22 @@ internal static class WorkItemCommandData
             UtcNow).Value;
 
         return (workItem, assignee);
+    }
+
+    public static WorkItem GetWorkItemWithProjectComponent(User admin, out Component component)
+    {
+        Project project = GetActiveProjectWithFlow(admin);
+        component = Component.Create(ComponentName, project, admin, UtcNow).Value;
+
+        return WorkItem.Create(
+            Title,
+            null,
+            WorkItemType.Story,
+            Priority.Medium,
+            project,
+            admin,
+            null,
+            null,
+            UtcNow).Value;
     }
 }

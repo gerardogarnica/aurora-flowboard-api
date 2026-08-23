@@ -28,6 +28,7 @@ global using Aurora.Flowboard.Application.UnitTests.Abstractions;
 global using Aurora.Flowboard.Application.WorkItems.AddComment;
 global using Aurora.Flowboard.Application.WorkItems.AddTag;
 global using Aurora.Flowboard.Application.WorkItems.Assign;
+global using Aurora.Flowboard.Application.WorkItems.ChangeComponent;
 global using Aurora.Flowboard.Application.WorkItems.Create;
 global using Aurora.Flowboard.Application.WorkItems.GetByCode;
 global using Aurora.Flowboard.Application.WorkItems.GetByProject;

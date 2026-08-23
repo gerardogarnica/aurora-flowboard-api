@@ -9,6 +9,8 @@ global using Aurora.Flowboard.Domain.Shared;
 global using Aurora.Flowboard.Domain.TemplateFlows;
 global using Aurora.Flowboard.Domain.TemplateFlows.Events;
 global using Aurora.Flowboard.Domain.UnitTests.Abstractions;
+global using Aurora.Flowboard.Domain.UnitTests.Components;
+global using Aurora.Flowboard.Domain.UnitTests.Milestones;
 global using Aurora.Flowboard.Domain.UnitTests.Projects;
 global using Aurora.Flowboard.Domain.UnitTests.Users;
 global using Aurora.Flowboard.Domain.Users;
