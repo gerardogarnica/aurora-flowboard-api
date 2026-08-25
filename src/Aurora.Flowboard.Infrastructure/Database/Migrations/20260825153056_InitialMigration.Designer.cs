@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Aurora.Flowboard.Infrastructure.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260819014435_InitialMigration")]
+    [Migration("20260825153056_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
@@ -247,8 +247,9 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("name");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer")
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("status");
 
                     b.Property<DateTime?>("UpdatedOnUtc")
@@ -295,8 +296,8 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                         .HasColumnType("text")
                         .HasColumnName("new_kind");
 
-                    b.Property<int?>("NewStatus")
-                        .HasColumnType("integer")
+                    b.Property<string>("NewStatus")
+                        .HasColumnType("text")
                         .HasColumnName("new_status");
 
                     b.Property<Guid>("ProjectId")

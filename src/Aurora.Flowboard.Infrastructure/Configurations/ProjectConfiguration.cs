@@ -30,6 +30,10 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
                 .IsUnique();
         });
 
+        builder.Property(x => x.Kind)
+            .IsRequired()
+            .HasConversion<string>();
+
         builder.OwnsOne(x => x.Color, color =>
         {
             color.Property(c => c.Value)
@@ -38,13 +42,9 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
                 .HasMaxLength(Color.MaxLength);
         });
 
-        builder.Property(x => x.Kind)
-            .IsRequired()
-            .HasConversion<string>();
-
         builder.Property(x => x.Status)
             .IsRequired()
-            .HasConversion<int>();
+            .HasConversion<string>();
 
         builder.Property(x => x.WorkItemCounter)
             .IsRequired();

@@ -60,9 +60,9 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                     name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     prefix = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: false),
-                    color = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     kind = table.Column<string>(type: "text", nullable: false),
-                    status = table.Column<int>(type: "integer", nullable: false),
+                    color = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
                     work_item_counter = table.Column<int>(type: "integer", nullable: false),
                     last_activity_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     created_by = table.Column<Guid>(type: "uuid", nullable: false),
@@ -190,8 +190,8 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     project_id = table.Column<Guid>(type: "uuid", nullable: false),
                     name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    sort_order = table.Column<int>(type: "integer", nullable: false),
                     category = table.Column<string>(type: "text", nullable: false),
+                    sort_order = table.Column<int>(type: "integer", nullable: false),
                     color = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)
                 },
                 constraints: table =>
@@ -248,11 +248,11 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     project_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    changed_by_id = table.Column<Guid>(type: "uuid", nullable: false),
                     change_type = table.Column<string>(type: "text", nullable: false),
                     affected_entity_id = table.Column<Guid>(type: "uuid", nullable: true),
-                    new_status = table.Column<int>(type: "integer", nullable: true),
+                    new_status = table.Column<string>(type: "text", nullable: true),
                     new_kind = table.Column<string>(type: "text", nullable: true),
+                    changed_by_id = table.Column<Guid>(type: "uuid", nullable: false),
                     changed_on_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -312,8 +312,8 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     template_flow_id = table.Column<Guid>(type: "uuid", nullable: false),
                     name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    sort_order = table.Column<int>(type: "integer", nullable: false),
                     category = table.Column<string>(type: "text", nullable: false),
+                    sort_order = table.Column<int>(type: "integer", nullable: false),
                     color = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)
                 },
                 constraints: table =>
@@ -371,6 +371,7 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
+                    code = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     description = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: true),
                     type = table.Column<string>(type: "text", nullable: false),
@@ -379,12 +380,11 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                     flow_state_id = table.Column<Guid>(type: "uuid", nullable: false),
                     assignee_id = table.Column<Guid>(type: "uuid", nullable: true),
                     created_by_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    code = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     sequence_number = table.Column<int>(type: "integer", nullable: false),
+                    milestone_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    component_id = table.Column<Guid>(type: "uuid", nullable: true),
                     estimated_points = table.Column<int>(type: "integer", nullable: true),
                     estimated_completion_date = table.Column<DateOnly>(type: "date", nullable: true),
-                    component_id = table.Column<Guid>(type: "uuid", nullable: true),
-                    milestone_id = table.Column<Guid>(type: "uuid", nullable: true),
                     created_on_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     updated_on_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     completed_on_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
@@ -429,9 +429,9 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     work_item_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    changed_by_id = table.Column<Guid>(type: "uuid", nullable: false),
                     change_type = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
                     affected_entity_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    changed_by_id = table.Column<Guid>(type: "uuid", nullable: false),
                     changed_on_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -480,8 +480,8 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                     work_item_id = table.Column<Guid>(type: "uuid", nullable: false),
                     from_state_id = table.Column<Guid>(type: "uuid", nullable: true),
                     to_state_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    changed_by_id = table.Column<Guid>(type: "uuid", nullable: false),
                     reason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    changed_by_id = table.Column<Guid>(type: "uuid", nullable: false),
                     changed_on_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>

@@ -18,12 +18,12 @@ internal sealed class TemplateFlowStateConfiguration : IEntityTypeConfiguration<
             .IsRequired()
             .HasMaxLength(TemplateFlowState.MaxNameLength);
 
-        builder.Property(x => x.SortOrder)
-            .IsRequired();
-
         builder.Property(x => x.Category)
             .IsRequired()
             .HasConversion<string>();
+
+        builder.Property(x => x.SortOrder)
+            .IsRequired();
 
         builder.OwnsOne(x => x.Color, color =>
         {

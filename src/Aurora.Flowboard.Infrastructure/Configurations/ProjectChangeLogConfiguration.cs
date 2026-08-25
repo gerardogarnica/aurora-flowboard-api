@@ -14,9 +14,6 @@ internal sealed class ProjectChangeLogConfiguration : IEntityTypeConfiguration<P
         builder.Property(x => x.ProjectId)
             .IsRequired();
 
-        builder.Property(x => x.ChangedById)
-            .IsRequired();
-
         builder.Property(x => x.ChangeType)
             .IsRequired()
             .HasConversion<string>();
@@ -24,10 +21,13 @@ internal sealed class ProjectChangeLogConfiguration : IEntityTypeConfiguration<P
         builder.Property(x => x.AffectedEntityId);
 
         builder.Property(x => x.NewStatus)
-            .HasConversion<int>();
+            .HasConversion<string>();
 
         builder.Property(x => x.NewKind)
             .HasConversion<string>();
+
+        builder.Property(x => x.ChangedById)
+            .IsRequired();
 
         builder.Property(x => x.ChangedOnUtc)
             .IsRequired();

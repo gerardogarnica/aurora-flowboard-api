@@ -28,18 +28,18 @@ public sealed class WorkItem : BaseEntity
     public Guid? AssigneeId { get; private set; }
     public Guid CreatedById { get; private set; }
     public int SequenceNumber { get; private set; }
+    public Guid? MilestoneId { get; private set; }
+    public Guid? ComponentId { get; private set; }
     public int? EstimatedPoints { get; private set; }
     public DateOnly? EstimatedCompletionDate { get; private set; }
-    public Guid? ComponentId { get; private set; }
-    public Guid? MilestoneId { get; private set; }
     public DateTime CreatedOnUtc { get; private set; }
     public DateTime? UpdatedOnUtc { get; private set; }
     public DateTime? CompletedOnUtc { get; private set; }
 
     public Project Project { get; init; } = null!;
     public FlowState FlowState { get; private set; } = null!;
-    public Component? Component { get; private set; }
     public Milestone? Milestone { get; private set; }
+    public Component? Component { get; private set; }
     public IReadOnlyCollection<Comment> Comments => _comments.AsReadOnly();
     public IReadOnlyCollection<TimeEntry> TimeEntries => _timeEntries.AsReadOnly();
     public IReadOnlyCollection<StateTransitionHistory> StateHistory => _stateHistory.AsReadOnly();
@@ -60,10 +60,10 @@ public sealed class WorkItem : BaseEntity
         Guid createdById,
         Guid? assigneeId,
         int sequenceNumber,
-        int? estimatedPoints,
-        DateOnly? estimatedCompletionDate,
         Guid? milestoneId,
         Guid? componentId,
+        int? estimatedPoints,
+        DateOnly? estimatedCompletionDate,
         DateTime createdOnUtc) : base(id)
     {
         Code = code;
@@ -76,10 +76,10 @@ public sealed class WorkItem : BaseEntity
         CreatedById = createdById;
         AssigneeId = assigneeId;
         SequenceNumber = sequenceNumber;
-        EstimatedPoints = estimatedPoints;
-        EstimatedCompletionDate = estimatedCompletionDate;
         MilestoneId = milestoneId;
         ComponentId = componentId;
+        EstimatedPoints = estimatedPoints;
+        EstimatedCompletionDate = estimatedCompletionDate;
         CreatedOnUtc = createdOnUtc;
     }
 
@@ -188,10 +188,10 @@ public sealed class WorkItem : BaseEntity
             createdBy.Id,
             assignee?.Id,
             sequenceNumber,
-            estimatedPoints,
-            estimatedCompletionDate,
             milestone?.Id,
             component?.Id,
+            estimatedPoints,
+            estimatedCompletionDate,
             createdOnUtc)
         {
             Project = project,
@@ -481,8 +481,8 @@ public sealed class WorkItem : BaseEntity
             this,
             FlowState,
             toState,
-            changedBy,
             reason,
+            changedBy,
             changedOnUtc));
 
         FlowStateId = toState.Id;

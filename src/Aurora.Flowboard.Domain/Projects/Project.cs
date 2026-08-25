@@ -37,8 +37,8 @@ public sealed class Project : BaseEntity
     public string Name { get; private set; }
     public string? Description { get; private set; }
     public ProjectCode Prefix { get; private set; }
-    public Color Color { get; private set; }
     public ProjectKind Kind { get; private set; }
+    public Color Color { get; private set; }
     public ProjectStatus Status { get; private set; }
     public int WorkItemCounter { get; private set; }
     public DateTime LastActivityDate { get; private set; }
@@ -333,7 +333,7 @@ public sealed class Project : BaseEntity
         int nextActiveOrder = activeStates.Count > 0 ? activeStates.Max(s => s.SortOrder) + 1 : 1;
         int sortOrder = category == FlowStateCategory.Active ? nextActiveOrder : 0;
 
-        Result<FlowState> stateResult = FlowState.Create(this, name, sortOrder, category, color);
+        Result<FlowState> stateResult = FlowState.Create(this, name, category, sortOrder, color);
 
         if (!stateResult.IsSuccessful)
         {

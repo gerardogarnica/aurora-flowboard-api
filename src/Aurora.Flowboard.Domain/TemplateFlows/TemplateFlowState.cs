@@ -9,8 +9,8 @@ public sealed class TemplateFlowState
     public Guid Id { get; private set; }
     public Guid TemplateFlowId { get; private set; }
     public string Name { get; private set; }
-    public int SortOrder { get; private set; }
     public FlowStateCategory Category { get; private set; }
+    public int SortOrder { get; private set; }
     public Color Color { get; private set; }
 
     private TemplateFlowState() { } // EF Core
@@ -19,23 +19,23 @@ public sealed class TemplateFlowState
         Guid id,
         Guid templateFlowId,
         string name,
-        int sortOrder,
         FlowStateCategory category,
+        int sortOrder,
         Color color)
     {
         Id = id;
         TemplateFlowId = templateFlowId;
         Name = name;
-        SortOrder = sortOrder;
         Category = category;
+        SortOrder = sortOrder;
         Color = color;
     }
 
     internal static Result<TemplateFlowState> Create(
         TemplateFlow template,
         string name,
-        int sortOrder,
         FlowStateCategory category,
+        int sortOrder,
         Color color)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -52,8 +52,8 @@ public sealed class TemplateFlowState
             Guid.NewGuid(),
             template.Id,
             name.Trim(),
-            sortOrder,
             category,
+            sortOrder,
             color);
     }
 

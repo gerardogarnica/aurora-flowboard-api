@@ -7,23 +7,23 @@ public sealed class FlowState
     public Guid Id { get; private set; }
     public Guid ProjectId { get; private set; }
     public string Name { get; private set; }
-    public int SortOrder { get; private set; }
     public FlowStateCategory Category { get; private set; }
+    public int SortOrder { get; private set; }
     public Color Color { get; private set; }
 
     private FlowState() { } // EF Core
 
-    private FlowState(Guid id, Guid projectId, string name, int sortOrder, FlowStateCategory category, Color color)
+    private FlowState(Guid id, Guid projectId, string name, FlowStateCategory category, int sortOrder, Color color)
     {
         Id = id;
         ProjectId = projectId;
         Name = name;
-        SortOrder = sortOrder;
         Category = category;
+        SortOrder = sortOrder;
         Color = color;
     }
 
-    internal static Result<FlowState> Create(Project project, string name, int sortOrder, FlowStateCategory category, Color color)
+    internal static Result<FlowState> Create(Project project, string name, FlowStateCategory category, int sortOrder, Color color)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -39,8 +39,8 @@ public sealed class FlowState
             Guid.NewGuid(),
             project.Id,
             name.Trim(),
-            sortOrder,
             category,
+            sortOrder,
             color);
     }
 

@@ -62,7 +62,7 @@ public sealed class TemplateFlow : BaseEntity
 
         int sortOrder = category == FlowStateCategory.Active ? NextActiveSortOrder() : 0;
 
-        Result<TemplateFlowState> stateResult = TemplateFlowState.Create(this, name, sortOrder, category, color);
+        Result<TemplateFlowState> stateResult = TemplateFlowState.Create(this, name, category, sortOrder, color);
 
         if (!stateResult.IsSuccessful)
         {
