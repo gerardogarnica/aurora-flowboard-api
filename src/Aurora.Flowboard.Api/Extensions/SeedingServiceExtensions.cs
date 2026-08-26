@@ -19,25 +19,28 @@ internal static class SeedingServiceExtensions
             [
                 ("Backlog", FlowStateCategory.Active, "slate"),
                 ("In Progress", FlowStateCategory.Active, "blue"),
-                ("Code Review", FlowStateCategory.Active, "navy"),
+                ("Code Review", FlowStateCategory.Active, "lime"),
                 ("In Testing", FlowStateCategory.Active, "amber"),
-                ("Done", FlowStateCategory.Completed, "green"),
+                ("Ready for Release", FlowStateCategory.Active, "teal"),
+                ("Released", FlowStateCategory.Completed, "green"),
                 ("Cancelled", FlowStateCategory.Cancelled, "red"),
             ],
             [ProjectKind.Client] =
             [
                 ("Backlog", FlowStateCategory.Active, "slate"),
                 ("In Progress", FlowStateCategory.Active, "blue"),
-                ("Code Review", FlowStateCategory.Active, "navy"),
+                ("Code Review", FlowStateCategory.Active, "lime"),
                 ("In Testing", FlowStateCategory.Active, "amber"),
-                ("Waiting for Client", FlowStateCategory.Active, "lime"),
-                ("Done", FlowStateCategory.Completed, "green"),
+                ("Waiting for Client", FlowStateCategory.Active, "navy"),
+                ("Ready for Delivery", FlowStateCategory.Active, "teal"),
+                ("Delivered", FlowStateCategory.Completed, "green"),
                 ("Cancelled", FlowStateCategory.Cancelled, "red"),
             ],
             [ProjectKind.Research] =
             [
                 ("Backlog", FlowStateCategory.Active, "slate"),
                 ("Investigating", FlowStateCategory.Active, "blue"),
+                ("Reporting", FlowStateCategory.Active, "indigo"),
                 ("Concluded", FlowStateCategory.Completed, "green"),
                 ("Cancelled", FlowStateCategory.Cancelled, "red"),
             ],
@@ -45,6 +48,7 @@ internal static class SeedingServiceExtensions
             [
                 ("Backlog", FlowStateCategory.Active, "slate"),
                 ("In Progress", FlowStateCategory.Active, "blue"),
+                ("Verifying", FlowStateCategory.Active, "orange"),
                 ("Done", FlowStateCategory.Completed, "green"),
                 ("Cancelled", FlowStateCategory.Cancelled, "red"),
             ],
