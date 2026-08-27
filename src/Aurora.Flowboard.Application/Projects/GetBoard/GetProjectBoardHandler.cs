@@ -1,17 +1,16 @@
 namespace Aurora.Flowboard.Application.Projects.GetBoard;
 
 internal sealed class GetProjectBoardHandler(
-    IApplicationDbContext dbContext) : IQueryHandler<GetProjectBoardQuery, IReadOnlyCollection<BoardColumnResponse>>
+    IApplicationDbContext dbContext,
+    IUserContext userContext) : IQueryHandler<GetProjectBoardQuery, IReadOnlyCollection<BoardColumnResponse>>
 {
     public async Task<Result<IReadOnlyCollection<BoardColumnResponse>>> Handle(
         GetProjectBoardQuery query,
         CancellationToken cancellationToken)
     {
-        bool projectExists = await dbContext
-            .Projects
-            .AnyAsync(p => p.Id == query.ProjectId, cancellationToken);
+        bool isMember = await dbContext.IsProjectMemberAsync(query.ProjectId, userContext.UserId, cancellationToken);
 
-        if (!projectExists)
+        if (!isMember)
         {
             return Result.Fail<IReadOnlyCollection<BoardColumnResponse>>(ProjectErrors.NotFound);
         }

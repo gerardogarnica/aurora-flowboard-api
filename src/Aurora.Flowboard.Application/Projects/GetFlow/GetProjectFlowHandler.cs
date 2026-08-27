@@ -1,7 +1,8 @@
 namespace Aurora.Flowboard.Application.Projects.GetFlow;
 
 internal sealed class GetProjectFlowHandler(
-    IApplicationDbContext dbContext) : IQueryHandler<GetProjectFlowQuery, ProjectFlowResponse>
+    IApplicationDbContext dbContext,
+    IUserContext userContext) : IQueryHandler<GetProjectFlowQuery, ProjectFlowResponse>
 {
     public async Task<Result<ProjectFlowResponse>> Handle(
         GetProjectFlowQuery query,
@@ -9,13 +10,14 @@ internal sealed class GetProjectFlowHandler(
     {
         Project? project = await dbContext
             .Projects
+            .Include(p => p.Members)
             .Include(p => p.FlowStates)
             .Include(p => p.FlowTransitions)
             .AsNoTracking()
             .AsSplitQuery()
             .SingleOrDefaultAsync(p => p.Id == query.ProjectId, cancellationToken);
 
-        if (project is null)
+        if (project is null || !project.Members.Any(m => m.UserId == userContext.UserId))
         {
             return Result.Fail<ProjectFlowResponse>(ProjectErrors.NotFound);
         }

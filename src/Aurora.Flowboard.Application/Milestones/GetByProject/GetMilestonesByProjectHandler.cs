@@ -8,10 +8,7 @@ internal sealed class GetMilestonesByProjectHandler(
         GetMilestonesByProjectQuery query,
         CancellationToken cancellationToken)
     {
-        bool isMember = await dbContext
-            .Projects
-            .AsNoTracking()
-            .AnyAsync(p => p.Id == query.ProjectId && p.Members.Any(m => m.UserId == userContext.UserId), cancellationToken);
+        bool isMember = await dbContext.IsProjectMemberAsync(query.ProjectId, userContext.UserId, cancellationToken);
 
         if (!isMember)
         {

@@ -3,22 +3,46 @@ namespace Aurora.Flowboard.Application.UnitTests.Projects;
 public sealed class GetProjectFlowHandlerTests
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IUserContext _userContext;
     private readonly GetProjectFlowHandler _handler;
 
     public GetProjectFlowHandlerTests()
     {
         _dbContext = Substitute.For<IApplicationDbContext>();
-        _handler = new GetProjectFlowHandler(_dbContext);
+        _userContext = Substitute.For<IUserContext>();
+        _handler = new GetProjectFlowHandler(_dbContext, _userContext);
     }
 
     [Fact]
     public async Task Should_ReturnNotFoundError_When_ProjectDoesNotExist()
     {
         // Arrange
+        _userContext.UserId.Returns(Guid.NewGuid());
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
         _dbContext.Projects.Returns(projectsMock);
 
         GetProjectFlowQuery query = new(Guid.NewGuid());
+
+        // Act
+        Result<ProjectFlowResponse> result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(ProjectErrors.NotFound);
+    }
+
+    [Fact]
+    public async Task Should_ReturnNotFoundError_When_UserIsNotMember()
+    {
+        // Arrange
+        User admin = ProjectQueryData.GetAdminUser();
+        User other = ProjectQueryData.GetOtherUser();
+        Project project = ProjectQueryData.GetActiveProject(admin);
+        _userContext.UserId.Returns(other.Id);
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        _dbContext.Projects.Returns(projectsMock);
+
+        GetProjectFlowQuery query = new(project.Id);
 
         // Act
         Result<ProjectFlowResponse> result = await _handler.Handle(query, CancellationToken.None);
@@ -35,6 +59,7 @@ public sealed class GetProjectFlowHandlerTests
         User admin = ProjectQueryData.GetAdminUser();
         Project project = ProjectQueryData.GetActiveProject(admin);
 
+        _userContext.UserId.Returns(admin.Id);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
         _dbContext.Projects.Returns(projectsMock);
 
@@ -57,6 +82,7 @@ public sealed class GetProjectFlowHandlerTests
         User admin = ProjectQueryData.GetAdminUser();
         Project project = ProjectQueryData.GetProjectWithFlowStates(admin);
 
+        _userContext.UserId.Returns(admin.Id);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
         _dbContext.Projects.Returns(projectsMock);
 
@@ -80,6 +106,7 @@ public sealed class GetProjectFlowHandlerTests
         User admin = ProjectQueryData.GetAdminUser();
         Project project = ProjectQueryData.GetProjectWithFlowStates(admin);
 
+        _userContext.UserId.Returns(admin.Id);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
         _dbContext.Projects.Returns(projectsMock);
 
@@ -99,6 +126,7 @@ public sealed class GetProjectFlowHandlerTests
         User admin = ProjectQueryData.GetAdminUser();
         Project project = ProjectQueryData.GetProjectWithFlowStates(admin);
 
+        _userContext.UserId.Returns(admin.Id);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
         _dbContext.Projects.Returns(projectsMock);
 
@@ -120,6 +148,7 @@ public sealed class GetProjectFlowHandlerTests
         User admin = ProjectQueryData.GetAdminUser();
         Project project = ProjectQueryData.GetProjectWithFlowStates(admin);
 
+        _userContext.UserId.Returns(admin.Id);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
         _dbContext.Projects.Returns(projectsMock);
 
