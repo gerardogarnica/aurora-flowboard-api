@@ -6,10 +6,11 @@ public sealed class ProjectChangeLog
 {
     public Guid Id { get; private set; }
     public Guid ProjectId { get; private set; }
-    public Guid ChangedById { get; private set; }
     public ProjectChangeType ChangeType { get; private set; }
     public Guid? AffectedEntityId { get; private set; }
     public ProjectStatus? NewStatus { get; private set; }
+    public ProjectKind? NewKind { get; private set; }
+    public Guid ChangedById { get; private set; }
     public DateTime ChangedOnUtc { get; private set; }
 
     public User ChangedBy { get; init; } = null!; // Navigation property
@@ -19,18 +20,20 @@ public sealed class ProjectChangeLog
     private ProjectChangeLog(
         Guid id,
         Guid projectId,
-        Guid changedById,
         ProjectChangeType changeType,
         Guid? affectedEntityId,
         ProjectStatus? newStatus,
+        ProjectKind? newKind,
+        Guid changedById,
         DateTime changedOnUtc)
     {
         Id = id;
         ProjectId = projectId;
-        ChangedById = changedById;
         ChangeType = changeType;
         AffectedEntityId = affectedEntityId;
         NewStatus = newStatus;
+        NewKind = newKind;
+        ChangedById = changedById;
         ChangedOnUtc = changedOnUtc;
     }
 
@@ -40,6 +43,7 @@ public sealed class ProjectChangeLog
         ProjectChangeType changeType,
         Guid? affectedEntityId,
         DateTime changedOnUtc,
-        ProjectStatus? newStatus = null) =>
-        new(Guid.NewGuid(), project.Id, changedBy.Id, changeType, affectedEntityId, newStatus, changedOnUtc);
+        ProjectStatus? newStatus = null,
+        ProjectKind? newKind = null) =>
+        new(Guid.NewGuid(), project.Id, changeType, affectedEntityId, newStatus, newKind, changedBy.Id, changedOnUtc);
 }

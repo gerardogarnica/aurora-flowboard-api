@@ -12,21 +12,25 @@ public sealed record ProjectCode
     {
         if (string.IsNullOrWhiteSpace(input))
         {
-            return Result.Fail<ProjectCode>(ProjectErrors.CodeRequired);
+            return Result.Fail<ProjectCode>(ProjectErrors.PrefixRequired);
         }
 
         string trimmed = input.Trim();
 
         if (trimmed.Length > MaxLength)
         {
-            return Result.Fail<ProjectCode>(ProjectErrors.CodeTooLong);
+            return Result.Fail<ProjectCode>(ProjectErrors.PrefixTooLong);
         }
 
         if (!trimmed.All(char.IsLetter))
         {
-            return Result.Fail<ProjectCode>(ProjectErrors.CodeInvalidCharacters);
+            return Result.Fail<ProjectCode>(ProjectErrors.PrefixInvalidCharacters);
         }
 
         return new ProjectCode(trimmed.ToUpperInvariant());
     }
+
+    public override string ToString() => Value;
+
+    public static implicit operator string(ProjectCode prefix) => prefix.Value;
 }

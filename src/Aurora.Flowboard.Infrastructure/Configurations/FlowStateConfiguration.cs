@@ -1,4 +1,4 @@
-using Aurora.Flowboard.Domain.Flows;
+using Aurora.Flowboard.Domain.Projects;
 using Aurora.Flowboard.Domain.Shared;
 
 namespace Aurora.Flowboard.Infrastructure.Configurations;
@@ -11,19 +11,19 @@ internal sealed class FlowStateConfiguration : IEntityTypeConfiguration<FlowStat
 
         builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.FlowId)
+        builder.Property(x => x.ProjectId)
             .IsRequired();
 
         builder.Property(x => x.Name)
             .IsRequired()
             .HasMaxLength(FlowState.MaxNameLength);
 
-        builder.Property(x => x.SortOrder)
-            .IsRequired();
-
         builder.Property(x => x.Category)
             .IsRequired()
             .HasConversion<string>();
+
+        builder.Property(x => x.SortOrder)
+            .IsRequired();
 
         builder.OwnsOne(x => x.Color, color =>
         {
@@ -33,6 +33,6 @@ internal sealed class FlowStateConfiguration : IEntityTypeConfiguration<FlowStat
                 .HasMaxLength(Color.MaxLength);
         });
 
-        builder.HasIndex(x => x.FlowId);
+        builder.HasIndex(x => x.ProjectId);
     }
 }

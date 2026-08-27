@@ -1,651 +1,83 @@
 ---
 name: domain-entity
-description: Generates Domain Entities following DDD principles with factory methods, private setters, domain events, and proper encapsulation. Supports aggregate roots, child entities, and value objects.
-language: C#
-framework: .NET
-pattern: Domain-Driven Design
+description: Adds or changes a domain entity and maps it to the database — aggregate roots, child entities, value objects, domain events, error catalogs, and the EF Core configuration. Use when the user asks to add or change an entity, aggregate, value object, domain event, or {Entity}Errors class; when a business rule or invariant needs a home; when an entity needs a table, column, relationship, or index; or when asked where domain logic belongs.
+argument-hint: <entity and its fields, e.g. "WorkItemTemplate with a name, priority and project">
 ---
 
-# Domain Entity patterns
+# Domain entity
 
-## Overview
+Write the domain type, then map it. An entity that is never mapped is never persisted, so both steps belong together.
 
-This skill generates Domain Entities following Domain-Driven Design (DDD) principles:
+Once the entity exists, continue with the `create-feature` skill for the use case and endpoint.
 
-- **Encapsulation** - Private setters, controlled modification
-- **Factory Methods** - Static `Create()` methods with validation
-- **Domain Events** - State changes raise events
-- **Rich Domain Model** - Behavior lives in the entity, not services
-- **Invariant Protection** - Entity always in valid state
+## Workflow
 
-## Quick Reference
+1. **Classify what you are writing.** Aggregate root, child entity, or value object. See the table below.
+2. **Write the domain type** → `src/{name}.Domain/{Aggregate}/`. Templates: [references/aggregate-root.md](references/aggregate-root.md) and [references/value-objects.md](references/value-objects.md).
+3. **Write the error catalog and domain events** → `{Entity}Errors.cs` and `Events/`. Template: [references/errors-and-events.md](references/errors-and-events.md).
+4. **Write the EF configuration** → `src/{name}.Infrastructure/Configurations/{Entity}Configuration.cs`. Template: [references/ef-configuration.md](references/ef-configuration.md). Let *Persistence consequences* below drive what it must contain.
+5. **Register the DbSet** — add `DbSet<{Entity}> {Plural}` to **both** `Application/Abstractions/Data/IApplicationDbContext.cs` and `Infrastructure/Database/ApplicationDbContext.cs`.
+6. **Create the migration** — plain PascalCase name (`AddWorkItemTemplates`):
 
-| Concept | Purpose | Example |
-|---------|---------|---------|
-| Aggregate Root | Entry point for aggregate | `Project`, `User` |
-| Child Entity | Part of aggregate, no own identity outside | `OrderItem`, `AssessmentDetail` |
-| Value Object | Immutable, no identity | `Email`, `Money`, `Address` |
-| Domain Event | Signal state change | `UserCreatedDomainEvent` |
+   ```
+   dotnet ef migrations add {Name} --project src/{name}.Infrastructure --startup-project src/{name}.Api
+   ```
 
----
+7. **Verify** — launch the `dotnet-test-runner` agent (Agent tool, `subagent_type: dotnet-test-runner`). It runs `dotnet build` (warnings are errors here) and `dotnet test`, and reports only failures. Do not run those commands yourself, and do not consider the entity done until that agent comes back clean.
 
-## Entity Structure
+## What to write
+
+| Concept | Purpose | Base type | Example |
+|---------|---------|-----------|---------|
+| Aggregate root | Entry point for the aggregate | `BaseEntity` | `Project`, `User` |
+| Child entity | Part of an aggregate, never loaded alone | none | `ProjectMember`, `Comment` |
+| Value object | Immutable, no identity | none (`sealed record`) | `Email`, `Color`, `ProjectCode` |
+| Domain event | Signals a state change | `DomainEvent` | `ProjectCreatedDomainEvent` |
+
+## Folder layout
+
+`{Aggregate}` is the **plural PascalCase folder name** (`Projects`, `Users`, `WorkItems`). `{Entity}` is the singular type name (`Project`, `WorkItem`).
 
 ```
-/Domain/{Aggregate}s/
-├── {Entity}.cs                    # Main entity
+/Domain/{Aggregate}/
+├── {Entity}.cs                    # Aggregate root
 ├── {Entity}Errors.cs              # Typed errors
-├── {Entity}{Child}.cs             # Child entity (if applicable)
-├── {Entity}Type.cs                # Enumerations related to the entity
+├── {ChildEntity}.cs               # Child entity (if applicable)
+├── {Entity}Status.cs              # Enumerations owned by this aggregate
 └── Events/
-    ├── {Entity}CreatedDomainEvent.cs
-    ├── {Entity}UpdatedDomainEvent.cs
-    └── ...
+    └── {Entity}CreatedDomainEvent.cs
 ```
 
----
-
-## Template: Aggregate Root Entity
-
-```csharp
-// src/{name}.Domain/{Aggregate}s/{Entity}.cs
-using {name}.Domain.{Aggregate}.Events;
-
-namespace {name}.Domain.{Aggregate}s;
-
-public sealed class {Entity} : BaseEntity
-{
-    // ═══════════════════════════════════════════════════════════════
-    // PRIVATE COLLECTIONS (encapsulated)
-    // ═══════════════════════════════════════════════════════════════
-    private readonly List<{ChildEntity}> _{childEntities} = [];
-
-    // ═══════════════════════════════════════════════════════════════
-    // PROPERTIES (private setters)
-    // ═══════════════════════════════════════════════════════════════
-    public Guid {Entity}Id { get; private set; }
-    public string Name { get; private set; }
-    public string? Description { get; private set; }
-    public bool IsActive { get; private set; }
-    public Guid CreatedBy { get; private set; } // If tracking creator
-    public Guid? UpdatedBy { get; private set; } // If tracking updater
-    public DateTime CreatedOnUtc { get; private set; }
-    public DateTime? UpdatedOnUtc { get; private set; }
-
-    // Navigation property to creator (if needed)
-    public {CreatorEntity} Creator { get; init; } = null!; // Navigation property
-
-    // Navigation property to updator (if needed)
-    public {UpdatorEntity} Updator { get; init; } = null!; // Navigation property
-
-    // Navigation property (read-only collection)
-    public IReadOnlyCollection<{ChildEntity}> {ChildEntities} => _{childEntities}.AsReadOnly();
-
-    // ═══════════════════════════════════════════════════════════════
-    // CONSTRUCTORS
-    // ═══════════════════════════════════════════════════════════════
-    // Private constructor for EF Core
-    private {Entity}() : base(Guid.Empty) { }
-
-    // Private constructor for factory method
-    private {Entity}(
-        Guid id,
-        string name,
-        string? description,
-        Guid createdBy,
-        DateTime createdOnUtc) : base(id)
-    {
-        Name = name;
-        Description = description;
-        IsActive = true;
-        CreatedBy = createdBy;
-        CreatedOnUtc = createdOnUtc;
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    // FACTORY METHODS
-    // ═══════════════════════════════════════════════════════════════
-    public static Result<{Entity}> Create(
-        string name,
-        string? description,
-        {CreatorEntity} createdBy,
-        DateTime createdOnUtc)
-    {
-        // Validate invariants
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            return Result.Fail<{Entity}>({Entity}Errors.NameIsRequired);
-        }
-
-        if (name.Length > 100)
-        {
-            return Result.Fail<{Entity}>({Entity}Errors.NameTooLong);
-        }
-
-        var {entity} = new {Entity}(
-            Guid.NewGuid(),
-            name.Trim(),
-            description.Trim(),
-            createdBy.Id,
-            createdOnUtc);
-
-        // Raise domain event
-        AddDomainEvent(new {Entity}CreatedDomainEvent({entity}.Id));
-
-        return {entity};
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    // DOMAIN METHODS
-    // ═══════════════════════════════════════════════════════════════
-    /// <summary>
-    /// Updates the {Entity} properties
-    /// </summary>
-    public Result Update(
-        string name,
-        string? description,
-        DateTime updatedOnUtc)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            return Result.Fail({Entity}Errors.NameIsRequired);
-        }
-
-        if (name.Length > 100)
-        {
-            return Result.Fail({Entity}Errors.NameTooLong);
-        }
-
-        Name = name.Trim();
-        Description = description.Trim();
-        UpdatedOnUtc = updatedOnUtc;
-
-        AddDomainEvent(new {Entity}UpdatedDomainEvent(Id));
-
-        return Result.Ok();
-    }
-
-    /// <summary>
-    /// Deactivates the {Entity}
-    /// </summary>
-    public Result Deactivate(DateTime updatedOnUtc)
-    {
-        if (!IsActive)
-        {
-            return Result.Fail({Entity}Errors.AlreadyDeactivated);
-        }
-
-        IsActive = false;
-        UpdatedOnUtc = updatedOnUtc;
-
-        AddDomainEvent(new {Entity}DeactivatedDomainEvent(Id));
-
-        return Result.Ok();
-    }
-
-    /// <summary>
-    /// Reactivates the {Entity}
-    /// </summary>
-    public Result Activate(DateTime updatedOnUtc)
-    {
-        if (IsActive)
-        {
-            return Result.Fail({Entity}Errors.AlreadyActive);
-        }
-
-        IsActive = true;
-        UpdatedOnUtc = updatedOnUtc;
-
-        return Result.Ok();
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    // CHILD ENTITY MANAGEMENT
-    // ═══════════════════════════════════════════════════════════════
-    /// <summary>
-    /// Adds a child entity to this aggregate
-    /// </summary>
-    public Result Add{ChildEntity}(string name, string? description, int sortOrder, DateTime createdOnUtc)
-    {
-        Result<ChildEntity> {childEntity} = {ChildEntity}.Create(this, name, description, sortOrder, createdOnUtc);
-        if (!{childEntity}.IsSuccessful)
-        {
-            return Result.Fail({childEntity}.Error);
-        }
-
-        _{childEntities}.Add({childEntity}.Value);
-
-        AddDomainEvent(new {ChildEntity}AddedDomainEvent(Id, {childEntity}.Id));
-
-        return Result.Ok();
-    }
-
-    /// <summary>
-    /// Removes a child entity from this aggregate
-    /// </summary>
-    public Result Remove{ChildEntity}(Guid {childEntity}Id)
-    {
-        var {childEntity} = _{childEntities}.FirstOrDefault(c => c.Id == {childEntity}Id);
-
-        if ({childEntity} is null)
-        {
-            return Result.Fail({Entity}Errors.{ChildEntity}NotFound);
-        }
-
-        _{childEntities}.Remove({childEntity});
-
-        return Result.Ok();
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    // QUERY METHODS
-    // ═══════════════════════════════════════════════════════════════
-    public bool HasActiveChildren() => _{childEntities}.Any(c => c.IsActive);
-
-    public {ChildEntity}? GetChildById(Guid childId) => 
-        _{childEntities}.FirstOrDefault(c => c.Id == childId);
-}
-```
-
----
-
-## Template: Child Entity (Part of Aggregate)
-
-```csharp
-// src/{name}.Domain/{Aggregate}s/{ChildEntity}.cs
-namespace {Name}.Domain.{Aggregate}s;
-
-public sealed class {ChildEntity}
-{
-    // ═══════════════════════════════════════════════════════════════
-    // PROPERTIES
-    // ═══════════════════════════════════════════════════════════════
-    public Guid Id { get; private set; }
-    public Guid {Parent}Id { get; private set; }
-    public string Name { get; private set; }
-    public string? Description { get; private set; }
-    public int SortOrder { get; private set; }
-    public bool IsActive { get; private set; }
-    public DateTime CreatedOnUtc { get; private set; }
-    public DateTime UpdatedOnUtc { get; private set; }
-
-    // Navigation property
-    public {Parent} {Parent} { get; init; } = null!;
-
-    // ═══════════════════════════════════════════════════════════════
-    // CONSTRUCTORS
-    // ═══════════════════════════════════════════════════════════════
-    private {ChildEntity}() { } // EF Core
-
-    private {ChildEntity}(
-        Guid id,
-        Guid {parent}Id,
-        string name,
-        string? description,
-        int sortOrder,
-        DateTime createdOnUtc)
-    {
-        Id = id;
-        {Parent}Id = {parent}Id;
-        Name = name;
-        Description = description;
-        SortOrder = sortOrder;
-        IsActive = true;
-        CreatedOnUtc = createdOnUtc;
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    // FACTORY METHOD
-    // ═══════════════════════════════════════════════════════════════
-    internal static {ChildEntity} Create(
-        {Parent} {parent},
-        string name,
-        string? description,
-        int sortOrder,
-        DateTime createdOnUtc)
-    {
-        return new {ChildEntity}(
-            Guid.NewGuid(),
-            {parent}.Id,
-            name,
-            description,
-            sortOrder,
-            createdOnUtc);
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    // DOMAIN METHODS
-    // ═══════════════════════════════════════════════════════════════
-    public void Update(
-        string name,
-        string? description,
-        int sortOrder,
-        DateTime updatedOnUtc)
-    {
-        Name = name;
-        Description = description;
-        SortOrder = sortOrder;
-        UpdatedOnUtc = updatedOnUtc;
-    }
-
-    public void Deactivate(DateTime updatedOnUtc)
-    {
-        IsActive = false;
-        UpdatedOnUtc = updatedOnUtc;
-    }
-}
-```
-
----
-
-## Template: Value Object
-
-```csharp
-// src/{name}.Domain/Shared/Email.cs
-namespace {name}.Domain.Shared;
-
-public sealed record Email
-{
-    public string Value { get; init; }
-
-    private Email(string value)
-    {
-        Value = value;
-    }
-
-    public static Result<Email> Create(string email)
-    {
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            return Result.Fail<Email>(EmailErrors.Empty);
-        }
-
-        email = email.Trim().ToLowerInvariant();
-
-        if (email.Length > 255)
-        {
-            return Result.Fail<Email>(EmailErrors.TooLong);
-        }
-
-        if (!IsValidFormat(email))
-        {
-            return Result.Fail<Email>(EmailErrors.InvalidFormat);
-        }
-
-        return new Email(email);
-    }
-
-    private static bool IsValidFormat(string email)
-    {
-        // Simple email validation
-        var atIndex = email.IndexOf('@');
-        var dotIndex = email.LastIndexOf('.');
-        
-        return atIndex > 0 
-            && dotIndex > atIndex + 1 
-            && dotIndex < email.Length - 1;
-    }
-
-    public override string ToString() => Value;
-
-    // Implicit conversion for convenience
-    public static implicit operator string(Email email) => email.Value;
-}
-
-public static class EmailErrors
-{
-    public static readonly Error Empty = new("Email.Empty", "Email cannot be empty");
-    public static readonly Error TooLong = new("Email.TooLong", "Email cannot exceed 255 characters");
-    public static readonly Error InvalidFormat = new("Email.InvalidFormat", "Email format is invalid");
-}
-```
-
-### More Value Object Examples
-
-```csharp
-// Money Value Object
-public sealed record Money
-{
-    public decimal Amount { get; }
-    public string Currency { get; }
-
-    private Money(decimal amount, string currency)
-    {
-        Amount = amount;
-        Currency = currency;
-    }
-
-    public static Result<Money> Create(decimal amount, string currency = "USD")
-    {
-        if (amount < 0)
-            return Result.Failure<Money>(MoneyErrors.NegativeAmount);
-
-        if (string.IsNullOrWhiteSpace(currency) || currency.Length != 3)
-            return Result.Failure<Money>(MoneyErrors.InvalidCurrency);
-
-        return new Money(Math.Round(amount, 2), currency.ToUpperInvariant());
-    }
-
-    public Money Add(Money other)
-    {
-        if (Currency != other.Currency)
-            throw new InvalidOperationException("Cannot add different currencies");
-
-        return new Money(Amount + other.Amount, Currency);
-    }
-
-    public static Money Zero(string currency = "USD") => new(0, currency);
-}
-
-// DateRange Value Object
-public sealed record DateRange
-{
-    public DateTime Start { get; }
-    public DateTime End { get; }
-
-    private DateRange(DateTime start, DateTime end)
-    {
-        Start = start;
-        End = end;
-    }
-
-    public static Result<DateRange> Create(DateTime start, DateTime end)
-    {
-        if (end <= start)
-            return Result.Failure<DateRange>(DateRangeErrors.EndMustBeAfterStart);
-
-        return new DateRange(start, end);
-    }
-
-    public bool Contains(DateTime date) => date >= Start && date <= End;
-    
-    public bool Overlaps(DateRange other) => 
-        Start < other.End && End > other.Start;
-
-    public int DurationInDays => (End - Start).Days;
-}
-```
-
----
-
-## Template: Domain Errors
-
-```csharp
-// src/{name}.Domain/{Aggregate}/{Entity}Errors.cs
-namespace {name}.Domain.{aggregate};
-
-public static class {Entity}Errors
-{
-    // Not found errors
-    public static readonly Error NotFound = BaseError.NotFound(
-        "{Entity}.NotFound",
-        "The {entity} with the specified identifier was not found");
-
-    // Validation errors
-    public static readonly Error NameIsRequired = BaseError.Validation(
-        "{Entity}.NameRequired",
-        "{Entity} name is required");
-
-    public static readonly Error NameTooLong = BaseError.Validation(
-        "{Entity}.NameTooLong",
-        "{Entity} name cannot exceed 100 characters");
-
-    // Business rule errors
-    public static readonly Error AlreadyExists = BaseError.Conflict(
-        "{Entity}.AlreadyExists",
-        "A {entity} with this name already exists");
-
-    public static readonly Error AlreadyDeactivated = BaseError.Validation(
-        "{Entity}.AlreadyDeactivated",
-        "The {entity} is already deactivated");
-
-    public static readonly Error AlreadyActive = BaseError.Validation(
-        "{Entity}.AlreadyActive",
-        "The {entity} is already active");
-
-    public static readonly Error CannotDeleteWithActiveRelationships = BaseError.Validation(
-        "{Entity}.CannotDeleteWithActiveRelationships",
-        "Cannot delete {entity} with active relationships");
-
-    // Child entity errors
-    public static readonly Error {ChildEntity}NotFound = BaseError.NotFound(
-        "{Entity}.{ChildEntity}NotFound",
-        "The {childEntity} was not found in this {entity}");
-
-    public static readonly Error Duplicate{ChildEntity}Name = BaseError.Conflict(
-        "{Entity}.Duplicate{ChildEntity}Name",
-        "A {childEntity} with this name already exists");
-
-    public static readonly Error Child{ChildEntity}Required = BaseError.Validation(
-        "{Entity}.Child{ChildEntity}Required",
-        "{ChildEntity} cannot be null");
-}
-```
-
----
-
-## Template: Domain Events
-
-```csharp
-// src/{name}.Domain/{Aggregate}/Events/{Entity}CreatedDomainEvent.cs
-namespace {name}.Domain.{aggregate}.Events;
-
-public sealed class {Entity}CreatedDomainEvent(Guid {entity}Id) : DomainEvent
-{
-    public Guid {Entity}Id { get; init; } = {entity}Id;
-}
-```
-
-```csharp
-// src/{name}.Domain/{Aggregate}/Events/{Entity}UpdatedDomainEvent.cs
-public sealed class {Entity}UpdatedDomainEvent(Guid {entity}Id) : DomainEvent
-{
-    public Guid {Entity}Id { get; init; } = {entity}Id;
-}
-
-```
-
-```csharp
-// src/{name}.Domain/{Aggregate}/Events/{Entity}DeactivatedDomainEvent.cs
-public sealed class {Entity}DeactivatedDomainEvent(Guid {entity}Id) : DomainEvent
-{
-    public Guid {Entity}Id { get; init; } = {entity}Id;
-}
-
-```
-
-```csharp
-// src/{name}.Domain/{Aggregate}/Events/{ChildEntity}AddedDomainEvent.cs
-public sealed class {ChildEntity}AddedDomainEvent(
-    Guid {entity}Id,
-    Guid {childEntity}Id) : DomainEvent
-{
-    public Guid {Entity}Id { get; init; } = {entity}Id;
-    public Guid {ChildEntity}Id { get; init; } = {childEntity}Id;
-}
-```
-
----
-
-## Domain entities conventions
-
-- Prefer `Guid` parameters over full entity objects when the method only needs the ID (e.g. `RemoveMember(Guid userId, ...)` instead of `RemoveMember(User user, ...)`).
-
----
-
-## Critical DDD Rules
-
-- **Private setters always** - No direct property modification from outside
-- **Factory methods for creation** - `Create()` static methods with validations
-- **Domain events for state changes** - Signal significant changes
-- **Entities are always valid** - Invariants protected in constructors and methods
-- **Aggregate root controls children** - Child entities managed through root
-- **Value objects are immutable** - Use `record` types
-- **No logic in setters** - Use named methods
-- **Use Result pattern** - Return errors, don't throw
-- **Keep entities persistence-ignorant** - No EF Core attributes on domain
-
----
-
-## Anti-Patterns to Avoid
-
-```csharp
-// ❌ WRONG: Public setters
-public string Name { get; set; }
-
-// ✅ CORRECT: Private setters
-public string Name { get; private set; }
-
-// ❌ WRONG: Constructor with all parameters
-public User(Guid id, string name, string email, DateTime createdOnUtc, ...)
-
-// ✅ CORRECT: Factory method
-public static Result<User> Create(string name, string email, DateTime createdOnUtc)
-
-// ❌ WRONG: Throwing exceptions
-if (name == null) throw new ArgumentNullException(nameof(name));
-
-// ✅ CORRECT: Return Result
-if (string.IsNullOrWhiteSpace(name))
-{
-    return Result.Failure<Entity>(EntityErrors.NameRequired);
-}
-
-// ❌ WRONG: Anemic domain model
-public class User
-{
-    public string Name { get; set; }
-    public void SetName(string name) => Name = name; // Just a setter!
-}
-
-// ✅ CORRECT: Rich domain model with behavior
-public class User
-{
-    public string Name { get; private set; }
-    
-    public Result ChangeName(string newName, DateTime updatedAt)
-    {
-        if (string.IsNullOrWhiteSpace(newName))
-            return Result.Failure(UserErrors.NameRequired);
-        
-        Name = newName;
-        UpdatedAt = updatedAt;
-        RaiseDomainEvent(new UserNameChangedDomainEvent(Id, newName));
-        return Result.Success();
-    }
-}
-
-// ❌ WRONG: Exposing internal collections
-public List<OrderItem> Items { get; set; } = [];
-
-// ✅ CORRECT: Encapsulated collections
-private readonly List<OrderItem> _items = [];
-public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
-```
-
----
-
-## Related Skills
-
-- `domain-layer-setup` - Base abstractions for Domain layer
-- `ef-core-configuration` - Map entities to database
+Enums live in their owning aggregate folder, never in `Shared/`. Value objects shared across aggregates go in `Domain/Shared/` with their own `{ValueObject}Errors.cs`.
+
+## Non-negotiable conventions
+
+- **Private setters always.** `Id` is inherited from `BaseEntity` — never redeclare it.
+- **Static factory `Create(...)` returning `Result<T>`.** Private constructors only. Never throw for an expected failure.
+- **The aggregate root owns its children.** Child factories are `internal`; invariants that need the aggregate's state are enforced in the root, not the child.
+- **Collections are private fields** exposed as `IReadOnlyCollection<T>`.
+- **`AddDomainEvent` is a protected instance method.** Inside a static factory call it on the new instance (`entity.AddDomainEvent(...)`) — a bare call does not compile.
+- **Timestamps are parameters**, never `DateTime.UtcNow` inside the entity. That keeps domain tests deterministic with no substitute.
+- **Length limits are `public const int`** on the entity or value object; the EF configuration reuses them. No magic numbers — `.editorconfig` treats them as errors.
+- **Prefer `Guid` parameters** over full entities when the method only needs the id. Take the entity only when the method reads its state (`AddMember(User user, ...)` checks `user.IsActive`).
+- **Errors are `BaseError`**, built with `BaseError.Validation/NotFound/Conflict/Forbidden/Failure`. Codes are singular: `"Project.NotFound"`.
+- **Entities stay persistence-ignorant** — no EF attributes in Domain.
+
+## Persistence consequences
+
+Each domain shape forces a specific mapping. Decide these while designing the entity:
+
+| Shape in the domain | Required in the EF configuration |
+|---|---|
+| `private readonly List<T> _items` exposed as `IReadOnlyCollection<T> Items` | `builder.Navigation(x => x.Items).HasField("_items").UsePropertyAccessMode(PropertyAccessMode.Field)` — **without it EF cannot materialize the collection** |
+| Value object (`sealed record` with `Value`) | `builder.OwnsOne(x => x.Vo, vo => vo.Property(v => v.Value).HasColumnName("vo").HasMaxLength(Vo.MaxLength))` |
+| `public const int MaxLength` on the entity/VO | `HasMaxLength({Entity}.MaxLength)` — never the literal number |
+| Enum property | `HasConversion<string>()` for new enums |
+| Computed property (`FullName`) | `builder.Ignore(x => x.FullName)` |
+| Navigation to the creator (`User Creator`) | `HasOne(x => x.Creator).WithMany().HasForeignKey(x => x.CreatedBy).OnDelete(DeleteBehavior.Restrict)` |
+| Child collection owned by the root | `HasMany(x => x.Children).WithOne().HasForeignKey(x => x.{Entity}Id).OnDelete(DeleteBehavior.Cascade)` |
+
+## Notes
+
+- Domain events are recorded by the aggregate and dispatched by `InsertOutboxMessagesInterceptor` on `SaveChanges`. A handler never publishes them itself.
+- Application unit tests substitute `IApplicationDbContext` with NSubstitute and `MockDbSetHelper` — there is no `TestDbContext` to update. See the `unit-testing` skill.

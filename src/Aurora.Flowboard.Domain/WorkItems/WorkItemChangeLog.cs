@@ -6,9 +6,9 @@ public sealed class WorkItemChangeLog
 {
     public Guid Id { get; private set; }
     public Guid WorkItemId { get; private set; }
-    public Guid ChangedById { get; private set; }
     public WorkItemChangeType ChangeType { get; private set; }
     public Guid? AffectedEntityId { get; private set; }
+    public Guid ChangedById { get; private set; }
     public DateTime ChangedOnUtc { get; private set; }
 
     private WorkItemChangeLog() { } // EF Core
@@ -16,16 +16,16 @@ public sealed class WorkItemChangeLog
     private WorkItemChangeLog(
         Guid id,
         Guid workItemId,
-        Guid changedById,
         WorkItemChangeType changeType,
         Guid? affectedEntityId,
+        Guid changedById,
         DateTime changedOnUtc)
     {
         Id = id;
         WorkItemId = workItemId;
-        ChangedById = changedById;
         ChangeType = changeType;
         AffectedEntityId = affectedEntityId;
+        ChangedById = changedById;
         ChangedOnUtc = changedOnUtc;
     }
 
@@ -35,5 +35,5 @@ public sealed class WorkItemChangeLog
         WorkItemChangeType changeType,
         Guid? affectedEntityId,
         DateTime changedOnUtc) =>
-        new(Guid.NewGuid(), workItem.Id, changedBy.Id, changeType, affectedEntityId, changedOnUtc);
+        new(Guid.NewGuid(), workItem.Id, changeType, affectedEntityId, changedBy.Id, changedOnUtc);
 }

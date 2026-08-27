@@ -1,5 +1,7 @@
-using Aurora.Flowboard.Domain.Flows;
+using Aurora.Flowboard.Domain.Components;
+using Aurora.Flowboard.Domain.Milestones;
 using Aurora.Flowboard.Domain.Projects;
+using Aurora.Flowboard.Domain.TemplateFlows;
 using Aurora.Flowboard.Domain.Users;
 using Aurora.Flowboard.Domain.WorkItems;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -17,9 +19,12 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     public DbSet<Project> Projects { get; set; } = null!;
     public DbSet<ProjectMember> ProjectMembers { get; set; } = null!;
     public DbSet<ProjectChangeLog> ProjectChangeLogs { get; set; } = null!;
-    public DbSet<Flow> Flows { get; set; } = null!;
+    public DbSet<Component> Components { get; set; } = null!;
+    public DbSet<Milestone> Milestones { get; set; } = null!;
     public DbSet<FlowState> FlowStates { get; set; } = null!;
     public DbSet<FlowTransition> FlowTransitions { get; set; } = null!;
+    public DbSet<TemplateFlow> TemplateFlows { get; set; } = null!;
+    public DbSet<TemplateFlowState> TemplateFlowStates { get; set; } = null!;
     public DbSet<WorkItem> WorkItems { get; set; } = null!;
     public DbSet<WorkItemTag> WorkItemTags { get; set; } = null!;
     public DbSet<Comment> Comments { get; set; } = null!;

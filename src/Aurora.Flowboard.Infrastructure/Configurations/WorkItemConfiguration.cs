@@ -1,4 +1,3 @@
-using Aurora.Flowboard.Domain.Flows;
 using Aurora.Flowboard.Domain.Projects;
 using Aurora.Flowboard.Domain.WorkItems;
 
@@ -11,6 +10,10 @@ internal sealed class WorkItemConfiguration : IEntityTypeConfiguration<WorkItem>
         builder.ToTable("work_items");
 
         builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.Code)
+            .IsRequired()
+            .HasMaxLength(WorkItem.MaxCodeLength);
 
         builder.Property(x => x.Title)
             .IsRequired()
@@ -26,10 +29,6 @@ internal sealed class WorkItemConfiguration : IEntityTypeConfiguration<WorkItem>
         builder.Property(x => x.Priority)
             .IsRequired()
             .HasConversion<string>();
-
-        builder.Property(x => x.Code)
-            .IsRequired()
-            .HasMaxLength(WorkItem.MaxCodeLength);
 
         builder.Property(x => x.SequenceNumber)
             .IsRequired();
@@ -58,6 +57,16 @@ internal sealed class WorkItemConfiguration : IEntityTypeConfiguration<WorkItem>
         builder.HasOne<FlowState>(x => x.FlowState)
             .WithMany()
             .HasForeignKey(x => x.FlowStateId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.Milestone)
+            .WithMany()
+            .HasForeignKey(x => x.MilestoneId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.Component)
+            .WithMany()
+            .HasForeignKey(x => x.ComponentId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(x => x.Tags)
@@ -108,5 +117,9 @@ internal sealed class WorkItemConfiguration : IEntityTypeConfiguration<WorkItem>
         builder.HasIndex(x => x.Code).IsUnique();
 
         builder.HasIndex(x => x.ProjectId);
+
+        builder.HasIndex(x => x.MilestoneId);
+
+        builder.HasIndex(x => x.ComponentId);
     }
 }

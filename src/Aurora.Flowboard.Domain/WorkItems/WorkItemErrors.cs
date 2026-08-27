@@ -18,9 +18,13 @@ public static class WorkItemErrors
         "WorkItem.DescriptionTooLong",
         "Work item description cannot exceed 4000 characters");
 
-    public static readonly BaseError UserNotProjectMember = BaseError.Forbidden(
-        "WorkItem.UserNotProjectMember",
-        "Only project members can perform this operation on a work item");
+    public static readonly BaseError EstimatedPointsInvalid = BaseError.Validation(
+        "WorkItem.EstimatedPointsInvalid",
+        "Estimated points must be greater than zero");
+
+    public static readonly BaseError EstimatedCompletionDateInPast = BaseError.Validation(
+        "WorkItem.EstimatedCompletionDateInPast",
+        "Estimated completion date cannot be earlier than today");
 
     public static readonly BaseError AssigneeNotProjectMember = BaseError.Validation(
         "WorkItem.AssigneeNotProjectMember",
@@ -46,9 +50,9 @@ public static class WorkItemErrors
         "WorkItem.TimeEntryHoursInvalid",
         "Logged hours must be greater than zero");
 
-    public static readonly BaseError TargetStateNotInFlow = BaseError.Validation(
-        "WorkItem.TargetStateNotInFlow",
-        "The target state does not belong to the work item's flow");
+    public static readonly BaseError TargetStateNotInProject = BaseError.Validation(
+        "WorkItem.TargetStateNotInProject",
+        "The target state does not belong to the work item's project");
 
     public static readonly BaseError TransitionNotAllowed = BaseError.Validation(
         "WorkItem.TransitionNotAllowed",
@@ -85,4 +89,20 @@ public static class WorkItemErrors
     public static readonly BaseError CancelledWorkItemCannotBeModified = BaseError.Validation(
         "WorkItem.CancelledWorkItemCannotBeModified",
         "A work item in a cancelled state cannot be assigned or unassigned");
+
+    public static readonly BaseError MilestoneNotInProject = BaseError.Validation(
+        "WorkItem.MilestoneNotInProject",
+        "The milestone must belong to the work item's project");
+
+    public static readonly BaseError MilestoneNotAcceptingAssignments = BaseError.Validation(
+        "WorkItem.MilestoneNotAcceptingAssignments",
+        "The milestone is completed or archived and does not accept new work item assignments");
+
+    public static readonly BaseError ComponentNotInProject = BaseError.Validation(
+        "WorkItem.ComponentNotInProject",
+        "The component must belong to the work item's project");
+
+    public static readonly BaseError ComponentRetired = BaseError.Validation(
+        "WorkItem.ComponentRetired",
+        "The component is retired and cannot be assigned to new work items");
 }

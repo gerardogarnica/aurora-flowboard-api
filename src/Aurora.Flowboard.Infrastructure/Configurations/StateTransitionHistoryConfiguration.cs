@@ -1,4 +1,4 @@
-using Aurora.Flowboard.Domain.Flows;
+using Aurora.Flowboard.Domain.Projects;
 using Aurora.Flowboard.Domain.WorkItems;
 
 namespace Aurora.Flowboard.Infrastructure.Configurations;
@@ -19,11 +19,11 @@ internal sealed class StateTransitionHistoryConfiguration : IEntityTypeConfigura
         builder.Property(x => x.ToStateId)
             .IsRequired();
 
-        builder.Property(x => x.ChangedById)
-            .IsRequired();
-
         builder.Property(x => x.Reason)
             .HasMaxLength(StateTransitionHistory.MaxReasonLength);
+
+        builder.Property(x => x.ChangedById)
+            .IsRequired();
 
         builder.Property(x => x.ChangedOnUtc)
             .IsRequired();

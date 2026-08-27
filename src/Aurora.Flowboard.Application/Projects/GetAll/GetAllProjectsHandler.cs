@@ -10,11 +10,9 @@ internal sealed class GetAllProjectsHandler(
     {
         List<Project> projects = await dbContext
             .Projects
-            .Include(p => p.Flows)
             .Include(p => p.Members).ThenInclude(m => m.User)
             .Include(p => p.WorkItems).ThenInclude(wi => wi.FlowState)
             .Where(p => p.Members.Any(m => m.UserId == userContext.UserId))
-            .Where(p => query.StatusFilter == null || p.Status == query.StatusFilter)
             .OrderBy(p => p.Name)
             .AsNoTracking()
             .AsSplitQuery()
@@ -25,27 +23,20 @@ internal sealed class GetAllProjectsHandler(
                 p.Id,
                 p.Name,
                 p.Description,
-                p.Code,
+                p.Prefix.Value,
                 p.Color,
-                p.EstimatedCompletionDate,
+                p.Kind,
                 p.Status,
                 p.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Active),
                 p.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Completed),
-                p.CanAddOrUpdateFlow(),
+                p.CanModifyFlowStates(),
                 p.CanAddOrUpdateWorkItem(),
                 [.. p.Members.OrderBy(m => m.User.FullName).Select(
                     m => new ProjectMemberSummaryResponse(
                         m.UserId,
                         m.User.FullName,
                         m.User.Initials,
-                        m.Role))],
-                [.. p.Flows.OrderByDescending(f => f.IsDefault).Select(
-                    f => new ProjectFlowSummaryResponse(
-                        f.Id,
-                        f.Name,
-                        f.Description,
-                        f.IsDefault,
-                        f.IsActive))]))
+                        m.Role))]))
             .ToList();
     }
 }

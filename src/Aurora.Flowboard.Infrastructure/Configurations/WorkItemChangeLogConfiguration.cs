@@ -13,15 +13,15 @@ internal sealed class WorkItemChangeLogConfiguration : IEntityTypeConfiguration<
         builder.Property(x => x.WorkItemId)
             .IsRequired();
 
-        builder.Property(x => x.ChangedById)
-            .IsRequired();
-
         builder.Property(x => x.ChangeType)
             .IsRequired()
             .HasConversion<string>()
             .HasMaxLength(40);
 
         builder.Property(x => x.AffectedEntityId);
+
+        builder.Property(x => x.ChangedById)
+            .IsRequired();
 
         builder.Property(x => x.ChangedOnUtc)
             .IsRequired();

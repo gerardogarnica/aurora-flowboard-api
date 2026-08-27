@@ -46,4 +46,25 @@ internal static class UserData
         user.AssignRole(role);
         return user;
     }
+
+    public static User GetUserWithTwoTokens(out Guid firstTokenId, out Guid secondTokenId)
+    {
+        User user = GetActiveUser();
+
+        firstTokenId = user.IssueToken(
+            AccessToken,
+            RefreshToken,
+            AccessTokenExpiresOnUtc,
+            RefreshTokenExpiresOnUtc,
+            CreatedOnUtc).Value.UserTokenId;
+
+        secondTokenId = user.IssueToken(
+            $"{AccessToken}-2",
+            $"{RefreshToken}-2",
+            AccessTokenExpiresOnUtc,
+            RefreshTokenExpiresOnUtc,
+            CreatedOnUtc).Value.UserTokenId;
+
+        return user;
+    }
 }

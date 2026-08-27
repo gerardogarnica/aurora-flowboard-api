@@ -57,13 +57,14 @@ Aurora Flowboard is an internal REST API for software project management that he
 
 ### Flows
 
-- **Create flow** (`POST /api/v1/flowboard/flows`): Define a workflow with a set of states and transitions for a project.
-- **List flows** (`GET /api/v1/flowboard/flows`): Retrieve flows associated with a project.
-- **Get flow** (`GET /api/v1/flowboard/flows/{id}`): Fetch flow details including states and allowed transitions.
-- **Update flow** (`PUT /api/v1/flowboard/flows/{id}`): Modify flow name and description.
-- **Activate / Deactivate flow** (`PUT /api/v1/flowboard/flows/{id}/activate`, `PUT /api/v1/flowboard/flows/{id}/deactivate`): Control whether a flow is available for work items.
-- **Flow states**: Define ordered states (e.g. Backlog, In Progress, Done) within a flow.
-- **Flow transitions**: Specify allowed state transitions to enforce workflow rules.
+Each project has exactly one flow, owned by the `Project` aggregate. There is no standalone flow entity.
+
+- **Get flow** (`GET /api/v1/flowboard/projects/{id}/flow`): Fetch the project's flow states and allowed transitions.
+- **Add flow state** (`POST /api/v1/flowboard/projects/{id}/flow/states`): Append a state; transitions to and from adjacent states are generated automatically.
+- **Remove flow state** (`DELETE /api/v1/flowboard/projects/{id}/flow/states/{stateId}`): Remove a state, bridging the surrounding transitions.
+- **Add / remove transition role** (`POST` / `DELETE /api/v1/flowboard/projects/{id}/flow/transitions/{transitionId}/roles`): Gate a transition by project role.
+- **Flow states**: Ordered states (e.g. Backlog, In Progress, Done) classified as `Active`, `Completed`, or `Cancelled`.
+- **Flow transitions**: Allowed state transitions, each carrying the set of project roles permitted to perform it.
 
 ### Work Items
 

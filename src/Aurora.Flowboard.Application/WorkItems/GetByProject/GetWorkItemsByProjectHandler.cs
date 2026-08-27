@@ -1,42 +1,24 @@
 namespace Aurora.Flowboard.Application.WorkItems.GetByProject;
 
 internal sealed class GetWorkItemsByProjectHandler(
-    IApplicationDbContext dbContext) : IQueryHandler<GetWorkItemsByProjectQuery, IReadOnlyCollection<FlowStateBoardResponse>>
+    IApplicationDbContext dbContext,
+    IUserContext userContext) : IQueryHandler<GetWorkItemsByProjectQuery, IReadOnlyCollection<FlowStateBoardResponse>>
 {
     public async Task<Result<IReadOnlyCollection<FlowStateBoardResponse>>> Handle(
         GetWorkItemsByProjectQuery query,
         CancellationToken cancellationToken)
     {
-        bool projectExists = await dbContext
-            .Projects
-            .AnyAsync(p => p.Id == query.ProjectId, cancellationToken);
+        bool isMember = await dbContext.IsProjectMemberAsync(query.ProjectId, userContext.UserId, cancellationToken);
 
-        if (!projectExists)
+        if (!isMember)
         {
             return Result.Fail<IReadOnlyCollection<FlowStateBoardResponse>>(ProjectErrors.NotFound);
-        }
-
-        var flow = await dbContext
-            .Flows
-            .AsNoTracking()
-            .Where(f => f.ProjectId == query.ProjectId && f.IsDefault)
-            .Select(f => new { f.Id, f.IsActive })
-            .SingleOrDefaultAsync(cancellationToken);
-
-        if (flow is null)
-        {
-            return Result.Fail<IReadOnlyCollection<FlowStateBoardResponse>>(FlowErrors.NotFound);
-        }
-
-        if (!flow.IsActive)
-        {
-            return Result.Fail<IReadOnlyCollection<FlowStateBoardResponse>>(FlowErrors.Deactivated);
         }
 
         List<FlowState> stateEntities = await dbContext
             .FlowStates
             .AsNoTracking()
-            .Where(fs => fs.FlowId == flow.Id)
+            .Where(fs => fs.ProjectId == query.ProjectId)
             .ToListAsync(cancellationToken);
 
         List<FlowStateProjection> states = [.. stateEntities.Select(fs => new FlowStateProjection(fs.Id, fs.Name, fs.Category, fs.SortOrder, fs.Color.Value))];

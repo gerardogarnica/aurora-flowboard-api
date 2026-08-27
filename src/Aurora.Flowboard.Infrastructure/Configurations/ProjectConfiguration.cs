@@ -19,9 +19,20 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.Property(x => x.Description)
             .HasMaxLength(Project.MaxDescriptionLength);
 
-        builder.Property(x => x.Code)
+        builder.OwnsOne(x => x.Prefix, prefix =>
+        {
+            prefix.Property(p => p.Value)
+                .HasColumnName("prefix")
+                .IsRequired()
+                .HasMaxLength(ProjectCode.MaxLength);
+
+            prefix.HasIndex(p => p.Value)
+                .IsUnique();
+        });
+
+        builder.Property(x => x.Kind)
             .IsRequired()
-            .HasMaxLength(ProjectCode.MaxLength);
+            .HasConversion<string>();
 
         builder.OwnsOne(x => x.Color, color =>
         {
@@ -31,11 +42,9 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
                 .HasMaxLength(Color.MaxLength);
         });
 
-        builder.Property(x => x.EstimatedCompletionDate);
-
         builder.Property(x => x.Status)
             .IsRequired()
-            .HasConversion<int>();
+            .HasConversion<string>();
 
         builder.Property(x => x.WorkItemCounter)
             .IsRequired();
@@ -74,15 +83,46 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
             .HasField("_changeLogs")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
-        builder.Navigation(x => x.Flows)
-            .HasField("_flows")
+        // Cascade is load-bearing, not cosmetic: Project.RemoveFlowState severs states and
+        // transitions from a required relationship, and EF only delete-orphans under Cascade.
+        builder.HasMany(x => x.FlowStates)
+            .WithOne()
+            .HasForeignKey(x => x.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.FlowStates)
+            .HasField("_flowStates")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasMany(x => x.FlowTransitions)
+            .WithOne()
+            .HasForeignKey(x => x.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.FlowTransitions)
+            .HasField("_flowTransitions")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         builder.Navigation(x => x.WorkItems)
             .HasField("_workItems")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
 
-        builder.HasIndex(x => x.Code)
-            .IsUnique();
+        builder.HasMany(x => x.Components)
+            .WithOne(c => c.Project)
+            .HasForeignKey(x => x.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.Components)
+            .HasField("_components")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasMany(x => x.Milestones)
+            .WithOne(m => m.Project)
+            .HasForeignKey(x => x.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(x => x.Milestones)
+            .HasField("_milestones")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

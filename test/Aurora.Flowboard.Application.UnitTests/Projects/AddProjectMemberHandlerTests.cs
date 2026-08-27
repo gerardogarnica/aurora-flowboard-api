@@ -21,7 +21,7 @@ public sealed class AddProjectMemberHandlerTests
         // Arrange
         User admin = ProjectCommandData.GetAdmin();
         User newUser = ProjectCommandData.GetNewUser();
-        Project project = ProjectCommandData.GetDraftProject(admin);
+        Project project = ProjectCommandData.GetProject(admin);
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
@@ -45,7 +45,7 @@ public sealed class AddProjectMemberHandlerTests
         // Arrange
         User admin = ProjectCommandData.GetAdmin();
         User newUser = ProjectCommandData.GetNewUser();
-        Project project = ProjectCommandData.GetDraftProject(admin);
+        Project project = ProjectCommandData.GetProject(admin);
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
@@ -101,7 +101,7 @@ public sealed class AddProjectMemberHandlerTests
     {
         // Arrange
         User admin = ProjectCommandData.GetAdmin();
-        Project project = ProjectCommandData.GetDraftProject(admin);
+        Project project = ProjectCommandData.GetProject(admin);
         _userContext.UserId.Returns(admin.Id);
 
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
@@ -124,7 +124,7 @@ public sealed class AddProjectMemberHandlerTests
     {
         // Arrange
         User admin = ProjectCommandData.GetAdmin();
-        Project project = ProjectCommandData.GetDraftProject(admin);
+        Project project = ProjectCommandData.GetProject(admin);
         _userContext.UserId.Returns(admin.Id);
 
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
@@ -147,7 +147,7 @@ public sealed class AddProjectMemberHandlerTests
         // Arrange
         User admin = ProjectCommandData.GetAdmin();
         User newUser = ProjectCommandData.GetNewUser();
-        Project project = ProjectCommandData.GetDraftProject(admin);
+        Project project = ProjectCommandData.GetProject(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
 
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
@@ -171,7 +171,7 @@ public sealed class AddProjectMemberHandlerTests
         // Arrange
         User admin = ProjectCommandData.GetAdmin();
         User newUser = ProjectCommandData.GetNewUser();
-        Project project = ProjectCommandData.GetDraftProject(admin);
+        Project project = ProjectCommandData.GetProject(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
 
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
@@ -195,7 +195,7 @@ public sealed class AddProjectMemberHandlerTests
         User admin = ProjectCommandData.GetAdmin();
         User nonAdmin = ProjectCommandData.GetNonAdmin();
         User newUser = ProjectCommandData.GetNewUser();
-        Project project = ProjectCommandData.GetDraftProject(admin);
+        Project project = ProjectCommandData.GetProject(admin);
         _userContext.UserId.Returns(nonAdmin.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
@@ -221,7 +221,7 @@ public sealed class AddProjectMemberHandlerTests
         User admin = ProjectCommandData.GetAdmin();
         User nonAdmin = ProjectCommandData.GetNonAdmin();
         User newUser = ProjectCommandData.GetNewUser();
-        Project project = ProjectCommandData.GetDraftProject(admin);
+        Project project = ProjectCommandData.GetProject(admin);
         _userContext.UserId.Returns(nonAdmin.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 

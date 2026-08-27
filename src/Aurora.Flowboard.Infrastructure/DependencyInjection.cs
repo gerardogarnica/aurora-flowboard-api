@@ -1,4 +1,5 @@
 using Aurora.Flowboard.Infrastructure.Authentication;
+using Aurora.Flowboard.Infrastructure.Bootstrap;
 using Aurora.Flowboard.Infrastructure.Cryptography;
 using Aurora.Flowboard.Infrastructure.Database;
 using Aurora.Flowboard.Infrastructure.DomainEvents;
@@ -21,6 +22,7 @@ public static class DependencyInjection
             .AddDomainEventsServices()
             .AddPasswordHashingServices()
             .AddEncryptionServices(configuration)
+            .AddBootstrapServices(configuration)
             .AddOutboxPatternImplementation()
             .AddQuartzServices();
 
@@ -104,6 +106,13 @@ public static class DependencyInjection
         services.Configure<EncryptionOptions>(configuration.GetSection(EncryptionOptions.SectionName));
 
         services.AddTransient<EncryptionService>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddBootstrapServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<BootstrapOptions>(configuration.GetSection(BootstrapOptions.SectionName));
 
         return services;
     }

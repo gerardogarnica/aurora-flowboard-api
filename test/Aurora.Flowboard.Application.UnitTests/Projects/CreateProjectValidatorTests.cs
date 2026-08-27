@@ -6,9 +6,7 @@ public sealed class CreateProjectValidatorTests
 
     public CreateProjectValidatorTests()
     {
-        IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
-        dateTimeProvider.Today.Returns(ProjectCommandData.Today);
-        _validator = new CreateProjectValidator(dateTimeProvider);
+        _validator = new CreateProjectValidator();
     }
 
     [Fact]
@@ -25,7 +23,7 @@ public sealed class CreateProjectValidatorTests
     public void Should_Fail_When_NameIsEmpty()
     {
         var command = new CreateProjectCommand(
-            string.Empty, null, ProjectCommandData.Code, ProjectCommandData.Color, null);
+            string.Empty, null, ProjectCommandData.Prefix, ProjectCommandData.Kind, ProjectCommandData.Color, []);
 
         var result = _validator.Validate(command);
 
@@ -37,7 +35,7 @@ public sealed class CreateProjectValidatorTests
     {
         string longName = new('A', Project.MaxNameLength + 1);
         var command = new CreateProjectCommand(
-            longName, null, ProjectCommandData.Code, ProjectCommandData.Color, null);
+            longName, null, ProjectCommandData.Prefix, ProjectCommandData.Kind, ProjectCommandData.Color, []);
 
         var result = _validator.Validate(command);
 
@@ -45,10 +43,10 @@ public sealed class CreateProjectValidatorTests
     }
 
     [Fact]
-    public void Should_Fail_When_CodeIsEmpty()
+    public void Should_Fail_When_PrefixIsEmpty()
     {
         var command = new CreateProjectCommand(
-            ProjectCommandData.Name, null, string.Empty, ProjectCommandData.Color, null);
+            ProjectCommandData.Name, null, string.Empty, ProjectCommandData.Kind, ProjectCommandData.Color, []);
 
         var result = _validator.Validate(command);
 
@@ -56,11 +54,11 @@ public sealed class CreateProjectValidatorTests
     }
 
     [Fact]
-    public void Should_Fail_When_CodeExceedsMaxLength()
+    public void Should_Fail_When_PrefixExceedsMaxLength()
     {
-        string longCode = new('A', ProjectCode.MaxLength + 1);
+        string longPrefix = new('A', ProjectCode.MaxLength + 1);
         var command = new CreateProjectCommand(
-            ProjectCommandData.Name, null, longCode, ProjectCommandData.Color, null);
+            ProjectCommandData.Name, null, longPrefix, ProjectCommandData.Kind, ProjectCommandData.Color, []);
 
         var result = _validator.Validate(command);
 
@@ -68,10 +66,21 @@ public sealed class CreateProjectValidatorTests
     }
 
     [Fact]
-    public void Should_Fail_When_CodeContainsNonAlphabeticCharacters()
+    public void Should_Fail_When_PrefixContainsNonAlphabeticCharacters()
     {
         var command = new CreateProjectCommand(
-            ProjectCommandData.Name, null, "A1B", ProjectCommandData.Color, null);
+            ProjectCommandData.Name, null, "A1B", ProjectCommandData.Kind, ProjectCommandData.Color, []);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Should_Fail_When_KindIsOutOfRange()
+    {
+        var command = new CreateProjectCommand(
+            ProjectCommandData.Name, null, ProjectCommandData.Prefix, (ProjectKind)99, ProjectCommandData.Color, []);
 
         var result = _validator.Validate(command);
 
@@ -83,7 +92,7 @@ public sealed class CreateProjectValidatorTests
     {
         string longDescription = new('A', Project.MaxDescriptionLength + 1);
         var command = new CreateProjectCommand(
-            ProjectCommandData.Name, longDescription, ProjectCommandData.Code, ProjectCommandData.Color, null);
+            ProjectCommandData.Name, longDescription, ProjectCommandData.Prefix, ProjectCommandData.Kind, ProjectCommandData.Color, []);
 
         var result = _validator.Validate(command);
 
@@ -91,11 +100,21 @@ public sealed class CreateProjectValidatorTests
     }
 
     [Fact]
-    public void Should_Fail_When_EstimatedCompletionDateIsInThePast()
+    public void Should_Pass_When_FlowStatesAreValid()
     {
-        DateOnly pastDate = ProjectCommandData.Today.AddDays(-1);
-        var command = new CreateProjectCommand(
-            ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, pastDate);
+        CreateProjectCommand command = ProjectCommandData.GetCreateCommand(ProjectCommandData.GetValidCreateProjectStates());
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Should_Fail_When_FlowStateNameIsEmpty()
+    {
+        IReadOnlyCollection<CreateProjectState> flowStates =
+            [new CreateProjectState(string.Empty, FlowStateCategory.Active, ProjectCommandData.FlowStateColor, [ProjectRole.Admin])];
+        CreateProjectCommand command = ProjectCommandData.GetCreateCommand(flowStates);
 
         var result = _validator.Validate(command);
 
@@ -103,24 +122,63 @@ public sealed class CreateProjectValidatorTests
     }
 
     [Fact]
-    public void Should_Pass_When_EstimatedCompletionDateIsToday()
+    public void Should_Fail_When_FlowStateNameExceedsMaxLength()
     {
-        var command = new CreateProjectCommand(
-            ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, ProjectCommandData.Today);
+        string longName = new('A', FlowState.MaxNameLength + 1);
+        IReadOnlyCollection<CreateProjectState> flowStates =
+            [new CreateProjectState(longName, FlowStateCategory.Active, ProjectCommandData.FlowStateColor, [ProjectRole.Admin])];
+        CreateProjectCommand command = ProjectCommandData.GetCreateCommand(flowStates);
 
         var result = _validator.Validate(command);
 
-        result.IsValid.Should().BeTrue();
+        result.IsValid.Should().BeFalse();
     }
 
     [Fact]
-    public void Should_Pass_When_EstimatedCompletionDateIsNull()
+    public void Should_Fail_When_FlowStateCategoryIsOutOfRange()
     {
-        var command = new CreateProjectCommand(
-            ProjectCommandData.Name, null, ProjectCommandData.Code, ProjectCommandData.Color, null);
+        IReadOnlyCollection<CreateProjectState> flowStates =
+            [new CreateProjectState("Backlog", (FlowStateCategory)99, ProjectCommandData.FlowStateColor, [ProjectRole.Admin])];
+        CreateProjectCommand command = ProjectCommandData.GetCreateCommand(flowStates);
 
         var result = _validator.Validate(command);
 
-        result.IsValid.Should().BeTrue();
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Should_Fail_When_FlowStateColorIsEmpty()
+    {
+        IReadOnlyCollection<CreateProjectState> flowStates =
+            [new CreateProjectState("Backlog", FlowStateCategory.Active, string.Empty, [ProjectRole.Admin])];
+        CreateProjectCommand command = ProjectCommandData.GetCreateCommand(flowStates);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Should_Fail_When_FlowStateAllowedRolesIsEmpty()
+    {
+        IReadOnlyCollection<CreateProjectState> flowStates =
+            [new CreateProjectState("Backlog", FlowStateCategory.Active, ProjectCommandData.FlowStateColor, [])];
+        CreateProjectCommand command = ProjectCommandData.GetCreateCommand(flowStates);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Should_Fail_When_FlowStateAllowedRoleIsOutOfRange()
+    {
+        IReadOnlyCollection<CreateProjectState> flowStates =
+            [new CreateProjectState("Backlog", FlowStateCategory.Active, ProjectCommandData.FlowStateColor, [(ProjectRole)99])];
+        CreateProjectCommand command = ProjectCommandData.GetCreateCommand(flowStates);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.Should().BeFalse();
     }
 }

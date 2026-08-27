@@ -4,13 +4,12 @@ internal static class ProjectCommandData
 {
     public const string Name = "Aurora Flowboard";
     public const string? Description = "Project management API";
-    public const string Code = "AFB";
+    public const string Prefix = "AFB";
+    public const ProjectKind Kind = ProjectKind.Product;
     public static readonly Color Color = Color.Create("white").Value;
     public const string UpdatedName = "Updated Flowboard";
     public const string? UpdatedDescription = "Updated project description";
-    public static readonly DateOnly EstimatedCompletionDate = new(2026, 12, 31);
     public static readonly DateTime UtcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-    public static readonly DateOnly Today = DateOnly.FromDateTime(UtcNow);
 
     public static User GetUser()
     {
@@ -42,31 +41,47 @@ internal static class ProjectCommandData
         return User.Create("Regular", "Member", email, Password.Create("hashed_password_789").Value, UtcNow).Value;
     }
 
-    public static Project GetDraftProject(User admin) =>
-        Project.Create("Test Project", "Test Description", "TST", Color, null, admin, UtcNow).Value;
+    public static Project GetProject(User admin) =>
+        Project.Create("Test Project", "Test Description", ProjectCode.Create("TST").Value, Kind, Color, admin, UtcNow).Value;
+
+    public static Project GetExistingProjectWithPrefix(User admin, string prefix = Prefix) =>
+        Project.Create("Existing Project", "Existing Description", ProjectCode.Create(prefix).Value, Kind, Color, admin, UtcNow).Value;
 
     public static Project GetArchivedProject(User admin)
     {
-        Project project = GetDraftProject(admin);
+        Project project = GetProject(admin);
         project.ChangeStatus(ProjectStatus.Archived, admin, UtcNow);
         return project;
     }
 
     public static Project GetProjectWithMember(User admin, User member)
     {
-        Project project = GetDraftProject(admin);
+        Project project = GetProject(admin);
         project.AddMember(member, ProjectRole.Developer, admin, UtcNow);
         return project;
     }
 
     public static CreateProjectCommand GetCreateCommand() =>
-        new(Name, Description, Code, Color, EstimatedCompletionDate);
+        new(Name, Description, Prefix, Kind, Color, []);
+
+    public static CreateProjectCommand GetCreateCommand(IReadOnlyCollection<CreateProjectState> flowStates) =>
+        new(Name, Description, Prefix, Kind, Color, flowStates);
+
+    public static IReadOnlyCollection<CreateProjectState> GetValidCreateProjectStates() =>
+    [
+        new CreateProjectState("Backlog", FlowStateCategory.Active, FlowStateColor, [ProjectRole.Admin]),
+        new CreateProjectState("Done", FlowStateCategory.Completed, FlowStateColor, [ProjectRole.Admin]),
+        new CreateProjectState("Cancelled", FlowStateCategory.Cancelled, FlowStateColor, [ProjectRole.Admin])
+    ];
 
     public static UpdateProjectCommand GetUpdateCommand(Guid projectId) =>
-        new(projectId, UpdatedName, UpdatedDescription, Color, EstimatedCompletionDate);
+        new(projectId, UpdatedName, UpdatedDescription, Color);
 
     public static ChangeProjectStatusCommand GetChangeStatusCommand(Guid projectId) =>
-        new(projectId, ProjectStatus.Active);
+        new(projectId, ProjectStatus.Maintenance);
+
+    public static ChangeProjectKindCommand GetChangeKindCommand(Guid projectId) =>
+        new(projectId, ProjectKind.Client);
 
     public static AddProjectMemberCommand GetAddMemberCommand(Guid projectId, Guid userId) =>
         new(projectId, userId, ProjectRole.Developer);
@@ -74,14 +89,25 @@ internal static class ProjectCommandData
     public static RemoveProjectMemberCommand GetRemoveCommand(Guid projectId, Guid userId) =>
         new(projectId, userId);
 
-    public static SetupProjectFlowDto GetSetupFlowDto() =>
-        new("Sprint Flow", null,
-        [
-            new("Todo", FlowStateCategory.Active, "white", [ProjectRole.Developer]),
-            new("Done", FlowStateCategory.Completed, "white", [ProjectRole.Developer]),
-            new("Cancelled", FlowStateCategory.Cancelled, "white", [ProjectRole.Developer])
-        ]);
+    public const string FlowStateName = "In Review";
+    public const string FlowStateColor = "white";
 
-    public static SetupProjectCommand GetSetupCommand() =>
-        new(Name, Description, Code, Color, EstimatedCompletionDate, GetSetupFlowDto());
+    public static Project GetProjectWithFlowStates(User admin)
+    {
+        Project project = GetProject(admin);
+        Color stateColor = Color.Create(FlowStateColor).Value;
+        ProjectRole[] allRoles = [ProjectRole.Admin, ProjectRole.Developer];
+
+        project.AddFlowState("Backlog", FlowStateCategory.Active, stateColor, allRoles, admin);
+        project.AddFlowState("Done", FlowStateCategory.Completed, stateColor, allRoles, admin);
+        project.AddFlowState("Cancelled", FlowStateCategory.Cancelled, stateColor, allRoles, admin);
+
+        return project;
+    }
+
+    public static (Project Project, FlowTransition Transition) GetProjectWithFlowTransition(User admin)
+    {
+        Project project = GetProjectWithFlowStates(admin);
+        return (project, project.FlowTransitions.First());
+    }
 }

@@ -1,4 +1,4 @@
-using Aurora.Flowboard.Application.Flows.RemoveState;
+using Aurora.Flowboard.Application.Projects.RemoveFlowState;
 
 namespace Aurora.Flowboard.Api.Endpoints.Flows;
 
@@ -7,7 +7,7 @@ public sealed class RemoveFlowState : IBaseEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapDelete(
-            "flows/{id:guid}/states/{stateId:guid}",
+            "projects/{id:guid}/flow/states/{stateId:guid}",
             async (
                 Guid id,
                 Guid stateId,

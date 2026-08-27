@@ -1,5 +1,4 @@
-using Aurora.Flowboard.Application.Flows.AddState;
-using Aurora.Flowboard.Domain.Flows;
+using Aurora.Flowboard.Application.Projects.AddFlowState;
 using Aurora.Flowboard.Domain.Projects;
 
 namespace Aurora.Flowboard.Api.Endpoints.Flows;
@@ -9,7 +8,7 @@ public sealed class AddFlowState : IBaseEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost(
-            "flows/{id:guid}/states",
+            "projects/{id:guid}/flow/states",
             async (
                 Guid id,
                 [FromBody] AddFlowStateRequest request,
