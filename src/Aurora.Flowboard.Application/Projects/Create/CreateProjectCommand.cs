@@ -3,6 +3,13 @@ namespace Aurora.Flowboard.Application.Projects.Create;
 public sealed record CreateProjectCommand(
     string Name,
     string? Description,
-    string Code,
+    string Prefix,
+    ProjectKind Kind,
     string Color,
-    DateOnly? EstimatedCompletionDate) : ICommand<Guid>;
+    IReadOnlyCollection<CreateProjectState> FlowStates) : ICommand<Guid>;
+
+public sealed record CreateProjectState(
+    string Name,
+    FlowStateCategory Category,
+    string Color,
+    IReadOnlyCollection<ProjectRole> AllowedRoles);

@@ -42,5 +42,5 @@ public sealed class CreateUser : IBaseEndpoint
         string LastName,
         string Email,
         string Password,
-        string? Role);
+        string Role);
 }

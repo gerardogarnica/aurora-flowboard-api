@@ -161,7 +161,7 @@ public sealed class UpdateWorkItemTitleHandlerTests
 
         // Assert
         result.IsSuccessful.Should().BeFalse();
-        result.Error.Should().Be(WorkItemErrors.UserNotProjectMember);
+        result.Error.Should().Be(WorkItemErrors.NotFound);
     }
 
     [Fact]

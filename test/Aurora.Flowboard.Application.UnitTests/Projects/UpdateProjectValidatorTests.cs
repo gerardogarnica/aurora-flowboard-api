@@ -6,9 +6,7 @@ public sealed class UpdateProjectValidatorTests
 
     public UpdateProjectValidatorTests()
     {
-        IDateTimeProvider dateTimeProvider = Substitute.For<IDateTimeProvider>();
-        dateTimeProvider.Today.Returns(ProjectCommandData.Today);
-        _validator = new UpdateProjectValidator(dateTimeProvider);
+        _validator = new UpdateProjectValidator();
     }
 
     [Fact]
@@ -35,7 +33,7 @@ public sealed class UpdateProjectValidatorTests
     public void Should_Fail_When_NameIsEmpty()
     {
         var command = new UpdateProjectCommand(
-            Guid.NewGuid(), string.Empty, null, ProjectCommandData.Color, null);
+            Guid.NewGuid(), string.Empty, null, ProjectCommandData.Color);
 
         var result = _validator.Validate(command);
 
@@ -47,7 +45,7 @@ public sealed class UpdateProjectValidatorTests
     {
         string longName = new('A', Project.MaxNameLength + 1);
         var command = new UpdateProjectCommand(
-            Guid.NewGuid(), longName, null, ProjectCommandData.Color, null);
+            Guid.NewGuid(), longName, null, ProjectCommandData.Color);
 
         var result = _validator.Validate(command);
 
@@ -59,44 +57,10 @@ public sealed class UpdateProjectValidatorTests
     {
         string longDescription = new('A', Project.MaxDescriptionLength + 1);
         var command = new UpdateProjectCommand(
-            Guid.NewGuid(), ProjectCommandData.UpdatedName, longDescription, ProjectCommandData.Color, null);
+            Guid.NewGuid(), ProjectCommandData.UpdatedName, longDescription, ProjectCommandData.Color);
 
         var result = _validator.Validate(command);
 
         result.IsValid.Should().BeFalse();
-    }
-
-    [Fact]
-    public void Should_Fail_When_EstimatedCompletionDateIsInThePast()
-    {
-        DateOnly pastDate = ProjectCommandData.Today.AddDays(-1);
-        var command = new UpdateProjectCommand(
-            Guid.NewGuid(), ProjectCommandData.UpdatedName, null, ProjectCommandData.Color, pastDate);
-
-        var result = _validator.Validate(command);
-
-        result.IsValid.Should().BeFalse();
-    }
-
-    [Fact]
-    public void Should_Pass_When_EstimatedCompletionDateIsToday()
-    {
-        var command = new UpdateProjectCommand(
-            Guid.NewGuid(), ProjectCommandData.UpdatedName, null, ProjectCommandData.Color, ProjectCommandData.Today);
-
-        var result = _validator.Validate(command);
-
-        result.IsValid.Should().BeTrue();
-    }
-
-    [Fact]
-    public void Should_Pass_When_EstimatedCompletionDateIsNull()
-    {
-        var command = new UpdateProjectCommand(
-            Guid.NewGuid(), ProjectCommandData.UpdatedName, null, ProjectCommandData.Color, null);
-
-        var result = _validator.Validate(command);
-
-        result.IsValid.Should().BeTrue();
     }
 }

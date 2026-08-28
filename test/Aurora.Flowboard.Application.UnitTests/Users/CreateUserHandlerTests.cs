@@ -73,22 +73,6 @@ public sealed class CreateUserHandlerTests
     }
 
     [Fact]
-    public async Task Should_DefaultToMemberRole_When_RoleIsNotProvided()
-    {
-        // Arrange
-        CreateUserCommand command = CreateUserCommandData.GetCreateCommand(role: null);
-
-        // Act
-        Result<Guid> result = await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.IsSuccessful.Should().BeTrue();
-        _dbContext.Users.Received(1).Add(Arg.Is<User>(u =>
-            u.Roles.Count == 1 &&
-            u.Roles.Any(r => r.Name == Role.Member.Name)));
-    }
-
-    [Fact]
     public async Task Should_AssignSpecifiedRole_When_RoleIsProvided()
     {
         // Arrange
@@ -147,7 +131,7 @@ public sealed class CreateUserHandlerTests
             CreateUserCommandData.LastName,
             "not-an-email",
             CreateUserCommandData.PlainPassword,
-            null);
+            Role.Member.Name);
 
         // Act
         Result<Guid> result = await _handler.Handle(command, CancellationToken.None);

@@ -38,7 +38,6 @@ internal sealed class UpdateProjectHandler(
             command.Name,
             command.Description,
             colorResult.Value,
-            command.EstimatedCompletionDate,
             changedBy,
             dateTimeProvider.UtcNow);
 

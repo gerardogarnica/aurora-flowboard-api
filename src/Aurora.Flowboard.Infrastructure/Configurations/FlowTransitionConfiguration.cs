@@ -1,4 +1,3 @@
-using Aurora.Flowboard.Domain.Flows;
 using Aurora.Flowboard.Domain.Projects;
 
 namespace Aurora.Flowboard.Infrastructure.Configurations;
@@ -11,7 +10,7 @@ internal sealed class FlowTransitionConfiguration : IEntityTypeConfiguration<Flo
 
         builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.FlowId)
+        builder.Property(x => x.ProjectId)
             .IsRequired();
 
         builder.Property(x => x.FromStateId)
@@ -34,9 +33,9 @@ internal sealed class FlowTransitionConfiguration : IEntityTypeConfiguration<Flo
             .HasForeignKey(x => x.ToStateId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(x => x.FlowId);
+        builder.HasIndex(x => x.ProjectId);
 
-        builder.HasIndex(x => new { x.FlowId, x.FromStateId, x.ToStateId })
+        builder.HasIndex(x => new { x.ProjectId, x.FromStateId, x.ToStateId })
             .IsUnique();
     }
 }

@@ -87,7 +87,7 @@ public sealed class GetProjectByIdHandlerTests
         response.ProjectId.Should().Be(project.Id);
         response.Name.Should().Be(project.Name);
         response.Description.Should().Be(project.Description);
-        response.EstimatedCompletionDate.Should().Be(project.EstimatedCompletionDate);
+        response.Kind.Should().Be(project.Kind);
         response.Status.Should().Be(project.Status);
         response.CreatedById.Should().Be(admin.Id);
         response.CreatedByFullName.Should().Be(admin.FullName);
@@ -95,8 +95,8 @@ public sealed class GetProjectByIdHandlerTests
         response.UpdatedOnUtc.Should().Be(project.UpdatedOnUtc);
         response.OpenWorkItems.Should().Be(0);
         response.ClosedWorkItems.Should().Be(0);
-        response.CanAddOrUpdateFlows.Should().BeTrue();
-        response.CanAddOrUpdateWorkItems.Should().BeFalse();
+        response.CanModifyFlowStates.Should().BeTrue();
+        response.CanAddOrUpdateWorkItems.Should().BeTrue();
     }
 
     [Fact]

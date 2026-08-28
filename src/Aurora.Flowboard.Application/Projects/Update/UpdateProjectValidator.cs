@@ -2,7 +2,7 @@ namespace Aurora.Flowboard.Application.Projects.Update;
 
 internal sealed class UpdateProjectValidator : AbstractValidator<UpdateProjectCommand>
 {
-    public UpdateProjectValidator(IDateTimeProvider dateTimeProvider)
+    public UpdateProjectValidator()
     {
         RuleFor(x => x.Id)
             .NotEmpty();
@@ -17,9 +17,5 @@ internal sealed class UpdateProjectValidator : AbstractValidator<UpdateProjectCo
         RuleFor(x => x.Color)
             .NotEmpty()
             .MaximumLength(Color.MaxLength);
-
-        RuleFor(x => x.EstimatedCompletionDate)
-            .GreaterThanOrEqualTo(_ => dateTimeProvider.Today)
-            .When(x => x.EstimatedCompletionDate.HasValue);
     }
 }

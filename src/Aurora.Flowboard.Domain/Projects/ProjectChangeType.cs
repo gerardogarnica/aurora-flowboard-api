@@ -4,7 +4,8 @@ public enum ProjectChangeType
 {
     Created = 0,
     Updated = 1,
-    StatusChanged = 2,
-    MemberAdded = 3,
-    MemberRemoved = 4
+    KindChanged = 2,
+    StatusChanged = 3,
+    MemberAdded = 4,
+    MemberRemoved = 5
 }

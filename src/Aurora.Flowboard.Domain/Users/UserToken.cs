@@ -66,4 +66,7 @@ public sealed class UserToken
 
         return Result.Ok();
     }
+
+    public bool IsRefreshTokenValid(DateTime utcNow) =>
+        !IsRevoked && RefreshTokenExpiresOnUtc > utcNow;
 }

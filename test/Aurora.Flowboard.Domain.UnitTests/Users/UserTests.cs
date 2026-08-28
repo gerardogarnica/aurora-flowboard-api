@@ -547,6 +547,72 @@ public sealed class UserTests
         }
     }
 
+    public sealed class RevokeAllActiveTokens : BaseTest
+    {
+        [Fact]
+        public void Should_RevokeAllActiveTokens_When_TokensExist()
+        {
+            // Arrange
+            User user = UserData.GetUserWithTwoTokens(out _, out _);
+
+            // Act
+            Result result = user.RevokeAllActiveTokens();
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            user.Tokens.Should().OnlyContain(t => t.IsRevoked);
+        }
+
+        [Fact]
+        public void Should_RaiseUserTokenRevokedDomainEventPerToken_When_TokensRevoked()
+        {
+            // Arrange
+            User user = UserData.GetUserWithTwoTokens(out Guid firstTokenId, out Guid secondTokenId);
+
+            // Act
+            user.RevokeAllActiveTokens();
+
+            // Assert
+            List<UserTokenRevokedDomainEvent> domainEvents = user.DomainEvents
+                .OfType<UserTokenRevokedDomainEvent>()
+                .ToList();
+
+            domainEvents.Should().HaveCount(2);
+            domainEvents.Select(e => e.UserTokenId).Should().BeEquivalentTo([firstTokenId, secondTokenId]);
+        }
+
+        [Fact]
+        public void Should_NotAffectAlreadyRevokedTokens_When_SomeTokensAlreadyRevoked()
+        {
+            // Arrange
+            User user = UserData.GetUserWithTwoTokens(out Guid firstTokenId, out Guid secondTokenId);
+            user.RevokeToken(firstTokenId);
+            user.ClearDomainEvents();
+
+            // Act
+            Result result = user.RevokeAllActiveTokens();
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            user.DomainEvents.OfType<UserTokenRevokedDomainEvent>()
+                .Should().ContainSingle(e => e.UserTokenId == secondTokenId);
+        }
+
+        [Fact]
+        public void Should_Succeed_When_NoTokensExist()
+        {
+            // Arrange
+            User user = UserData.GetActiveUser();
+
+            // Act
+            Result result = user.RevokeAllActiveTokens();
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            user.DomainEvents.OfType<UserTokenRevokedDomainEvent>().Should().BeEmpty();
+        }
+    }
+
     public sealed class AssignRole : BaseTest
     {
         [Fact]
@@ -659,6 +725,108 @@ public sealed class UserTests
 
             // Act
             Action act = () => user.RemoveRole(null!);
+
+            // Assert
+            act.Should().Throw<ArgumentNullException>();
+        }
+    }
+
+    public sealed class ChangeRole : BaseTest
+    {
+        [Fact]
+        public void Should_AssignNewRole_When_UserHasNoRole()
+        {
+            // Arrange
+            User user = UserData.GetActiveUser();
+
+            // Act
+            Result result = user.ChangeRole(Role.Member, UserData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            user.Roles.Should().ContainSingle(r => r.Name == Role.Member.Name);
+        }
+
+        [Fact]
+        public void Should_ReplaceExistingRole_When_UserAlreadyHasADifferentRole()
+        {
+            // Arrange
+            User user = UserData.GetUserWithRole(Role.Member);
+
+            // Act
+            Result result = user.ChangeRole(Role.Administrator, UserData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            user.Roles.Should().ContainSingle(r => r.Name == Role.Administrator.Name);
+        }
+
+        [Fact]
+        public void Should_UpdateUpdatedOnUtc_When_RoleChanged()
+        {
+            // Arrange
+            User user = UserData.GetActiveUser();
+
+            // Act
+            user.ChangeRole(Role.Member, UserData.UpdatedOnUtc);
+
+            // Assert
+            user.UpdatedOnUtc.Should().Be(UserData.UpdatedOnUtc);
+        }
+
+        [Fact]
+        public void Should_RaiseRoleRemovedAndAssignedDomainEvents_When_ReplacingExistingRole()
+        {
+            // Arrange
+            User user = UserData.GetUserWithRole(Role.Member);
+            user.ClearDomainEvents();
+
+            // Act
+            user.ChangeRole(Role.Administrator, UserData.UpdatedOnUtc);
+
+            // Assert
+            UserRoleRemovedDomainEvent removedEvent = AssertDomainEventWasPublished<UserRoleRemovedDomainEvent>(user);
+            removedEvent.RoleName.Should().Be(Role.Member.Name);
+
+            UserRoleAssignedDomainEvent assignedEvent = AssertDomainEventWasPublished<UserRoleAssignedDomainEvent>(user);
+            assignedEvent.RoleName.Should().Be(Role.Administrator.Name);
+        }
+
+        [Fact]
+        public void Should_Fail_When_NewRoleEqualsCurrentRole()
+        {
+            // Arrange
+            User user = UserData.GetUserWithRole(Role.Member);
+
+            // Act
+            Result result = user.ChangeRole(Role.Member, UserData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(UserErrors.RoleAlreadyAssigned);
+        }
+
+        [Fact]
+        public void Should_NotChangeRoles_When_NewRoleEqualsCurrentRole()
+        {
+            // Arrange
+            User user = UserData.GetUserWithRole(Role.Member);
+
+            // Act
+            user.ChangeRole(Role.Member, UserData.UpdatedOnUtc);
+
+            // Assert
+            user.Roles.Should().ContainSingle(r => r.Name == Role.Member.Name);
+        }
+
+        [Fact]
+        public void Should_Throw_When_NewRoleIsNull()
+        {
+            // Arrange
+            User user = UserData.GetActiveUser();
+
+            // Act
+            Action act = () => user.ChangeRole(null!, UserData.UpdatedOnUtc);
 
             // Assert
             act.Should().Throw<ArgumentNullException>();

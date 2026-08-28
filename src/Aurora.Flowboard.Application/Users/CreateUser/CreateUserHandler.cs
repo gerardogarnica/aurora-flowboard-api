@@ -17,7 +17,7 @@ internal sealed class CreateUserHandler(
 
         Email email = emailResult.Value;
 
-        Result<Role> roleResult = ResolveRole(command.Role);
+        Result<Role> roleResult = Role.FromName(command.Role.Trim());
         if (!roleResult.IsSuccessful)
         {
             return Result.Fail<Guid>(roleResult.Error);
@@ -66,9 +66,4 @@ internal sealed class CreateUserHandler(
 
         return user.Id;
     }
-
-    private static Result<Role> ResolveRole(string? role) =>
-        string.IsNullOrWhiteSpace(role)
-            ? Result.Ok(Role.Member)
-            : Role.FromName(role.Trim());
 }

@@ -18,71 +18,24 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("flowboard")
-                .HasAnnotation("ProductVersion", "10.0.9")
+                .HasAnnotation("ProductVersion", "10.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Aurora.Flowboard.Domain.Flows.Flow", b =>
+            modelBuilder.Entity("Aurora.Flowboard.Domain.Components.Component", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
 
                     b.Property<DateTime>("CreatedOnUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_on_utc");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("description");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_active");
-
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_default");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("name");
-
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("project_id");
-
-                    b.Property<DateTime?>("UpdatedOnUtc")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_on_utc");
-
-                    b.HasKey("Id")
-                        .HasName("pk_flows");
-
-                    b.HasIndex("ProjectId")
-                        .HasDatabaseName("ix_flows_project_id");
-
-                    b.ToTable("flows", "flowboard");
-                });
-
-            modelBuilder.Entity("Aurora.Flowboard.Domain.Flows.FlowState", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("category");
-
-                    b.Property<Guid>("FlowId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("flow_id");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -90,72 +43,40 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("name");
 
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer")
-                        .HasColumnName("sort_order");
-
-                    b.HasKey("Id")
-                        .HasName("pk_flow_states");
-
-                    b.HasIndex("FlowId")
-                        .HasDatabaseName("ix_flow_states_flow_id");
-
-                    b.ToTable("flow_states", "flowboard");
-                });
-
-            modelBuilder.Entity("Aurora.Flowboard.Domain.Flows.FlowTransition", b =>
-                {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("ProjectId")
                         .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnName("project_id");
 
-                    b.Property<Guid>("FlowId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("flow_id");
-
-                    b.Property<Guid>("FromStateId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("from_state_id");
-
-                    b.Property<Guid>("ToStateId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("to_state_id");
-
-                    b.PrimitiveCollection<int[]>("_allowedRoles")
+                    b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("integer[]")
-                        .HasColumnName("allowed_roles");
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("UpdatedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_on_utc");
 
                     b.HasKey("Id")
-                        .HasName("pk_flow_transitions");
+                        .HasName("pk_components");
 
-                    b.HasIndex("FlowId")
-                        .HasDatabaseName("ix_flow_transitions_flow_id");
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("ix_components_created_by");
 
-                    b.HasIndex("FromStateId")
-                        .HasDatabaseName("ix_flow_transitions_from_state_id");
+                    b.HasIndex("ProjectId")
+                        .HasDatabaseName("ix_components_project_id");
 
-                    b.HasIndex("ToStateId")
-                        .HasDatabaseName("ix_flow_transitions_to_state_id");
-
-                    b.HasIndex("FlowId", "FromStateId", "ToStateId")
+                    b.HasIndex("ProjectId", "Name")
                         .IsUnique()
-                        .HasDatabaseName("ix_flow_transitions_flow_id_from_state_id_to_state_id");
+                        .HasDatabaseName("ix_components_project_id_name");
 
-                    b.ToTable("flow_transitions", "flowboard");
+                    b.ToTable("components", "flowboard");
                 });
 
-            modelBuilder.Entity("Aurora.Flowboard.Domain.Projects.Project", b =>
+            modelBuilder.Entity("Aurora.Flowboard.Domain.Milestones.Milestone", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
                         .HasColumnName("id");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("character varying(3)")
-                        .HasColumnName("code");
 
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uuid")
@@ -170,9 +91,148 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("description");
 
-                    b.Property<DateOnly?>("EstimatedCompletionDate")
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("project_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<DateOnly?>("TargetEndDate")
                         .HasColumnType("date")
-                        .HasColumnName("estimated_completion_date");
+                        .HasColumnName("target_end_date");
+
+                    b.Property<DateOnly?>("TargetStartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("target_start_date");
+
+                    b.Property<DateTime?>("UpdatedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_on_utc");
+
+                    b.HasKey("Id")
+                        .HasName("pk_milestones");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("ix_milestones_created_by");
+
+                    b.HasIndex("ProjectId")
+                        .HasDatabaseName("ix_milestones_project_id");
+
+                    b.HasIndex("ProjectId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_milestones_project_id_name");
+
+                    b.ToTable("milestones", "flowboard");
+                });
+
+            modelBuilder.Entity("Aurora.Flowboard.Domain.Projects.FlowState", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("category");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("project_id");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.HasKey("Id")
+                        .HasName("pk_flow_states");
+
+                    b.HasIndex("ProjectId")
+                        .HasDatabaseName("ix_flow_states_project_id");
+
+                    b.ToTable("flow_states", "flowboard");
+                });
+
+            modelBuilder.Entity("Aurora.Flowboard.Domain.Projects.FlowTransition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("FromStateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("from_state_id");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("project_id");
+
+                    b.Property<Guid>("ToStateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("to_state_id");
+
+                    b.PrimitiveCollection<int[]>("_allowedRoles")
+                        .IsRequired()
+                        .HasColumnType("integer[]")
+                        .HasColumnName("allowed_roles");
+
+                    b.HasKey("Id")
+                        .HasName("pk_flow_transitions");
+
+                    b.HasIndex("FromStateId")
+                        .HasDatabaseName("ix_flow_transitions_from_state_id");
+
+                    b.HasIndex("ProjectId")
+                        .HasDatabaseName("ix_flow_transitions_project_id");
+
+                    b.HasIndex("ToStateId")
+                        .HasDatabaseName("ix_flow_transitions_to_state_id");
+
+                    b.HasIndex("ProjectId", "FromStateId", "ToStateId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_flow_transitions_project_id_from_state_id_to_state_id");
+
+                    b.ToTable("flow_transitions", "flowboard");
+                });
+
+            modelBuilder.Entity("Aurora.Flowboard.Domain.Projects.Project", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_on_utc");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
 
                     b.Property<DateTime>("LastActivityDate")
                         .HasColumnType("timestamp with time zone")
@@ -184,8 +244,9 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("name");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer")
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
                         .HasColumnName("status");
 
                     b.Property<DateTime?>("UpdatedOnUtc")
@@ -198,10 +259,6 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_projects");
-
-                    b.HasIndex("Code")
-                        .IsUnique()
-                        .HasDatabaseName("ix_projects_code");
 
                     b.HasIndex("CreatedBy")
                         .HasDatabaseName("ix_projects_created_by");
@@ -232,8 +289,12 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("changed_on_utc");
 
-                    b.Property<int?>("NewStatus")
-                        .HasColumnType("integer")
+                    b.Property<string>("NewKind")
+                        .HasColumnType("text")
+                        .HasColumnName("new_kind");
+
+                    b.Property<string>("NewStatus")
+                        .HasColumnType("text")
                         .HasColumnName("new_status");
 
                     b.Property<Guid>("ProjectId")
@@ -289,6 +350,76 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                         .HasDatabaseName("ix_project_members_project_id_user_id");
 
                     b.ToTable("project_members", "flowboard");
+                });
+
+            modelBuilder.Entity("Aurora.Flowboard.Domain.TemplateFlows.TemplateFlow", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("CreatedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_on_utc");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<DateTime?>("UpdatedOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_on_utc");
+
+                    b.HasKey("Id")
+                        .HasName("pk_template_flows");
+
+                    b.HasIndex("CreatedBy")
+                        .HasDatabaseName("ix_template_flows_created_by");
+
+                    b.HasIndex("Kind")
+                        .IsUnique()
+                        .HasDatabaseName("ix_template_flows_kind");
+
+                    b.ToTable("template_flows", "flowboard");
+                });
+
+            modelBuilder.Entity("Aurora.Flowboard.Domain.TemplateFlows.TemplateFlowState", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("category");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<Guid>("TemplateFlowId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("template_flow_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_template_flow_states");
+
+                    b.HasIndex("TemplateFlowId")
+                        .HasDatabaseName("ix_template_flow_states_template_flow_id");
+
+                    b.ToTable("template_flow_states", "flowboard");
                 });
 
             modelBuilder.Entity("Aurora.Flowboard.Domain.Users.User", b =>
@@ -526,6 +657,10 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("completed_on_utc");
 
+                    b.Property<Guid?>("ComponentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("component_id");
+
                     b.Property<Guid>("CreatedById")
                         .HasColumnType("uuid")
                         .HasColumnName("created_by_id");
@@ -550,6 +685,10 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                     b.Property<Guid>("FlowStateId")
                         .HasColumnType("uuid")
                         .HasColumnName("flow_state_id");
+
+                    b.Property<Guid?>("MilestoneId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("milestone_id");
 
                     b.Property<string>("Priority")
                         .IsRequired()
@@ -586,8 +725,14 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_work_items_code");
 
+                    b.HasIndex("ComponentId")
+                        .HasDatabaseName("ix_work_items_component_id");
+
                     b.HasIndex("FlowStateId")
                         .HasDatabaseName("ix_work_items_flow_state_id");
+
+                    b.HasIndex("MilestoneId")
+                        .HasDatabaseName("ix_work_items_milestone_id");
 
                     b.HasIndex("ProjectId")
                         .HasDatabaseName("ix_work_items_project_id");
@@ -699,26 +844,52 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                     b.ToTable("outbox_messages", "flowboard");
                 });
 
-            modelBuilder.Entity("Aurora.Flowboard.Domain.Flows.Flow", b =>
+            modelBuilder.Entity("Aurora.Flowboard.Domain.Components.Component", b =>
                 {
-                    b.HasOne("Aurora.Flowboard.Domain.Projects.Project", "Project")
-                        .WithMany("Flows")
-                        .HasForeignKey("ProjectId")
+                    b.HasOne("Aurora.Flowboard.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_flows_projects_project_id");
+                        .HasConstraintName("fk_components_users_created_by");
+
+                    b.HasOne("Aurora.Flowboard.Domain.Projects.Project", "Project")
+                        .WithMany("Components")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_components_projects_project_id");
 
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("Aurora.Flowboard.Domain.Flows.FlowState", b =>
+            modelBuilder.Entity("Aurora.Flowboard.Domain.Milestones.Milestone", b =>
                 {
-                    b.HasOne("Aurora.Flowboard.Domain.Flows.Flow", "Flow")
-                        .WithMany("States")
-                        .HasForeignKey("FlowId")
+                    b.HasOne("Aurora.Flowboard.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_milestones_users_created_by");
+
+                    b.HasOne("Aurora.Flowboard.Domain.Projects.Project", "Project")
+                        .WithMany("Milestones")
+                        .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_flow_states_flows_flow_id");
+                        .HasConstraintName("fk_milestones_projects_project_id");
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("Aurora.Flowboard.Domain.Projects.FlowState", b =>
+                {
+                    b.HasOne("Aurora.Flowboard.Domain.Projects.Project", null)
+                        .WithMany("FlowStates")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_flow_states_projects_project_id");
 
                     b.OwnsOne("Aurora.Flowboard.Domain.Shared.Color", "Color", b1 =>
                         {
@@ -743,27 +914,25 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
 
                     b.Navigation("Color")
                         .IsRequired();
-
-                    b.Navigation("Flow");
                 });
 
-            modelBuilder.Entity("Aurora.Flowboard.Domain.Flows.FlowTransition", b =>
+            modelBuilder.Entity("Aurora.Flowboard.Domain.Projects.FlowTransition", b =>
                 {
-                    b.HasOne("Aurora.Flowboard.Domain.Flows.Flow", null)
-                        .WithMany("Transitions")
-                        .HasForeignKey("FlowId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_flow_transitions_flows_flow_id");
-
-                    b.HasOne("Aurora.Flowboard.Domain.Flows.FlowState", null)
+                    b.HasOne("Aurora.Flowboard.Domain.Projects.FlowState", null)
                         .WithMany()
                         .HasForeignKey("FromStateId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_flow_transitions_flow_states_from_state_id");
 
-                    b.HasOne("Aurora.Flowboard.Domain.Flows.FlowState", null)
+                    b.HasOne("Aurora.Flowboard.Domain.Projects.Project", null)
+                        .WithMany("FlowTransitions")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_flow_transitions_projects_project_id");
+
+                    b.HasOne("Aurora.Flowboard.Domain.Projects.FlowState", null)
                         .WithMany()
                         .HasForeignKey("ToStateId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -801,10 +970,38 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                                 .HasConstraintName("fk_projects_projects_id");
                         });
 
+                    b.OwnsOne("Aurora.Flowboard.Domain.Projects.ProjectCode", "Prefix", b1 =>
+                        {
+                            b1.Property<Guid>("ProjectId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("id");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("prefix");
+
+                            b1.HasKey("ProjectId");
+
+                            b1.HasIndex("Value")
+                                .IsUnique()
+                                .HasDatabaseName("ix_projects_prefix");
+
+                            b1.ToTable("projects", "flowboard");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ProjectId")
+                                .HasConstraintName("fk_projects_projects_id");
+                        });
+
                     b.Navigation("Color")
                         .IsRequired();
 
                     b.Navigation("Creator");
+
+                    b.Navigation("Prefix")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Aurora.Flowboard.Domain.Projects.ProjectChangeLog", b =>
@@ -843,6 +1040,50 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                         .HasConstraintName("fk_project_members_users_user_id");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Aurora.Flowboard.Domain.TemplateFlows.TemplateFlow", b =>
+                {
+                    b.HasOne("Aurora.Flowboard.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_template_flows_users_created_by");
+                });
+
+            modelBuilder.Entity("Aurora.Flowboard.Domain.TemplateFlows.TemplateFlowState", b =>
+                {
+                    b.HasOne("Aurora.Flowboard.Domain.TemplateFlows.TemplateFlow", null)
+                        .WithMany("States")
+                        .HasForeignKey("TemplateFlowId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_template_flow_states_template_flows_template_flow_id");
+
+                    b.OwnsOne("Aurora.Flowboard.Domain.Shared.Color", "Color", b1 =>
+                        {
+                            b1.Property<Guid>("TemplateFlowStateId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("id");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasColumnName("color");
+
+                            b1.HasKey("TemplateFlowStateId");
+
+                            b1.ToTable("template_flow_states", "flowboard");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TemplateFlowStateId")
+                                .HasConstraintName("fk_template_flow_states_template_flow_states_id");
+                        });
+
+                    b.Navigation("Color")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Aurora.Flowboard.Domain.Users.User", b =>
@@ -947,13 +1188,13 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
 
             modelBuilder.Entity("Aurora.Flowboard.Domain.WorkItems.StateTransitionHistory", b =>
                 {
-                    b.HasOne("Aurora.Flowboard.Domain.Flows.FlowState", null)
+                    b.HasOne("Aurora.Flowboard.Domain.Projects.FlowState", null)
                         .WithMany()
                         .HasForeignKey("FromStateId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_work_item_state_transition_histories_flow_states_from_state");
 
-                    b.HasOne("Aurora.Flowboard.Domain.Flows.FlowState", null)
+                    b.HasOne("Aurora.Flowboard.Domain.Projects.FlowState", null)
                         .WithMany()
                         .HasForeignKey("ToStateId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -980,12 +1221,24 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
 
             modelBuilder.Entity("Aurora.Flowboard.Domain.WorkItems.WorkItem", b =>
                 {
-                    b.HasOne("Aurora.Flowboard.Domain.Flows.FlowState", "FlowState")
+                    b.HasOne("Aurora.Flowboard.Domain.Components.Component", "Component")
+                        .WithMany()
+                        .HasForeignKey("ComponentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_work_items_components_component_id");
+
+                    b.HasOne("Aurora.Flowboard.Domain.Projects.FlowState", "FlowState")
                         .WithMany()
                         .HasForeignKey("FlowStateId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_work_items_flow_states_flow_state_id");
+
+                    b.HasOne("Aurora.Flowboard.Domain.Milestones.Milestone", "Milestone")
+                        .WithMany()
+                        .HasForeignKey("MilestoneId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_work_items_milestones_milestone_id");
 
                     b.HasOne("Aurora.Flowboard.Domain.Projects.Project", "Project")
                         .WithMany("WorkItems")
@@ -994,7 +1247,11 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_work_items_projects_project_id");
 
+                    b.Navigation("Component");
+
                     b.Navigation("FlowState");
+
+                    b.Navigation("Milestone");
 
                     b.Navigation("Project");
                 });
@@ -1019,22 +1276,26 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                         .HasConstraintName("fk_work_item_tags_work_items_work_item_id");
                 });
 
-            modelBuilder.Entity("Aurora.Flowboard.Domain.Flows.Flow", b =>
-                {
-                    b.Navigation("States");
-
-                    b.Navigation("Transitions");
-                });
-
             modelBuilder.Entity("Aurora.Flowboard.Domain.Projects.Project", b =>
                 {
                     b.Navigation("ChangeLogs");
 
-                    b.Navigation("Flows");
+                    b.Navigation("Components");
+
+                    b.Navigation("FlowStates");
+
+                    b.Navigation("FlowTransitions");
 
                     b.Navigation("Members");
 
+                    b.Navigation("Milestones");
+
                     b.Navigation("WorkItems");
+                });
+
+            modelBuilder.Entity("Aurora.Flowboard.Domain.TemplateFlows.TemplateFlow", b =>
+                {
+                    b.Navigation("States");
                 });
 
             modelBuilder.Entity("Aurora.Flowboard.Domain.Users.User", b =>

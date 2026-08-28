@@ -12,10 +12,10 @@ internal sealed class MoveWorkItemHandler(
         WorkItem? workItem = await dbContext
             .WorkItems
             .Include(w => w.FlowState)
-            .ThenInclude(s => s.Flow)
-            .ThenInclude(f => f.Transitions)
             .Include(w => w.Project)
             .ThenInclude(p => p.Members)
+            .Include(w => w.Project)
+            .ThenInclude(p => p.FlowTransitions)
             .AsSplitQuery()
             .SingleOrDefaultAsync(w => w.Id == command.Id, cancellationToken);
 
@@ -30,7 +30,7 @@ internal sealed class MoveWorkItemHandler(
 
         if (toState is null)
         {
-            return Result.Fail(FlowErrors.StateNotFound);
+            return Result.Fail(ProjectErrors.FlowStateNotFound);
         }
 
         User? changedBy = await dbContext

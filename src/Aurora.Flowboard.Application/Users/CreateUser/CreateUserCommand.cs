@@ -5,4 +5,4 @@ public sealed record CreateUserCommand(
     string LastName,
     string Email,
     string Password,
-    string? Role) : ICommand<Guid>;
+    string Role) : ICommand<Guid>;
