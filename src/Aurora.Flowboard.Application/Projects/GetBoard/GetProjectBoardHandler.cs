@@ -42,6 +42,8 @@ internal sealed class GetProjectBoardHandler(
                 w.Priority,
                 w.FlowStateId,
                 w.AssigneeId,
+                w.ComponentId,
+                w.MilestoneId,
                 AssigneeFirstName = dbContext.Users
                     .Where(u => u.Id == w.AssigneeId)
                     .Select(u => u.FirstName)
@@ -49,6 +51,14 @@ internal sealed class GetProjectBoardHandler(
                 AssigneeLastName = dbContext.Users
                     .Where(u => u.Id == w.AssigneeId)
                     .Select(u => u.LastName)
+                    .FirstOrDefault(),
+                ComponentName = dbContext.Components
+                    .Where(c => c.Id == w.ComponentId)
+                    .Select(c => c.Name)
+                    .FirstOrDefault(),
+                MilestoneName = dbContext.Milestones
+                    .Where(m => m.Id == w.MilestoneId)
+                    .Select(m => m.Name)
                     .FirstOrDefault(),
                 w.EstimatedPoints,
                 w.EstimatedCompletionDate,
@@ -80,6 +90,8 @@ internal sealed class GetProjectBoardHandler(
                         w.AssigneeId,
                         BuildInitials(w.AssigneeFirstName, w.AssigneeLastName),
                         BuildFullName(w.AssigneeFirstName, w.AssigneeLastName),
+                        w.ComponentName,
+                        w.MilestoneName,
                         w.EstimatedPoints,
                         w.EstimatedCompletionDate,
                         w.CreatedOnUtc,

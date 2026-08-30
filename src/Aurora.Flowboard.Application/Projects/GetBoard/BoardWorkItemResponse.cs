@@ -11,6 +11,8 @@ public sealed record BoardWorkItemResponse(
     Guid? AssigneeId,
     string? AssigneeInitials,
     string? AssigneeFullName,
+    string? Component,
+    string? Milestone,
     int? EstimatedPoints,
     DateOnly? EstimatedCompletionDate,
     DateTime CreatedOnUtc,

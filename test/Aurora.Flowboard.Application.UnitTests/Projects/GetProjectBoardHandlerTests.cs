@@ -68,6 +68,10 @@ public sealed class GetProjectBoardHandlerTests
         _dbContext.FlowStates.Returns(statesMock);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
+        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
+        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Milestones.Returns(milestonesMock);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -98,6 +102,10 @@ public sealed class GetProjectBoardHandlerTests
         _dbContext.FlowStates.Returns(statesMock);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
+        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
+        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Milestones.Returns(milestonesMock);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -124,6 +132,10 @@ public sealed class GetProjectBoardHandlerTests
         _dbContext.FlowStates.Returns(statesMock);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
+        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
+        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Milestones.Returns(milestonesMock);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -157,6 +169,10 @@ public sealed class GetProjectBoardHandlerTests
         _dbContext.FlowStates.Returns(statesMock);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
+        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
+        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Milestones.Returns(milestonesMock);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -192,6 +208,10 @@ public sealed class GetProjectBoardHandlerTests
         _dbContext.FlowStates.Returns(statesMock);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
+        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
+        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Milestones.Returns(milestonesMock);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -227,6 +247,10 @@ public sealed class GetProjectBoardHandlerTests
         _dbContext.FlowStates.Returns(statesMock);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
+        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
+        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Milestones.Returns(milestonesMock);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -261,6 +285,10 @@ public sealed class GetProjectBoardHandlerTests
         _dbContext.FlowStates.Returns(statesMock);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
+        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
+        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Milestones.Returns(milestonesMock);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -294,6 +322,10 @@ public sealed class GetProjectBoardHandlerTests
         _dbContext.FlowStates.Returns(statesMock);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
+        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
+        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Milestones.Returns(milestonesMock);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
