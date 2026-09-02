@@ -38,6 +38,7 @@ public sealed record WorkItemTagResponse(
 public sealed record WorkItemCommentResponse(
     Guid CommentId,
     Guid AuthorId,
+    string AuthorFullName,
     string Content,
     DateTime CreatedOnUtc,
     DateTime? UpdatedOnUtc);
@@ -52,16 +53,21 @@ public sealed record WorkItemTimeEntryResponse(
 public sealed record WorkItemStateTransitionResponse(
     Guid StateTransitionId,
     Guid? FromStateId,
+    string? FromStateName,
     Guid ToStateId,
+    string ToStateName,
     Guid ChangedById,
+    string ChangedByFullName,
     string? Reason,
     DateTime ChangedOnUtc);
 
 public sealed record WorkItemChangeLogResponse(
     Guid ChangeLogId,
     Guid ChangedById,
+    string ChangedByFullName,
     WorkItemChangeType ChangeType,
     Guid? AffectedEntityId,
+    string? AffectedEntityName,
     DateTime ChangedOnUtc);
 
 public sealed record WorkItemFlowTransitionResponse(
