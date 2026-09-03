@@ -46,6 +46,7 @@ public sealed record WorkItemCommentResponse(
 public sealed record WorkItemTimeEntryResponse(
     Guid TimeEntryId,
     Guid UserId,
+    string LoggedByFullName,
     decimal Hours,
     string? Description,
     DateTime LoggedOnUtc);

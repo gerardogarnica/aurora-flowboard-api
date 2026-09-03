@@ -61,7 +61,16 @@ internal sealed class GetWorkItemByCodeHandler(
                             c.UpdatedOnUtc))
                         .ToList(),
                     w.TimeEntries
-                        .Select(t => new WorkItemTimeEntryResponse(t.Id, t.UserId, t.Hours, t.Description, t.LoggedOnUtc))
+                        .Select(t => new WorkItemTimeEntryResponse(
+                            t.Id,
+                            t.UserId,
+                            dbContext.Users
+                                .Where(u => u.Id == t.UserId)
+                                .Select(u => u.FirstName + " " + u.LastName)
+                                .FirstOrDefault() ?? string.Empty,
+                            t.Hours,
+                            t.Description,
+                            t.LoggedOnUtc))
                         .ToList(),
                     w.StateHistory
                         .OrderBy(s => s.ChangedOnUtc)
@@ -126,6 +135,7 @@ internal sealed class GetWorkItemByCodeHandler(
                 MemberRole = w.Project.Members.First(m => m.UserId == userContext.UserId).Role
             })
             .AsNoTracking()
+            .AsSplitQuery()
             .SingleOrDefaultAsync(cancellationToken);
 
         if (result is null)
