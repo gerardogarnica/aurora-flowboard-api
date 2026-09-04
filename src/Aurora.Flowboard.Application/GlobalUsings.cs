@@ -1,6 +1,7 @@
 global using Aurora.Flowboard.Application.Abstractions.Authentication;
 global using Aurora.Flowboard.Application.Abstractions.Data;
 global using Aurora.Flowboard.Application.Abstractions.Messaging;
+global using Aurora.Flowboard.Application.Abstractions.Pagination;
 global using Aurora.Flowboard.Application.Abstractions.Time;
 global using Aurora.Flowboard.Application.Abstractions.Validations;
 global using Aurora.Flowboard.Application.Projects.Shared;
