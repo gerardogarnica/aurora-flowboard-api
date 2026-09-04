@@ -131,21 +131,17 @@ public sealed class GetWorkItemByCodeHandlerTests
     {
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
-        (Project _, WorkItem workItem, Component component, Milestone milestone) =
+        (Project _, WorkItem workItem, Component _, Milestone _) =
             WorkItemQueryData.GetProjectAndWorkItemWithComponentAndMilestone(admin);
         _userContext.UserId.Returns(admin.Id);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
         DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowTransitions);
         DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowStates);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
         _dbContext.FlowTransitions.Returns(transitionsMock);
         _dbContext.FlowStates.Returns(statesMock);
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
 
         // Act
         Result<WorkItemResponse> result =
@@ -156,10 +152,6 @@ public sealed class GetWorkItemByCodeHandlerTests
         result.Value.ComponentName.Should().Be("Auth Module");
         result.Value.MilestoneId.Should().Be(workItem.MilestoneId);
         result.Value.MilestoneName.Should().Be("Sprint 1");
-        result.Value.ChangeLogs.Should().Contain(c =>
-            c.ChangeType == WorkItemChangeType.ComponentChanged && c.AffectedEntityName == "Auth Module");
-        result.Value.ChangeLogs.Should().Contain(c =>
-            c.ChangeType == WorkItemChangeType.MilestoneChanged && c.AffectedEntityName == "Sprint 1");
     }
 
     [Fact]
@@ -214,11 +206,11 @@ public sealed class GetWorkItemByCodeHandlerTests
     }
 
     [Fact]
-    public async Task Should_MapCollections_When_WorkItemHasData()
+    public async Task Should_MapTags_When_WorkItemHasTags()
     {
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
-        (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithComment(admin);
+        (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithTag(admin);
         _userContext.UserId.Returns(admin.Id);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
@@ -234,101 +226,8 @@ public sealed class GetWorkItemByCodeHandlerTests
             await _handler.Handle(new GetWorkItemByCodeQuery(workItem.Code), CancellationToken.None);
 
         // Assert
-        result.Value.Comments.Should().HaveCount(1);
-        result.Value.Comments.Single().AuthorFullName.Should().Be("Work Admin");
-        result.Value.ChangeLogs.Should().HaveCount(2); // Created + CommentAdded
-        result.Value.ChangeLogs.Should().OnlyContain(c => c.ChangedByFullName == "Work Admin");
-        result.Value.Tags.Should().BeEmpty();
-        result.Value.TimeEntries.Should().BeEmpty();
-        result.Value.StateHistory.Should().BeEmpty();
-    }
-
-    [Fact]
-    public async Task Should_MapStateHistoryNamesAndChangedBy_When_WorkItemHasStateHistory()
-    {
-        // Arrange
-        User admin = WorkItemQueryData.GetAdminUser();
-        (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithStateHistory(admin);
-        _userContext.UserId.Returns(admin.Id);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowTransitions);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowStates);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.FlowTransitions.Returns(transitionsMock);
-        _dbContext.FlowStates.Returns(statesMock);
-
-        // Act
-        Result<WorkItemResponse> result =
-            await _handler.Handle(new GetWorkItemByCodeQuery(workItem.Code), CancellationToken.None);
-
-        // Assert
-        result.Value.StateHistory.Should().ContainSingle();
-        WorkItemStateTransitionResponse transition = result.Value.StateHistory.Single();
-        transition.FromStateName.Should().Be("Backlog");
-        transition.ToStateName.Should().Be("Done");
-        transition.ChangedByFullName.Should().Be("Work Admin");
-    }
-
-    [Fact]
-    public async Task Should_ResolveLoggedByFullName_When_WorkItemHasTimeEntry()
-    {
-        // Arrange
-        User admin = WorkItemQueryData.GetAdminUser();
-        (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithTimeEntry(admin);
-        _userContext.UserId.Returns(admin.Id);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowTransitions);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowStates);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.FlowTransitions.Returns(transitionsMock);
-        _dbContext.FlowStates.Returns(statesMock);
-
-        // Act
-        Result<WorkItemResponse> result =
-            await _handler.Handle(new GetWorkItemByCodeQuery(workItem.Code), CancellationToken.None);
-
-        // Assert
-        result.Value.TimeEntries.Should().ContainSingle();
-        result.Value.TimeEntries.Single().LoggedByFullName.Should().Be("Work Admin");
-    }
-
-    [Fact]
-    public async Task Should_ResolveAffectedEntityName_When_ChangeLogTypeHasAnAffectedEntity()
-    {
-        // Arrange
-        User admin = WorkItemQueryData.GetAdminUser();
-        User assignee = WorkItemQueryData.GetAssigneeUser();
-        (Project _, WorkItem workItem, Component component, Milestone milestone) =
-            WorkItemQueryData.GetProjectAndWorkItemWithAllChangeLogTypes(admin, assignee);
-        _userContext.UserId.Returns(admin.Id);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin, assignee]);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowTransitions);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowStates);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.FlowTransitions.Returns(transitionsMock);
-        _dbContext.FlowStates.Returns(statesMock);
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
-
-        // Act
-        Result<WorkItemResponse> result =
-            await _handler.Handle(new GetWorkItemByCodeQuery(workItem.Code), CancellationToken.None);
-
-        // Assert
-        IReadOnlyCollection<WorkItemChangeLogResponse> changeLogs = result.Value.ChangeLogs;
-        changeLogs.Single(c => c.ChangeType == WorkItemChangeType.Assigned).AffectedEntityName.Should().Be("Work Assignee");
-        changeLogs.Single(c => c.ChangeType == WorkItemChangeType.Moved).AffectedEntityName.Should().Be("Done");
-        changeLogs.Single(c => c.ChangeType == WorkItemChangeType.ComponentChanged).AffectedEntityName.Should().Be("Auth Module");
-        changeLogs.Single(c => c.ChangeType == WorkItemChangeType.MilestoneChanged).AffectedEntityName.Should().Be("Sprint 1");
-        changeLogs.Single(c => c.ChangeType == WorkItemChangeType.Created).AffectedEntityName.Should().BeNull();
+        result.Value.Tags.Should().ContainSingle();
+        result.Value.Tags.Single().Name.Should().Be(WorkItemQueryData.TagName);
     }
 
     [Fact]

@@ -47,95 +47,11 @@ internal sealed class GetWorkItemByCodeHandler(
                         .OrderBy(t => t.Name)
                         .Select(t => new WorkItemTagResponse(t.Id, t.Name))
                         .ToList(),
-                    w.Comments
-                        .Where(c => !c.IsDeleted)
-                        .Select(c => new WorkItemCommentResponse(
-                            c.Id,
-                            c.AuthorId,
-                            dbContext.Users
-                                .Where(u => u.Id == c.AuthorId)
-                                .Select(u => u.FirstName + " " + u.LastName)
-                                .FirstOrDefault() ?? string.Empty,
-                            c.Content,
-                            c.CreatedOnUtc,
-                            c.UpdatedOnUtc))
-                        .ToList(),
-                    w.TimeEntries
-                        .Select(t => new WorkItemTimeEntryResponse(
-                            t.Id,
-                            t.UserId,
-                            dbContext.Users
-                                .Where(u => u.Id == t.UserId)
-                                .Select(u => u.FirstName + " " + u.LastName)
-                                .FirstOrDefault() ?? string.Empty,
-                            t.Hours,
-                            t.Description,
-                            t.LoggedOnUtc))
-                        .ToList(),
-                    w.StateHistory
-                        .OrderBy(s => s.ChangedOnUtc)
-                        .Select(s => new WorkItemStateTransitionResponse(
-                            s.Id,
-                            s.FromStateId,
-                            s.FromStateId != null
-                                ? dbContext.FlowStates
-                                    .Where(fs => fs.Id == s.FromStateId)
-                                    .Select(fs => fs.Name)
-                                    .FirstOrDefault()
-                                : null,
-                            s.ToStateId,
-                            dbContext.FlowStates
-                                .Where(fs => fs.Id == s.ToStateId)
-                                .Select(fs => fs.Name)
-                                .FirstOrDefault() ?? string.Empty,
-                            s.ChangedById,
-                            dbContext.Users
-                                .Where(u => u.Id == s.ChangedById)
-                                .Select(u => u.FirstName + " " + u.LastName)
-                                .FirstOrDefault() ?? string.Empty,
-                            s.Reason,
-                            s.ChangedOnUtc))
-                        .ToList(),
-                    w.ChangeLogs
-                        .OrderBy(c => c.ChangedOnUtc)
-                        .Select(c => new WorkItemChangeLogResponse(
-                            c.Id,
-                            c.ChangedById,
-                            dbContext.Users
-                                .Where(u => u.Id == c.ChangedById)
-                                .Select(u => u.FirstName + " " + u.LastName)
-                                .FirstOrDefault() ?? string.Empty,
-                            c.ChangeType,
-                            c.AffectedEntityId,
-                            c.ChangeType == WorkItemChangeType.Assigned
-                                ? dbContext.Users
-                                    .Where(u => u.Id == c.AffectedEntityId)
-                                    .Select(u => u.FirstName + " " + u.LastName)
-                                    .FirstOrDefault()
-                                : c.ChangeType == WorkItemChangeType.Moved
-                                    ? dbContext.FlowStates
-                                        .Where(fs => fs.Id == c.AffectedEntityId)
-                                        .Select(fs => fs.Name)
-                                        .FirstOrDefault()
-                                    : c.ChangeType == WorkItemChangeType.ComponentChanged
-                                        ? dbContext.Components
-                                            .Where(comp => comp.Id == c.AffectedEntityId)
-                                            .Select(comp => comp.Name)
-                                            .FirstOrDefault()
-                                        : c.ChangeType == WorkItemChangeType.MilestoneChanged
-                                            ? dbContext.Milestones
-                                                .Where(m => m.Id == c.AffectedEntityId)
-                                                .Select(m => m.Name)
-                                                .FirstOrDefault()
-                                            : null,
-                            c.ChangedOnUtc))
-                        .ToList(),
                     Array.Empty<WorkItemFlowTransitionResponse>()),
                 w.FlowStateId,
                 MemberRole = w.Project.Members.First(m => m.UserId == userContext.UserId).Role
             })
             .AsNoTracking()
-            .AsSplitQuery()
             .SingleOrDefaultAsync(cancellationToken);
 
         if (result is null)
