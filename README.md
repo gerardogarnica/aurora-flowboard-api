@@ -69,7 +69,7 @@ Each project has exactly one flow, owned by the `Project` aggregate. There is no
 ### Work Items
 
 - **Create work item** (`POST /api/v1/flowboard/workitems`): Open a new work item with title, description, type, and priority.
-- **Board view** (`GET /api/v1/flowboard/projects/{projectId}/work-items`): Work items for a project grouped by the project's default flow states (Kanban board shape), ordered by state and priority.
+- **Board view** (`GET /api/v1/flowboard/projects/{projectId}/board`): Work items for a project grouped by the project's default flow states (Kanban board shape), ordered by state and priority.
 - **Get work item** (`GET /api/v1/flowboard/workitems/{id}`): Full detail view including comments, time entries, tags, and transition history.
 - **Update work item** (`PUT /api/v1/flowboard/workitems/{id}`): Edit title, description, priority, and assignee.
 - **Transition state** (`PUT /api/v1/flowboard/workitems/{id}/transition`): Move a work item to the next state following flow transition rules.

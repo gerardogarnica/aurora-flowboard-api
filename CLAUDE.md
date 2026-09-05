@@ -78,7 +78,7 @@ Tests live under `test/`:
 
 **One flow per project** — there is no `Flow` aggregate. `FlowState` and `FlowTransition` are child entities of `Project` (FK `project_id`), and a work item reaches its transitions via `Project.FindFlowTransition(...)`. Flow operations are exposed under `projects/{id}/flow/...`.
 
-**Work item board response** — `GET projects/{projectId:guid}/work-items` returns work items grouped by the project's `FlowState`s (Kanban board shape), not a flat list. A project with no flow states returns an empty board, not a 404.
+**Work item board response** — `GET projects/{projectId:guid}/board` (`Application/Projects/GetBoard/`) returns work items grouped by the project's `FlowState`s (Kanban board shape), not a flat list. A project with no flow states returns an empty board, not a 404. A second, near-identical `GET projects/{projectId:guid}/work-items` (`Application/WorkItems/GetByProject/`) used to return the same column shape minus `component`/`milestone`; it was removed as an unused duplicate, so `/board` is now the only project board endpoint. Don't reintroduce a per-project work item list under `work-items/` — extend `GetProjectBoardQuery` instead.
 
 **Work item detail vs. activity collections** — `GET work-items/{code}` returns only bounded data: the scalars, `tags`, and `availableTransitions`. The four unbounded activity collections live in their own paginated sub-endpoints, keyed by the work item's **`{id:guid}`** (not its code, matching the existing sub-resources like `POST work-items/{id:guid}/comments`):
 
