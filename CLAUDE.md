@@ -76,7 +76,15 @@ Tests live under `test/`:
 
 **Authentication & authorization** — `POST auth/login` (anonymous) issues a JWT access token + opaque refresh token via `ITokenProvider`/`JwtTokenProvider`; passwords are hashed with PBKDF2 (`PasswordHasher`, not BCrypt/ASP.NET Identity). Protected endpoints use `RequireAuthorization()`; admin-only endpoints use `RequireAuthorization(policy => policy.RequireRole(Role.Administrator.Name))` (e.g. `POST users`). `IUserContext` exposes the current user's id/claims to handlers.
 
-**One flow per project** — there is no `Flow` aggregate. `FlowState` and `FlowTransition` are child entities of `Project` (FK `project_id`), and a work item reaches its transitions via `Project.FindFlowTransition(...)`. Flow operations are exposed under `projects/{id}/flow/...`.
+**One flow per project** — there is no `Flow` aggregate. `FlowState` and `FlowTransition` are child entities of `Project` (FK `project_id`), and a work item reaches its transitions via `Project.FindFlowTransition(...)`.
+
+**A project's flow is set at creation and is not editable over HTTP.** The `projects/{id}/flow/...` endpoints (get flow, add/remove state, add/remove transition role) and their Application slices were removed — the front-end never called them and there is no plan to. What remains:
+
+- `CreateProjectCommand` takes the `FlowStates` list, and `CreateProjectHandler` calls `Project.AddFlowState` for each. This is the only path that writes flow states, so the front-end pre-fills it from `GET template-flows/{kind}`.
+- The domain methods (`Project.AddFlowState`, `RemoveFlowState`, `AddFlowTransitionRole`, `RemoveFlowTransitionRole`) and their `Domain.UnitTests` coverage are intact and deliberately kept — only the Application slices and endpoints are gone. Re-exposing any of them is a new slice + endpoint, not a domain change.
+- Flow states are still *read* through `GET projects/{projectId:guid}/board` (the board columns) and `GET work-items/{code}` (`availableTransitions`).
+
+Consequence to keep in mind: a project created with the wrong flow can only be fixed by direct SQL. Don't reintroduce these endpoints without asking — their absence is a deliberate scope decision.
 
 **Work item board response** — `GET projects/{projectId:guid}/board` (`Application/Projects/GetBoard/`) returns work items grouped by the project's `FlowState`s (Kanban board shape), not a flat list. A project with no flow states returns an empty board, not a 404. A second, near-identical `GET projects/{projectId:guid}/work-items` (`Application/WorkItems/GetByProject/`) used to return the same column shape minus `component`/`milestone`; it was removed as an unused duplicate, so `/board` is now the only project board endpoint. Don't reintroduce a per-project work item list under `work-items/` — extend `GetProjectBoardQuery` instead.
 
