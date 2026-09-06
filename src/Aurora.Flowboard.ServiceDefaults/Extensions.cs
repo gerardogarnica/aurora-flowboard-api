@@ -110,8 +110,10 @@ public static class Extensions
         // See https://aka.ms/dotnet/aspire/healthchecks for details before enabling these endpoints in non-development environments.
         if (app.Environment.IsDevelopment())
         {
-            // All health checks must pass for app to be considered ready to accept traffic after starting
-            app.MapHealthChecks(HealthEndpointPath);
+            // The readiness endpoint (HealthEndpointPath) is mapped by the Api project instead
+            // (HealthCheckExtensions.MapHealthCheckEndpoints), for every environment and with a JSON
+            // response writer. Mapping it here as well gave the same route template two candidates
+            // and threw AmbiguousMatchException on every /health request in Development.
 
             // Only health checks tagged with the "live" tag must pass for app to be considered alive
             app.MapHealthChecks(AlivenessEndpointPath, new HealthCheckOptions
