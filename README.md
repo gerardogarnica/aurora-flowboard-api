@@ -59,17 +59,15 @@ Aurora Flowboard is an internal REST API for software project management that he
 
 Each project has exactly one flow, owned by the `Project` aggregate. There is no standalone flow entity.
 
-- **Get flow** (`GET /api/v1/flowboard/projects/{id}/flow`): Fetch the project's flow states and allowed transitions.
-- **Add flow state** (`POST /api/v1/flowboard/projects/{id}/flow/states`): Append a state; transitions to and from adjacent states are generated automatically.
-- **Remove flow state** (`DELETE /api/v1/flowboard/projects/{id}/flow/states/{stateId}`): Remove a state, bridging the surrounding transitions.
-- **Add / remove transition role** (`POST` / `DELETE /api/v1/flowboard/projects/{id}/flow/transitions/{transitionId}/roles`): Gate a transition by project role.
 - **Flow states**: Ordered states (e.g. Backlog, In Progress, Done) classified as `Active`, `Completed`, or `Cancelled`.
 - **Flow transitions**: Allowed state transitions, each carrying the set of project roles permitted to perform it.
+- **Defined at project creation**: the flow states are supplied in the `POST /api/v1/flowboard/projects` payload; clients pre-fill them from the flow template for the project's `ProjectKind` (`GET /api/v1/flowboard/template-flows/{kind}`).
+- **Read-only afterwards**: there are no endpoints to edit a project's flow. Flow states are surfaced through the board (`GET /api/v1/flowboard/projects/{projectId}/board`) and through a work item's available transitions.
 
 ### Work Items
 
 - **Create work item** (`POST /api/v1/flowboard/workitems`): Open a new work item with title, description, type, and priority.
-- **Board view** (`GET /api/v1/flowboard/projects/{projectId}/work-items`): Work items for a project grouped by the project's default flow states (Kanban board shape), ordered by state and priority.
+- **Board view** (`GET /api/v1/flowboard/projects/{projectId}/board`): Work items for a project grouped by the project's default flow states (Kanban board shape), ordered by state and priority.
 - **Get work item** (`GET /api/v1/flowboard/workitems/{id}`): Full detail view including comments, time entries, tags, and transition history.
 - **Update work item** (`PUT /api/v1/flowboard/workitems/{id}`): Edit title, description, priority, and assignee.
 - **Transition state** (`PUT /api/v1/flowboard/workitems/{id}/transition`): Move a work item to the next state following flow transition rules.

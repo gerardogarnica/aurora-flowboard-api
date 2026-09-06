@@ -131,7 +131,8 @@ public sealed class GetWorkItemByCodeHandlerTests
     {
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
-        (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithComponentAndMilestone(admin);
+        (Project _, WorkItem workItem, Component _, Milestone _) =
+            WorkItemQueryData.GetProjectAndWorkItemWithComponentAndMilestone(admin);
         _userContext.UserId.Returns(admin.Id);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
@@ -205,11 +206,11 @@ public sealed class GetWorkItemByCodeHandlerTests
     }
 
     [Fact]
-    public async Task Should_MapCollections_When_WorkItemHasData()
+    public async Task Should_MapTags_When_WorkItemHasTags()
     {
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
-        (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithComment(admin);
+        (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithTag(admin);
         _userContext.UserId.Returns(admin.Id);
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
@@ -225,11 +226,8 @@ public sealed class GetWorkItemByCodeHandlerTests
             await _handler.Handle(new GetWorkItemByCodeQuery(workItem.Code), CancellationToken.None);
 
         // Assert
-        result.Value.Comments.Should().HaveCount(1);
-        result.Value.ChangeLogs.Should().HaveCount(2); // Created + CommentAdded
-        result.Value.Tags.Should().BeEmpty();
-        result.Value.TimeEntries.Should().BeEmpty();
-        result.Value.StateHistory.Should().BeEmpty();
+        result.Value.Tags.Should().ContainSingle();
+        result.Value.Tags.Single().Name.Should().Be(WorkItemQueryData.TagName);
     }
 
     [Fact]

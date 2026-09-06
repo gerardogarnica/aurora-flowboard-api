@@ -205,6 +205,58 @@ public sealed class WorkItemTests
         }
 
         [Fact]
+        public void Should_CreateMilestoneChangedChangeLog_When_CreatedWithMilestone()
+        {
+            // Arrange
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
+            Milestone milestone = MilestoneData.GetMilestone(project, admin);
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, admin, null, null, WorkItemData.CreatedOnUtc, milestone: milestone);
+
+            // Assert
+            result.Value.ChangeLogs.Should().Contain(c =>
+                c.ChangeType == WorkItemChangeType.MilestoneChanged &&
+                c.AffectedEntityId == milestone.Id);
+        }
+
+        [Fact]
+        public void Should_CreateComponentChangedChangeLog_When_CreatedWithComponent()
+        {
+            // Arrange
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
+            Component component = ComponentData.GetComponent(project, admin);
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, admin, null, null, WorkItemData.CreatedOnUtc, component: component);
+
+            // Assert
+            result.Value.ChangeLogs.Should().Contain(c =>
+                c.ChangeType == WorkItemChangeType.ComponentChanged &&
+                c.AffectedEntityId == component.Id);
+        }
+
+        [Fact]
+        public void Should_NotCreateMilestoneOrComponentChangedChangeLog_When_CreatedWithoutThem()
+        {
+            // Arrange
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, admin, null, null, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.Value.ChangeLogs.Should().NotContain(c => c.ChangeType == WorkItemChangeType.MilestoneChanged);
+            result.Value.ChangeLogs.Should().NotContain(c => c.ChangeType == WorkItemChangeType.ComponentChanged);
+        }
+
+        [Fact]
         public void Should_Fail_When_TitleIsEmpty()
         {
             // Arrange

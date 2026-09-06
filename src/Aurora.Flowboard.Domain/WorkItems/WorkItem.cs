@@ -209,6 +209,16 @@ public sealed class WorkItem : BaseEntity
             workItem.AddDomainEvent(new WorkItemAssignedDomainEvent(workItem.Id, assignee.Id));
         }
 
+        if (milestone is not null)
+        {
+            workItem._changeLogs.Add(WorkItemChangeLog.Create(workItem, createdBy, WorkItemChangeType.MilestoneChanged, milestone.Id, createdOnUtc));
+        }
+
+        if (component is not null)
+        {
+            workItem._changeLogs.Add(WorkItemChangeLog.Create(workItem, createdBy, WorkItemChangeType.ComponentChanged, component.Id, createdOnUtc));
+        }
+
         return workItem;
     }
 
