@@ -47,21 +47,6 @@ internal sealed class GetWorkItemByCodeHandler(
                         .OrderBy(t => t.Name)
                         .Select(t => new WorkItemTagResponse(t.Id, t.Name))
                         .ToList(),
-                    w.Comments
-                        .Where(c => !c.IsDeleted)
-                        .Select(c => new WorkItemCommentResponse(c.Id, c.AuthorId, c.Content, c.CreatedOnUtc, c.UpdatedOnUtc))
-                        .ToList(),
-                    w.TimeEntries
-                        .Select(t => new WorkItemTimeEntryResponse(t.Id, t.UserId, t.Hours, t.Description, t.LoggedOnUtc))
-                        .ToList(),
-                    w.StateHistory
-                        .OrderBy(s => s.ChangedOnUtc)
-                        .Select(s => new WorkItemStateTransitionResponse(s.Id, s.FromStateId, s.ToStateId, s.ChangedById, s.Reason, s.ChangedOnUtc))
-                        .ToList(),
-                    w.ChangeLogs
-                        .OrderBy(c => c.ChangedOnUtc)
-                        .Select(c => new WorkItemChangeLogResponse(c.Id, c.ChangedById, c.ChangeType, c.AffectedEntityId, c.ChangedOnUtc))
-                        .ToList(),
                     Array.Empty<WorkItemFlowTransitionResponse>()),
                 w.FlowStateId,
                 MemberRole = w.Project.Members.First(m => m.UserId == userContext.UserId).Role

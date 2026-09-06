@@ -12,7 +12,7 @@ The domain entity must already exist — if it does not, or a business rule has 
 
 ## Workflow
 
-1. **Classify.** A state change is a **command**; a read is a **query**. Name it verb + entity: `ArchiveProjectCommand`, `GetWorkItemsByProjectQuery`.
+1. **Classify.** A state change is a **command**; a read is a **query**. Name it verb + entity: `ArchiveProjectCommand`, `GetMilestonesByProjectQuery`.
 2. **Check the domain first.** If the operation needs a new aggregate method, a new `{Entity}Errors` entry, or a new domain event, add those before writing the handler. The rule belongs in the aggregate, never in the handler.
 3. **Write the Application slice** in `src/{name}.Application/{Feature}/{UseCase}/`. Templates: [references/command-slice.md](references/command-slice.md) and [references/query-slice.md](references/query-slice.md).
 4. **Write the endpoint** in `src/{name}.Api/Endpoints/{Feature}/{UseCase}.cs`. Template: [references/endpoint.md](references/endpoint.md).
@@ -61,7 +61,7 @@ Logging wraps validation so the log captures the full round-trip, including vali
 | Artifact | Pattern | Example |
 |---|---|---|
 | Command | `{Verb}{Entity}Command` | `ArchiveProjectCommand` |
-| Query | `Get{X}Query` | `GetWorkItemsByProjectQuery` |
+| Query | `Get{X}Query` | `GetMilestonesByProjectQuery` |
 | Handler | `{Verb}{Entity}Handler` | `ArchiveProjectHandler` |
 | Validator | `{Verb}{Entity}Validator` | `ArchiveProjectValidator` |
 | Response | `{X}Response` | `WorkItemResponse` |

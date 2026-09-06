@@ -48,7 +48,55 @@ internal static class WorkItemQueryData
         return (project, workItem);
     }
 
-    public static (Project Project, WorkItem WorkItem) GetProjectAndWorkItemWithComponentAndMilestone(User admin)
+    public static (Project Project, WorkItem WorkItem) GetProjectAndWorkItemWithStateHistory(User admin)
+    {
+        (Project project, WorkItem workItem) = GetProjectAndWorkItem(admin);
+        FlowState doneState = project.FlowStates.Single(s => s.Name == "Done");
+        workItem.Move(doneState, admin, "Ready for QA", UtcNow.AddHours(1));
+        return (project, workItem);
+    }
+
+    public static (Project Project, WorkItem WorkItem) GetProjectAndWorkItemWithThreeComments(User admin)
+    {
+        (Project project, WorkItem workItem) = GetProjectAndWorkItem(admin);
+        workItem.AddComment(admin, "oldest comment", UtcNow);
+        workItem.AddComment(admin, "middle comment", UtcNow.AddHours(1));
+        workItem.AddComment(admin, "newest comment", UtcNow.AddHours(2));
+        return (project, workItem);
+    }
+
+    public static (Project Project, WorkItem WorkItem) GetProjectAndWorkItemWithThreeTimeEntries(User admin)
+    {
+        (Project project, WorkItem workItem) = GetProjectAndWorkItem(admin);
+        workItem.LogTime(admin, 1m, "oldest entry", UtcNow, UtcNow);
+        workItem.LogTime(admin, 2m, "middle entry", UtcNow.AddHours(1), UtcNow.AddHours(1));
+        workItem.LogTime(admin, 3m, "newest entry", UtcNow.AddHours(2), UtcNow.AddHours(2));
+        return (project, workItem);
+    }
+
+    public static (Project Project, WorkItem WorkItem) GetProjectAndWorkItemWithThreeStateTransitions(User admin)
+    {
+        Project project = Project.Create("WI Project", "Desc", ProjectCode.Create("WIP").Value, ProjectKind.Product, Color.Create("white").Value, admin, UtcNow).Value;
+        ProjectRole[] allRoles = [ProjectRole.Admin, ProjectRole.Developer];
+        Color stateColor = Color.Create("white").Value;
+
+        // Three consecutive Active states get bidirectional transitions between neighbours,
+        // so the work item can be moved along the whole chain and end on the Completed state.
+        project.AddFlowState("Backlog", FlowStateCategory.Active, stateColor, allRoles, admin);
+        project.AddFlowState("In Progress", FlowStateCategory.Active, stateColor, allRoles, admin);
+        project.AddFlowState("Review", FlowStateCategory.Active, stateColor, allRoles, admin);
+        project.AddFlowState("Done", FlowStateCategory.Completed, stateColor, allRoles, admin);
+
+        WorkItem workItem = WorkItem.Create("Test Work Item", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, UtcNow).Value;
+
+        workItem.Move(project.FlowStates.Single(s => s.Name == "In Progress"), admin, "started", UtcNow.AddHours(1));
+        workItem.Move(project.FlowStates.Single(s => s.Name == "Review"), admin, "ready for review", UtcNow.AddHours(2));
+        workItem.Move(project.FlowStates.Single(s => s.Name == "Done"), admin, "shipped", UtcNow.AddHours(3));
+
+        return (project, workItem);
+    }
+
+    public static (Project Project, WorkItem WorkItem, Component Component, Milestone Milestone) GetProjectAndWorkItemWithComponentAndMilestone(User admin)
     {
         Project project = GetActiveProjectWithFlow(admin);
         Component component = Component.Create("Auth Module", project, admin, UtcNow).Value;
@@ -56,7 +104,26 @@ internal static class WorkItemQueryData
         WorkItem workItem = WorkItem.Create(
             "Test Work Item", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, UtcNow,
             milestone: milestone, component: component).Value;
-        return (project, workItem);
+        return (project, workItem, component, milestone);
+    }
+
+    public static (Project Project, WorkItem WorkItem, Component Component, Milestone Milestone) GetProjectAndWorkItemWithAllChangeLogTypes(User admin, User assignee)
+    {
+        Project project = GetActiveProjectWithFlow(admin);
+        project.AddMember(assignee, ProjectRole.Developer, admin, UtcNow);
+        Component component = Component.Create("Auth Module", project, admin, UtcNow).Value;
+        Milestone milestone = Milestone.Create("Sprint 1", null, null, null, project, admin, UtcNow).Value;
+        WorkItem workItem = WorkItem.Create("Test Work Item", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, UtcNow).Value;
+
+        workItem.Assign(assignee, admin, UtcNow.AddMinutes(1));
+
+        FlowState doneState = project.FlowStates.Single(s => s.Name == "Done");
+        workItem.Move(doneState, admin, null, UtcNow.AddMinutes(2));
+
+        workItem.ChangeComponent(component, admin, UtcNow.AddMinutes(3));
+        workItem.ChangeMilestone(milestone, admin, UtcNow.AddMinutes(4));
+
+        return (project, workItem, component, milestone);
     }
 
     public static (Project Project, WorkItem WorkItem) GetProjectAndWorkItemWithTag(User admin)
