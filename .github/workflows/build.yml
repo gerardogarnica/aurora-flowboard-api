@@ -31,8 +31,10 @@ jobs:
       - name: Build
         run: dotnet build "Aurora Flowboard.slnx" --configuration Release --no-restore
 
-      - name: Test Domain (VSTest)
-        run: dotnet test test/Aurora.Flowboard.Domain.UnitTests/Aurora.Flowboard.Domain.UnitTests.csproj --configuration Release --no-restore --no-build --verbosity normal
+      - name: Test Domain (Microsoft.Testing.Platform)
+        run: |
+          chmod +x ./test/Aurora.Flowboard.Domain.UnitTests/bin/Release/net10.0/Aurora.Flowboard.Domain.UnitTests
+          ./test/Aurora.Flowboard.Domain.UnitTests/bin/Release/net10.0/Aurora.Flowboard.Domain.UnitTests
 
       - name: Test Application (Microsoft.Testing.Platform)
         run: |

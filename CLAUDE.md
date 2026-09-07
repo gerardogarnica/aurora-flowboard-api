@@ -125,13 +125,12 @@ Do not move these back into the detail payload. They were split out because proj
 
 ## Build & Test Verification
 - After every code change, run `dotnet build` to verify a clean build.
-- After modifying domain/application logic or tests, run **both** test projects (see the runner note below — they need different commands) and report pass/fail counts.
+- After modifying domain/application logic or tests, run **both** test projects (see the runner note below — neither works with `dotnet test`) and report pass/fail counts.
 - Do not consider a task complete until build and tests pass
 
-**The two test projects need different runners.** `dotnet test` on the whole solution fails, because it hits the Application project:
+**Both test projects use the same runner.** `Domain.UnitTests` and `Application.UnitTests` both reference `xunit.v3` (Microsoft.Testing.Platform) and self-host an executable, so `dotnet test` does **not** work on either project — nor on the solution. It fails with *"Testing with VSTest target is no longer supported by Microsoft.Testing.Platform on .NET 10 SDK and later."*
 
-- **`Application.UnitTests`** references `xunit.v3` (Microsoft.Testing.Platform) and self-hosts an executable. `dotnet test` on it fails with *"Testing with VSTest target is no longer supported by Microsoft.Testing.Platform on .NET 10 SDK and later."* Build it, then run the `.exe` directly. Filter with `-class "Namespace.ClassName"` or `-method "*MethodName"`.
-- **`Domain.UnitTests`** references `xunit` v2 (VSTest) and produces only a `.dll` — there is no self-hosting `.exe`. Run `dotnet test` on that csproj specifically. Note that `dotnet run` / `dotnet exec` against it exit 0 *without running any test*, so always confirm the runner printed a test count before reporting a pass.
+Build the project, then run the produced `.exe` directly. Filter with `-class "Namespace.ClassName"` or `-method "*MethodName"`. Note that `dotnet run` / `dotnet exec` against a test project exit 0 *without running any test*, so always confirm the runner printed a test count before reporting a pass.
 
 ## Commands
 
@@ -139,13 +138,14 @@ Do not move these back into the detail payload. They were split out because proj
 dotnet build
 dotnet build "Aurora Flowboard.slnx"   # whole solution
 
-# Application tests (xunit v3 — run the built executable, NOT dotnet test)
+# Unit tests (xunit v3 — run the built executable, NOT dotnet test)
 dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Application.UnitTests.csproj
 ./test/Aurora.Flowboard.Application.UnitTests/bin/Debug/net10.0/Aurora.Flowboard.Application.UnitTests.exe
 ./test/Aurora.Flowboard.Application.UnitTests/bin/Debug/net10.0/Aurora.Flowboard.Application.UnitTests.exe -class "Aurora.Flowboard.Application.UnitTests.WorkItems.GetWorkItemByCodeHandlerTests"
 
-# Domain tests (xunit v2 / VSTest — dotnet test on the csproj)
-dotnet test test/Aurora.Flowboard.Domain.UnitTests/Aurora.Flowboard.Domain.UnitTests.csproj
+dotnet build test/Aurora.Flowboard.Domain.UnitTests/Aurora.Flowboard.Domain.UnitTests.csproj
+./test/Aurora.Flowboard.Domain.UnitTests/bin/Debug/net10.0/Aurora.Flowboard.Domain.UnitTests.exe
+./test/Aurora.Flowboard.Domain.UnitTests/bin/Debug/net10.0/Aurora.Flowboard.Domain.UnitTests.exe -class "Aurora.Flowboard.Domain.UnitTests.Projects.ProjectTests"
 
 dotnet ef migrations add <Name> --project src/Aurora.Flowboard.Infrastructure --startup-project src/Aurora.Flowboard.Api
 dotnet ef database update --project src/Aurora.Flowboard.Infrastructure --startup-project src/Aurora.Flowboard.Api
@@ -176,7 +176,7 @@ Solution file: `Aurora Flowboard.slnx`
 
 ## Testing conventions
 
-- **Domain tests**: assert entity behavior and domain events. Use `BaseTest` helpers. Pattern: `*Data.cs` builders + `*Tests.cs` xUnit facts. Stack: xUnit **v2** + FluentAssertions.
+- **Domain tests**: assert entity behavior and domain events. Use `BaseTest` helpers. Pattern: `*Data.cs` builders + `*Tests.cs` xUnit facts. Stack: xUnit **v3** + FluentAssertions.
 - **Application tests**: test CQRS handler logic with NSubstitute mocks and `MockDbSetHelper`. Stack: xUnit **v3** + NSubstitute + FluentAssertions.
 - **Assign mock `DbSet`s to a local before `Returns(...)`.** `MockDbSetHelper.CreateMockDbSet(...)` builds a substitute internally, and NSubstitute throws `CouldNotSetReturnDueToNoLastCallException` if you nest it inside `Returns(...)`. Write `DbSet<X> xMock = MockDbSetHelper.CreateMockDbSet([...]); _dbContext.X.Returns(xMock);` — never `_dbContext.X.Returns(MockDbSetHelper.CreateMockDbSet([...]))`.
 - `MockDbSetHelper` runs on real LINQ-to-Objects, so `Skip`/`Take`/`OrderBy` behave for real — **paginated handlers must be tested across a page boundary** (3+ items, `pageSize` 2, asserting page 1 and page 2 hold *different* items). Asserting only page 1 or only an out-of-range page does not exercise the `Skip` offset. It does **not** exercise EF translation, though: provider-level concerns (`AsSplitQuery`, SQL shape, subquery translation) need the real Npgsql provider and must be verified by running the app and reading the SQL logs.
