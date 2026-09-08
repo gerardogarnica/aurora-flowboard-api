@@ -15,17 +15,15 @@ internal sealed class GetProjectBoardHandler(
             return Result.Fail<IReadOnlyCollection<BoardColumnResponse>>(ProjectErrors.NotFound);
         }
 
-        List<FlowStateProjection> stateEntities = await dbContext
+        // Only Active states are board columns. Completed and Cancelled are terminal:
+        // work items that reach them leave the board.
+        List<FlowStateProjection> orderedStates = await dbContext
             .FlowStates
             .AsNoTracking()
-            .Where(fs => fs.ProjectId == query.ProjectId && fs.Category != FlowStateCategory.Cancelled)
+            .Where(fs => fs.ProjectId == query.ProjectId && fs.Category == FlowStateCategory.Active)
+            .OrderBy(fs => fs.SortOrder)
             .Select(fs => new FlowStateProjection(fs.Id, fs.Name, fs.Category, fs.SortOrder, fs.Color.Value))
             .ToListAsync(cancellationToken);
-
-        List<FlowStateProjection> orderedStates = [
-            .. stateEntities.Where(s => s.Category == FlowStateCategory.Active).OrderBy(s => s.SortOrder),
-            .. stateEntities.Where(s => s.Category == FlowStateCategory.Completed).OrderBy(s => s.Name, StringComparer.Ordinal)
-        ];
 
         List<Guid> stateIds = [.. orderedStates.Select(s => s.Id)];
 

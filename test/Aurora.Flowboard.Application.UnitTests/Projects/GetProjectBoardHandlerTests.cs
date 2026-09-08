@@ -53,7 +53,7 @@ public sealed class GetProjectBoardHandlerTests
     }
 
     [Fact]
-    public async Task Should_ExcludeCancelledColumn_When_ProjectHasCancelledFlowState()
+    public async Task Should_ReturnOnlyActiveColumns_When_ProjectHasTerminalFlowStates()
     {
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
@@ -79,8 +79,9 @@ public sealed class GetProjectBoardHandlerTests
 
         // Assert
         result.IsSuccessful.Should().BeTrue();
-        result.Value.Should().HaveCount(2);
-        result.Value.Should().NotContain(c => c.Category == FlowStateCategory.Cancelled);
+        result.Value.Should().HaveCount(1);
+        result.Value.Should().OnlyContain(c => c.Category == FlowStateCategory.Active);
+        result.Value.Should().ContainSingle(c => c.FlowStateName == "Backlog");
     }
 
     [Fact]
@@ -117,11 +118,51 @@ public sealed class GetProjectBoardHandlerTests
     }
 
     [Fact]
-    public async Task Should_SortActiveColumns_BySortOrder_ThenCompletedLast()
+    public async Task Should_ExcludeWorkItem_When_ItsFlowStateIsCompleted()
     {
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
         Project project = WorkItemQueryData.GetActiveProjectWithFlow(admin);
+        FlowState completedState = project.FlowStates.Single(s => s.Category == FlowStateCategory.Completed);
+        WorkItem workItem = WorkItem.Create("Item", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, WorkItemQueryData.UtcNow).Value;
+        WorkItemQueryData.SetWorkItemFlowState(workItem, completedState.Id);
+
+        _userContext.UserId.Returns(admin.Id);
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
+        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.FlowStates.Returns(statesMock);
+        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Users.Returns(usersMock);
+        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
+        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Milestones.Returns(milestonesMock);
+
+        // Act
+        Result<IReadOnlyCollection<BoardColumnResponse>> result =
+            await _handler.Handle(new GetProjectBoardQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        result.Value.SelectMany(c => c.WorkItems).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Should_SortColumns_BySortOrder()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        Color color = Color.Create("white").Value;
+        Project project = Project.Create("Board Project", "Desc", ProjectCode.Create("BRD").Value, ProjectKind.Product, color, admin, WorkItemQueryData.UtcNow).Value;
+        ProjectRole[] roles = [ProjectRole.Admin, ProjectRole.Developer];
+        project.AddFlowState("Backlog", FlowStateCategory.Active, color, roles, admin);
+        project.AddFlowState("In Progress", FlowStateCategory.Active, color, roles, admin);
+        project.AddFlowState("QA", FlowStateCategory.Active, color, roles, admin);
+        project.AddFlowState("Done", FlowStateCategory.Completed, color, roles, admin);
+        project.AddFlowState("Cancelled", FlowStateCategory.Cancelled, color, roles, admin);
 
         _userContext.UserId.Returns(admin.Id);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
@@ -144,46 +185,9 @@ public sealed class GetProjectBoardHandlerTests
         // Assert
         result.IsSuccessful.Should().BeTrue();
         List<BoardColumnResponse> columns = result.Value.ToList();
-        columns[0].Category.Should().Be(FlowStateCategory.Active);
-        columns[^1].Category.Should().Be(FlowStateCategory.Completed);
-    }
-
-    [Fact]
-    public async Task Should_SortCompletedColumns_ByName_When_MultipleCompletedStatesExist()
-    {
-        // Arrange
-        User admin = WorkItemQueryData.GetAdminUser();
-        Color color = Color.Create("white").Value;
-        Project project = Project.Create("Board Project", "Desc", ProjectCode.Create("BRD").Value, ProjectKind.Product, color, admin, WorkItemQueryData.UtcNow).Value;
-        ProjectRole[] roles = [ProjectRole.Admin, ProjectRole.Developer];
-        project.AddFlowState("In Progress", FlowStateCategory.Active, color, roles, admin);
-        project.AddFlowState("Won't Fix", FlowStateCategory.Completed, color, roles, admin);
-        project.AddFlowState("Archived", FlowStateCategory.Completed, color, roles, admin);
-
-        _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.FlowStates.Returns(statesMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
-
-        // Act
-        Result<IReadOnlyCollection<BoardColumnResponse>> result =
-            await _handler.Handle(new GetProjectBoardQuery(project.Id), CancellationToken.None);
-
-        // Assert
-        result.IsSuccessful.Should().BeTrue();
-        List<BoardColumnResponse> completedColumns = result.Value
-            .Where(c => c.Category == FlowStateCategory.Completed)
-            .ToList();
-        completedColumns.Select(c => c.FlowStateName).Should().ContainInOrder("Archived", "Won't Fix");
+        columns.Should().OnlyContain(c => c.Category == FlowStateCategory.Active);
+        columns.Select(c => c.FlowStateName).Should().ContainInOrder("Backlog", "In Progress", "QA");
+        columns.Select(c => c.SortOrder).Should().BeInAscendingOrder();
     }
 
     [Fact]
@@ -192,12 +196,13 @@ public sealed class GetProjectBoardHandlerTests
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
         Project project = WorkItemQueryData.GetActiveProjectWithFlow(admin);
+        project.AddFlowState("In Progress", FlowStateCategory.Active, Color.Create("white").Value, [ProjectRole.Admin, ProjectRole.Developer], admin);
         FlowState todoState = project.FlowStates.Single(s => s.Name == "Backlog");
-        FlowState doneState = project.FlowStates.Single(s => s.Name == "Done");
+        FlowState inProgressState = project.FlowStates.Single(s => s.Name == "In Progress");
 
         WorkItem wi1 = WorkItem.Create("Item 1", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, WorkItemQueryData.UtcNow).Value;
         WorkItem wi2 = WorkItem.Create("Item 2", null, WorkItemType.Bug, Priority.High, project, admin, null, null, WorkItemQueryData.UtcNow.AddHours(1)).Value;
-        WorkItemQueryData.SetWorkItemFlowState(wi2, doneState.Id);
+        WorkItemQueryData.SetWorkItemFlowState(wi2, inProgressState.Id);
 
         _userContext.UserId.Returns(admin.Id);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
@@ -220,9 +225,9 @@ public sealed class GetProjectBoardHandlerTests
         // Assert
         result.IsSuccessful.Should().BeTrue();
         BoardColumnResponse todoColumn = result.Value.Single(s => s.FlowStateId == todoState.Id);
-        BoardColumnResponse doneColumn = result.Value.Single(s => s.FlowStateId == doneState.Id);
+        BoardColumnResponse inProgressColumn = result.Value.Single(s => s.FlowStateId == inProgressState.Id);
         todoColumn.WorkItems.Should().ContainSingle(w => w.WorkItemId == wi1.Id);
-        doneColumn.WorkItems.Should().ContainSingle(w => w.WorkItemId == wi2.Id);
+        inProgressColumn.WorkItems.Should().ContainSingle(w => w.WorkItemId == wi2.Id);
     }
 
     [Fact]
