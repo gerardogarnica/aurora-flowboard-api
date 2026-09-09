@@ -41,6 +41,11 @@ jobs:
           chmod +x ./test/Aurora.Flowboard.Application.UnitTests/bin/Release/net10.0/Aurora.Flowboard.Application.UnitTests
           ./test/Aurora.Flowboard.Application.UnitTests/bin/Release/net10.0/Aurora.Flowboard.Application.UnitTests
 
+      - name: Test Architecture (Microsoft.Testing.Platform)
+        run: |
+          chmod +x ./test/Aurora.Flowboard.ArchitectureTests/bin/Release/net10.0/Aurora.Flowboard.ArchitectureTests
+          ./test/Aurora.Flowboard.ArchitectureTests/bin/Release/net10.0/Aurora.Flowboard.ArchitectureTests
+
   docker-build-push:
     name: Build & Push Docker Image
     runs-on: ubuntu-latest
