@@ -1,5 +1,6 @@
 using Aurora.Flowboard.Api.Endpoints;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 using NetArchTest.Rules;
 using Shouldly;
 using System.Reflection;
@@ -21,12 +22,22 @@ public class ApiLayerTests : BaseTest
     private const string MapEndpointMethodName = nameof(IBaseEndpoint.MapEndpoint);
     private const string RequireAuthorizationMethodName = "RequireAuthorization";
     private const string AllowAnonymousMethodName = "AllowAnonymous";
+    private const string WithNameMethodName = "WithName";
+    private const string WithTagsMethodName = "WithTags";
+    private const string ProducesMethodName = "Produces";
+    private const string DomainNamespacePrefix = "Aurora.Flowboard.Domain.";
+    private const string BaseEntityTypeName = "Aurora.Flowboard.Domain.Abstractions.BaseEntity";
     private const string CloneMethodName = "<Clone>$";
     private const char NamespaceSeparator = '.';
 
     // The only endpoints allowed to opt out of authorization: both are part of the
     // login handshake, so requiring a token on them would be circular.
     private static readonly string[] AnonymousEndpoints = ["Login", "RefreshToken"];
+
+    // Swagger is the contract this API is consumed through, so every route must name
+    // itself, carry a tag, and declare at least one response shape.
+    private static readonly string[] RequiredOpenApiCalls =
+        [WithNameMethodName, WithTagsMethodName, ProducesMethodName];
 
     [Fact]
     public void Endpoint_Should_BeSealed()
@@ -179,26 +190,13 @@ public class ApiLayerTests : BaseTest
         List<string> failingEndpoints = [];
         foreach (Type endpointType in GetEndpointTypes())
         {
-            MethodDefinition? mapEndpoint = module
-                .GetType(endpointType.FullName)?
-                .Methods
-                .FirstOrDefault(method => method.Name == MapEndpointMethodName && method.HasBody);
+            HashSet<string>? calledMethods = GetMapEndpointCalls(module, endpointType);
 
-            if (mapEndpoint is null)
+            if (calledMethods is null)
             {
                 failingEndpoints.Add($"{endpointType.Name} (no {MapEndpointMethodName} body to inspect)");
                 continue;
             }
-
-            HashSet<string> calledMethods =
-            [
-                .. mapEndpoint
-                    .Body
-                    .Instructions
-                    .Select(instruction => instruction.Operand)
-                    .OfType<MethodReference>()
-                    .Select(method => method.Name)
-            ];
 
             bool requiresAuthorization = calledMethods.Contains(RequireAuthorizationMethodName);
             bool isAnonymous = calledMethods.Contains(AllowAnonymousMethodName);
@@ -213,6 +211,57 @@ public class ApiLayerTests : BaseTest
                 failingEndpoints.Add(
                     $"{endpointType.Name} (calls {AllowAnonymousMethodName} but is not in the anonymous allow list)");
             }
+        }
+
+        failingEndpoints.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Endpoints_Should_DeclareOpenApiMetadata()
+    {
+        using ModuleDefinition module = ModuleDefinition.ReadModule(ApiAssembly.Location);
+
+        List<string> failingEndpoints = [];
+        foreach (Type endpointType in GetEndpointTypes())
+        {
+            HashSet<string>? calledMethods = GetMapEndpointCalls(module, endpointType);
+
+            if (calledMethods is null)
+            {
+                failingEndpoints.Add($"{endpointType.Name} (no {MapEndpointMethodName} body to inspect)");
+                continue;
+            }
+
+            failingEndpoints.AddRange(
+                RequiredOpenApiCalls
+                    .Where(required => !calledMethods.Contains(required))
+                    .Select(required => $"{endpointType.Name} (does not call {required})"));
+        }
+
+        failingEndpoints.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Endpoints_ShouldNot_DependOnDomainEntities()
+    {
+        // Enums and value types (ProjectKind, Priority, Role) are part of the wire contract
+        // and may be referenced directly. Aggregate roots and their children are not: they
+        // stay behind the Application layer, which maps them into response DTOs.
+        using ModuleDefinition module = ModuleDefinition.ReadModule(ApiAssembly.Location);
+
+        List<string> failingEndpoints = [];
+        foreach (Type endpointType in GetEndpointTypes())
+        {
+            TypeDefinition? endpointDefinition = module.GetType(endpointType.FullName);
+
+            if (endpointDefinition is null)
+            {
+                continue;
+            }
+
+            failingEndpoints.AddRange(
+                GetReferencedDomainEntities(endpointDefinition)
+                    .Select(entityName => $"{endpointType.Name} (references the domain entity {entityName})"));
         }
 
         failingEndpoints.ShouldBeEmpty();
@@ -253,6 +302,172 @@ public class ApiLayerTests : BaseTest
         ];
 
         failingTypes.ShouldBeEmpty();
+    }
+
+    private static HashSet<string>? GetMapEndpointCalls(ModuleDefinition module, Type endpointType)
+    {
+        MethodDefinition? mapEndpoint = module
+            .GetType(endpointType.FullName)?
+            .Methods
+            .FirstOrDefault(method => method.Name == MapEndpointMethodName && method.HasBody);
+
+        return mapEndpoint is null
+            ? null
+            : [.. mapEndpoint
+                .Body
+                .Instructions
+                .Select(instruction => instruction.Operand)
+                .OfType<MethodReference>()
+                .Select(method => method.Name)];
+    }
+
+    private static IEnumerable<string> GetReferencedDomainEntities(TypeDefinition endpointDefinition) =>
+        GetReferencedTypes(endpointDefinition)
+            .SelectMany(Expand)
+            .Where(reference => reference.FullName.StartsWith(DomainNamespacePrefix, StringComparison.Ordinal))
+            .Select(ResolveDefinition)
+            .OfType<TypeDefinition>()
+            .Where(InheritsBaseEntity)
+            .Select(definition => definition.FullName)
+            .Distinct()
+            .Order();
+
+    // Walks everything an endpoint can name: its own members, the bodies it compiles to,
+    // and the nested request records and lambda display classes Roslyn emits for it.
+    private static IEnumerable<TypeReference> GetReferencedTypes(TypeDefinition type)
+    {
+        foreach (FieldDefinition field in type.Fields)
+        {
+            yield return field.FieldType;
+        }
+
+        foreach (PropertyDefinition property in type.Properties)
+        {
+            yield return property.PropertyType;
+        }
+
+        foreach (MethodDefinition method in type.Methods)
+        {
+            foreach (TypeReference reference in GetReferencedTypes(method))
+            {
+                yield return reference;
+            }
+        }
+
+        foreach (TypeDefinition nested in type.NestedTypes)
+        {
+            foreach (TypeReference reference in GetReferencedTypes(nested))
+            {
+                yield return reference;
+            }
+        }
+    }
+
+    private static IEnumerable<TypeReference> GetReferencedTypes(MethodDefinition method)
+    {
+        yield return method.ReturnType;
+
+        foreach (ParameterDefinition parameter in method.Parameters)
+        {
+            yield return parameter.ParameterType;
+        }
+
+        if (!method.HasBody)
+        {
+            yield break;
+        }
+
+        foreach (VariableDefinition variable in method.Body.Variables)
+        {
+            yield return variable.VariableType;
+        }
+
+        foreach (Instruction instruction in method.Body.Instructions)
+        {
+            foreach (TypeReference reference in GetReferencedTypes(instruction.Operand))
+            {
+                yield return reference;
+            }
+        }
+    }
+
+    private static IEnumerable<TypeReference> GetReferencedTypes(object? operand)
+    {
+        switch (operand)
+        {
+            case TypeReference typeReference:
+                yield return typeReference;
+                break;
+
+            case MethodReference methodReference:
+                yield return methodReference.DeclaringType;
+                yield return methodReference.ReturnType;
+
+                foreach (ParameterDefinition parameter in methodReference.Parameters)
+                {
+                    yield return parameter.ParameterType;
+                }
+
+                break;
+
+            case FieldReference fieldReference:
+                yield return fieldReference.DeclaringType;
+                yield return fieldReference.FieldType;
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    // Unwraps arrays, by-refs and generic instances so IReadOnlyCollection<Project> is
+    // not mistaken for a harmless framework type.
+    private static IEnumerable<TypeReference> Expand(TypeReference reference)
+    {
+        yield return reference;
+
+        if (reference is GenericInstanceType generic)
+        {
+            foreach (TypeReference argument in generic.GenericArguments.SelectMany(Expand))
+            {
+                yield return argument;
+            }
+        }
+
+        if (reference is TypeSpecification specification && specification.ElementType != reference)
+        {
+            foreach (TypeReference element in Expand(specification.ElementType))
+            {
+                yield return element;
+            }
+        }
+    }
+
+    private static TypeDefinition? ResolveDefinition(TypeReference reference)
+    {
+        try
+        {
+            return reference.Resolve();
+        }
+        catch (AssemblyResolutionException)
+        {
+            return null;
+        }
+    }
+
+    private static bool InheritsBaseEntity(TypeDefinition type)
+    {
+        for (TypeReference? current = type.BaseType;
+            current is not null;
+            current = ResolveDefinition(current)?.BaseType)
+        {
+            if (string.Equals(current.FullName, BaseEntityTypeName, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static IEnumerable<Type> GetEndpointTypes() =>
