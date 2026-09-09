@@ -16,8 +16,7 @@ Aurora Flowboard is a .NET 10 internal REST API for software project management.
 - OpenTelemetry (tracing, metrics, logging) — no Serilog
 - Swashbuckle (Swagger/OpenAPI)
 - JWT bearer authentication (custom `ITokenProvider`) + RBAC (`Administrator`, `Member`)
-
-> Note: the README currently also lists Redis and Serilog — neither is present in the code or `Directory.Packages.props`. Treat this file as the source of truth over the README until it's reconciled.
+- xUnit v3 + NetArchTest + Shouldly (architecture tests); xUnit v3 + NSubstitute + FluentAssertions (unit tests)
 
 ## Architecture
 
