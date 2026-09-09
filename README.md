@@ -32,6 +32,8 @@ Aurora Flowboard is an internal REST API for software project management that he
 - **Swagger/OpenAPI**: Interactive API documentation via Swashbuckle.
 - **OpenTelemetry**: Structured logging, tracing, and metrics.
 - **Scrutor**: Assembly scanning for automatic DI registration.
+- **xUnit v3**: Unit and architecture test suites, run through the Microsoft.Testing.Platform host.
+- **NetArchTest**: Architecture tests that enforce layer boundaries and project conventions on every build.
 - **Clean Architecture**: Clear separation of concerns (Domain, Application, Infrastructure, API).
 - **Outbox pattern**: Reliable domain event publishing for async processing and consistency.
 - **Automated migrations**: EF Core migrations auto-apply on startup in Development/Staging.
@@ -85,6 +87,7 @@ Each project has exactly one flow, owned by the `Project` aggregate. There is no
 - **Domain events**: Raised from aggregate roots and dispatched via the Outbox pattern for reliable side-effect processing.
 - **Error handling**: Problem Details (RFC 9457) responses and global exception middleware.
 - **RESTful API**: All routes grouped under `/api/v1/flowboard`, documented with Swagger.
+- **Architecture tests**: A dedicated suite (NetArchTest + reflection) that fails the build when a convention is broken — an inward layer referencing an outward one, a domain project pulling in a third-party package, an unsealed or public handler, a command without a validator, a handler living apart from its command, an endpoint reaching into Infrastructure or EF Core, or an endpoint that declares neither `RequireAuthorization` nor `AllowAnonymous`.
 
 ## Installation
 
@@ -171,6 +174,9 @@ Aurora Flowboard follows Clean Architecture with a modular monolith approach:
 | **API** | `Aurora.Flowboard.Api` | Minimal API endpoints, middleware, Swagger, DI composition root. |
 | **Orchestration** | `Aurora.Flowboard.AppHost` | .NET Aspire orchestration — provisions Postgres and wires the Api project for local development. |
 | **Orchestration** | `Aurora.Flowboard.ServiceDefaults` | Shared Aspire defaults — OpenTelemetry, health checks, resilience. |
+| **Tests** | `Aurora.Flowboard.Domain.UnitTests` | Entity invariants, state machines, and domain events. |
+| **Tests** | `Aurora.Flowboard.Application.UnitTests` | CQRS handler and validator behavior, with mocked persistence. |
+| **Tests** | `Aurora.Flowboard.ArchitectureTests` | Layer boundaries and project conventions, enforced with NetArchTest and reflection. |
 
 ```
 src/
@@ -182,6 +188,7 @@ src/
 └── Aurora.Flowboard.Infrastructure/
 test/
 ├── Aurora.Flowboard.Application.UnitTests/
+├── Aurora.Flowboard.ArchitectureTests/
 └── Aurora.Flowboard.Domain.UnitTests/
 ```
 
@@ -216,7 +223,19 @@ Contributions are welcome:
 4. Push to the branch (`git push origin feature/your-feature-name`).
 5. Open a Pull Request.
 
-Please ensure `dotnet build` and `dotnet test` pass before submitting.
+Please ensure `dotnet build` and the full test suite pass before submitting.
+
+All three test projects target xUnit v3 on the Microsoft.Testing.Platform, which self-hosts an executable — `dotnet test` does **not** work on them. Build the solution, then run each test host directly:
+
+```bash
+dotnet build "Aurora Flowboard.slnx"
+
+./test/Aurora.Flowboard.Domain.UnitTests/bin/Debug/net10.0/Aurora.Flowboard.Domain.UnitTests
+./test/Aurora.Flowboard.Application.UnitTests/bin/Debug/net10.0/Aurora.Flowboard.Application.UnitTests
+./test/Aurora.Flowboard.ArchitectureTests/bin/Debug/net10.0/Aurora.Flowboard.ArchitectureTests
+```
+
+On Windows, append `.exe` to each path. The same three hosts run in CI on every push to `main` and `staging`.
 
 ## License
 
