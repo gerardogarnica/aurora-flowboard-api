@@ -1,6 +1,6 @@
 namespace Aurora.Flowboard.Domain.Shared;
 
-public sealed record Color
+public sealed record Color : IValueObject
 {
     public const int MaxLength = 20;
 

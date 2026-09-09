@@ -1,6 +1,6 @@
 namespace Aurora.Flowboard.Domain.Users;
 
-public sealed record Password
+public sealed record Password : IValueObject
 {
     public const int MinHashLength = 8;
     public const int MaxHashLength = 500;

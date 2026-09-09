@@ -252,9 +252,11 @@ public class DomainLayerTests : BaseTest
     [Fact]
     public void ValueObjects_Should_BeSealedRecordsWithPrivateConstructorAndCreateFactory()
     {
+        // Membership is declared by the type itself, not inferred: only what carries the
+        // marker is held to the value object shape. `IValueObject` itself is assignable
+        // from `IValueObject`, so the interface has to be filtered out of its own rule.
         IEnumerable<Type> valueObjectTypes = GetDomainTypes()
-            .Where(t => t.Namespace?.StartsWith(AbstractionsNamespace, StringComparison.Ordinal) != true)
-            .Where(IsRecord);
+            .Where(t => !t.IsInterface && typeof(IValueObject).IsAssignableFrom(t));
 
         List<string> failingTypes = [];
         foreach (Type valueObjectType in valueObjectTypes)
@@ -281,6 +283,25 @@ public class DomainLayerTests : BaseTest
                 failingTypes.Add($"{valueObjectType.Name} (should expose a public static Create returning Result<{valueObjectType.Name}>)");
             }
         }
+
+        failingTypes.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ValueObjects_Should_BeMarkedWithValueObjectInterface()
+    {
+        // Completeness net for the rule above: keeps the old "sealed domain record" heuristic
+        // alive, but only to demand the marker. Without it a new value object that forgets
+        // IValueObject would silently drop out of the shape test instead of failing it.
+        List<string> failingTypes =
+        [
+            .. GetDomainTypes()
+                .Where(t => IsRecord(t)
+                    && t.Namespace?.StartsWith(AbstractionsNamespace, StringComparison.Ordinal) != true
+                    && !typeof(IDomainEvent).IsAssignableFrom(t)
+                    && !typeof(IValueObject).IsAssignableFrom(t))
+                .Select(t => $"{t.Name} (domain record should implement {nameof(IValueObject)})")
+        ];
 
         failingTypes.ShouldBeEmpty();
     }

@@ -2,7 +2,7 @@ using System.Net.Mail;
 
 namespace Aurora.Flowboard.Domain.Shared;
 
-public sealed record Email
+public sealed record Email : IValueObject
 {
     public const int MaxLength = 255;
 
