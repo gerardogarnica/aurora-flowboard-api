@@ -1,6 +1,6 @@
 namespace Aurora.Flowboard.Domain.Projects;
 
-public sealed record ProjectCode
+public sealed record ProjectCode : IValueObject
 {
     public const int MaxLength = 3;
 
