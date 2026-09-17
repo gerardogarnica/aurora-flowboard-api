@@ -40,7 +40,8 @@ internal sealed class CreateProjectValidator : AbstractValidator<CreateProjectCo
                 .NotEmpty();
 
             state.RuleForEach(s => s.AllowedRoles)
-                .IsInEnum();
+                .IsInEnum()
+                .NotEqual(ProjectRole.Viewer);
         });
     }
 }

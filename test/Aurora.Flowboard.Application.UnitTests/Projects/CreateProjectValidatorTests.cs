@@ -181,4 +181,16 @@ public sealed class CreateProjectValidatorTests
 
         result.IsValid.Should().BeFalse();
     }
+
+    [Fact]
+    public void Should_Fail_When_FlowStateAllowedRolesContainViewer()
+    {
+        IReadOnlyCollection<CreateProjectState> flowStates =
+            [new CreateProjectState("Backlog", FlowStateCategory.Active, ProjectCommandData.FlowStateColor, [ProjectRole.Developer, ProjectRole.Viewer])];
+        CreateProjectCommand command = ProjectCommandData.GetCreateCommand(flowStates);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.Should().BeFalse();
+    }
 }

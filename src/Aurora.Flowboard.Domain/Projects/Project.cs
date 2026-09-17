@@ -329,6 +329,11 @@ public sealed class Project : BaseEntity
             return Result.Fail(ProjectErrors.MaxActiveFlowStatesReached);
         }
 
+        if (allowedRoles.Contains(ProjectRole.Viewer))
+        {
+            return Result.Fail(ProjectErrors.FlowViewerRoleNotAllowed);
+        }
+
         List<FlowState> activeStates = [.. _flowStates.Where(s => s.Category == FlowStateCategory.Active)];
         int nextActiveOrder = activeStates.Count > 0 ? activeStates.Max(s => s.SortOrder) + 1 : 1;
         int sortOrder = category == FlowStateCategory.Active ? nextActiveOrder : 0;

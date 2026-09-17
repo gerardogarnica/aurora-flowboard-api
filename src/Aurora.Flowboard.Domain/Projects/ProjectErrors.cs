@@ -130,6 +130,10 @@ public static class ProjectErrors
         "Project.FlowTransitionRoleNotAllowed",
         "The role is not allowed for this flow transition");
 
+    public static readonly BaseError FlowViewerRoleNotAllowed = BaseError.Validation(
+        "Project.FlowViewerRoleNotAllowed",
+        "The Viewer role cannot be assigned to flow transitions");
+
     public static readonly BaseError FlowTransitionFromStateNotFound = BaseError.Validation(
         "Project.FlowTransitionFromStateNotFound",
         "The source flow state does not belong to this project");

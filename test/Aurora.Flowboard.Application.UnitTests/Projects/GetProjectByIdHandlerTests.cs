@@ -10,6 +10,8 @@ public sealed class GetProjectByIdHandlerTests
     {
         _dbContext = Substitute.For<IApplicationDbContext>();
         _userContext = Substitute.For<IUserContext>();
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
+        _dbContext.Users.Returns(usersMock);
         _handler = new GetProjectByIdHandler(_dbContext, _userContext);
     }
 
@@ -146,6 +148,31 @@ public sealed class GetProjectByIdHandlerTests
         firstLog.ChangedByFullName.Should().Be(admin.FullName);
         firstLog.ChangedByInitials.Should().Be(admin.Initials);
         firstLog.ChangeType.Should().Be(ProjectChangeType.Created);
+        firstLog.AffectedEntityName.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Should_ResolveAffectedEntityName_When_ChangeLogIsMemberAdded()
+    {
+        // Arrange
+        User admin = ProjectQueryData.GetAdminUser();
+        User member = ProjectQueryData.GetMemberUser();
+        Project project = ProjectQueryData.GetProjectWithMemberNavProperties(admin, member);
+        _userContext.UserId.Returns(admin.Id);
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        _dbContext.Projects.Returns(projectsMock);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin, member]);
+        _dbContext.Users.Returns(usersMock);
+
+        // Act
+        Result<ProjectResponse> result =
+            await _handler.Handle(new GetProjectByIdQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        ProjectChangeLogResponse memberAddedLog =
+            result.Value.ChangeLogs.Single(cl => cl.ChangeType == ProjectChangeType.MemberAdded);
+        memberAddedLog.AffectedEntityId.Should().Be(member.Id);
+        memberAddedLog.AffectedEntityName.Should().Be(member.FullName);
     }
 
     [Fact]
