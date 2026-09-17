@@ -23,6 +23,23 @@ internal sealed class GetProjectByIdHandler(
             return Result.Fail<ProjectResponse>(ProjectErrors.NotFound);
         }
 
+        // MemberAdded/MemberRemoved point AffectedEntityId at a User. A removed member is no longer
+        // in project.Members, so names are resolved against Users instead of the loaded members.
+        List<Guid> affectedUserIds = [.. project.ChangeLogs
+            .Where(cl => cl.ChangeType is ProjectChangeType.MemberAdded or ProjectChangeType.MemberRemoved)
+            .Where(cl => cl.AffectedEntityId.HasValue)
+            .Select(cl => cl.AffectedEntityId!.Value)
+            .Distinct()];
+
+        Dictionary<Guid, string> affectedUserNames = affectedUserIds.Count == 0
+            ? []
+            : await dbContext
+                .Users
+                .Where(u => affectedUserIds.Contains(u.Id))
+                .AsNoTracking()
+                .Select(u => new { u.Id, FullName = u.FirstName + " " + u.LastName })
+                .ToDictionaryAsync(u => u.Id, u => u.FullName, cancellationToken);
+
         return new ProjectResponse(
             project.Id,
             project.Name,
@@ -56,6 +73,9 @@ internal sealed class GetProjectByIdHandler(
                     cl.ChangedBy.Initials,
                     cl.ChangeType,
                     cl.AffectedEntityId,
+                    cl.AffectedEntityId.HasValue
+                        ? affectedUserNames.GetValueOrDefault(cl.AffectedEntityId.Value)
+                        : null,
                     cl.NewStatus,
                     cl.ChangedOnUtc))]);
     }

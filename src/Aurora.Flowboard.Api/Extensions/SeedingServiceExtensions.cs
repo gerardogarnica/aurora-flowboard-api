@@ -19,7 +19,7 @@ internal static class SeedingServiceExtensions
             [
                 ("Backlog", FlowStateCategory.Active, "slate"),
                 ("In Progress", FlowStateCategory.Active, "blue"),
-                ("Code Review", FlowStateCategory.Active, "lime"),
+                ("Code Review", FlowStateCategory.Active, "fuchsia"),
                 ("In Testing", FlowStateCategory.Active, "amber"),
                 ("Ready for Release", FlowStateCategory.Active, "teal"),
                 ("Released", FlowStateCategory.Completed, "green"),
@@ -29,7 +29,7 @@ internal static class SeedingServiceExtensions
             [
                 ("Backlog", FlowStateCategory.Active, "slate"),
                 ("In Progress", FlowStateCategory.Active, "blue"),
-                ("Code Review", FlowStateCategory.Active, "lime"),
+                ("Code Review", FlowStateCategory.Active, "fuchsia"),
                 ("In Testing", FlowStateCategory.Active, "amber"),
                 ("Waiting for Client", FlowStateCategory.Active, "navy"),
                 ("Ready for Delivery", FlowStateCategory.Active, "teal"),
