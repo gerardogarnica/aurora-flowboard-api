@@ -1221,6 +1221,31 @@ public sealed class ProjectTests
         }
 
         [Fact]
+        public void Should_Fail_When_AllowedRolesContainViewer()
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProject(admin);
+            project.AddFlowState("State A", FlowStateCategory.Active, ProjectData.FlowStateColor, [], admin);
+            project.ClearDomainEvents();
+
+            // Act
+            Result result = project.AddFlowState(
+                "State B",
+                FlowStateCategory.Active,
+                ProjectData.FlowStateColor,
+                [ProjectRole.Developer, ProjectRole.Viewer],
+                admin);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.FlowViewerRoleNotAllowed);
+            project.FlowStates.Should().ContainSingle(s => s.Name == "State A");
+            project.FlowTransitions.Should().BeEmpty();
+            project.DomainEvents.Should().NotContain(e => e is FlowStateAddedDomainEvent);
+        }
+
+        [Fact]
         public void Should_AddTransitionFromLastActiveToCompleted_When_CompletedStateAdded()
         {
             // Arrange
@@ -1574,6 +1599,22 @@ public sealed class ProjectTests
             // Assert
             result.IsSuccessful.Should().BeTrue();
             transition.AllowedRoles.Should().Contain(ProjectRole.Developer);
+        }
+
+        [Fact]
+        public void Should_Fail_When_RoleIsViewer()
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            (Project project, FlowTransition transition) = ProjectData.GetProjectWithFlowTransition(admin);
+
+            // Act
+            Result result = project.AddFlowTransitionRole(transition.Id, ProjectRole.Viewer, admin);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.FlowViewerRoleNotAllowed);
+            transition.AllowedRoles.Should().NotContain(ProjectRole.Viewer);
         }
 
         [Fact]

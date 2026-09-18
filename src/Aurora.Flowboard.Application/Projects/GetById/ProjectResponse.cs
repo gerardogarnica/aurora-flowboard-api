@@ -35,5 +35,6 @@ public sealed record ProjectChangeLogResponse(
     string ChangedByInitials,
     ProjectChangeType ChangeType,
     Guid? AffectedEntityId,
+    string? AffectedEntityName,
     ProjectStatus? NewStatus,
     DateTime ChangedOnUtc);

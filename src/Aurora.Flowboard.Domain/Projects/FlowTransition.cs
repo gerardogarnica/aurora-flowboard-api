@@ -26,6 +26,11 @@ public sealed class FlowTransition
 
     internal Result AddAllowedRole(ProjectRole role)
     {
+        if (role == ProjectRole.Viewer)
+        {
+            return Result.Fail(ProjectErrors.FlowViewerRoleNotAllowed);
+        }
+
         if (_allowedRoles.Contains(role))
         {
             return Result.Fail(ProjectErrors.FlowTransitionRoleAlreadyAllowed);

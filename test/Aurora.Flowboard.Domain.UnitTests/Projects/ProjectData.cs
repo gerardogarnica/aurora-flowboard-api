@@ -13,8 +13,9 @@ internal static class ProjectData
     public const string FlowStateName = "In Progress";
     public static readonly Color FlowStateColor = Color.Create("white").Value;
 
+    // Every role that can be assigned to a flow transition; Viewer is rejected by Project.AddFlowTransition.
     public static readonly ProjectRole[] AllRoles =
-        [ProjectRole.Admin, ProjectRole.Analyst, ProjectRole.Developer, ProjectRole.QA, ProjectRole.Viewer];
+        [ProjectRole.Admin, ProjectRole.Analyst, ProjectRole.Developer, ProjectRole.QA];
 
     public static Project GetProject(User? creator = null)
     {
