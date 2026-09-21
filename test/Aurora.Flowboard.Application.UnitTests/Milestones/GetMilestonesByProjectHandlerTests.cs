@@ -99,6 +99,26 @@ public sealed class GetMilestonesByProjectHandlerTests
     }
 
     [Fact]
+    public async Task Should_MapColor_When_ProjectHasMilestones()
+    {
+        // Arrange
+        User admin = MilestoneQueryData.GetAdminUser();
+        Project project = MilestoneQueryData.GetProjectWithMilestones(admin, "Phase 1");
+        _userContext.UserId.Returns(admin.Id);
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(project.Milestones);
+        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Milestones.Returns(milestonesMock);
+
+        // Act
+        Result<IReadOnlyCollection<MilestoneResponse>> result =
+            await _handler.Handle(new GetMilestonesByProjectQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.Value.Single().Color.Should().Be(MilestoneQueryData.ColorValue);
+    }
+
+    [Fact]
     public async Task Should_ReturnMilestonesOrderedByName()
     {
         // Arrange

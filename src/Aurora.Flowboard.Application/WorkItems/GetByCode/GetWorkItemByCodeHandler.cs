@@ -38,6 +38,7 @@ internal sealed class GetWorkItemByCodeHandler(
                     w.Component != null ? w.Component.Name : null,
                     w.MilestoneId,
                     w.Milestone != null ? w.Milestone.Name : null,
+                    w.Milestone != null ? w.Milestone.Color.Value : null,
                     w.EstimatedPoints,
                     w.EstimatedCompletionDate,
                     w.CreatedOnUtc,

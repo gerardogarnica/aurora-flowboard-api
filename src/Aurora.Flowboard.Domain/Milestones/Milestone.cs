@@ -21,6 +21,7 @@ public sealed class Milestone : BaseEntity
     public Guid ProjectId { get; private set; }
     public string Name { get; private set; }
     public string? Description { get; private set; }
+    public Color Color { get; private set; }
     public MilestoneStatus Status { get; private set; }
     public DateOnly? TargetStartDate { get; private set; }
     public DateOnly? TargetEndDate { get; private set; }
@@ -39,6 +40,7 @@ public sealed class Milestone : BaseEntity
         Guid projectId,
         string name,
         string? description,
+        Color color,
         DateOnly? targetStartDate,
         DateOnly? targetEndDate,
         Guid createdBy,
@@ -47,6 +49,7 @@ public sealed class Milestone : BaseEntity
         ProjectId = projectId;
         Name = name;
         Description = description;
+        Color = color;
         Status = MilestoneStatus.Draft;
         TargetStartDate = targetStartDate;
         TargetEndDate = targetEndDate;
@@ -57,6 +60,7 @@ public sealed class Milestone : BaseEntity
     public static Result<Milestone> Create(
         string name,
         string? description,
+        Color color,
         DateOnly? targetStartDate,
         DateOnly? targetEndDate,
         Project project,
@@ -98,6 +102,7 @@ public sealed class Milestone : BaseEntity
             project.Id,
             name.Trim(),
             description?.Trim(),
+            color,
             targetStartDate,
             targetEndDate,
             createdBy.Id,
@@ -116,6 +121,7 @@ public sealed class Milestone : BaseEntity
     public Result Update(
         string name,
         string? description,
+        Color color,
         DateOnly? targetStartDate,
         DateOnly? targetEndDate,
         User changedBy,
@@ -153,6 +159,7 @@ public sealed class Milestone : BaseEntity
 
         Name = name.Trim();
         Description = description?.Trim();
+        Color = color;
         TargetStartDate = targetStartDate;
         TargetEndDate = targetEndDate;
         UpdatedOnUtc = updatedOnUtc;

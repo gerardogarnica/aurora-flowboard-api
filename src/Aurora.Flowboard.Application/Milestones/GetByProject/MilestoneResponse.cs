@@ -4,6 +4,7 @@ public sealed record MilestoneResponse(
     Guid Id,
     string Name,
     string? Description,
+    string Color,
     MilestoneStatus Status,
     DateOnly? TargetStartDate,
     DateOnly? TargetEndDate,

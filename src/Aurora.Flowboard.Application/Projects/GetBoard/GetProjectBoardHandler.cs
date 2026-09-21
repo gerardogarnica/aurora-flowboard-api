@@ -58,6 +58,10 @@ internal sealed class GetProjectBoardHandler(
                     .Where(m => m.Id == w.MilestoneId)
                     .Select(m => m.Name)
                     .FirstOrDefault(),
+                MilestoneColor = dbContext.Milestones
+                    .Where(m => m.Id == w.MilestoneId)
+                    .Select(m => m.Color.Value)
+                    .FirstOrDefault(),
                 w.EstimatedPoints,
                 w.EstimatedCompletionDate,
                 w.CreatedOnUtc,
@@ -90,6 +94,7 @@ internal sealed class GetProjectBoardHandler(
                         BuildFullName(w.AssigneeFirstName, w.AssigneeLastName),
                         w.ComponentName,
                         w.MilestoneName,
+                        w.MilestoneColor,
                         w.EstimatedPoints,
                         w.EstimatedCompletionDate,
                         w.CreatedOnUtc,

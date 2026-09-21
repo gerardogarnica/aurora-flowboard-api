@@ -6,6 +6,9 @@ internal static class MilestoneCommandData
     public const string Description = "First delivery milestone";
     public const string UpdatedName = "Phase 1 launch";
     public const string UpdatedDescription = "Updated delivery milestone";
+    public const string ColorValue = "#F97316";
+    public const string UpdatedColorValue = "#22C55E";
+    public static readonly Color MilestoneColor = Color.Create(ColorValue).Value;
     public static readonly DateTime UtcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     public static readonly DateOnly TargetStartDate = new(2026, 1, 15);
     public static readonly DateOnly TargetEndDate = new(2026, 2, 15);
@@ -28,15 +31,15 @@ internal static class MilestoneCommandData
     public static Project GetProjectWithMilestone(User admin, out Milestone milestone)
     {
         Project project = GetProject(admin);
-        milestone = Milestone.Create(Name, Description, TargetStartDate, TargetEndDate, project, admin, UtcNow).Value;
+        milestone = Milestone.Create(Name, Description, MilestoneColor, TargetStartDate, TargetEndDate, project, admin, UtcNow).Value;
         return project;
     }
 
     public static CreateMilestoneCommand GetCreateCommand(Guid projectId) =>
-        new(projectId, Name, Description, TargetStartDate, TargetEndDate);
+        new(projectId, Name, Description, ColorValue, TargetStartDate, TargetEndDate);
 
     public static UpdateMilestoneCommand GetUpdateCommand(Guid milestoneId) =>
-        new(milestoneId, UpdatedName, UpdatedDescription, TargetStartDate, TargetEndDate);
+        new(milestoneId, UpdatedName, UpdatedDescription, UpdatedColorValue, TargetStartDate, TargetEndDate);
 
     public static ChangeMilestoneStatusCommand GetChangeStatusCommand(Guid milestoneId, MilestoneStatus newStatus) =>
         new(milestoneId, newStatus);

@@ -31,9 +31,16 @@ internal sealed class CreateMilestoneHandler(
             return Result.Fail<Guid>(UserErrors.NotFound);
         }
 
+        Result<Color> colorResult = Color.Create(command.Color);
+        if (!colorResult.IsSuccessful)
+        {
+            return Result.Fail<Guid>(colorResult.Error);
+        }
+
         Result<Milestone> result = Milestone.Create(
             command.Name,
             command.Description,
+            colorResult.Value,
             command.TargetStartDate,
             command.TargetEndDate,
             project,

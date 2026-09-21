@@ -18,6 +18,7 @@ public sealed class UpdateMilestone : IBaseEndpoint
                     id,
                     request.Name,
                     request.Description,
+                    request.Color,
                     request.TargetStartDate,
                     request.TargetEndDate);
 
@@ -40,6 +41,7 @@ public sealed class UpdateMilestone : IBaseEndpoint
     internal sealed record UpdateMilestoneRequest(
         string Name,
         string? Description,
+        string Color,
         DateOnly? TargetStartDate,
         DateOnly? TargetEndDate);
 }

@@ -207,6 +207,7 @@ public sealed class CreateMilestoneHandlerTests
         Milestone existing = Milestone.Create(
             MilestoneCommandData.Name,
             MilestoneCommandData.Description,
+            MilestoneCommandData.MilestoneColor,
             null,
             null,
             project,
@@ -241,6 +242,7 @@ public sealed class CreateMilestoneHandlerTests
         Milestone existing = Milestone.Create(
             MilestoneCommandData.Name,
             MilestoneCommandData.Description,
+            MilestoneCommandData.MilestoneColor,
             null,
             null,
             project,
@@ -281,7 +283,7 @@ public sealed class CreateMilestoneHandlerTests
         _dbContext.Users.Returns(usersMock);
         _dbContext.Milestones.Returns(milestonesMock);
 
-        var command = new CreateMilestoneCommand(project.Id, string.Empty, null, null, null);
+        var command = new CreateMilestoneCommand(project.Id, string.Empty, null, MilestoneCommandData.ColorValue, null, null);
 
         // Act
         Result<Guid> result = await _handler.Handle(command, CancellationToken.None);
@@ -313,6 +315,7 @@ public sealed class CreateMilestoneHandlerTests
             project.Id,
             MilestoneCommandData.Name,
             MilestoneCommandData.Description,
+            MilestoneCommandData.ColorValue,
             laterDate,
             earlierDate);
 
@@ -322,5 +325,62 @@ public sealed class CreateMilestoneHandlerTests
         // Assert
         result.IsSuccessful.Should().BeFalse();
         result.Error.Should().Be(MilestoneErrors.InvalidDateRange);
+    }
+    [Fact]
+    public async Task Should_SetColor_When_CommandIsValid()
+    {
+        // Arrange
+        User admin = MilestoneCommandData.GetAdmin();
+        Project project = MilestoneCommandData.GetProject(admin);
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
+
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
+        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Users.Returns(usersMock);
+        _dbContext.Milestones.Returns(milestonesMock);
+
+        CreateMilestoneCommand command = MilestoneCommandData.GetCreateCommand(project.Id);
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        project.Milestones.Single().Color.Value.Should().Be(MilestoneCommandData.ColorValue);
+    }
+
+    [Fact]
+    public async Task Should_ReturnColorError_When_ColorIsEmpty()
+    {
+        // Arrange
+        User admin = MilestoneCommandData.GetAdmin();
+        Project project = MilestoneCommandData.GetProject(admin);
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
+
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
+        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Users.Returns(usersMock);
+        _dbContext.Milestones.Returns(milestonesMock);
+
+        var command = new CreateMilestoneCommand(
+            project.Id,
+            MilestoneCommandData.Name,
+            MilestoneCommandData.Description,
+            string.Empty,
+            MilestoneCommandData.TargetStartDate,
+            MilestoneCommandData.TargetEndDate);
+
+        // Act
+        Result<Guid> result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(ColorErrors.ColorRequired);
+        await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 }

@@ -18,6 +18,7 @@ public sealed class CreateMilestone : IBaseEndpoint
                     id,
                     request.Name,
                     request.Description,
+                    request.Color,
                     request.TargetStartDate,
                     request.TargetEndDate);
 
@@ -41,6 +42,7 @@ public sealed class CreateMilestone : IBaseEndpoint
     internal sealed record CreateMilestoneRequest(
         string Name,
         string? Description,
+        string Color,
         DateOnly? TargetStartDate,
         DateOnly? TargetEndDate);
 }
