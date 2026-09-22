@@ -10,6 +10,8 @@ internal static class WorkItemCommandData
     public const string TagName = "backend";
     public const string ComponentName = "Billing";
     public const string MilestoneName = "Phase 1 delivery";
+    public const string MilestoneColorValue = "#F97316";
+    public static readonly Color MilestoneColor = Color.Create(MilestoneColorValue).Value;
     public static readonly DateOnly MilestoneStartDate = new(2026, 1, 15);
     public static readonly DateOnly MilestoneEndDate = new(2026, 2, 15);
     public static readonly DateTime UtcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -167,6 +169,7 @@ internal static class WorkItemCommandData
         milestone = Milestone.Create(
             MilestoneName,
             null,
+            MilestoneColor,
             MilestoneStartDate,
             MilestoneEndDate,
             project,

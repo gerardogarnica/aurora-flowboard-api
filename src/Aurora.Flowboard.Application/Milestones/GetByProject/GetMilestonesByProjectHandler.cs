@@ -24,6 +24,7 @@ internal sealed class GetMilestonesByProjectHandler(
                 m.Id,
                 m.Name,
                 m.Description,
+                m.Color.Value,
                 m.Status,
                 m.TargetStartDate,
                 m.TargetEndDate,

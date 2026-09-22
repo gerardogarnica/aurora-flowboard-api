@@ -204,7 +204,7 @@ public sealed class UpdateMilestoneHandlerTests
         _dbContext.Milestones.Returns(milestonesMock);
         _dbContext.Users.Returns(usersMock);
 
-        var command = new UpdateMilestoneCommand(milestone.Id, string.Empty, null, null, null);
+        var command = new UpdateMilestoneCommand(milestone.Id, string.Empty, null, MilestoneCommandData.ColorValue, null, null);
 
         // Act
         Result result = await _handler.Handle(command, CancellationToken.None);
@@ -228,7 +228,7 @@ public sealed class UpdateMilestoneHandlerTests
         _dbContext.Milestones.Returns(milestonesMock);
         _dbContext.Users.Returns(usersMock);
 
-        var command = new UpdateMilestoneCommand(milestone.Id, string.Empty, null, null, null);
+        var command = new UpdateMilestoneCommand(milestone.Id, string.Empty, null, MilestoneCommandData.ColorValue, null, null);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
@@ -261,5 +261,59 @@ public sealed class UpdateMilestoneHandlerTests
         // Assert
         result.IsSuccessful.Should().BeFalse();
         result.Error.Should().Be(MilestoneErrors.OperationNotAllowedInCurrentStatus);
+    }
+    [Fact]
+    public async Task Should_UpdateColor_When_CommandIsValid()
+    {
+        // Arrange
+        User admin = MilestoneCommandData.GetAdmin();
+        MilestoneCommandData.GetProjectWithMilestone(admin, out Milestone milestone);
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
+
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
+        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Users.Returns(usersMock);
+
+        UpdateMilestoneCommand command = MilestoneCommandData.GetUpdateCommand(milestone.Id);
+
+        // Act
+        Result result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        milestone.Color.Value.Should().Be(MilestoneCommandData.UpdatedColorValue);
+    }
+
+    [Fact]
+    public async Task Should_ReturnColorError_When_ColorIsEmpty()
+    {
+        // Arrange
+        User admin = MilestoneCommandData.GetAdmin();
+        MilestoneCommandData.GetProjectWithMilestone(admin, out Milestone milestone);
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
+
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
+        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Users.Returns(usersMock);
+
+        var command = new UpdateMilestoneCommand(
+            milestone.Id,
+            MilestoneCommandData.UpdatedName,
+            MilestoneCommandData.UpdatedDescription,
+            string.Empty,
+            MilestoneCommandData.TargetStartDate,
+            MilestoneCommandData.TargetEndDate);
+
+        // Act
+        Result result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(ColorErrors.ColorRequired);
+        await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 }

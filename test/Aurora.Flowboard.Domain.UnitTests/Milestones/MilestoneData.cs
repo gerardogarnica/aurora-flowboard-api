@@ -6,13 +6,15 @@ internal static class MilestoneData
     public const string Description = "First delivery milestone";
     public const string UpdatedName = "Phase 1 launch";
     public const string UpdatedDescription = "Updated delivery milestone";
+    public static readonly Color MilestoneColor = Color.Create("#F97316").Value;
+    public static readonly Color UpdatedMilestoneColor = Color.Create("#22C55E").Value;
     public static readonly DateOnly TargetStartDate = new(2026, 1, 15);
     public static readonly DateOnly TargetEndDate = new(2026, 2, 15);
     public static readonly DateTime CreatedOnUtc = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     public static readonly DateTime UpdatedOnUtc = new(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc);
 
     public static Milestone GetMilestone(Project project, User admin, string? name = null) =>
-        Milestone.Create(name ?? Name, Description, TargetStartDate, TargetEndDate, project, admin, CreatedOnUtc).Value;
+        Milestone.Create(name ?? Name, Description, MilestoneColor, TargetStartDate, TargetEndDate, project, admin, CreatedOnUtc).Value;
 
     public static Milestone GetMilestoneWithStatus(MilestoneStatus status, Project project, User admin)
     {

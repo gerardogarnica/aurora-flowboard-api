@@ -1,4 +1,5 @@
 using Aurora.Flowboard.Domain.Milestones;
+using Aurora.Flowboard.Domain.Shared;
 using Aurora.Flowboard.Domain.Users;
 
 namespace Aurora.Flowboard.Infrastructure.Configurations;
@@ -20,6 +21,14 @@ internal sealed class MilestoneConfiguration : IEntityTypeConfiguration<Mileston
 
         builder.Property(x => x.Description)
             .HasMaxLength(Milestone.MaxDescriptionLength);
+
+        builder.OwnsOne(x => x.Color, color =>
+        {
+            color.Property(c => c.Value)
+                .HasColumnName("color")
+                .IsRequired()
+                .HasMaxLength(Color.MaxLength);
+        });
 
         builder.Property(x => x.Status)
             .IsRequired()

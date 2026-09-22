@@ -4,5 +4,6 @@ public sealed record CreateMilestoneCommand(
     Guid ProjectId,
     string Name,
     string? Description,
+    string Color,
     DateOnly? TargetStartDate,
     DateOnly? TargetEndDate) : ICommand<Guid>;
