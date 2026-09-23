@@ -30,9 +30,16 @@ internal sealed class UpdateMilestoneHandler(
             return Result.Fail(UserErrors.NotFound);
         }
 
+        Result<Color> colorResult = Color.Create(command.Color);
+        if (!colorResult.IsSuccessful)
+        {
+            return Result.Fail(colorResult.Error);
+        }
+
         Result result = milestone.Update(
             command.Name,
             command.Description,
+            colorResult.Value,
             command.TargetStartDate,
             command.TargetEndDate,
             changedBy,

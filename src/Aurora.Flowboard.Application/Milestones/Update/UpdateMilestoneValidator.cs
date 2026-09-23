@@ -14,6 +14,10 @@ internal sealed class UpdateMilestoneValidator : AbstractValidator<UpdateMilesto
         RuleFor(x => x.Description)
             .MaximumLength(Milestone.MaxDescriptionLength);
 
+        RuleFor(x => x.Color)
+            .NotEmpty()
+            .MaximumLength(Color.MaxLength);
+
         RuleFor(x => x.TargetEndDate)
             .Must((command, targetEndDate) =>
                 targetEndDate is null ||

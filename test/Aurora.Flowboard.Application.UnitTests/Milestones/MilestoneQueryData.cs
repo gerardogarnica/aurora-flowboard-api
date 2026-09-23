@@ -3,6 +3,8 @@ namespace Aurora.Flowboard.Application.UnitTests.Milestones;
 internal static class MilestoneQueryData
 {
     public static readonly DateTime UtcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+    public const string ColorValue = "#F97316";
+    public static readonly Color MilestoneColor = Color.Create(ColorValue).Value;
 
     public static User GetAdminUser()
     {
@@ -25,7 +27,7 @@ internal static class MilestoneQueryData
 
         foreach (string name in names)
         {
-            Milestone.Create(name, null, null, null, project, admin, UtcNow);
+            Milestone.Create(name, null, MilestoneColor, null, null, project, admin, UtcNow);
         }
 
         return project;

@@ -19,6 +19,7 @@ public sealed record WorkItemResponse(
     string? ComponentName,
     Guid? MilestoneId,
     string? MilestoneName,
+    string? MilestoneColor,
     int? EstimatedPoints,
     DateOnly? EstimatedCompletionDate,
     DateTime CreatedOnUtc,

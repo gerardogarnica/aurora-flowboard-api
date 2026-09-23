@@ -15,6 +15,7 @@ public sealed class MilestoneTests
             Result<Milestone> result = Milestone.Create(
                 MilestoneData.Name,
                 MilestoneData.Description,
+                MilestoneData.MilestoneColor,
                 MilestoneData.TargetStartDate,
                 MilestoneData.TargetEndDate,
                 project,
@@ -44,6 +45,7 @@ public sealed class MilestoneTests
             Result<Milestone> result = Milestone.Create(
                 MilestoneData.Name,
                 null,
+                MilestoneData.MilestoneColor,
                 null,
                 null,
                 project,
@@ -68,6 +70,7 @@ public sealed class MilestoneTests
             Result<Milestone> result = Milestone.Create(
                 MilestoneData.Name,
                 MilestoneData.Description,
+                MilestoneData.MilestoneColor,
                 MilestoneData.TargetStartDate,
                 MilestoneData.TargetEndDate,
                 project,
@@ -90,6 +93,7 @@ public sealed class MilestoneTests
             Result<Milestone> result = Milestone.Create(
                 "  Phase 1 delivery  ",
                 MilestoneData.Description,
+                MilestoneData.MilestoneColor,
                 MilestoneData.TargetStartDate,
                 MilestoneData.TargetEndDate,
                 project,
@@ -129,6 +133,7 @@ public sealed class MilestoneTests
             Result<Milestone> result = Milestone.Create(
                 MilestoneData.Name,
                 MilestoneData.Description,
+                MilestoneData.MilestoneColor,
                 MilestoneData.TargetStartDate,
                 MilestoneData.TargetEndDate,
                 project,
@@ -151,6 +156,7 @@ public sealed class MilestoneTests
             Result<Milestone> result = Milestone.Create(
                 string.Empty,
                 MilestoneData.Description,
+                MilestoneData.MilestoneColor,
                 MilestoneData.TargetStartDate,
                 MilestoneData.TargetEndDate,
                 project,
@@ -174,6 +180,7 @@ public sealed class MilestoneTests
             Result<Milestone> result = Milestone.Create(
                 longName,
                 MilestoneData.Description,
+                MilestoneData.MilestoneColor,
                 MilestoneData.TargetStartDate,
                 MilestoneData.TargetEndDate,
                 project,
@@ -197,6 +204,7 @@ public sealed class MilestoneTests
             Result<Milestone> result = Milestone.Create(
                 MilestoneData.Name,
                 longDescription,
+                MilestoneData.MilestoneColor,
                 MilestoneData.TargetStartDate,
                 MilestoneData.TargetEndDate,
                 project,
@@ -220,6 +228,7 @@ public sealed class MilestoneTests
             Result<Milestone> result = Milestone.Create(
                 "phase 1 delivery",
                 MilestoneData.Description,
+                MilestoneData.MilestoneColor,
                 MilestoneData.TargetStartDate,
                 MilestoneData.TargetEndDate,
                 project,
@@ -242,6 +251,7 @@ public sealed class MilestoneTests
             Result<Milestone> result = Milestone.Create(
                 MilestoneData.Name,
                 MilestoneData.Description,
+                MilestoneData.MilestoneColor,
                 MilestoneData.TargetEndDate,
                 MilestoneData.TargetStartDate,
                 project,
@@ -251,6 +261,20 @@ public sealed class MilestoneTests
             // Assert
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(MilestoneErrors.InvalidDateRange);
+        }
+
+        [Fact]
+        public void Should_SetColor_When_Created()
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProject(admin);
+
+            // Act
+            Milestone milestone = MilestoneData.GetMilestone(project, admin);
+
+            // Assert
+            milestone.Color.Should().Be(MilestoneData.MilestoneColor);
         }
     }
 
@@ -268,6 +292,7 @@ public sealed class MilestoneTests
             Result result = milestone.Update(
                 MilestoneData.UpdatedName,
                 MilestoneData.UpdatedDescription,
+                MilestoneData.UpdatedMilestoneColor,
                 MilestoneData.TargetStartDate,
                 MilestoneData.TargetEndDate,
                 admin,
@@ -292,6 +317,7 @@ public sealed class MilestoneTests
             milestone.Update(
                 MilestoneData.UpdatedName,
                 MilestoneData.UpdatedDescription,
+                MilestoneData.UpdatedMilestoneColor,
                 MilestoneData.TargetStartDate,
                 MilestoneData.TargetEndDate,
                 admin,
@@ -315,6 +341,7 @@ public sealed class MilestoneTests
             Result result = milestone.Update(
                 MilestoneData.UpdatedName,
                 MilestoneData.UpdatedDescription,
+                MilestoneData.UpdatedMilestoneColor,
                 MilestoneData.TargetStartDate,
                 MilestoneData.TargetEndDate,
                 nonAdmin,
@@ -337,6 +364,7 @@ public sealed class MilestoneTests
             Result result = milestone.Update(
                 string.Empty,
                 MilestoneData.UpdatedDescription,
+                MilestoneData.UpdatedMilestoneColor,
                 MilestoneData.TargetStartDate,
                 MilestoneData.TargetEndDate,
                 admin,
@@ -360,6 +388,7 @@ public sealed class MilestoneTests
             Result result = milestone.Update(
                 longName,
                 MilestoneData.UpdatedDescription,
+                MilestoneData.UpdatedMilestoneColor,
                 MilestoneData.TargetStartDate,
                 MilestoneData.TargetEndDate,
                 admin,
@@ -383,6 +412,7 @@ public sealed class MilestoneTests
             Result result = milestone.Update(
                 MilestoneData.UpdatedName,
                 longDescription,
+                MilestoneData.UpdatedMilestoneColor,
                 MilestoneData.TargetStartDate,
                 MilestoneData.TargetEndDate,
                 admin,
@@ -405,6 +435,7 @@ public sealed class MilestoneTests
             Result result = milestone.Update(
                 MilestoneData.UpdatedName,
                 MilestoneData.UpdatedDescription,
+                MilestoneData.UpdatedMilestoneColor,
                 MilestoneData.TargetEndDate,
                 MilestoneData.TargetStartDate,
                 admin,
@@ -427,6 +458,7 @@ public sealed class MilestoneTests
             Result result = milestone.Update(
                 MilestoneData.UpdatedName,
                 MilestoneData.UpdatedDescription,
+                MilestoneData.UpdatedMilestoneColor,
                 MilestoneData.TargetStartDate,
                 MilestoneData.TargetEndDate,
                 admin,
@@ -449,6 +481,7 @@ public sealed class MilestoneTests
             Result result = milestone.Update(
                 MilestoneData.UpdatedName,
                 MilestoneData.UpdatedDescription,
+                MilestoneData.UpdatedMilestoneColor,
                 MilestoneData.TargetStartDate,
                 MilestoneData.TargetEndDate,
                 admin,
@@ -457,6 +490,29 @@ public sealed class MilestoneTests
             // Assert
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(MilestoneErrors.OperationNotAllowedInCurrentStatus);
+        }
+
+        [Fact]
+        public void Should_UpdateColor_When_AdminUpdates()
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProject(admin);
+            Milestone milestone = MilestoneData.GetMilestone(project, admin);
+
+            // Act
+            Result result = milestone.Update(
+                MilestoneData.UpdatedName,
+                MilestoneData.UpdatedDescription,
+                MilestoneData.UpdatedMilestoneColor,
+                MilestoneData.TargetStartDate,
+                MilestoneData.TargetEndDate,
+                admin,
+                MilestoneData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            milestone.Color.Should().Be(MilestoneData.UpdatedMilestoneColor);
         }
     }
 

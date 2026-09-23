@@ -259,6 +259,7 @@ public sealed class ChangeMilestoneStatusHandlerTests
         Milestone milestone = Milestone.Create(
             MilestoneCommandData.Name,
             MilestoneCommandData.Description,
+            MilestoneCommandData.MilestoneColor,
             null,
             null,
             project,
@@ -307,6 +308,7 @@ public sealed class ChangeMilestoneStatusHandlerTests
         Milestone milestone = Milestone.Create(
             MilestoneCommandData.Name,
             MilestoneCommandData.Description,
+            MilestoneCommandData.MilestoneColor,
             null,
             null,
             project,

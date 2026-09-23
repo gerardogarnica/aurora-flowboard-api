@@ -7,6 +7,8 @@ internal static class WorkItemQueryData
     public static readonly DateTime UtcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     public const string CommentContent = "Test comment";
     public const string TagName = "query-tag";
+    public const string MilestoneColorValue = "#F97316";
+    public static readonly Color MilestoneColor = Color.Create(MilestoneColorValue).Value;
 
     public static User GetAdminUser()
     {
@@ -100,7 +102,7 @@ internal static class WorkItemQueryData
     {
         Project project = GetActiveProjectWithFlow(admin);
         Component component = Component.Create("Auth Module", project, admin, UtcNow).Value;
-        Milestone milestone = Milestone.Create("Sprint 1", null, null, null, project, admin, UtcNow).Value;
+        Milestone milestone = Milestone.Create("Sprint 1", null, MilestoneColor, null, null, project, admin, UtcNow).Value;
         WorkItem workItem = WorkItem.Create(
             "Test Work Item", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, UtcNow,
             milestone: milestone, component: component).Value;
@@ -112,7 +114,7 @@ internal static class WorkItemQueryData
         Project project = GetActiveProjectWithFlow(admin);
         project.AddMember(assignee, ProjectRole.Developer, admin, UtcNow);
         Component component = Component.Create("Auth Module", project, admin, UtcNow).Value;
-        Milestone milestone = Milestone.Create("Sprint 1", null, null, null, project, admin, UtcNow).Value;
+        Milestone milestone = Milestone.Create("Sprint 1", null, MilestoneColor, null, null, project, admin, UtcNow).Value;
         WorkItem workItem = WorkItem.Create("Test Work Item", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, UtcNow).Value;
 
         workItem.Assign(assignee, admin, UtcNow.AddMinutes(1));
