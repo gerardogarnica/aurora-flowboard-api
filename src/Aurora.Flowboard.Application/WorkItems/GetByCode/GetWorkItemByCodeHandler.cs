@@ -4,6 +4,8 @@ internal sealed class GetWorkItemByCodeHandler(
     IApplicationDbContext dbContext,
     IUserContext userContext) : IQueryHandler<GetWorkItemByCodeQuery, WorkItemResponse>
 {
+    private const string UnknownUserInitials = "U";
+
     public async Task<Result<WorkItemResponse>> Handle(
         GetWorkItemByCodeQuery query,
         CancellationToken cancellationToken)
@@ -25,15 +27,11 @@ internal sealed class GetWorkItemByCodeHandler(
                     w.FlowStateId,
                     w.FlowState.Name,
                     w.AssigneeId,
-                    dbContext.Users
-                        .Where(u => u.Id == w.AssigneeId)
-                        .Select(u => u.FirstName + " " + u.LastName)
-                        .FirstOrDefault(),
+                    null,
+                    null,
                     w.CreatedById,
-                    dbContext.Users
-                        .Where(u => u.Id == w.CreatedById)
-                        .Select(u => u.FirstName + " " + u.LastName)
-                        .FirstOrDefault() ?? string.Empty,
+                    string.Empty,
+                    string.Empty,
                     w.ComponentId,
                     w.Component != null ? w.Component.Name : null,
                     w.MilestoneId,
@@ -49,6 +47,22 @@ internal sealed class GetWorkItemByCodeHandler(
                         .Select(t => new WorkItemTagResponse(t.Id, t.Name))
                         .ToList(),
                     Array.Empty<WorkItemFlowTransitionResponse>()),
+                AssigneeFirstName = dbContext.Users
+                    .Where(u => u.Id == w.AssigneeId)
+                    .Select(u => u.FirstName)
+                    .FirstOrDefault(),
+                AssigneeLastName = dbContext.Users
+                    .Where(u => u.Id == w.AssigneeId)
+                    .Select(u => u.LastName)
+                    .FirstOrDefault(),
+                CreatedByFirstName = dbContext.Users
+                    .Where(u => u.Id == w.CreatedById)
+                    .Select(u => u.FirstName)
+                    .FirstOrDefault(),
+                CreatedByLastName = dbContext.Users
+                    .Where(u => u.Id == w.CreatedById)
+                    .Select(u => u.LastName)
+                    .FirstOrDefault(),
                 w.FlowStateId,
                 MemberRole = w.Project.Members.First(m => m.UserId == userContext.UserId).Role
             })
@@ -79,6 +93,26 @@ internal sealed class GetWorkItemByCodeHandler(
             .OrderBy(t => stateNames.GetValueOrDefault(t.ToStateId, string.Empty))
             .Select(t => new WorkItemFlowTransitionResponse(t.ToStateId, stateNames.GetValueOrDefault(t.ToStateId, string.Empty)))];
 
-        return result.Response with { AvailableTransitions = availableTransitions };
+        bool hasAssignee = result.AssigneeFirstName is not null && result.AssigneeLastName is not null;
+
+        return result.Response with
+        {
+            AssigneeFullName = hasAssignee ? BuildFullName(result.AssigneeFirstName, result.AssigneeLastName) : null,
+            AssigneeInitials = hasAssignee ? BuildInitials(result.AssigneeFirstName, result.AssigneeLastName) : null,
+            CreatedByFullName = BuildFullName(result.CreatedByFirstName, result.CreatedByLastName),
+            CreatedByInitials = BuildInitials(result.CreatedByFirstName, result.CreatedByLastName),
+            AvailableTransitions = availableTransitions
+        };
     }
+
+    // Mirrors User.Initials, which EF ignores and therefore cannot be projected in the query.
+    private static string BuildInitials(string? firstName, string? lastName) =>
+        string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName)
+            ? UnknownUserInitials
+            : $"{char.ToUpperInvariant(firstName[0])}{char.ToUpperInvariant(lastName[0])}";
+
+    private static string BuildFullName(string? firstName, string? lastName) =>
+        firstName is not null && lastName is not null
+            ? $"{firstName} {lastName}"
+            : string.Empty;
 }

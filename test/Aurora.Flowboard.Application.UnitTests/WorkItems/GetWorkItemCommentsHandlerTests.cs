@@ -84,9 +84,33 @@ public sealed class GetWorkItemCommentsHandlerTests
         // Assert
         result.Value.Items.Should().ContainSingle();
         result.Value.Items.Single().AuthorFullName.Should().Be("Work Admin");
+        result.Value.Items.Single().AuthorInitials.Should().Be("WA");
         result.Value.Items.Single().Content.Should().Be(WorkItemQueryData.CommentContent);
         result.Value.TotalCount.Should().Be(1);
         result.Value.TotalPages.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Should_FallBackToUnknownAuthor_When_AuthorUserIsMissing()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithComment(admin);
+        _userContext.UserId.Returns(admin.Id);
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
+        DbSet<Comment> commentsMock = MockDbSetHelper.CreateMockDbSet(workItem.Comments);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
+        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Comments.Returns(commentsMock);
+        _dbContext.Users.Returns(usersMock);
+
+        // Act
+        Result<PagedResponse<WorkItemCommentResponse>> result =
+            await _handler.Handle(new GetWorkItemCommentsQuery(workItem.Id, Page, PageSize), CancellationToken.None);
+
+        // Assert
+        result.Value.Items.Single().AuthorFullName.Should().BeEmpty();
+        result.Value.Items.Single().AuthorInitials.Should().Be("U");
     }
 
     [Fact]
