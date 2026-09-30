@@ -30,6 +30,14 @@ public static class WorkItemErrors
         "WorkItem.AssigneeNotProjectMember",
         "The assignee must be a member of the project");
 
+    public static readonly BaseError AssigneeIsViewer = BaseError.Validation(
+        "WorkItem.AssigneeIsViewer",
+        "Work items cannot be assigned to project members with the Viewer role");
+
+    public static readonly BaseError ViewerCannotModify = BaseError.Forbidden(
+        "WorkItem.ViewerCannotModify",
+        "Project members with the Viewer role cannot modify work items");
+
     public static readonly BaseError AssigneeNotFound = BaseError.NotFound(
         "WorkItem.AssigneeNotFound",
         "The assignee user was not found");

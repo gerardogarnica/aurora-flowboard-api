@@ -117,6 +117,11 @@ public sealed class WorkItem : BaseEntity
             return Result.Fail<WorkItem>(WorkItemErrors.NotFound);
         }
 
+        if (project.GetRole(createdBy.Id) == ProjectRole.Viewer)
+        {
+            return Result.Fail<WorkItem>(WorkItemErrors.ViewerCannotModify);
+        }
+
         if (!project.CanAddOrUpdateWorkItem())
         {
             return Result.Fail<WorkItem>(ProjectErrors.OperationNotAllowedInCurrentStatus);
@@ -132,6 +137,11 @@ public sealed class WorkItem : BaseEntity
             if (!project.IsMember(assignee.Id))
             {
                 return Result.Fail<WorkItem>(WorkItemErrors.AssigneeNotProjectMember);
+            }
+
+            if (project.GetRole(assignee.Id) == ProjectRole.Viewer)
+            {
+                return Result.Fail<WorkItem>(WorkItemErrors.AssigneeIsViewer);
             }
 
             if (!assignee.IsActive)
@@ -523,9 +533,19 @@ public sealed class WorkItem : BaseEntity
             return Result.Fail(WorkItemErrors.NotFound);
         }
 
+        if (Project.GetRole(changedBy.Id) == ProjectRole.Viewer)
+        {
+            return Result.Fail(WorkItemErrors.ViewerCannotModify);
+        }
+
         if (!Project.IsMember(assignee.Id))
         {
             return Result.Fail(WorkItemErrors.AssigneeNotProjectMember);
+        }
+
+        if (Project.GetRole(assignee.Id) == ProjectRole.Viewer)
+        {
+            return Result.Fail(WorkItemErrors.AssigneeIsViewer);
         }
 
         if (FlowState.Category == FlowStateCategory.Cancelled)
@@ -570,6 +590,11 @@ public sealed class WorkItem : BaseEntity
             return Result.Fail(WorkItemErrors.NotFound);
         }
 
+        if (Project.GetRole(changedBy.Id) == ProjectRole.Viewer)
+        {
+            return Result.Fail(WorkItemErrors.ViewerCannotModify);
+        }
+
         if (FlowState.Category == FlowStateCategory.Cancelled)
         {
             return Result.Fail(WorkItemErrors.CancelledWorkItemCannotBeModified);
@@ -592,7 +617,7 @@ public sealed class WorkItem : BaseEntity
 
     public Result AddComment(User author, string content, DateTime createdOnUtc)
     {
-        Result guardResult = EnsureCanBeModifiedBy(author);
+        Result guardResult = EnsureCanParticipate(author);
 
         if (!guardResult.IsSuccessful)
         {
@@ -774,17 +799,34 @@ public sealed class WorkItem : BaseEntity
 
     private Result EnsureCanBeModifiedBy(User changedBy)
     {
+        Result participationResult = EnsureCanParticipate(changedBy);
+
+        if (!participationResult.IsSuccessful)
+        {
+            return participationResult;
+        }
+
+        if (Project.GetRole(changedBy.Id) == ProjectRole.Viewer)
+        {
+            return Result.Fail(WorkItemErrors.ViewerCannotModify);
+        }
+
+        return Result.Ok();
+    }
+
+    private Result EnsureCanParticipate(User user)
+    {
         if (!Project.CanAddOrUpdateWorkItem())
         {
             return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
 
-        if (!Project.IsMember(changedBy.Id))
+        if (!Project.IsMember(user.Id))
         {
             return Result.Fail(WorkItemErrors.NotFound);
         }
 
-        if (!changedBy.IsActive)
+        if (!user.IsActive)
         {
             return Result.Fail(UserErrors.Inactive);
         }
