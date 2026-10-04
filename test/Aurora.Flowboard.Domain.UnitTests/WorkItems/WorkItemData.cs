@@ -52,4 +52,13 @@ internal static class WorkItemData
 
         return (workItem, project, admin);
     }
+
+    public static (WorkItem WorkItem, Project Project, User Admin, User Viewer) GetWorkItemWithViewer()
+    {
+        var (workItem, project, admin) = GetWorkItemWithContext();
+        User viewer = UserData.GetActiveUser();
+        project.AddMember(viewer, ProjectRole.Viewer, admin, CreatedOnUtc);
+
+        return (workItem, project, admin, viewer);
+    }
 }
