@@ -2655,4 +2655,319 @@ public sealed class WorkItemTests
             result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
     }
+
+    public sealed class ViewerRole : BaseTest
+    {
+        [Fact]
+        public void Should_FailCreate_When_CreatorIsViewer()
+        {
+            // Arrange
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
+            User viewer = UserData.GetActiveUser();
+            project.AddMember(viewer, ProjectRole.Viewer, admin, WorkItemData.CreatedOnUtc);
+            int counterBefore = project.WorkItemCounter;
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, viewer, null, null, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.ViewerCannotModify);
+            project.WorkItemCounter.Should().Be(counterBefore);
+        }
+
+        [Fact]
+        public void Should_FailCreate_When_AssigneeIsViewer()
+        {
+            // Arrange
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
+            User viewer = UserData.GetActiveUser();
+            project.AddMember(viewer, ProjectRole.Viewer, admin, WorkItemData.CreatedOnUtc);
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, admin, null, null, WorkItemData.CreatedOnUtc, viewer);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.AssigneeIsViewer);
+        }
+
+        [Fact]
+        public void Should_FailUpdateTitle_When_ChangedByIsViewer()
+        {
+            // Arrange
+            var (workItem, _, _, viewer) = WorkItemData.GetWorkItemWithViewer();
+
+            // Act
+            Result result = workItem.UpdateTitle("New Title", viewer, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.ViewerCannotModify);
+            workItem.Title.Should().Be(WorkItemData.Title);
+        }
+
+        [Fact]
+        public void Should_FailUpdateDescription_When_ChangedByIsViewer()
+        {
+            // Arrange
+            var (workItem, _, _, viewer) = WorkItemData.GetWorkItemWithViewer();
+
+            // Act
+            Result result = workItem.UpdateDescription("New description", viewer, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.ViewerCannotModify);
+            workItem.Description.Should().Be(WorkItemData.Description);
+        }
+
+        [Fact]
+        public void Should_FailUpdateType_When_ChangedByIsViewer()
+        {
+            // Arrange
+            var (workItem, _, _, viewer) = WorkItemData.GetWorkItemWithViewer();
+
+            // Act
+            Result result = workItem.UpdateType(WorkItemType.Bug, viewer, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.ViewerCannotModify);
+            workItem.Type.Should().Be(WorkItemData.Type);
+        }
+
+        [Fact]
+        public void Should_FailUpdatePriority_When_ChangedByIsViewer()
+        {
+            // Arrange
+            var (workItem, _, _, viewer) = WorkItemData.GetWorkItemWithViewer();
+
+            // Act
+            Result result = workItem.UpdatePriority(Priority.High, viewer, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.ViewerCannotModify);
+            workItem.Priority.Should().Be(WorkItemData.Priority);
+        }
+
+        [Fact]
+        public void Should_FailUpdateEstimatedPoints_When_ChangedByIsViewer()
+        {
+            // Arrange
+            var (workItem, _, _, viewer) = WorkItemData.GetWorkItemWithViewer();
+
+            // Act
+            Result result = workItem.UpdateEstimatedPoints(8, viewer, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.ViewerCannotModify);
+            workItem.EstimatedPoints.Should().Be(WorkItemData.EstimatedPoints);
+        }
+
+        [Fact]
+        public void Should_FailUpdateEstimatedCompletionDate_When_ChangedByIsViewer()
+        {
+            // Arrange
+            var (workItem, _, _, viewer) = WorkItemData.GetWorkItemWithViewer();
+            DateOnly newDate = DateOnly.FromDateTime(WorkItemData.UpdatedOnUtc).AddDays(30);
+
+            // Act
+            Result result = workItem.UpdateEstimatedCompletionDate(newDate, viewer, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.ViewerCannotModify);
+            workItem.EstimatedCompletionDate.Should().Be(WorkItemData.EstimatedCompletionDate);
+        }
+
+        [Fact]
+        public void Should_FailChangeComponent_When_ChangedByIsViewer()
+        {
+            // Arrange
+            var (workItem, project, admin, viewer) = WorkItemData.GetWorkItemWithViewer();
+            Component component = ComponentData.GetComponent(project, admin);
+
+            // Act
+            Result result = workItem.ChangeComponent(component, viewer, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.ViewerCannotModify);
+            workItem.ComponentId.Should().BeNull();
+        }
+
+        [Fact]
+        public void Should_FailChangeMilestone_When_ChangedByIsViewer()
+        {
+            // Arrange
+            var (workItem, project, admin, viewer) = WorkItemData.GetWorkItemWithViewer();
+            Milestone milestone = MilestoneData.GetMilestone(project, admin);
+
+            // Act
+            Result result = workItem.ChangeMilestone(milestone, viewer, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.ViewerCannotModify);
+            workItem.MilestoneId.Should().BeNull();
+        }
+
+        [Fact]
+        public void Should_FailMove_When_ChangedByIsViewer()
+        {
+            // Arrange
+            var (workItem, project, _, viewer) = WorkItemData.GetWorkItemWithViewer();
+            Guid initialStateId = workItem.FlowStateId;
+            FlowState toState = project.FlowStates.Single(s => s.Name == "In Progress");
+
+            // Act
+            Result result = workItem.Move(toState, viewer, null, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.ViewerCannotModify);
+            workItem.FlowStateId.Should().Be(initialStateId);
+            workItem.StateHistory.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void Should_FailAssign_When_ChangedByIsViewer()
+        {
+            // Arrange
+            var (workItem, project, admin, viewer) = WorkItemData.GetWorkItemWithViewer();
+            User assignee = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+
+            // Act
+            Result result = workItem.Assign(assignee, viewer, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.ViewerCannotModify);
+            workItem.AssigneeId.Should().BeNull();
+        }
+
+        [Fact]
+        public void Should_FailAssign_When_AssigneeIsViewer()
+        {
+            // Arrange
+            var (workItem, _, admin, viewer) = WorkItemData.GetWorkItemWithViewer();
+
+            // Act
+            Result result = workItem.Assign(viewer, admin, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.AssigneeIsViewer);
+            workItem.AssigneeId.Should().BeNull();
+        }
+
+        [Fact]
+        public void Should_FailUnassign_When_ChangedByIsViewer()
+        {
+            // Arrange
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
+            User assignee = UserData.GetActiveUser();
+            User viewer = UserData.GetActiveUser();
+            project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
+            project.AddMember(viewer, ProjectRole.Viewer, admin, WorkItemData.CreatedOnUtc);
+            WorkItem workItem = WorkItem.Create(
+                WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
+                project, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
+
+            // Act
+            Result result = workItem.Unassign(viewer, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.ViewerCannotModify);
+            workItem.AssigneeId.Should().Be(assignee.Id);
+        }
+
+        [Fact]
+        public void Should_FailLogTime_When_UserIsViewer()
+        {
+            // Arrange
+            var (workItem, _, _, viewer) = WorkItemData.GetWorkItemWithViewer();
+
+            // Act
+            Result result = workItem.LogTime(viewer, 1m, null, WorkItemData.UpdatedOnUtc, WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.ViewerCannotModify);
+            workItem.TimeEntries.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void Should_FailAddTag_When_ChangedByIsViewer()
+        {
+            // Arrange
+            var (workItem, _, _, viewer) = WorkItemData.GetWorkItemWithViewer();
+
+            // Act
+            Result result = workItem.AddTag("backend", viewer, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.ViewerCannotModify);
+            workItem.Tags.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void Should_FailRemoveTag_When_ChangedByIsViewer()
+        {
+            // Arrange
+            var (workItem, _, admin, viewer) = WorkItemData.GetWorkItemWithViewer();
+            workItem.AddTag("backend", admin, WorkItemData.UpdatedOnUtc);
+            Guid tagId = workItem.Tags.First().Id;
+
+            // Act
+            Result result = workItem.RemoveTag(tagId, viewer, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(WorkItemErrors.ViewerCannotModify);
+            workItem.Tags.Should().ContainSingle(t => t.Id == tagId);
+        }
+
+        [Fact]
+        public void Should_AddComment_When_AuthorIsViewer()
+        {
+            // Arrange
+            var (workItem, _, _, viewer) = WorkItemData.GetWorkItemWithViewer();
+            const string content = "Looks good from the client side";
+
+            // Act
+            Result result = workItem.AddComment(viewer, content, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.Comments.Should().ContainSingle(c => c.Content == content && c.AuthorId == viewer.Id);
+        }
+
+        [Fact]
+        public void Should_UpdateAndRemoveOwnComment_When_AuthorIsViewer()
+        {
+            // Arrange
+            var (workItem, _, _, viewer) = WorkItemData.GetWorkItemWithViewer();
+            workItem.AddComment(viewer, "Original", WorkItemData.CreatedOnUtc);
+            Guid commentId = workItem.Comments.Single().Id;
+
+            // Act
+            Result updateResult = workItem.UpdateComment(commentId, viewer, "Edited", WorkItemData.UpdatedOnUtc);
+            Result removeResult = workItem.RemoveComment(commentId, viewer, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            updateResult.IsSuccessful.Should().BeTrue();
+            removeResult.IsSuccessful.Should().BeTrue();
+        }
+    }
 }

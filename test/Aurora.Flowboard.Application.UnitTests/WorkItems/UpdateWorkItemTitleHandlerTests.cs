@@ -187,4 +187,32 @@ public sealed class UpdateWorkItemTitleHandlerTests
         // Assert
         await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task Should_ReturnForbiddenAndNotPersist_When_UserIsViewer()
+    {
+        // Arrange
+        User admin = WorkItemCommandData.GetAdmin();
+        WorkItem workItem = WorkItemCommandData.GetWorkItem(admin);
+        User viewer = WorkItemCommandData.GetAssignee();
+        workItem.Project.AddMember(viewer, ProjectRole.Viewer, admin, WorkItemCommandData.UtcNow);
+        _userContext.UserId.Returns(viewer.Id);
+        _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
+
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([viewer]);
+        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Users.Returns(usersMock);
+
+        UpdateWorkItemTitleCommand command = new(workItem.Id, WorkItemCommandData.UpdatedTitle);
+
+        // Act
+        Result result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(WorkItemErrors.ViewerCannotModify);
+        result.Error.ErrorType.Should().Be(BaseErrorType.Forbidden);
+        await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
 }
