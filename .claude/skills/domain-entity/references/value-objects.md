@@ -1,6 +1,6 @@
 # Value objects
 
-Value objects are `sealed record` (structural equality), immutable, and validate in `Create`. Their errors live in a **separate** `{ValueObject}Errors.cs` file — never in the same file as the value object itself.
+Value objects are `sealed record` (structural equality), immutable, validate in `Create`, and **implement the `IValueObject` marker** (`Domain/Abstractions/IValueObject.cs`). The architecture tests select value objects by that marker, so forgetting it fails `ValueObjects_Should_BeMarkedWithValueObjectInterface`. Their errors live in a **separate** `{ValueObject}Errors.cs` file — never in the same file as the value object itself.
 
 Shared value objects go in `Domain/Shared/`. One that belongs to a single aggregate (like `ProjectCode`) lives in that aggregate's folder.
 
@@ -10,7 +10,7 @@ Shared value objects go in `Domain/Shared/`. One that belongs to a single aggreg
 // src/{name}.Domain/Shared/Email.cs
 namespace {name}.Domain.Shared;
 
-public sealed record Email
+public sealed record Email : IValueObject
 {
     public const int MaxLength = 255;
 

@@ -17,7 +17,7 @@ The domain entity must already exist — if it does not, or a business rule has 
 3. **Write the Application slice** in `src/{name}.Application/{Feature}/{UseCase}/`. Templates: [references/command-slice.md](references/command-slice.md) and [references/query-slice.md](references/query-slice.md).
 4. **Write the endpoint** in `src/{name}.Api/Endpoints/{Feature}/{UseCase}.cs`. Template: [references/endpoint.md](references/endpoint.md).
 5. **Write the tests** — handler tests and validator tests. Use the `unit-testing` skill.
-6. **Verify** — launch the `dotnet-test-runner` agent (Agent tool, `subagent_type: dotnet-test-runner`). It runs `dotnet build` (warnings are errors here) and `dotnet test`, and reports only failures. Do not run those commands yourself, and do not consider the feature done until that agent comes back clean.
+6. **Verify** — launch the `dotnet-test-runner` agent (Agent tool, `subagent_type: dotnet-test-runner`). It runs `dotnet build` (warnings are errors here) and the three xunit.v3 test executables (never `dotnet test`, which does not work in this repo), and reports only failures. Do not run those commands yourself, and do not consider the feature done until that agent comes back clean.
 
 ## Command or query
 
