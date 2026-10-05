@@ -29,12 +29,9 @@ Aurora.Flowboard.Domain          → Entities, value objects, domain events, Res
 Aurora.Flowboard.Infrastructure  → EF Core, PostgreSQL, migrations, auth (JWT, password hashing), time
 ```
 
-All project folder/file names use the dot-separated `Aurora.Flowboard.*` convention. Do not reintroduce a space in a project name: a space in a `ProjectReference`'s target breaks the .NET SDK's publish-time copy-local resolution for that project's *transitive* `PackageReference`s — `dotnet build` copies them fine, but `dotnet publish` silently drops them, which only surfaces as a `FileNotFoundException` at runtime in the published/container image.
+Project names use the dot-separated `Aurora.Flowboard.*` convention — never a space (it breaks `dotnet publish`; see `.claude/rules/build-and-packaging.md`).
 
-Tests live under `test/`:
-- `Aurora.Flowboard.Domain.UnitTests`
-- `Aurora.Flowboard.Application.UnitTests`
-- `Aurora.Flowboard.ArchitectureTests` — enforces the conventions in this file (layer dependencies, naming, sealing, visibility, slice layout). References only `Aurora.Flowboard.Api`, reaching the other assemblies transitively through `BaseTest`.
+Tests live under `test/`: `Aurora.Flowboard.Domain.UnitTests`, `Aurora.Flowboard.Application.UnitTests`, and `Aurora.Flowboard.ArchitectureTests` (enforces the conventions in this file and in `.claude/rules/`: layer dependencies, naming, sealing, visibility, slice layout).
 
 ## Domain aggregates
 
@@ -56,60 +53,31 @@ Tests live under `test/`:
 
 ## Key patterns
 
-**CQRS** — every operation is a `ICommand`/`IQuery` + handler. Handlers return `Result` or `Result<T>`. Validators are auto-wired via `ValidationBehavior`. Behavior pipeline: `LoggingBehavior → PerformanceBehavior → ValidationBehavior → Handler`.
+- **CQRS** — every operation is an `ICommand`/`IQuery` + handler returning `Result` or `Result<T>`. Validators are auto-wired via `ValidationBehavior`. Pipeline: `LoggingBehavior → PerformanceBehavior → ValidationBehavior → Handler`.
+- **Result type** — railway-oriented `Result`/`Result<TValue>` with `BaseError` categories `Failure`, `Validation`, `NotFound`, `Conflict`, `Forbidden`. Endpoints map them with `ResultExtensions.Match(...)`.
+- **Minimal APIs** — endpoints implement `IBaseEndpoint`, auto-registered via Scrutor, grouped under `/api/v1/flowboard`.
+- **Data access** — no repository pattern: handlers query `IApplicationDbContext` directly with LINQ. One `IEntityTypeConfiguration<T>` per entity in `Infrastructure/Configurations/`, schema `flowboard`, snake_case, private field navigations mapped explicitly. Migrations auto-apply on startup.
+- **Domain entities** — private setters, static factory methods, domain events via `BaseEntity`. Enums live in their owning aggregate folder. Value objects implement the `IValueObject` marker and are mapped with `OwnsOne`.
+- **Auth** — `POST auth/login` issues a JWT + opaque refresh token (`JwtTokenProvider`); PBKDF2 password hashing (`PasswordHasher`). Endpoints call `RequireAuthorization()`, or `RequireAuthorization(policy => policy.RequireRole(Role.Administrator.Name))` for admin-only ones. `IUserContext` exposes the current user to handlers. A default Administrator is seeded at startup.
+- **Flow** — there is no `Flow` aggregate: `FlowState`/`FlowTransition` are children of `Project`, set at creation and not editable over HTTP.
 
-**Result type** — railway-oriented `Result`/`Result<TValue>` with `BaseError` categories: `Failure`, `Validation`, `NotFound`, `Conflict`, `Forbidden`. Endpoints use `ResultExtensions.Match(...)` to map to HTTP responses.
+## Area-specific rules
 
-**Minimal APIs** — endpoints implement `IBaseEndpoint`, auto-registered via Scrutor. All routes grouped under `/api/v1/flowboard`.
+Detailed conventions live in `.claude/rules/` and load automatically when you read files matching their `paths:`. When creating something in an area without reading its existing files first, read the relevant rule.
 
-**EF Core** — one `IEntityTypeConfiguration<T>` per entity in `Infrastructure/Configurations/`. Schema `flowboard`, snake_case naming. Private field navigation (`_members`, `_changeLogs`, etc.) mapped explicitly. Migrations auto-apply on startup in every environment, including Production, controlled by the `Database:ApplyMigrationsOnStartup` config flag (default `true`; `Extensions/MigrationServiceExtensions.cs`). Set `Database__ApplyMigrationsOnStartup=false` to disable and apply migrations manually instead.
+| Rule | Covers |
+|---|---|
+| `ef-core-queries.md` | Query shape (no sibling collections, correlated subqueries, expression-tree limits), tracking with `ValueGeneratedNever` keys, raw SQL, pagination |
+| `work-items.md` | Board endpoint, detail vs. paginated activity endpoints, change log semantics, `Viewer` permissions |
+| `project-flow.md` | One flow per project, removed flow endpoints (don't reintroduce), TemplateFlows |
+| `milestones-components.md` | Aggregate ownership, admin-only changes, milestone state machine |
+| `domain-model.md` | Enum placement, value object conventions |
+| `startup-and-seeding.md` | Migrations on startup, Administrator and template seeding, `Bootstrap` config |
+| `unit-tests.md` | Mock `DbSet` setup, pagination test across page boundaries |
+| `architecture-tests.md` | NetArchTest pitfalls, Mono.Cecil pin |
+| `build-and-packaging.md` | No spaces in project names, central package management |
 
-**EF Core query shape** — there is no repository pattern; handlers query `IApplicationDbContext` directly with LINQ, and that makes the shape of the query the handler's responsibility:
-
-- **Never project more than one collection per query.** Sibling collections become same-level `LEFT JOIN`s and the row count is their *product*, not their sum. A work item with 3 tags × 15 comments × 8 time entries × 6 transitions × 40 change logs returned 86,400 rows — each carrying the full duplicated scalar payload. Split the collections into separate queries (or separate endpoints, as the activity collections are). `AsSplitQuery()` mitigates it when several collections genuinely must load together, but it is not a substitute for splitting an unbounded collection out; with a single collection it only buys an extra round trip, so don't add it reflexively.
-- **Display names are resolved with correlated subqueries** against `dbContext.Users` / `FlowStates` / `Components` / `Milestones`, e.g. `dbContext.Users.Where(u => u.Id == x.UserId).Select(u => u.FirstName + " " + u.LastName).FirstOrDefault() ?? string.Empty`. `Comment`, `StateTransitionHistory` and `WorkItemChangeLog` deliberately hold raw `Guid` FKs with no navigation properties, so there is nothing to join through. Keep these subqueries inside a page-limited query — they are evaluated per returned row.
-- **Expression trees cannot contain `switch` expressions (CS8514).** Inside an `IQueryable` projection the lambda is an `Expression<Func<>>`, so multi-branch logic has to be a ternary chain. `GetWorkItemChangeLogsHandler`'s `AffectedEntityName` looks verbose for exactly this reason and carries a comment saying so — don't "simplify" it into a `switch`, it won't compile.
-
-**Domain entities** — private setters, static factory methods, domain events via `BaseEntity`. Enum types belong in their owning aggregate folder.
-
-**Value objects** — marked with `IValueObject` (`Domain/Abstractions/IValueObject.cs`, an empty marker interface). A value object is a `sealed record` with a private constructor and a `public static Create` returning `Result<T>`: `Email`, `Color` (`Shared/`), `ProjectCode` (`Projects/`), `Password` (`Users/`). The marker is what the architecture tests select on, so a new value object must declare it — `ValueObjects_Should_BeMarkedWithValueObjectInterface` fails if one is forgotten. Two types deliberately stay out: `BaseError` (an `Abstractions` record, not a domain concept) and `Role`, which is a closed enumeration-style `sealed class` with static instances and `FromName` instead of `Create`. EF Core maps every value object with `OwnsOne`, never `HasConversion`, so adding the marker changes no mapping.
-
-**Default Administrator seeding** — on every startup, right after migrations apply, `SeedAdministratorAsync` (`Api/Extensions/SeedingServiceExtensions.cs`) creates a default `Role.Administrator` user if none exists yet in `flowboard.user_roles` (idempotent no-op otherwise). Credentials come from the `Bootstrap` config section (`BootstrapOptions`, `Infrastructure/Bootstrap/`): `AdminEmail`/`AdminPassword` are required and must be set per environment (`Bootstrap__AdminEmail`/`Bootstrap__AdminPassword` env vars in staging/prod, e.g. via Dokploy secrets — never commit real values); `AdminFirstName`/`AdminLastName` default to `"System"`/`"Administrator"`. This solves the bootstrap chicken-and-egg problem: `POST users` requires an existing Administrator, so the very first one must be created outside that endpoint. There is no forced-password-change mechanism — rotating the seeded password after first login is an operational convention, not enforced by the domain.
-
-**Authentication & authorization** — `POST auth/login` (anonymous) issues a JWT access token + opaque refresh token via `ITokenProvider`/`JwtTokenProvider`; passwords are hashed with PBKDF2 (`PasswordHasher`, not BCrypt/ASP.NET Identity). Protected endpoints use `RequireAuthorization()`; admin-only endpoints use `RequireAuthorization(policy => policy.RequireRole(Role.Administrator.Name))` (e.g. `POST users`). `IUserContext` exposes the current user's id/claims to handlers.
-
-**One flow per project** — there is no `Flow` aggregate. `FlowState` and `FlowTransition` are child entities of `Project` (FK `project_id`), and a work item reaches its transitions via `Project.FindFlowTransition(...)`.
-
-**A project's flow is set at creation and is not editable over HTTP.** The `projects/{id}/flow/...` endpoints (get flow, add/remove state, add/remove transition role) and their Application slices were removed — the front-end never called them and there is no plan to. What remains:
-
-- `CreateProjectCommand` takes the `FlowStates` list, and `CreateProjectHandler` calls `Project.AddFlowState` for each. This is the only path that writes flow states, so the front-end pre-fills it from `GET template-flows/{kind}`.
-- The domain methods (`Project.AddFlowState`, `RemoveFlowState`, `AddFlowTransitionRole`, `RemoveFlowTransitionRole`) and their `Domain.UnitTests` coverage are intact and deliberately kept — only the Application slices and endpoints are gone. Re-exposing any of them is a new slice + endpoint, not a domain change.
-- Flow states are still *read* through `GET projects/{projectId:guid}/board` (the board columns — `Active` category only) and `GET work-items/{code}` (`availableTransitions`, which covers every category).
-
-Consequence to keep in mind: a project created with the wrong flow can only be fixed by direct SQL. Don't reintroduce these endpoints without asking — their absence is a deliberate scope decision.
-
-**Work item board response** — `GET projects/{projectId:guid}/board` (`Application/Projects/GetBoard/`) returns work items grouped by the project's **`Active`-category** `FlowState`s (Kanban board shape), not a flat list, ordered by `SortOrder`. `Completed` and `Cancelled` are terminal: they produce no column, and the work items sitting in them are absent from the response entirely — the board is a view of in-flight work, not an archive. There is no opt-in to include them; a closed item is reached through `GET work-items/{code}`. Note that only `Active` states get a real `SortOrder` (`Project.AddFlowState` assigns `0` to the terminal ones), which is why ordering in the query is safe now that they are filtered out. A project with no flow states returns an empty board, not a 404. A second, near-identical `GET projects/{projectId:guid}/work-items` (`Application/WorkItems/GetByProject/`) used to return the same column shape minus `component`/`milestone`; it was removed as an unused duplicate, so `/board` is now the only project board endpoint. Don't reintroduce a per-project work item list under `work-items/` — extend `GetProjectBoardQuery` instead.
-
-**Work item detail vs. activity collections** — `GET work-items/{code}` returns only bounded data: the scalars, `tags`, and `availableTransitions`. The four unbounded activity collections live in their own paginated sub-endpoints, keyed by the work item's **`{id:guid}`** (not its code, matching the existing sub-resources like `POST work-items/{id:guid}/comments`):
-
-```
-GET work-items/{id:guid}/comments
-GET work-items/{id:guid}/change-logs
-GET work-items/{id:guid}/state-history
-GET work-items/{id:guid}/time-entries
-```
-
-Do not move these back into the detail payload. They were split out because projecting five sibling collections in one EF query produced a cartesian product (see *EF Core query shape* below), and `change_logs` in particular grows monotonically — every field update, move, assignment, comment and tag operation writes a row, and nothing prunes them.
-
-**Pagination** — `PagedResponse<T>` (`Application/Abstractions/Pagination/`) is the shared envelope: `Items`, `Page`, `PageSize`, `TotalCount`, and a computed `TotalPages`. Offset-based, `Page` is 1-based. `PaginationDefaults` holds `DefaultPage = 1`, `DefaultPageSize = 20`, `MaxPageSize = 100`; endpoints take `page`/`pageSize` as optional query params defaulted from those constants. Validators apply `MustBeValidPage()` / `MustBeValidPageSize()` (`Abstractions/Validations/PaginationRuleExtensions.cs`) — exceeding `MaxPageSize` is a 400, not a silent clamp. Activity collections are ordered newest-first, always with the entity `Id` as tie-breaker so paging stays stable. A page past the end returns 200 with an empty `Items` and the real `TotalCount`, never a 404.
-
-**Work item change log semantics** — `WorkItemChangeLog.AffectedEntityId` points at a different table depending on `ChangeType`: a `User` for `Assigned`, a `FlowState` for `Moved`, a `Component` for `ComponentChanged`, a `Milestone` for `MilestoneChanged`; it is null for the rest. `GetWorkItemChangeLogsHandler` resolves it into `AffectedEntityName` accordingly. `WorkItem.Create` writes `MilestoneChanged`/`ComponentChanged` entries when created with a milestone or component, mirroring `ChangeMilestone`/`ChangeComponent`.
-
-**`Viewer` is read-only on work items, except comments** — `WorkItem.EnsureCanBeModifiedBy` rejects `ProjectRole.Viewer` with `WorkItemErrors.ViewerCannotModify` (403), and `Create`/`Assign`/`Unassign` apply the same check inline; a Viewer also cannot be an assignee (`AssigneeIsViewer`). `AddComment` deliberately uses the role-agnostic `EnsureCanParticipate` because whether a Viewer may comment is still an open business question — don't "fix" it to `EnsureCanBeModifiedBy` without a product decision. Any new work item mutation should go through `EnsureCanBeModifiedBy`.
-
-**Milestones & Components** — both are project-owned aggregate roots (own `Domain/Milestones` and `Domain/Components` folders, FK `project_id`), not child collections mapped through `Project` the way `FlowState`/`FlowTransition` are. Only a project admin (`Project.IsAdmin`) can create/update/change status. `Milestone` has a status state machine (`Draft → Active/Archived`, `Active → OnHold/Completed/Archived`, `OnHold → Active/Archived`) enforced in `Milestone.ChangeStatus`; closing (`Completed`/`Archived`) or retiring a `Component` is blocked while it has open work items. `WorkItem` optionally references a `Milestone` and/or `Component` via nullable `milestone_id`/`component_id`. Endpoints are under `projects/{id}/milestones/...` and `projects/{id}/components/...`.
-
-**TemplateFlows** — `TemplateFlow` (`Domain/TemplateFlows/`) is a global aggregate root keyed by `ProjectKind`, not owned by any single `Project` (no `project_id` FK). It holds suggested `TemplateFlowState` entries (`Name`, `FlowStateCategory`, `Color`, `SortOrder`) that the front-end will use to pre-fill a new project's initial flow states — `CreateProjectCommand`/`CreateProjectHandler` already accept an explicit `FlowStates` list from the caller, so templates plug in purely on the front-end without any change to project creation. One template per `ProjectKind`; uniqueness is enforced at the Application layer (query + DB unique index), not in `TemplateFlow.Create`. Unlike `Milestone`/`Component`, authorization is **not** checked in the domain — it's enforced at the (future) endpoint level via `RequireAuthorization(Role.Administrator)`, the same pattern as `POST users`; `TemplateFlow.CreatedBy` is just an audit `Guid`. `TemplateFlowState.Category` is immutable after creation — `TemplateFlow.UpdateState` only takes `(stateId, name, color)`; to change a state's category, remove it and add it again. EF configuration, `DbSet`s, and an initial migration already exist, and `SeedTemplateFlowsAsync` (`Api/Extensions/SeedingServiceExtensions.cs`) seeds the default templates at startup; Application-layer commands/queries and public endpoints don't exist yet.
+When a change introduces a new area-specific decision, add it to the matching rule (or a new one), not here. This file only changes when the architecture, stack or workflow changes.
 
 ## Workflow
 1. Ask clarifying questions if requirements are unclear.
@@ -129,32 +97,22 @@ Do not move these back into the detail payload. They were split out because proj
 
 ## Build & Test Verification
 - After every code change, run `dotnet build` to verify a clean build.
-- After modifying domain/application logic or tests, run **all three** test projects (see the runner note below — none of them work with `dotnet test`) and report pass/fail counts.
+- After modifying domain/application logic or tests, run **all three** test projects and report pass/fail counts.
 - After adding or renaming a type in any layer, also run `ArchitectureTests` — it is the fastest way to catch a convention violation (unsealed handler, wrong namespace, public validator, missing validator).
-- Do not consider a task complete until build and tests pass
+- Do not consider a task complete until build and tests pass.
 
-**All three test projects use the same runner.** `Domain.UnitTests`, `Application.UnitTests` and `ArchitectureTests` all reference `xunit.v3` (Microsoft.Testing.Platform) and self-host an executable, so `dotnet test` does **not** work on any of them — nor on the solution. It fails with *"Testing with VSTest target is no longer supported by Microsoft.Testing.Platform on .NET 10 SDK and later."*
-
-Build the project, then run the produced `.exe` directly. Filter with `-class "Namespace.ClassName"` or `-method "*MethodName"`. Note that `dotnet run` / `dotnet exec` against a test project exit 0 *without running any test*, so always confirm the runner printed a test count before reporting a pass.
+**Never use `dotnet test`.** All three test projects are xunit.v3 (Microsoft.Testing.Platform) and fail under `dotnet test` with *"Testing with VSTest target is no longer supported..."*. Build, then run the produced `.exe`; filter with `-class "Namespace.ClassName"` or `-method "*MethodName"`. `dotnet run` / `dotnet exec` on a test project exit 0 *without running any test*, so always confirm the runner printed a test count.
 
 ## Commands
 
 ```bash
-dotnet build
-dotnet build "Aurora Flowboard.slnx"   # whole solution
+dotnet build "Aurora Flowboard.slnx"   # whole solution, including test projects
 
-# Unit tests (xunit v3 — run the built executable, NOT dotnet test)
-dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Application.UnitTests.csproj
-./test/Aurora.Flowboard.Application.UnitTests/bin/Debug/net10.0/Aurora.Flowboard.Application.UnitTests.exe
-./test/Aurora.Flowboard.Application.UnitTests/bin/Debug/net10.0/Aurora.Flowboard.Application.UnitTests.exe -class "Aurora.Flowboard.Application.UnitTests.WorkItems.GetWorkItemByCodeHandlerTests"
-
-dotnet build test/Aurora.Flowboard.Domain.UnitTests/Aurora.Flowboard.Domain.UnitTests.csproj
+# Tests (run the built executables, NOT dotnet test)
 ./test/Aurora.Flowboard.Domain.UnitTests/bin/Debug/net10.0/Aurora.Flowboard.Domain.UnitTests.exe
-./test/Aurora.Flowboard.Domain.UnitTests/bin/Debug/net10.0/Aurora.Flowboard.Domain.UnitTests.exe -class "Aurora.Flowboard.Domain.UnitTests.Projects.ProjectTests"
-
-dotnet build test/Aurora.Flowboard.ArchitectureTests/Aurora.Flowboard.ArchitectureTests.csproj
+./test/Aurora.Flowboard.Application.UnitTests/bin/Debug/net10.0/Aurora.Flowboard.Application.UnitTests.exe
 ./test/Aurora.Flowboard.ArchitectureTests/bin/Debug/net10.0/Aurora.Flowboard.ArchitectureTests.exe
-./test/Aurora.Flowboard.ArchitectureTests/bin/Debug/net10.0/Aurora.Flowboard.ArchitectureTests.exe -class "Aurora.Flowboard.ArchitectureTests.ApplicationLayerTests"
+./test/Aurora.Flowboard.Application.UnitTests/bin/Debug/net10.0/Aurora.Flowboard.Application.UnitTests.exe -class "Aurora.Flowboard.Application.UnitTests.WorkItems.GetWorkItemByCodeHandlerTests"
 
 dotnet ef migrations add <Name> --project src/Aurora.Flowboard.Infrastructure --startup-project src/Aurora.Flowboard.Api
 dotnet ef database update --project src/Aurora.Flowboard.Infrastructure --startup-project src/Aurora.Flowboard.Api
@@ -162,16 +120,14 @@ dotnet ef database update --project src/Aurora.Flowboard.Infrastructure --startu
 # Run locally via Aspire (provisions Postgres, wires connection string, sets up dashboard)
 dotnet run --project "src/Aurora.Flowboard.AppHost"
 
-# Build and run the API image directly (no Aspire, requires an external Postgres via ConnectionStrings__Database)
+# Build and run the API image directly (requires an external Postgres via ConnectionStrings__Database)
 docker build -f src/Aurora.Flowboard.Api/Dockerfile -t aurora-flowboard-api .
 docker run -p 8080:8080 aurora-flowboard-api
 ```
 
-Solution file: `Aurora Flowboard.slnx`
-
 ## Code style
 
-`Directory.Build.props` treats warnings as errors and enables SonarAnalyzer. `.editorconfig` enforces:
+`Directory.Build.props` treats warnings as errors and enables SonarAnalyzer. `Directory.Packages.props` manages all NuGet versions centrally. `.editorconfig` enforces:
 
 - File-scoped namespaces
 - No `var` for built-in types; `var` allowed when type is apparent
@@ -180,22 +136,3 @@ Solution file: `Aurora Flowboard.slnx`
 - Expression-bodied members for properties/lambdas where applicable
 - Null propagation (`?.`) over explicit null checks
 - No magic numbers or strings — use constants
-
-`Directory.Packages.props` manages all NuGet versions centrally — never add version attributes to individual `.csproj` files.
-
-## Testing conventions
-
-- **Domain tests**: assert entity behavior and domain events. Use `BaseTest` helpers. Pattern: `*Data.cs` builders + `*Tests.cs` xUnit facts. Stack: xUnit **v3** + FluentAssertions.
-- **Application tests**: test CQRS handler logic with NSubstitute mocks and `MockDbSetHelper`. Stack: xUnit **v3** + NSubstitute + FluentAssertions.
-- **Assign mock `DbSet`s to a local before `Returns(...)`.** `MockDbSetHelper.CreateMockDbSet(...)` builds a substitute internally, and NSubstitute throws `CouldNotSetReturnDueToNoLastCallException` if you nest it inside `Returns(...)`. Write `DbSet<X> xMock = MockDbSetHelper.CreateMockDbSet([...]); _dbContext.X.Returns(xMock);` — never `_dbContext.X.Returns(MockDbSetHelper.CreateMockDbSet([...]))`.
-- `MockDbSetHelper` runs on real LINQ-to-Objects, so `Skip`/`Take`/`OrderBy` behave for real — **paginated handlers must be tested across a page boundary** (3+ items, `pageSize` 2, asserting page 1 and page 2 hold *different* items). Asserting only page 1 or only an out-of-range page does not exercise the `Skip` offset. It does **not** exercise EF translation, though: provider-level concerns (`AsSplitQuery`, SQL shape, subquery translation) need the real Npgsql provider and must be verified by running the app and reading the SQL logs.
-- **Architecture tests**: enforce the conventions in this file. Stack: xUnit **v3** + NetArchTest.Rules + Shouldly (**not** FluentAssertions — that stays in the two unit test projects). One file per layer: `DomainLayerTests`, `ApplicationLayerTests`, `ApiLayerTests`, plus `LayerDependencyTests` for the inter-assembly rules. `BaseTest` exposes the four assemblies.
-
-### Architecture test conventions
-
-- **`.Or()` starts a new predicate sequence.** A later `.And()` applies only to the *last* sequence, so `.ImplementInterface(A).Or().ImplementInterface(B).And().AreNotAbstract()` leaves branch A unfiltered. Write one test per interface instead of chaining with `.Or()`; that is why `Command*`/`CommandHandler*` tests come in `X` / `XWithResponse` pairs.
-- **Never use `.BeImmutable()` on records.** `init` accessors compile to non-readonly backing fields, so every record is reported as mutable. Detect a record by the synthesized `<Clone>$` method instead.
-- **`Type.Name` carries the generic arity** (``PagedResponse`1``), so trim at the backtick before any suffix check.
-- **A reflection test that selects zero types passes silently.** When adding one, verify the selector actually matches something before trusting the green.
-- The NetArchTest condition is `OnlyHaveDependenciesOn` (plural). It cannot express "Domain has no third-party dependencies" — `Milestone` depends on the namespace-less `<PrivateImplementationDetails>` that Roslyn emits for its `Transitions` dictionary, and that type matches no search term. `Domain_Should_OnlyReference_FrameworkAssemblies` uses `Assembly.GetReferencedAssemblies()` instead, which is stricter and immune to compiler artifacts.
-- `ApiLayerTests` scans the IL of `MapEndpoint` to assert every endpoint calls `RequireAuthorization` or `AllowAnonymous`, using **Mono.Cecil**, which is only a *transitive* dependency of `NetArchTest.Rules` — pin it explicitly in `Directory.Packages.props` before bumping NetArchTest.

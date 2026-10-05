@@ -23,7 +23,7 @@ Once the entity exists, continue with the `create-feature` skill for the use cas
    dotnet ef migrations add {Name} --project src/{name}.Infrastructure --startup-project src/{name}.Api
    ```
 
-7. **Verify** — launch the `dotnet-test-runner` agent (Agent tool, `subagent_type: dotnet-test-runner`). It runs `dotnet build` (warnings are errors here) and `dotnet test`, and reports only failures. Do not run those commands yourself, and do not consider the entity done until that agent comes back clean.
+7. **Verify** — launch the `dotnet-test-runner` agent (Agent tool, `subagent_type: dotnet-test-runner`). It runs `dotnet build` (warnings are errors here) and the three xunit.v3 test executables (never `dotnet test`, which does not work in this repo), and reports only failures. Do not run those commands yourself, and do not consider the entity done until that agent comes back clean.
 
 ## What to write
 

@@ -59,6 +59,21 @@ Dependencies point inward. Domain is the center.
    - Outbound HTTP calls have both a timeout and cancellation.
    - Business failures return `Result.Fail(...)` rather than throwing.
 
+   **Access control** (access is project membership, not ownership by `UserId`)
+   - Handlers reading or mutating project-scoped data check membership with `dbContext.IsProjectMemberAsync(...)` / `dbContext.CanAccessWorkItemAsync(...)` and return `{Entity}Errors.NotFound` for non-members — never `Forbidden`, so the resource's existence isn't leaked. A new project-scoped handler with no membership check is Critical: it compiles and passes every test.
+   - Work item mutations go through `WorkItem.EnsureCanBeModifiedBy` (a `Viewer` is read-only). `AddComment` deliberately uses the role-agnostic `EnsureCanParticipate` — a product decision, don't flag it.
+   - Milestone/Component changes are gated by `Project.IsAdmin` inside the domain, not in the handler.
+   - Global admin operations (users, template flow writes) use `RequireAuthorization(policy => policy.RequireRole(Role.Administrator.Name))` on the endpoint, not a domain check.
+
+   **EF Core query shape and tracking** — read `.claude/rules/ef-core-queries.md` (path-scoped rules may not be loaded in this agent) and check changed handlers for:
+   - More than one collection projected in a single query (cartesian product).
+   - `FlowTransition.AllowedRoles` referenced inside a query EF must translate to SQL.
+   - `dbContext.X.Update(entity)` on a tracked aggregate.
+   - `AsNoTracking()` on an entity that is later assigned to a navigation property of a tracked aggregate.
+   These are invisible to the unit tests (`MockDbSetHelper` runs LINQ-to-Objects) and only fail against Npgsql, so treat them as Warning at minimum.
+
+   **Area guardrails** — for each changed area, read the matching `.claude/rules/*.md` (`work-items.md`, `project-flow.md`, `milestones-components.md`, `domain-model.md`, `startup-and-seeding.md`) and flag anything that reintroduces a removed endpoint or contradicts a documented decision (e.g. editable flow endpoints, a per-project work item list under `work-items/`, activity collections back in the work item detail payload).
+
 3. **Review EF Core migrations.** For any new or changed file under `Migrations/`:
    - **Destructive renames** — a `DropColumn` + `AddColumn` pair (or `DropTable` + `CreateTable`) where a `RenameColumn`/`RenameTable` was intended. This silently discards production data. Always Critical.
    - **Missing indexes** — new foreign keys or columns that will be filtered/joined on without a corresponding `CreateIndex`.
