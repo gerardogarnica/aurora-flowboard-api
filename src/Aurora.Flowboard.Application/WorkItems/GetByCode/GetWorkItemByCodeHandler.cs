@@ -74,24 +74,22 @@ internal sealed class GetWorkItemByCodeHandler(
             return Result.Fail<WorkItemResponse>(WorkItemErrors.NotFound);
         }
 
-        List<FlowTransition> transitions = await dbContext
-            .FlowTransitions
-            .Where(t => t.FromStateId == result.FlowStateId)
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
-
-        List<Guid> toStateIds = [.. transitions.Select(t => t.ToStateId)];
+        Guid projectId = result.Response.ProjectId;
 
         Dictionary<Guid, string> stateNames = await dbContext
             .FlowStates
-            .Where(s => toStateIds.Contains(s.Id))
+            .Where(s => s.ProjectId == projectId)
             .AsNoTracking()
             .ToDictionaryAsync(s => s.Id, s => s.Name, cancellationToken);
 
-        List<WorkItemFlowTransitionResponse> availableTransitions = [.. transitions
-            .Where(t => t.AllowedRoles.Contains(result.MemberRole))
-            .OrderBy(t => stateNames.GetValueOrDefault(t.ToStateId, string.Empty))
-            .Select(t => new WorkItemFlowTransitionResponse(t.ToStateId, stateNames.GetValueOrDefault(t.ToStateId, string.Empty)))];
+        Dictionary<Guid, List<WorkItemFlowTransitionResponse>> transitionsByState = await dbContext.GetAvailableTransitionsByStateAsync(
+            projectId,
+            [result.FlowStateId],
+            result.MemberRole,
+            stateNames,
+            cancellationToken);
+
+        List<WorkItemFlowTransitionResponse> availableTransitions = transitionsByState.GetValueOrDefault(result.FlowStateId, []);
 
         bool hasAssignee = result.AssigneeFirstName is not null && result.AssigneeLastName is not null;
 

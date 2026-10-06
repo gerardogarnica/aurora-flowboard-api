@@ -14,7 +14,8 @@ paths:
 
 - `Completed` and `Cancelled` are terminal: they produce no column, and the work items in them are absent from the response — the board is a view of in-flight work, not an archive. There is no opt-in to include them; a closed item is reached through `GET work-items/{code}`.
 - Only `Active` states get a real `SortOrder` (`Project.AddFlowState` assigns `0` to terminal ones), which is why ordering is safe once they are filtered out.
-- A project with no flow states returns an empty board, not a 404.
+- A project with no flow states (or no `Active` ones) returns an empty board, not a 404.
+- Each column carries `availableTransitions`: the transitions out of that state the requester's `ProjectRole` may take, for drag-and-drop on the web board. It **must** match `GET work-items/{code}` `availableTransitions` for an item in that state: destinations of every category (terminal ones included — the front-end intersects with the visible columns), no `Viewer` special-casing (whatever `AllowedRoles` says), ordered by `ToStateName`, `[]` rather than null. Both handlers build it through `GetAvailableTransitionsByStateAsync` (`Projects/Shared/FlowTransitionQueryExtensions.cs`) — change the contract there, never in one handler.
 - `/board` is the only project board endpoint. A near-identical `GET projects/{id}/work-items` was removed as an unused duplicate — don't reintroduce a per-project work item list under `work-items/`; extend `GetProjectBoardQuery` instead.
 
 ## Detail vs. activity collections
