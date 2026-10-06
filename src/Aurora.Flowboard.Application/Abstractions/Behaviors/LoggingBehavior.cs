@@ -15,7 +15,7 @@ internal static class LoggingBehavior
         {
             if (logger.IsEnabled(LogLevel.Information))
             {
-                logger.LogInformation("Processing request: {Name} {@Request}", typeof(TCommand).Name, command);
+                logger.LogInformation("Processing request: {Name}", typeof(TCommand).Name);
             }
 
             Result<TResponse> result = await innerHandler.Handle(command, cancellationToken);
@@ -24,16 +24,16 @@ internal static class LoggingBehavior
             {
                 if (logger.IsEnabled(LogLevel.Information))
                 {
-                    logger.LogInformation("Request processed successfully: {Name} {@Response}", typeof(TCommand).Name, result);
+                    logger.LogInformation("Request processed successfully: {Name}", typeof(TCommand).Name);
                 }
             }
             else if (result.Error.ErrorType == BaseErrorType.Failure)
             {
-                logger.LogError("Request processed with errors: {Name} {@Response}", typeof(TCommand).Name, result);
+                logger.LogError("Request processed with errors: {Name} {ErrorCode}", typeof(TCommand).Name, result.Error.Code);
             }
             else
             {
-                logger.LogWarning("Request processed with errors: {Name} {@Response}", typeof(TCommand).Name, result);
+                logger.LogWarning("Request processed with errors: {Name} {ErrorCode}", typeof(TCommand).Name, result.Error.Code);
             }
 
             return result;
@@ -51,7 +51,7 @@ internal static class LoggingBehavior
         {
             if (logger.IsEnabled(LogLevel.Information))
             {
-                logger.LogInformation("Processing request: {Name} {@Request}", typeof(TCommand).Name, command);
+                logger.LogInformation("Processing request: {Name}", typeof(TCommand).Name);
             }
 
             Result result = await innerHandler.Handle(command, cancellationToken);
@@ -60,16 +60,16 @@ internal static class LoggingBehavior
             {
                 if (logger.IsEnabled(LogLevel.Information))
                 {
-                    logger.LogInformation("Request processed successfully: {Name} {@Response}", typeof(TCommand).Name, result);
+                    logger.LogInformation("Request processed successfully: {Name}", typeof(TCommand).Name);
                 }
             }
             else if (result.Error.ErrorType == BaseErrorType.Failure)
             {
-                logger.LogError("Request processed with errors: {Name} {@Response}", typeof(TCommand).Name, result);
+                logger.LogError("Request processed with errors: {Name} {ErrorCode}", typeof(TCommand).Name, result.Error.Code);
             }
             else
             {
-                logger.LogWarning("Request processed with errors: {Name} {@Response}", typeof(TCommand).Name, result);
+                logger.LogWarning("Request processed with errors: {Name} {ErrorCode}", typeof(TCommand).Name, result.Error.Code);
             }
 
             return result;
@@ -87,7 +87,7 @@ internal static class LoggingBehavior
         {
             if (logger.IsEnabled(LogLevel.Information))
             {
-                logger.LogInformation("Processing request: {Name} {@Request}", typeof(TQuery).Name, query);
+                logger.LogInformation("Processing request: {Name}", typeof(TQuery).Name);
             }
 
             Result<TResponse> result = await innerHandler.Handle(query, cancellationToken);
@@ -96,16 +96,16 @@ internal static class LoggingBehavior
             {
                 if (logger.IsEnabled(LogLevel.Information))
                 {
-                    logger.LogInformation("Request processed successfully: {Name} {@Response}", typeof(TResponse).Name, result);
+                    logger.LogInformation("Request processed successfully: {Name}", typeof(TQuery).Name);
                 }
             }
             else if (result.Error.ErrorType == BaseErrorType.Failure)
             {
-                logger.LogError("Request processed with errors: {Name} {@Response}", typeof(TResponse).Name, result);
+                logger.LogError("Request processed with errors: {Name} {ErrorCode}", typeof(TQuery).Name, result.Error.Code);
             }
             else
             {
-                logger.LogWarning("Request processed with errors: {Name} {@Response}", typeof(TResponse).Name, result);
+                logger.LogWarning("Request processed with errors: {Name} {ErrorCode}", typeof(TQuery).Name, result.Error.Code);
             }
 
             return result;
