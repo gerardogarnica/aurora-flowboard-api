@@ -18,7 +18,7 @@ The `projects/{id}/flow/...` endpoints (get flow, add/remove state, add/remove t
 
 - `CreateProjectCommand` takes the `FlowStates` list, and `CreateProjectHandler` calls `Project.AddFlowState` for each. This is the only path that writes flow states; the front-end pre-fills it from `GET template-flows/{kind}`.
 - The domain methods (`Project.AddFlowState`, `RemoveFlowState`, `AddFlowTransitionRole`, `RemoveFlowTransitionRole`) and their `Domain.UnitTests` coverage are intentionally kept. Re-exposing any of them is a new slice + endpoint, not a domain change.
-- Flow states are still *read* through `GET projects/{projectId:guid}/board` (columns — `Active` category only) and `GET work-items/{code}` (`availableTransitions`, every category).
+- Flow states and transitions are still *read* through `GET projects/{projectId:guid}/board` (columns — `Active` category only — each with its `availableTransitions` to every category) and `GET work-items/{code}` (`availableTransitions`, every category). Both share `GetAvailableTransitionsByStateAsync`; see `work-items.md`.
 
 Consequence: a project created with the wrong flow can only be fixed by direct SQL.
 

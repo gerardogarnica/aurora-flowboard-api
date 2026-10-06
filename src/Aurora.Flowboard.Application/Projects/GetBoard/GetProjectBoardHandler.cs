@@ -8,24 +8,40 @@ internal sealed class GetProjectBoardHandler(
         GetProjectBoardQuery query,
         CancellationToken cancellationToken)
     {
-        bool isMember = await dbContext.IsProjectMemberAsync(query.ProjectId, userContext.UserId, cancellationToken);
+        ProjectRole? memberRole = await dbContext.GetProjectMemberRoleAsync(query.ProjectId, userContext.UserId, cancellationToken);
 
-        if (!isMember)
+        if (memberRole is not { } role)
         {
             return Result.Fail<IReadOnlyCollection<BoardColumnResponse>>(ProjectErrors.NotFound);
         }
 
-        // Only Active states are board columns. Completed and Cancelled are terminal:
-        // work items that reach them leave the board.
-        List<FlowStateProjection> orderedStates = await dbContext
+        // All states are loaded once: terminal ones are needed to name transition destinations.
+        List<FlowStateProjection> projectStates = await dbContext
             .FlowStates
             .AsNoTracking()
-            .Where(fs => fs.ProjectId == query.ProjectId && fs.Category == FlowStateCategory.Active)
-            .OrderBy(fs => fs.SortOrder)
+            .Where(fs => fs.ProjectId == query.ProjectId)
             .Select(fs => new FlowStateProjection(fs.Id, fs.Name, fs.Category, fs.SortOrder, fs.Color.Value))
             .ToListAsync(cancellationToken);
 
+        // Only Active states are board columns. Completed and Cancelled are terminal:
+        // work items that reach them leave the board.
+        List<FlowStateProjection> orderedStates = [.. projectStates
+            .Where(s => s.Category == FlowStateCategory.Active)
+            .OrderBy(s => s.SortOrder)];
+
+        if (orderedStates.Count == 0)
+        {
+            return Array.Empty<BoardColumnResponse>();
+        }
+
         List<Guid> stateIds = [.. orderedStates.Select(s => s.Id)];
+
+        Dictionary<Guid, List<WorkItemFlowTransitionResponse>> transitionsByState = await dbContext.GetAvailableTransitionsByStateAsync(
+            query.ProjectId,
+            stateIds,
+            role,
+            projectStates.ToDictionary(s => s.Id, s => s.Name),
+            cancellationToken);
 
         var workItemRows = await dbContext
             .WorkItems
@@ -99,7 +115,8 @@ internal sealed class GetProjectBoardHandler(
                         w.EstimatedCompletionDate,
                         w.CreatedOnUtc,
                         w.CommentCount,
-                        w.TimeEntryCount))]))];
+                        w.TimeEntryCount))],
+                transitionsByState.GetValueOrDefault(s.Id, [])))];
 
         return board;
     }
