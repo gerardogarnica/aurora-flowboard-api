@@ -6,7 +6,7 @@ namespace Aurora.Flowboard.Application.Abstractions.Behaviors;
 internal static class PerformanceBehavior
 {
     private const int MaximumAllowedMilliseconds = 500;
-    private const string LongRunningMessage = "Long-running request: {Name} ({ElapsedMilliseconds} milliseconds) {@Request}";
+    private const string LongRunningMessage = "Long-running request: {Name} ({ElapsedMilliseconds} milliseconds)";
 
     internal sealed class CommandHandler<TCommand, TResponse>(
         ICommandHandler<TCommand, TResponse> innerHandler,
@@ -25,7 +25,7 @@ internal static class PerformanceBehavior
 
             if (stopwatch.ElapsedMilliseconds > MaximumAllowedMilliseconds)
             {
-                logger.LogWarning(LongRunningMessage, typeof(TCommand).Name, stopwatch.ElapsedMilliseconds, command);
+                logger.LogWarning(LongRunningMessage, typeof(TCommand).Name, stopwatch.ElapsedMilliseconds);
             }
 
             return result;
@@ -49,7 +49,7 @@ internal static class PerformanceBehavior
 
             if (stopwatch.ElapsedMilliseconds > MaximumAllowedMilliseconds)
             {
-                logger.LogWarning(LongRunningMessage, typeof(TCommand).Name, stopwatch.ElapsedMilliseconds, command);
+                logger.LogWarning(LongRunningMessage, typeof(TCommand).Name, stopwatch.ElapsedMilliseconds);
             }
 
             return result;
@@ -73,7 +73,7 @@ internal static class PerformanceBehavior
 
             if (stopwatch.ElapsedMilliseconds > MaximumAllowedMilliseconds)
             {
-                logger.LogWarning(LongRunningMessage, typeof(TQuery).Name, stopwatch.ElapsedMilliseconds, query);
+                logger.LogWarning(LongRunningMessage, typeof(TQuery).Name, stopwatch.ElapsedMilliseconds);
             }
 
             return result;

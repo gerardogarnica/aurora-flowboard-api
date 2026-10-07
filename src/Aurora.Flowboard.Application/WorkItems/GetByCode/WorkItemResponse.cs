@@ -33,7 +33,3 @@ public sealed record WorkItemResponse(
 public sealed record WorkItemTagResponse(
     Guid TagId,
     string Name);
-
-public sealed record WorkItemFlowTransitionResponse(
-    Guid ToStateId,
-    string ToStateName);

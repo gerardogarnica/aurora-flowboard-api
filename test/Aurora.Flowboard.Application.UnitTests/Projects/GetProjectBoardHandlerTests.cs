@@ -1,3 +1,4 @@
+using Aurora.Flowboard.Application.Projects.Shared;
 using Aurora.Flowboard.Application.UnitTests.WorkItems;
 
 namespace Aurora.Flowboard.Application.UnitTests.Projects;
@@ -72,6 +73,8 @@ public sealed class GetProjectBoardHandlerTests
         DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
         _dbContext.Components.Returns(componentsMock);
         _dbContext.Milestones.Returns(milestonesMock);
+        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(project.FlowTransitions);
+        _dbContext.FlowTransitions.Returns(transitionsMock);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -107,6 +110,8 @@ public sealed class GetProjectBoardHandlerTests
         DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
         _dbContext.Components.Returns(componentsMock);
         _dbContext.Milestones.Returns(milestonesMock);
+        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(project.FlowTransitions);
+        _dbContext.FlowTransitions.Returns(transitionsMock);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -140,6 +145,8 @@ public sealed class GetProjectBoardHandlerTests
         DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
         _dbContext.Components.Returns(componentsMock);
         _dbContext.Milestones.Returns(milestonesMock);
+        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(project.FlowTransitions);
+        _dbContext.FlowTransitions.Returns(transitionsMock);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -177,6 +184,8 @@ public sealed class GetProjectBoardHandlerTests
         DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
         _dbContext.Components.Returns(componentsMock);
         _dbContext.Milestones.Returns(milestonesMock);
+        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(project.FlowTransitions);
+        _dbContext.FlowTransitions.Returns(transitionsMock);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -217,6 +226,8 @@ public sealed class GetProjectBoardHandlerTests
         DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
         _dbContext.Components.Returns(componentsMock);
         _dbContext.Milestones.Returns(milestonesMock);
+        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(project.FlowTransitions);
+        _dbContext.FlowTransitions.Returns(transitionsMock);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -256,6 +267,8 @@ public sealed class GetProjectBoardHandlerTests
         DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
         _dbContext.Components.Returns(componentsMock);
         _dbContext.Milestones.Returns(milestonesMock);
+        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(project.FlowTransitions);
+        _dbContext.FlowTransitions.Returns(transitionsMock);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -294,6 +307,8 @@ public sealed class GetProjectBoardHandlerTests
         DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
         _dbContext.Components.Returns(componentsMock);
         _dbContext.Milestones.Returns(milestonesMock);
+        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(project.FlowTransitions);
+        _dbContext.FlowTransitions.Returns(transitionsMock);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -331,6 +346,8 @@ public sealed class GetProjectBoardHandlerTests
         DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
         _dbContext.Components.Returns(componentsMock);
         _dbContext.Milestones.Returns(milestonesMock);
+        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(project.FlowTransitions);
+        _dbContext.FlowTransitions.Returns(transitionsMock);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -349,5 +366,161 @@ public sealed class GetProjectBoardHandlerTests
         summary.CreatedOnUtc.Should().Be(WorkItemQueryData.UtcNow);
         summary.CommentCount.Should().Be(1);
         summary.TimeEntryCount.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Should_FilterAvailableTransitions_ByRequesterRole()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        User developer = WorkItemQueryData.GetDeveloperUser();
+        Project project = WorkItemQueryData.GetActiveProjectWithFlow(admin);
+        project.AddMember(developer, ProjectRole.Developer, admin, WorkItemQueryData.UtcNow);
+        FlowState backlogState = project.FlowStates.Single(s => s.Name == "Backlog");
+        FlowState doneState = project.FlowStates.Single(s => s.Name == "Done");
+        FlowState cancelledState = project.FlowStates.Single(s => s.Name == "Cancelled");
+        FlowTransition toCancelled = project.FlowTransitions.Single(t => t.FromStateId == backlogState.Id && t.ToStateId == cancelledState.Id);
+        project.RemoveFlowTransitionRole(toCancelled.Id, ProjectRole.Developer, admin);
+
+        ArrangeBoard(project, developer.Id, project.FlowTransitions);
+
+        // Act
+        Result<IReadOnlyCollection<BoardColumnResponse>> result =
+            await _handler.Handle(new GetProjectBoardQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        result.Value.Single(c => c.FlowStateId == backlogState.Id).AvailableTransitions
+            .Should().ContainSingle()
+            .Which.ToStateId.Should().Be(doneState.Id);
+    }
+
+    [Fact]
+    public async Task Should_ReturnEmptyAvailableTransitions_When_ColumnHasNoOutgoingTransitions()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        Project project = WorkItemQueryData.GetActiveProjectWithFlow(admin);
+
+        ArrangeBoard(project, admin.Id, Array.Empty<FlowTransition>());
+
+        // Act
+        Result<IReadOnlyCollection<BoardColumnResponse>> result =
+            await _handler.Handle(new GetProjectBoardQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        result.Value.Should().ContainSingle()
+            .Which.AvailableTransitions.Should().NotBeNull().And.BeEmpty();
+    }
+
+    [Fact]
+    public async Task Should_IncludeTerminalDestinationsWithTheirNames_InAvailableTransitions()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        Project project = WorkItemQueryData.GetActiveProjectWithFlow(admin);
+        FlowState doneState = project.FlowStates.Single(s => s.Category == FlowStateCategory.Completed);
+        FlowState cancelledState = project.FlowStates.Single(s => s.Category == FlowStateCategory.Cancelled);
+
+        ArrangeBoard(project, admin.Id, project.FlowTransitions);
+
+        // Act
+        Result<IReadOnlyCollection<BoardColumnResponse>> result =
+            await _handler.Handle(new GetProjectBoardQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        WorkItemFlowTransitionResponse[] expected =
+        [
+            new(doneState.Id, "Done"),
+            new(cancelledState.Id, "Cancelled")
+        ];
+        result.Value.Single().AvailableTransitions.Should().BeEquivalentTo(expected);
+    }
+
+    [Fact]
+    public async Task Should_OrderAvailableTransitions_ByToStateName()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        Project project = WorkItemQueryData.GetActiveProjectWithFlow(admin);
+
+        // Transitions are created Backlog → Done first, then Backlog → Cancelled, so insertion order is not alphabetical.
+        ArrangeBoard(project, admin.Id, project.FlowTransitions);
+
+        // Act
+        Result<IReadOnlyCollection<BoardColumnResponse>> result =
+            await _handler.Handle(new GetProjectBoardQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        result.Value.Single().AvailableTransitions.Select(t => t.ToStateName)
+            .Should().Equal("Cancelled", "Done");
+    }
+
+    [Fact]
+    public async Task Should_AttributeAvailableTransitions_ToTheirFromStateColumn()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        Project project = WorkItemQueryData.GetActiveProjectWithFlow(admin);
+        // Adding a second Active state links Backlog <-> In Progress and reroutes Backlog -> Done to In Progress -> Done,
+        // so each column ends up with a different set of destinations.
+        project.AddFlowState("In Progress", FlowStateCategory.Active, Color.Create("white").Value, [ProjectRole.Admin, ProjectRole.Developer], admin);
+        FlowState backlogState = project.FlowStates.Single(s => s.Name == "Backlog");
+        FlowState inProgressState = project.FlowStates.Single(s => s.Name == "In Progress");
+
+        ArrangeBoard(project, admin.Id, project.FlowTransitions);
+
+        // Act
+        Result<IReadOnlyCollection<BoardColumnResponse>> result =
+            await _handler.Handle(new GetProjectBoardQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        result.Value.Single(c => c.FlowStateId == backlogState.Id).AvailableTransitions.Select(t => t.ToStateName)
+            .Should().Equal("Cancelled", "In Progress");
+        result.Value.Single(c => c.FlowStateId == inProgressState.Id).AvailableTransitions.Select(t => t.ToStateName)
+            .Should().Equal("Backlog", "Done");
+    }
+
+    [Fact]
+    public async Task Should_ReturnEmptyBoard_When_ProjectHasNoActiveStates()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        Project project = Project.Create("Empty Project", "Desc", ProjectCode.Create("EMP").Value, ProjectKind.Product, Color.Create("white").Value, admin, WorkItemQueryData.UtcNow).Value;
+
+        ArrangeBoard(project, admin.Id, project.FlowTransitions);
+
+        // Act
+        Result<IReadOnlyCollection<BoardColumnResponse>> result =
+            await _handler.Handle(new GetProjectBoardQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        result.Value.Should().BeEmpty();
+        _ = _dbContext.DidNotReceive().FlowTransitions;
+        _ = _dbContext.DidNotReceive().WorkItems;
+    }
+
+    private void ArrangeBoard(Project project, Guid userId, IEnumerable<FlowTransition> transitions)
+    {
+        _userContext.UserId.Returns(userId);
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
+        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(transitions);
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
+        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
+        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.FlowStates.Returns(statesMock);
+        _dbContext.FlowTransitions.Returns(transitionsMock);
+        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Users.Returns(usersMock);
+        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Milestones.Returns(milestonesMock);
     }
 }
