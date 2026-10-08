@@ -178,19 +178,19 @@ En este orden:
 
 `Down` recrea las columnas antiguas sin datos; las sesiones no se recuperan en ningún sentido.
 
-### 5.4 Job de purga (`Infrastructure/Authentication/`)
+### 5.4 Job de limpieza `UserTokenCleanup` (`Infrastructure/Authentication/`)
 
-- `UserTokenPurgeOptions` (sección `UserTokenPurge`): `IntervalInHours`, `RetentionDays`, `BatchSize`.
+- `UserTokenCleanupOptions` (sección `UserTokenCleanup`): `IntervalInHours`, `RetentionDays`, `BatchSize`.
 - `appsettings.json`:
   ```json
-  "UserTokenPurge": {
+  "UserTokenCleanup": {
     "IntervalInHours": 24,
     "RetentionDays": 7,
     "BatchSize": 1000
   }
   ```
-- `ConfigurePurgeExpiredUserTokensJob : IConfigureOptions<QuartzOptions>`: `SimpleSchedule` con `WithIntervalInHours(...)`.`RepeatForever()`, igual que `ConfigureProcessOutboxJob`. La primera ejecución ocurre al arrancar.
-- `PurgeExpiredUserTokensJob`, marcado con `[DisallowConcurrentExecution]`:
+- `ConfigureUserTokenCleanupJob : IConfigureOptions<QuartzOptions>`: `SimpleSchedule` con `WithIntervalInHours(...)`.`RepeatForever()`, igual que `ConfigureProcessOutboxJob`. La primera ejecución ocurre al arrancar.
+- `UserTokenCleanupJob`, marcado con `[DisallowConcurrentExecution]`:
   - `cutoff = UtcNow - RetentionDays`.
   - En bucle, borra hasta `BatchSize` filas con `RefreshTokenExpiresOnUtc < cutoff` mediante `ExecuteDeleteAsync`; si Npgsql no traduce `Take` dentro de `ExecuteDelete`, usa SQL crudo `DELETE ... WHERE user_token_id IN (SELECT user_token_id ... LIMIT n)` como el outbox.
   - Termina cuando un lote borra menos de `BatchSize` filas, y registra un `LogInformation` con el total borrado.
