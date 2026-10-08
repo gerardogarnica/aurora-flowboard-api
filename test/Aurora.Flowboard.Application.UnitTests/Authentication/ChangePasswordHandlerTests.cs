@@ -121,7 +121,7 @@ public sealed class ChangePasswordHandlerTests
     }
 
     [Fact]
-    public async Task Should_ReturnInvalidCredentials_When_CurrentPasswordIsWrong()
+    public async Task Should_ReturnInvalidCurrentPassword_When_CurrentPasswordIsWrong()
     {
         // Arrange
         User user = ChangePasswordCommandData.GetUser();
@@ -138,9 +138,10 @@ public sealed class ChangePasswordHandlerTests
         // Act
         Result result = await _handler.Handle(command, CancellationToken.None);
 
-        // Assert
+        // Assert — 400, not 401: the caller is authenticated, so a client must not treat this as an expired session.
         result.IsSuccessful.Should().BeFalse();
-        result.Error.Should().Be(AuthenticationErrors.InvalidCredentials);
+        result.Error.Should().Be(AuthenticationErrors.InvalidCurrentPassword);
+        result.Error.ErrorType.Should().Be(BaseErrorType.Validation);
         await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 

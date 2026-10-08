@@ -27,7 +27,7 @@ internal sealed class ChangePasswordHandler(
 
         if (!user.VerifyPassword(passwordHasher, command.CurrentPassword))
         {
-            return Result.Fail(AuthenticationErrors.InvalidCredentials);
+            return Result.Fail(AuthenticationErrors.InvalidCurrentPassword);
         }
 
         string passwordHash = passwordHasher.HashPassword(command.NewPassword);

@@ -95,6 +95,24 @@ public sealed class LoginHandlerTests
     }
 
     [Fact]
+    public async Task Should_ReturnUnauthorizedError_When_PasswordIsWrong()
+    {
+        // Arrange
+        User user = CreateUser();
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
+        _dbContext.Users.Returns(usersMock);
+        _passwordHasher.VerifyHashedPassword(HashedPassword, Arg.Any<string>()).Returns(false);
+
+        var command = new LoginCommand("john.doe@example.com", "wrong-password");
+
+        // Act
+        Result<IdentityToken> result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.Error.ErrorType.Should().Be(BaseErrorType.Unauthorized);
+    }
+
+    [Fact]
     public async Task Should_ReturnInvalidCredentials_When_UserIsInactive()
     {
         // Arrange

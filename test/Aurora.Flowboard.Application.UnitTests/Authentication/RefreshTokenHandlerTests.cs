@@ -70,6 +70,7 @@ public sealed class RefreshTokenHandlerTests
         // Assert
         result.IsSuccessful.Should().BeFalse();
         result.Error.Should().Be(AuthenticationErrors.InvalidRefreshToken);
+        result.Error.ErrorType.Should().Be(BaseErrorType.Unauthorized);
         await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
