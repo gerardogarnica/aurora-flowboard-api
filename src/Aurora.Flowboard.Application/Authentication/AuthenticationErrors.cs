@@ -14,6 +14,10 @@ public static class AuthenticationErrors
         "Auth.InvalidCurrentPassword",
         "The current password is incorrect.");
 
+    public static readonly BaseError SessionChangedConcurrently = BaseError.Conflict(
+        "Auth.SessionChangedConcurrently",
+        "The user's sessions changed while the request was processed. Try again.");
+
     public static readonly BaseError NewPasswordMustDiffer = BaseError.Validation(
         "Auth.NewPasswordMustDiffer",
         "The new password must be different from the current password.");

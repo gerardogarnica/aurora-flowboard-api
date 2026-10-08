@@ -41,7 +41,7 @@ public sealed class LoginHandlerTests
 
         _passwordHasher.VerifyHashedPassword(HashedPassword, PlainPassword).Returns(true);
 
-        IdentityToken issued = CreateIdentityToken();
+        IssuedToken issued = CreateIssuedToken();
         _tokenProvider.CreateToken(Arg.Any<TokenRequest>()).Returns(issued);
 
         var command = new LoginCommand("john.doe@example.com", PlainPassword);
@@ -51,9 +51,11 @@ public sealed class LoginHandlerTests
 
         // Assert
         result.IsSuccessful.Should().BeTrue();
-        result.Value.Should().Be(issued);
+        result.Value.Should().Be(issued.Identity);
         await _dbContext.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
-        user.Tokens.Should().ContainSingle(t => t.AccessToken == issued.AccessToken);
+        user.Tokens.Should().ContainSingle(t =>
+            t.AccessTokenId == issued.AccessTokenId &&
+            t.RefreshTokenHash == issued.RefreshTokenHash);
     }
 
     [Fact]
@@ -174,7 +176,7 @@ public sealed class LoginHandlerTests
         _dbContext.Users.Returns(usersMock);
 
         _passwordHasher.VerifyHashedPassword(HashedPassword, PlainPassword).Returns(true);
-        _tokenProvider.CreateToken(Arg.Any<TokenRequest>()).Returns(CreateIdentityToken());
+        _tokenProvider.CreateToken(Arg.Any<TokenRequest>()).Returns(CreateIssuedToken());
 
         var command = new LoginCommand("john.doe@example.com", PlainPassword);
 
@@ -196,9 +198,12 @@ public sealed class LoginHandlerTests
         return User.Create("John", "Doe", email, password, UtcNow).Value;
     }
 
-    private static IdentityToken CreateIdentityToken() => new(
-        AccessToken: "access-token-value",
-        AccessTokenExpiresOn: new DateTimeOffset(UtcNow.AddMinutes(60), TimeSpan.Zero),
-        RefreshToken: "refresh-token-value",
-        RefreshTokenExpiresOn: new DateTimeOffset(UtcNow.AddDays(7), TimeSpan.Zero));
+    private static IssuedToken CreateIssuedToken() => new(
+        new IdentityToken(
+            AccessToken: "access-token-value",
+            AccessTokenExpiresOn: new DateTimeOffset(UtcNow.AddMinutes(60), TimeSpan.Zero),
+            RefreshToken: "refresh-token-value",
+            RefreshTokenExpiresOn: new DateTimeOffset(UtcNow.AddDays(7), TimeSpan.Zero)),
+        AccessTokenId: "access-token-id",
+        RefreshTokenHash: "refresh-token-hash");
 }

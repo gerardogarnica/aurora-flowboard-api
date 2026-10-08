@@ -42,7 +42,7 @@ internal sealed class LoginHandler(
 
         List<string> roles = [.. user.Roles.Select(r => r.Name)];
 
-        IdentityToken identityToken = tokenProvider.CreateToken(new TokenRequest(
+        IssuedToken issuedToken = tokenProvider.CreateToken(new TokenRequest(
             user.Id,
             user.Email.Value,
             user.FirstName,
@@ -50,10 +50,10 @@ internal sealed class LoginHandler(
             roles));
 
         Result<UserToken> issueResult = user.IssueToken(
-            identityToken.AccessToken,
-            identityToken.RefreshToken,
-            identityToken.AccessTokenExpiresOn.UtcDateTime,
-            identityToken.RefreshTokenExpiresOn.UtcDateTime,
+            issuedToken.AccessTokenId,
+            issuedToken.RefreshTokenHash,
+            issuedToken.Identity.AccessTokenExpiresOn.UtcDateTime,
+            issuedToken.Identity.RefreshTokenExpiresOn.UtcDateTime,
             dateTimeProvider.UtcNow);
 
         if (!issueResult.IsSuccessful)
@@ -65,6 +65,6 @@ internal sealed class LoginHandler(
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return identityToken;
+        return issuedToken.Identity;
     }
 }

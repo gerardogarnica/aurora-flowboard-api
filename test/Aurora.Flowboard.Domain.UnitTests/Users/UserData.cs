@@ -5,8 +5,8 @@ internal static class UserData
     public const string FirstName = "John";
     public const string LastName = "Doe";
     public const string EmailAddress = "john.doe@example.com";
-    public const string AccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.access";
-    public const string RefreshToken = "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4";
+    public const string AccessTokenId = "0f8fad5bd9cb469fa16570867728950e";
+    public const string RefreshTokenHash = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
     public static readonly Password Password = Password.Create("hashed_password_123").Value;
     public static readonly Password NewPassword = Password.Create("new_hashed_password_456").Value;
     public static readonly DateTime CreatedOnUtc = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -31,8 +31,8 @@ internal static class UserData
     {
         User user = GetActiveUser();
         Result<UserToken> result = user.IssueToken(
-            AccessToken,
-            RefreshToken,
+            AccessTokenId,
+            RefreshTokenHash,
             AccessTokenExpiresOnUtc,
             RefreshTokenExpiresOnUtc,
             CreatedOnUtc);
@@ -52,18 +52,40 @@ internal static class UserData
         User user = GetActiveUser();
 
         firstTokenId = user.IssueToken(
-            AccessToken,
-            RefreshToken,
+            AccessTokenId,
+            RefreshTokenHash,
             AccessTokenExpiresOnUtc,
             RefreshTokenExpiresOnUtc,
             CreatedOnUtc).Value.UserTokenId;
 
         secondTokenId = user.IssueToken(
-            $"{AccessToken}-2",
-            $"{RefreshToken}-2",
+            $"{AccessTokenId}-2",
+            $"{RefreshTokenHash}-2",
             AccessTokenExpiresOnUtc,
             RefreshTokenExpiresOnUtc,
             CreatedOnUtc).Value.UserTokenId;
+
+        return user;
+    }
+
+    // The second token's refresh expiry (CreatedOnUtc - 3 days) is already past at CreatedOnUtc.
+    public static User GetUserWithActiveAndExpiredToken(out Guid activeTokenId, out Guid expiredTokenId)
+    {
+        User user = GetActiveUser();
+
+        activeTokenId = user.IssueToken(
+            AccessTokenId,
+            RefreshTokenHash,
+            AccessTokenExpiresOnUtc,
+            RefreshTokenExpiresOnUtc,
+            CreatedOnUtc).Value.UserTokenId;
+
+        expiredTokenId = user.IssueToken(
+            $"{AccessTokenId}-expired",
+            $"{RefreshTokenHash}-expired",
+            CreatedOnUtc.AddDays(-9),
+            CreatedOnUtc.AddDays(-3),
+            CreatedOnUtc.AddDays(-10)).Value.UserTokenId;
 
         return user;
     }

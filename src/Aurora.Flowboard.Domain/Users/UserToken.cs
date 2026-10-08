@@ -2,13 +2,14 @@ namespace Aurora.Flowboard.Domain.Users;
 
 public sealed class UserToken
 {
-    public const int MaxAccessTokenLength = 2000;
+    public const int MaxAccessTokenIdLength = 64;
+    public const int RefreshTokenHashLength = 64;
     public const int MaxRefreshTokenLength = 500;
 
     public Guid UserTokenId { get; private set; }
     public Guid UserId { get; private set; }
-    public string AccessToken { get; private set; }
-    public string RefreshToken { get; private set; }
+    public string AccessTokenId { get; private set; }
+    public string RefreshTokenHash { get; private set; }
     public DateTime AccessTokenExpiresOnUtc { get; private set; }
     public DateTime RefreshTokenExpiresOnUtc { get; private set; }
     public DateTime IssuedOnUtc { get; private set; }
@@ -21,16 +22,16 @@ public sealed class UserToken
     private UserToken(
         Guid userTokenId,
         Guid userId,
-        string accessToken,
-        string refreshToken,
+        string accessTokenId,
+        string refreshTokenHash,
         DateTime accessTokenExpiresOnUtc,
         DateTime refreshTokenExpiresOnUtc,
         DateTime issuedOnUtc)
     {
         UserTokenId = userTokenId;
         UserId = userId;
-        AccessToken = accessToken;
-        RefreshToken = refreshToken;
+        AccessTokenId = accessTokenId;
+        RefreshTokenHash = refreshTokenHash;
         AccessTokenExpiresOnUtc = accessTokenExpiresOnUtc;
         RefreshTokenExpiresOnUtc = refreshTokenExpiresOnUtc;
         IssuedOnUtc = issuedOnUtc;
@@ -39,8 +40,8 @@ public sealed class UserToken
 
     internal static UserToken Create(
         Guid userId,
-        string accessToken,
-        string refreshToken,
+        string accessTokenId,
+        string refreshTokenHash,
         DateTime accessTokenExpiresOnUtc,
         DateTime refreshTokenExpiresOnUtc,
         DateTime issuedOnUtc)
@@ -48,8 +49,8 @@ public sealed class UserToken
         return new UserToken(
             Guid.NewGuid(),
             userId,
-            accessToken,
-            refreshToken,
+            accessTokenId,
+            refreshTokenHash,
             accessTokenExpiresOnUtc,
             refreshTokenExpiresOnUtc,
             issuedOnUtc);
