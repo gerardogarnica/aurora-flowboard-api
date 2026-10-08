@@ -24,6 +24,7 @@ public static class DependencyInjection
             .AddEncryptionServices(configuration)
             .AddBootstrapServices(configuration)
             .AddOutboxPatternImplementation()
+            .AddUserTokenCleanupJob()
             .AddQuartzServices();
 
     private static IServiceCollection AddAuthenticationServices(this IServiceCollection services, IConfiguration configuration)
@@ -121,6 +122,14 @@ public static class DependencyInjection
     {
         services.AddOptions<OutboxOptions>().BindConfiguration("Outbox");
         services.ConfigureOptions<ConfigureProcessOutboxJob>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddUserTokenCleanupJob(this IServiceCollection services)
+    {
+        services.AddOptions<UserTokenCleanupOptions>().BindConfiguration(UserTokenCleanupOptions.SectionName);
+        services.ConfigureOptions<ConfigureUserTokenCleanupJob>();
 
         return services;
     }
