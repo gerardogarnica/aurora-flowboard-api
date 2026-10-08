@@ -72,6 +72,10 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            // Hashed tokens cannot be turned back into raw ones, and every row would get the same empty
+            // refresh_token, breaking the unique index below. Sessions are not recovered in either direction.
+            migrationBuilder.Sql("DELETE FROM flowboard.user_tokens;");
+
             migrationBuilder.DropIndex(
                 name: "ix_user_tokens_refresh_token_expires_on_utc",
                 schema: "flowboard",
