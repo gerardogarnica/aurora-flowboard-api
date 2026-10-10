@@ -1,22 +1,29 @@
 using Aurora.Flowboard.Application.Authentication.Logout;
+using NSubstitute.ExceptionExtensions;
 
 namespace Aurora.Flowboard.Application.UnitTests.Authentication;
 
 public sealed class LogoutHandlerTests
 {
     private const string HashedPassword = "hashed_password_123";
+    private const string PresentedRefreshToken = "presented-refresh-token";
+    private const string PresentedRefreshTokenHash = "presented-refresh-token-hash";
     private static readonly DateTime UtcNow = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
     private readonly IApplicationDbContext _dbContext;
+    private readonly ITokenProvider _tokenProvider;
     private readonly IUserContext _userContext;
     private readonly LogoutHandler _handler;
 
     public LogoutHandlerTests()
     {
         _dbContext = Substitute.For<IApplicationDbContext>();
+        _tokenProvider = Substitute.For<ITokenProvider>();
         _userContext = Substitute.For<IUserContext>();
 
-        _handler = new LogoutHandler(_dbContext, _userContext);
+        _handler = new LogoutHandler(_dbContext, _tokenProvider, _userContext);
+
+        _tokenProvider.HashRefreshToken(PresentedRefreshToken).Returns(PresentedRefreshTokenHash);
     }
 
     [Fact]
@@ -25,17 +32,11 @@ public sealed class LogoutHandlerTests
         // Arrange
         User user = CreateUser();
         UserToken token = IssueToken(user);
-
-        DbSet<UserToken> userTokensMock = MockDbSetHelper.CreateMockDbSet([token]);
-        _dbContext.UserTokens.Returns(userTokensMock);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        SetupUsers(user);
         _userContext.UserId.Returns(user.Id);
 
-        var command = new LogoutCommand(token.RefreshToken);
-
         // Act
-        Result result = await _handler.Handle(command, CancellationToken.None);
+        Result result = await _handler.Handle(new LogoutCommand(PresentedRefreshToken), CancellationToken.None);
 
         // Assert
         result.IsSuccessful.Should().BeTrue();
@@ -47,14 +48,13 @@ public sealed class LogoutHandlerTests
     public async Task Should_ReturnSuccess_When_RefreshTokenIsUnknown()
     {
         // Arrange
-        DbSet<UserToken> userTokensMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<UserToken>());
-        _dbContext.UserTokens.Returns(userTokensMock);
-        _userContext.UserId.Returns(Guid.NewGuid());
-
-        var command = new LogoutCommand("unknown-refresh-token");
+        User user = CreateUser();
+        user.IssueToken("other-access-token-id", "other-refresh-token-hash", UtcNow.AddMinutes(60), UtcNow.AddDays(7), UtcNow);
+        SetupUsers(user);
+        _userContext.UserId.Returns(user.Id);
 
         // Act
-        Result result = await _handler.Handle(command, CancellationToken.None);
+        Result result = await _handler.Handle(new LogoutCommand(PresentedRefreshToken), CancellationToken.None);
 
         // Assert
         result.IsSuccessful.Should().BeTrue();
@@ -67,15 +67,11 @@ public sealed class LogoutHandlerTests
         // Arrange
         User user = CreateUser();
         UserToken token = IssueToken(user);
-
-        DbSet<UserToken> userTokensMock = MockDbSetHelper.CreateMockDbSet([token]);
-        _dbContext.UserTokens.Returns(userTokensMock);
+        SetupUsers(user);
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        var command = new LogoutCommand(token.RefreshToken);
-
         // Act
-        Result result = await _handler.Handle(command, CancellationToken.None);
+        Result result = await _handler.Handle(new LogoutCommand(PresentedRefreshToken), CancellationToken.None);
 
         // Assert
         result.IsSuccessful.Should().BeTrue();
@@ -84,27 +80,22 @@ public sealed class LogoutHandlerTests
     }
 
     [Fact]
-    public async Task Should_ReturnSuccess_When_TokenIsAlreadyRevoked()
+    public async Task Should_ReturnSuccessWithoutSaving_When_TokenIsAlreadyRevoked()
     {
         // Arrange
         User user = CreateUser();
         UserToken token = IssueToken(user);
         user.RevokeToken(token.UserTokenId);
-
-        DbSet<UserToken> userTokensMock = MockDbSetHelper.CreateMockDbSet([token]);
-        _dbContext.UserTokens.Returns(userTokensMock);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        SetupUsers(user);
         _userContext.UserId.Returns(user.Id);
 
-        var command = new LogoutCommand(token.RefreshToken);
-
         // Act
-        Result result = await _handler.Handle(command, CancellationToken.None);
+        Result result = await _handler.Handle(new LogoutCommand(PresentedRefreshToken), CancellationToken.None);
 
         // Assert
         result.IsSuccessful.Should().BeTrue();
         token.IsRevoked.Should().BeTrue();
+        await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -114,21 +105,39 @@ public sealed class LogoutHandlerTests
         User user = CreateUser();
         UserToken token = IssueToken(user);
         user.Deactivate(UtcNow);
-
-        DbSet<UserToken> userTokensMock = MockDbSetHelper.CreateMockDbSet([token]);
-        _dbContext.UserTokens.Returns(userTokensMock);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        SetupUsers(user);
         _userContext.UserId.Returns(user.Id);
 
-        var command = new LogoutCommand(token.RefreshToken);
-
         // Act
-        Result result = await _handler.Handle(command, CancellationToken.None);
+        Result result = await _handler.Handle(new LogoutCommand(PresentedRefreshToken), CancellationToken.None);
 
         // Assert
         result.IsSuccessful.Should().BeTrue();
         token.IsRevoked.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Should_ReturnSuccess_When_TokenIsRevokedConcurrently()
+    {
+        // Arrange — a concurrent refresh or logout changed the row first; the session is closed either way.
+        User user = CreateUser();
+        IssueToken(user);
+        SetupUsers(user);
+        _userContext.UserId.Returns(user.Id);
+        _dbContext.SaveChangesAsync(Arg.Any<CancellationToken>())
+            .ThrowsAsync(new DbUpdateConcurrencyException("user_tokens row changed"));
+
+        // Act
+        Result result = await _handler.Handle(new LogoutCommand(PresentedRefreshToken), CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+    }
+
+    private void SetupUsers(params User[] users)
+    {
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(users);
+        _dbContext.Users.Returns(usersMock);
     }
 
     private static User CreateUser()
@@ -139,8 +148,8 @@ public sealed class LogoutHandlerTests
     }
 
     private static UserToken IssueToken(User user) => user.IssueToken(
-        "access-token",
-        "refresh-token",
+        "access-token-id",
+        PresentedRefreshTokenHash,
         UtcNow.AddMinutes(60),
         UtcNow.AddDays(7),
         UtcNow).Value;

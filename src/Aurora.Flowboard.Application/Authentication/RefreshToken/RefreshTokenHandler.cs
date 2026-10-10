@@ -11,22 +11,22 @@ internal sealed class RefreshTokenHandler(
         RefreshTokenCommand command,
         CancellationToken cancellationToken)
     {
-        UserToken? userToken = await dbContext
-            .UserTokens
-            .SingleOrDefaultAsync(t => t.RefreshToken == command.RefreshToken, cancellationToken);
+        string refreshTokenHash = tokenProvider.HashRefreshToken(command.RefreshToken);
+        DateTime utcNow = dateTimeProvider.UtcNow;
 
-        if (userToken is null || !userToken.IsRefreshTokenValid(dateTimeProvider.UtcNow))
-        {
-            return Result.Fail<IdentityToken>(AuthenticationErrors.InvalidRefreshToken);
-        }
-
+        // Loads only the presented token, not the user's whole token history.
         User? user = await dbContext
             .Users
             .Include(u => u.Roles)
-            .Include(u => u.Tokens)
-            .SingleOrDefaultAsync(u => u.Id == userToken.UserId, cancellationToken);
+            .Include(u => u.Tokens.Where(t => t.RefreshTokenHash == refreshTokenHash))
+            .SingleOrDefaultAsync(
+                u => u.Tokens.Any(t => t.RefreshTokenHash == refreshTokenHash),
+                cancellationToken);
 
-        if (user is null || !user.IsActive)
+        UserToken? userToken = user?.Tokens.SingleOrDefault(t => t.RefreshTokenHash == refreshTokenHash);
+
+        // A revoked token here is a replay of an already rotated token: rejected like any other.
+        if (user is null || userToken is null || !user.IsActive || !userToken.IsRefreshTokenValid(utcNow))
         {
             return Result.Fail<IdentityToken>(AuthenticationErrors.InvalidRefreshToken);
         }
@@ -40,7 +40,7 @@ internal sealed class RefreshTokenHandler(
 
         List<string> roles = [.. user.Roles.Select(r => r.Name)];
 
-        IdentityToken identityToken = tokenProvider.CreateToken(new TokenRequest(
+        IssuedToken issuedToken = tokenProvider.CreateToken(new TokenRequest(
             user.Id,
             user.Email.Value,
             user.FirstName,
@@ -48,19 +48,28 @@ internal sealed class RefreshTokenHandler(
             roles));
 
         Result<UserToken> issueResult = user.IssueToken(
-            identityToken.AccessToken,
-            identityToken.RefreshToken,
-            identityToken.AccessTokenExpiresOn.UtcDateTime,
-            identityToken.RefreshTokenExpiresOn.UtcDateTime,
-            dateTimeProvider.UtcNow);
+            issuedToken.AccessTokenId,
+            issuedToken.RefreshTokenHash,
+            issuedToken.Identity.AccessTokenExpiresOn.UtcDateTime,
+            issuedToken.Identity.RefreshTokenExpiresOn.UtcDateTime,
+            utcNow);
 
         if (!issueResult.IsSuccessful)
         {
             return Result.Fail<IdentityToken>(issueResult.Error);
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // Another request redeemed the same token between our read and our write (xmin changed).
+            // SaveChanges' transaction also rolled back the insert of the new token.
+            return Result.Fail<IdentityToken>(AuthenticationErrors.InvalidRefreshToken);
+        }
 
-        return identityToken;
+        return issuedToken.Identity;
     }
 }

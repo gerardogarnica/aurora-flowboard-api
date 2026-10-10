@@ -72,6 +72,7 @@ Detailed conventions live in `.claude/rules/` and load automatically when you re
 | `project-flow.md` | One flow per project, removed flow endpoints (don't reintroduce), TemplateFlows |
 | `milestones-components.md` | Aggregate ownership, admin-only changes, milestone state machine |
 | `domain-model.md` | Enum placement, value object conventions |
+| `authentication.md` | Refresh token hashing, `jti`, `xmin` concurrency on `user_tokens`, token cleanup job, 401 vs 400 |
 | `startup-and-seeding.md` | Migrations on startup, Administrator and template seeding, `Bootstrap` config |
 | `unit-tests.md` | Mock `DbSet` setup, pagination test across page boundaries |
 | `architecture-tests.md` | NetArchTest pitfalls, Mono.Cecil pin |

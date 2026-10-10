@@ -15,21 +15,28 @@ internal sealed class JwtTokenProvider(
     private readonly JwtAuthOptions _options = jwtAuthOptions.Value;
     private readonly IDateTimeProvider _dateTimeProvider = dateTimeProvider;
 
-    public IdentityToken CreateToken(TokenRequest tokenRequest)
+    public IssuedToken CreateToken(TokenRequest tokenRequest)
     {
         DateTime utcNow = _dateTimeProvider.UtcNow;
+        string accessTokenId = Guid.NewGuid().ToString("N");
 
-        (string accessToken, DateTimeOffset accessTokenExpiresOn) = GenerateAccessToken(tokenRequest, utcNow);
+        (string accessToken, DateTimeOffset accessTokenExpiresOn) = GenerateAccessToken(tokenRequest, accessTokenId, utcNow);
         (string refreshToken, DateTimeOffset refreshTokenExpiresOn) = GenerateRefreshToken(utcNow);
 
-        return new IdentityToken(
+        var identityToken = new IdentityToken(
             accessToken,
             accessTokenExpiresOn,
             refreshToken,
             refreshTokenExpiresOn);
+
+        return new IssuedToken(identityToken, accessTokenId, HashRefreshToken(refreshToken));
     }
 
-    private (string Token, DateTimeOffset ExpiresOn) GenerateAccessToken(TokenRequest tokenRequest, DateTime utcNow)
+    // The refresh token is 64 random bytes, so a plain SHA-256 cannot be brute-forced; no salt or pepper needed.
+    public string HashRefreshToken(string refreshToken) =>
+        Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(refreshToken)));
+
+    private (string Token, DateTimeOffset ExpiresOn) GenerateAccessToken(TokenRequest tokenRequest, string accessTokenId, DateTime utcNow)
     {
         DateTime expiresOn = utcNow.AddMinutes(_options.LifeTimeInMinutes);
 
@@ -52,7 +59,7 @@ internal sealed class JwtTokenProvider(
             new(JwtRegisteredClaimNames.GivenName, tokenRequest.FirstName),
             new(JwtRegisteredClaimNames.FamilyName, tokenRequest.LastName),
             new(JwtRegisteredClaimNames.Name, fullName),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N")),
+            new(JwtRegisteredClaimNames.Jti, accessTokenId),
             new(JwtRegisteredClaimNames.Typ, "Bearer"),
             new(
                 JwtRegisteredClaimNames.Iat,
