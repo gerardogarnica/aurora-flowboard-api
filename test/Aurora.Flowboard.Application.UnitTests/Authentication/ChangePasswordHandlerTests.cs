@@ -1,5 +1,6 @@
 using Aurora.Flowboard.Application.Authentication;
 using Aurora.Flowboard.Application.Authentication.ChangePassword;
+using NSubstitute.ExceptionExtensions;
 
 namespace Aurora.Flowboard.Application.UnitTests.Authentication;
 
@@ -59,8 +60,8 @@ public sealed class ChangePasswordHandlerTests
     {
         // Arrange
         User user = ChangePasswordCommandData.GetUser();
-        user.IssueToken("access-1", "refresh-1", ChangePasswordCommandData.UtcNow.AddMinutes(60), ChangePasswordCommandData.UtcNow.AddDays(7), ChangePasswordCommandData.UtcNow);
-        user.IssueToken("access-2", "refresh-2", ChangePasswordCommandData.UtcNow.AddMinutes(60), ChangePasswordCommandData.UtcNow.AddDays(7), ChangePasswordCommandData.UtcNow);
+        user.IssueToken("access-token-id-1", "refresh-token-hash-1", ChangePasswordCommandData.UtcNow.AddMinutes(60), ChangePasswordCommandData.UtcNow.AddDays(7), ChangePasswordCommandData.UtcNow);
+        user.IssueToken("access-token-id-2", "refresh-token-hash-2", ChangePasswordCommandData.UtcNow.AddMinutes(60), ChangePasswordCommandData.UtcNow.AddDays(7), ChangePasswordCommandData.UtcNow);
 
         DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
         _dbContext.Users.Returns(usersMock);
@@ -121,7 +122,7 @@ public sealed class ChangePasswordHandlerTests
     }
 
     [Fact]
-    public async Task Should_ReturnInvalidCredentials_When_CurrentPasswordIsWrong()
+    public async Task Should_ReturnInvalidCurrentPassword_When_CurrentPasswordIsWrong()
     {
         // Arrange
         User user = ChangePasswordCommandData.GetUser();
@@ -138,10 +139,70 @@ public sealed class ChangePasswordHandlerTests
         // Act
         Result result = await _handler.Handle(command, CancellationToken.None);
 
+        // Assert — 400, not 401: the caller is authenticated, so a client must not treat this as an expired session.
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(AuthenticationErrors.InvalidCurrentPassword);
+        result.Error.ErrorType.Should().Be(BaseErrorType.Validation);
+        await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Should_NotRevokeExpiredTokens_When_PasswordChanged()
+    {
+        // Arrange
+        User user = ChangePasswordCommandData.GetUser();
+        UserToken expiredToken = user.IssueToken(
+            "access-token-id-old",
+            "refresh-token-hash-old",
+            ChangePasswordCommandData.UtcNow.AddDays(-9),
+            ChangePasswordCommandData.UtcNow.AddDays(-3),
+            ChangePasswordCommandData.UtcNow.AddDays(-10)).Value;
+
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
+        _dbContext.Users.Returns(usersMock);
+        _userContext.UserId.Returns(user.Id);
+
+        _passwordHasher
+            .VerifyHashedPassword(ChangePasswordCommandData.CurrentPasswordHash, ChangePasswordCommandData.CurrentPlainPassword)
+            .Returns(true);
+
+        // Act
+        Result result = await _handler.Handle(ChangePasswordCommandData.GetCommand(), CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        expiredToken.IsRevoked.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Should_ReturnSessionChangedConcurrently_When_TokensChangeDuringSave()
+    {
+        // Arrange — a refresh rotated one of the tokens between the read and the save.
+        User user = ChangePasswordCommandData.GetUser();
+        user.IssueToken(
+            "access-token-id-1",
+            "refresh-token-hash-1",
+            ChangePasswordCommandData.UtcNow.AddMinutes(60),
+            ChangePasswordCommandData.UtcNow.AddDays(7),
+            ChangePasswordCommandData.UtcNow);
+
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
+        _dbContext.Users.Returns(usersMock);
+        _userContext.UserId.Returns(user.Id);
+
+        _passwordHasher
+            .VerifyHashedPassword(ChangePasswordCommandData.CurrentPasswordHash, ChangePasswordCommandData.CurrentPlainPassword)
+            .Returns(true);
+        _dbContext.SaveChangesAsync(Arg.Any<CancellationToken>())
+            .ThrowsAsync(new DbUpdateConcurrencyException("user_tokens row changed"));
+
+        // Act
+        Result result = await _handler.Handle(ChangePasswordCommandData.GetCommand(), CancellationToken.None);
+
         // Assert
         result.IsSuccessful.Should().BeFalse();
-        result.Error.Should().Be(AuthenticationErrors.InvalidCredentials);
-        await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+        result.Error.Should().Be(AuthenticationErrors.SessionChangedConcurrently);
+        result.Error.ErrorType.Should().Be(BaseErrorType.Conflict);
     }
 
 }

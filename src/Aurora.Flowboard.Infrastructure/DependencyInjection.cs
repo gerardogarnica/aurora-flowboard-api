@@ -24,6 +24,7 @@ public static class DependencyInjection
             .AddEncryptionServices(configuration)
             .AddBootstrapServices(configuration)
             .AddOutboxPatternImplementation()
+            .AddUserTokenCleanupJob()
             .AddQuartzServices();
 
     private static IServiceCollection AddAuthenticationServices(this IServiceCollection services, IConfiguration configuration)
@@ -121,6 +122,20 @@ public static class DependencyInjection
     {
         services.AddOptions<OutboxOptions>().BindConfiguration("Outbox");
         services.ConfigureOptions<ConfigureProcessOutboxJob>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddUserTokenCleanupJob(this IServiceCollection services)
+    {
+        // A zero batch size would loop forever, and a negative retention would delete live sessions.
+        services.AddOptions<UserTokenCleanupOptions>()
+            .BindConfiguration(UserTokenCleanupOptions.SectionName)
+            .Validate(
+                o => o.IntervalInHours > 0 && o.RetentionDays >= 0 && o.BatchSize > 0,
+                $"{UserTokenCleanupOptions.SectionName} requires IntervalInHours > 0, RetentionDays >= 0 and BatchSize > 0.")
+            .ValidateOnStart();
+        services.ConfigureOptions<ConfigureUserTokenCleanupJob>();
 
         return services;
     }

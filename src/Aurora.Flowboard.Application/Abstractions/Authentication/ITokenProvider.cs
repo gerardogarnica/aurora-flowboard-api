@@ -2,5 +2,7 @@ namespace Aurora.Flowboard.Application.Abstractions.Authentication;
 
 public interface ITokenProvider
 {
-    IdentityToken CreateToken(TokenRequest tokenRequest);
+    IssuedToken CreateToken(TokenRequest tokenRequest);
+
+    string HashRefreshToken(string refreshToken);
 }

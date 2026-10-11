@@ -10,13 +10,13 @@ public static class UserTokenErrors
         "UserToken.AlreadyRevoked",
         "The token has already been revoked");
 
-    public static readonly BaseError AccessTokenRequired = BaseError.Validation(
-        "UserToken.AccessTokenRequired",
-        "Access token is required");
+    public static readonly BaseError AccessTokenIdRequired = BaseError.Validation(
+        "UserToken.AccessTokenIdRequired",
+        "Access token identifier is required");
 
-    public static readonly BaseError RefreshTokenRequired = BaseError.Validation(
-        "UserToken.RefreshTokenRequired",
-        "Refresh token is required");
+    public static readonly BaseError RefreshTokenHashRequired = BaseError.Validation(
+        "UserToken.RefreshTokenHashRequired",
+        "Refresh token hash is required");
 
     public static readonly BaseError InvalidExpiration = BaseError.Validation(
         "UserToken.InvalidExpiration",
