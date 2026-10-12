@@ -284,8 +284,8 @@ public sealed class UserTests
 
             // Act
             Result<UserToken> result = user.IssueToken(
-                UserData.AccessToken,
-                UserData.RefreshToken,
+                UserData.AccessTokenId,
+                UserData.RefreshTokenHash,
                 UserData.AccessTokenExpiresOnUtc,
                 UserData.RefreshTokenExpiresOnUtc,
                 UserData.CreatedOnUtc);
@@ -296,6 +296,25 @@ public sealed class UserTests
         }
 
         [Fact]
+        public void Should_StoreAccessTokenIdAndRefreshTokenHash_When_Issued()
+        {
+            // Arrange
+            User user = UserData.GetActiveUser();
+
+            // Act
+            Result<UserToken> result = user.IssueToken(
+                UserData.AccessTokenId,
+                UserData.RefreshTokenHash,
+                UserData.AccessTokenExpiresOnUtc,
+                UserData.RefreshTokenExpiresOnUtc,
+                UserData.CreatedOnUtc);
+
+            // Assert
+            result.Value.AccessTokenId.Should().Be(UserData.AccessTokenId);
+            result.Value.RefreshTokenHash.Should().Be(UserData.RefreshTokenHash);
+        }
+
+        [Fact]
         public void Should_AddTokenToCollection_When_Issued()
         {
             // Arrange
@@ -303,8 +322,8 @@ public sealed class UserTests
 
             // Act
             user.IssueToken(
-                UserData.AccessToken,
-                UserData.RefreshToken,
+                UserData.AccessTokenId,
+                UserData.RefreshTokenHash,
                 UserData.AccessTokenExpiresOnUtc,
                 UserData.RefreshTokenExpiresOnUtc,
                 UserData.CreatedOnUtc);
@@ -321,8 +340,8 @@ public sealed class UserTests
 
             // Act
             Result<UserToken> result = user.IssueToken(
-                UserData.AccessToken,
-                UserData.RefreshToken,
+                UserData.AccessTokenId,
+                UserData.RefreshTokenHash,
                 UserData.AccessTokenExpiresOnUtc,
                 UserData.RefreshTokenExpiresOnUtc,
                 UserData.CreatedOnUtc);
@@ -334,7 +353,7 @@ public sealed class UserTests
         }
 
         [Fact]
-        public void Should_Fail_When_AccessTokenIsEmpty()
+        public void Should_Fail_When_AccessTokenIdIsEmpty()
         {
             // Arrange
             User user = UserData.GetActiveUser();
@@ -342,18 +361,18 @@ public sealed class UserTests
             // Act
             Result<UserToken> result = user.IssueToken(
                 string.Empty,
-                UserData.RefreshToken,
+                UserData.RefreshTokenHash,
                 UserData.AccessTokenExpiresOnUtc,
                 UserData.RefreshTokenExpiresOnUtc,
                 UserData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(UserTokenErrors.AccessTokenRequired);
+            result.Error.Should().Be(UserTokenErrors.AccessTokenIdRequired);
         }
 
         [Fact]
-        public void Should_Fail_When_AccessTokenIsWhitespace()
+        public void Should_Fail_When_AccessTokenIdIsWhitespace()
         {
             // Arrange
             User user = UserData.GetActiveUser();
@@ -361,25 +380,25 @@ public sealed class UserTests
             // Act
             Result<UserToken> result = user.IssueToken(
                 "   ",
-                UserData.RefreshToken,
+                UserData.RefreshTokenHash,
                 UserData.AccessTokenExpiresOnUtc,
                 UserData.RefreshTokenExpiresOnUtc,
                 UserData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(UserTokenErrors.AccessTokenRequired);
+            result.Error.Should().Be(UserTokenErrors.AccessTokenIdRequired);
         }
 
         [Fact]
-        public void Should_Fail_When_RefreshTokenIsEmpty()
+        public void Should_Fail_When_RefreshTokenHashIsEmpty()
         {
             // Arrange
             User user = UserData.GetActiveUser();
 
             // Act
             Result<UserToken> result = user.IssueToken(
-                UserData.AccessToken,
+                UserData.AccessTokenId,
                 string.Empty,
                 UserData.AccessTokenExpiresOnUtc,
                 UserData.RefreshTokenExpiresOnUtc,
@@ -387,18 +406,18 @@ public sealed class UserTests
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(UserTokenErrors.RefreshTokenRequired);
+            result.Error.Should().Be(UserTokenErrors.RefreshTokenHashRequired);
         }
 
         [Fact]
-        public void Should_Fail_When_RefreshTokenIsWhitespace()
+        public void Should_Fail_When_RefreshTokenHashIsWhitespace()
         {
             // Arrange
             User user = UserData.GetActiveUser();
 
             // Act
             Result<UserToken> result = user.IssueToken(
-                UserData.AccessToken,
+                UserData.AccessTokenId,
                 "   ",
                 UserData.AccessTokenExpiresOnUtc,
                 UserData.RefreshTokenExpiresOnUtc,
@@ -406,7 +425,7 @@ public sealed class UserTests
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(UserTokenErrors.RefreshTokenRequired);
+            result.Error.Should().Be(UserTokenErrors.RefreshTokenHashRequired);
         }
 
         [Fact]
@@ -417,8 +436,8 @@ public sealed class UserTests
 
             // Act
             Result<UserToken> result = user.IssueToken(
-                UserData.AccessToken,
-                UserData.RefreshToken,
+                UserData.AccessTokenId,
+                UserData.RefreshTokenHash,
                 UserData.CreatedOnUtc.AddMinutes(-1),
                 UserData.RefreshTokenExpiresOnUtc,
                 UserData.CreatedOnUtc);
@@ -436,8 +455,8 @@ public sealed class UserTests
 
             // Act
             Result<UserToken> result = user.IssueToken(
-                UserData.AccessToken,
-                UserData.RefreshToken,
+                UserData.AccessTokenId,
+                UserData.RefreshTokenHash,
                 UserData.CreatedOnUtc,
                 UserData.RefreshTokenExpiresOnUtc,
                 UserData.CreatedOnUtc);
@@ -455,8 +474,8 @@ public sealed class UserTests
 
             // Act
             Result<UserToken> result = user.IssueToken(
-                UserData.AccessToken,
-                UserData.RefreshToken,
+                UserData.AccessTokenId,
+                UserData.RefreshTokenHash,
                 UserData.AccessTokenExpiresOnUtc,
                 UserData.CreatedOnUtc.AddMinutes(-1),
                 UserData.CreatedOnUtc);
@@ -474,8 +493,8 @@ public sealed class UserTests
 
             // Act
             Result<UserToken> result = user.IssueToken(
-                UserData.AccessToken,
-                UserData.RefreshToken,
+                UserData.AccessTokenId,
+                UserData.RefreshTokenHash,
                 UserData.AccessTokenExpiresOnUtc,
                 UserData.CreatedOnUtc,
                 UserData.CreatedOnUtc);
@@ -556,7 +575,7 @@ public sealed class UserTests
             User user = UserData.GetUserWithTwoTokens(out _, out _);
 
             // Act
-            Result result = user.RevokeAllActiveTokens();
+            Result result = user.RevokeAllActiveTokens(UserData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeTrue();
@@ -570,7 +589,7 @@ public sealed class UserTests
             User user = UserData.GetUserWithTwoTokens(out Guid firstTokenId, out Guid secondTokenId);
 
             // Act
-            user.RevokeAllActiveTokens();
+            user.RevokeAllActiveTokens(UserData.CreatedOnUtc);
 
             // Assert
             List<UserTokenRevokedDomainEvent> domainEvents = user.DomainEvents
@@ -590,7 +609,7 @@ public sealed class UserTests
             user.ClearDomainEvents();
 
             // Act
-            Result result = user.RevokeAllActiveTokens();
+            Result result = user.RevokeAllActiveTokens(UserData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeTrue();
@@ -605,11 +624,41 @@ public sealed class UserTests
             User user = UserData.GetActiveUser();
 
             // Act
-            Result result = user.RevokeAllActiveTokens();
+            Result result = user.RevokeAllActiveTokens(UserData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeTrue();
             user.DomainEvents.OfType<UserTokenRevokedDomainEvent>().Should().BeEmpty();
+        }
+
+        [Fact]
+        public void Should_NotRevokeExpiredTokens_When_RevokingAllActiveTokens()
+        {
+            // Arrange
+            User user = UserData.GetUserWithActiveAndExpiredToken(out Guid activeTokenId, out Guid expiredTokenId);
+
+            // Act
+            Result result = user.RevokeAllActiveTokens(UserData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            user.Tokens.Single(t => t.UserTokenId == activeTokenId).IsRevoked.Should().BeTrue();
+            user.Tokens.Single(t => t.UserTokenId == expiredTokenId).IsRevoked.Should().BeFalse();
+        }
+
+        [Fact]
+        public void Should_RaiseEventsOnlyForActiveTokens_When_SomeTokensExpired()
+        {
+            // Arrange
+            User user = UserData.GetUserWithActiveAndExpiredToken(out Guid activeTokenId, out _);
+            user.ClearDomainEvents();
+
+            // Act
+            user.RevokeAllActiveTokens(UserData.CreatedOnUtc);
+
+            // Assert
+            user.DomainEvents.OfType<UserTokenRevokedDomainEvent>()
+                .Should().ContainSingle(e => e.UserTokenId == activeTokenId);
         }
     }
 

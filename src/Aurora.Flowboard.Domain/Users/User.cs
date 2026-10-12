@@ -105,20 +105,20 @@ public sealed class User : BaseEntity
     }
 
     public Result<UserToken> IssueToken(
-        string accessToken,
-        string refreshToken,
+        string accessTokenId,
+        string refreshTokenHash,
         DateTime accessTokenExpiresOnUtc,
         DateTime refreshTokenExpiresOnUtc,
         DateTime issuedOnUtc)
     {
-        if (string.IsNullOrWhiteSpace(accessToken))
+        if (string.IsNullOrWhiteSpace(accessTokenId))
         {
-            return Result.Fail<UserToken>(UserTokenErrors.AccessTokenRequired);
+            return Result.Fail<UserToken>(UserTokenErrors.AccessTokenIdRequired);
         }
 
-        if (string.IsNullOrWhiteSpace(refreshToken))
+        if (string.IsNullOrWhiteSpace(refreshTokenHash))
         {
-            return Result.Fail<UserToken>(UserTokenErrors.RefreshTokenRequired);
+            return Result.Fail<UserToken>(UserTokenErrors.RefreshTokenHashRequired);
         }
 
         if (accessTokenExpiresOnUtc <= issuedOnUtc)
@@ -133,8 +133,8 @@ public sealed class User : BaseEntity
 
         var token = UserToken.Create(
             Id,
-            accessToken,
-            refreshToken,
+            accessTokenId,
+            refreshTokenHash,
             accessTokenExpiresOnUtc,
             refreshTokenExpiresOnUtc,
             issuedOnUtc);
@@ -167,9 +167,10 @@ public sealed class User : BaseEntity
         return Result.Ok();
     }
 
-    public Result RevokeAllActiveTokens()
+    public Result RevokeAllActiveTokens(DateTime utcNow)
     {
-        foreach (UserToken token in _tokens.Where(t => !t.IsRevoked))
+        // Expired tokens can no longer be redeemed, so they need no revocation (nor an event).
+        foreach (UserToken token in _tokens.Where(t => t.IsRefreshTokenValid(utcNow)))
         {
             token.Revoke();
 

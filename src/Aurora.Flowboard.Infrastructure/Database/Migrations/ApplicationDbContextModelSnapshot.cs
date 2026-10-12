@@ -464,15 +464,15 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("user_token_id");
 
-                    b.Property<string>("AccessToken")
-                        .IsRequired()
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)")
-                        .HasColumnName("access_token");
-
                     b.Property<DateTime>("AccessTokenExpiresOnUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("access_token_expires_on_utc");
+
+                    b.Property<string>("AccessTokenId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("access_token_id");
 
                     b.Property<bool>("IsRevoked")
                         .HasColumnType("boolean")
@@ -482,26 +482,36 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("issued_on_utc");
 
-                    b.Property<string>("RefreshToken")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("refresh_token");
-
                     b.Property<DateTime>("RefreshTokenExpiresOnUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("refresh_token_expires_on_utc");
+
+                    b.Property<string>("RefreshTokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .HasColumnName("refresh_token_hash")
+                        .IsFixedLength();
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("UserTokenId")
                         .HasName("pk_user_tokens");
 
-                    b.HasIndex("RefreshToken")
+                    b.HasIndex("RefreshTokenExpiresOnUtc")
+                        .HasDatabaseName("ix_user_tokens_refresh_token_expires_on_utc");
+
+                    b.HasIndex("RefreshTokenHash")
                         .IsUnique()
-                        .HasDatabaseName("ix_user_tokens_refresh_token");
+                        .HasDatabaseName("ix_user_tokens_refresh_token_hash");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_user_tokens_user_id");
