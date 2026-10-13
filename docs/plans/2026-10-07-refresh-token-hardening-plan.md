@@ -1,5 +1,11 @@
 # Endurecimiento de refresh tokens — Plan de implementación
 
+**Fecha:** 2026-10-07
+**Estado:** Implementado
+**Tickets:** I3, I4, M11
+**Rama:** `fix/refresh-token-hardening` · **PR:** #32
+**Spec:** `docs/specs/2026-10-07-refresh-token-hardening-design.md`
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Que la base de datos no guarde secretos de sesión utilizables, que un refresh token solo se pueda canjear una vez aunque lleguen peticiones concurrentes, que el coste de refresh, logout y cambio de contraseña no crezca con el histórico, y que los fallos de autenticación respondan 401.
@@ -7,8 +13,6 @@
 **Architecture:** `UserToken` pasa a guardar el `jti` del JWT y el SHA-256 del refresh token; `JwtTokenProvider` genera ambos y los entrega a los handlers en un nuevo `IssuedToken`, sin cambiar el contrato HTTP de `IdentityToken`. Los handlers cargan solo el token presentado (o los activos) con `Include` filtrado, y `xmin` de Postgres actúa como concurrency token de `user_tokens` para detectar canjes concurrentes. Un job Quartz borra por lotes los tokens caducados hace más de 7 días.
 
 **Tech Stack:** .NET 10, ASP.NET Core Minimal APIs, EF Core + Npgsql + EFCore.NamingConventions, Quartz, xUnit v3 + NSubstitute + FluentAssertions.
-
-**Spec:** `docs/superpowers/specs/2026-10-07-refresh-token-hardening-design.md`
 
 ## Global Constraints
 

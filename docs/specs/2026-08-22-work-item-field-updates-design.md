@@ -1,8 +1,10 @@
 # Work Item Field Updates — Design
 
-**Date:** 2026-08-22
-**Status:** Approved for implementation
-**Branch:** `feature/milestones-components`
+**Fecha:** 2026-08-22
+**Estado:** Implementado
+**Tickets:** —
+**Rama:** `feature/milestones-components` · **PR:** #3
+**Plan:** `docs/plans/2026-08-22-work-item-field-updates-plan.md`
 
 ## 1. Problem
 
@@ -282,7 +284,7 @@ Volume is the bulk of the work here; each class is mechanical.
 
 ## 9. Documentation
 
-`docs/flowboard-prd.md`:
+`docs/product/flowboard-prd.md`:
 
 - §11 — add the seven routes. `PATCH /work-items/{id}/component` is missing from the document entirely.
 - Line 532 — correct `409 Conflict` to `400 Bad Request` for a `Completed`/`Archived` target milestone, per decision 8.

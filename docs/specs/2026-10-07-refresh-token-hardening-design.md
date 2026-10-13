@@ -1,9 +1,10 @@
 # Endurecimiento de refresh tokens — Diseño
 
 **Fecha:** 2026-10-07
-**Estado:** Aprobado para implementación
-**Rama:** `fix/refresh-token-hardening`
-**Puntos de la revisión:** I3, I4, M11 (ver `docs/review-remediation-plan.md` y la página de seguimiento)
+**Estado:** Implementado
+**Tickets:** I3, I4, M11 (ver `docs/reviews/review-remediation-plan.md` y la página de seguimiento)
+**Rama:** `fix/refresh-token-hardening` · **PR:** #32
+**Plan:** `docs/plans/2026-10-07-refresh-token-hardening-plan.md`
 
 ## 1. Problema
 
