@@ -18,6 +18,10 @@ public static class UserErrors
         "User.AlreadyDeactivated",
         "The user is already deactivated");
 
+    public static readonly BaseError AlreadyActive = BaseError.Validation(
+        "User.AlreadyActive",
+        "The user is already active");
+
     public static readonly BaseError Inactive = BaseError.Validation(
         "User.Inactive",
         "Cannot perform this operation on an inactive user");
@@ -33,4 +37,8 @@ public static class UserErrors
     public static readonly BaseError RoleNotAssigned = BaseError.Validation(
         "User.RoleNotAssigned",
         "The role is not assigned to this user");
+
+    public static readonly BaseError LastAdministrator = BaseError.Conflict(
+        "User.LastAdministrator",
+        "The last active Administrator cannot be demoted");
 }
