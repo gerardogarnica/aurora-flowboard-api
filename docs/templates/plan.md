@@ -16,6 +16,12 @@
 - Cada tarea se implementa siguiendo la skill indicada en su línea **Skill:**. Invócala (Skill tool) antes de escribir el código de la tarea, aunque empieces sin contexto.
 - Se ejecuta con la skill `execute-plan`. Aprobar el plan (`**Estado:** Aprobado`) autoriza un commit por tarea; nunca push ni PR sin que el usuario lo pida.
 
+## Mapa de ficheros
+
+| Fichero | Acción | Responsabilidad |
+|---|---|---|
+| `ruta` | Crear / Modificar | qué hace |
+
 ## Tareas
 
 ### Tarea 1: <nombre>
@@ -31,7 +37,8 @@
 - [ ] Verlo fallar (`-class "Namespace.ClassName"`)
 - [ ] Implementar lo mínimo
 - [ ] Verlo pasar
-- [ ] Commit: `<mensaje en inglés, imperativo>` (autorizado por la aprobación del plan)
+- [ ] `dotnet build <ruta del .csproj>` (si la tarea toca Api o Infrastructure, que el `-class` no compila)
+- [ ] Commit: `<mensaje en inglés, imperativo>` con `ruta1`, `ruta2` y este plan (autorizado por la aprobación del plan)
 
 ## Verificación final
 

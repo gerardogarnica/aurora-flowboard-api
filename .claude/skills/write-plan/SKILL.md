@@ -26,13 +26,13 @@ Habla con el usuario en español. Sigue `.claude/rules/documentation.md` (estruc
 
 ## 3. Mapa de ficheros
 
-Antes de dividir en tareas, lista qué ficheros se crean y cuáles se modifican, con la responsabilidad de cada uno. Un fichero, una responsabilidad; si uno ya existente crece demasiado, dilo en el plan en vez de repartirlo por tu cuenta.
+Antes de dividir en tareas, decide qué ficheros se crean y cuáles se modifican, con la responsabilidad de cada uno, y escríbelo en la sección `## Mapa de ficheros` del plan (quien lo ejecute empieza sin contexto y lo necesita). Un fichero, una responsabilidad; si uno ya existente crece demasiado, dilo en el plan en vez de repartirlo por tu cuenta.
 
 ## 4. Tareas
 
 Crea `docs/plans/YYYY-MM-DD-<tema>-plan.md` a partir de `docs/templates/plan.md`, con la misma fecha y tema que el spec y `**Estado:** Borrador`.
 
-- **Una tarea es una unidad commiteable**: p. ej. un método de dominio y sus tests, un handler y sus tests, un endpoint, una configuración de EF y su migración, una actualización de docs. Orden habitual: dominio, application, infraestructura, API, docs.
+- **Una tarea es una unidad commiteable**: p. ej. un método de dominio y sus tests, un handler y sus tests, un endpoint, una configuración de EF y su migración, una actualización de docs. Orden habitual: dominio → application → infraestructura → API → docs.
 - Cada tarea lleva:
   - **Skill:** `domain-entity`, `create-feature`, `unit-testing` o `—`.
   - **Ficheros:** rutas exactas a crear, modificar y testear.
@@ -44,6 +44,7 @@ Crea `docs/plans/YYYY-MM-DD-<tema>-plan.md` a partir de `docs/templates/plan.md`
     5. `Commit` con el mensaje exacto (en inglés, imperativo) y los ficheros a añadir.
 - Nada de "añadir validación", "manejar errores" o "similar a la tarea 3": escribe el código. Si una tarea repite un patrón, repite el código.
 - Lo que no tiene proyecto de tests (Api, seeder, `Program.cs`) lleva pasos de verificación manual exactos: SQL, petición HTTP, resultado esperado.
+- Toda tarea que toque código no cubierto por el ejecutable de tests que usa (Api, Infrastructure) incluye antes del commit `dotnet build <ruta del .csproj>`: un `-class` solo compila el proyecto de tests y sus dependencias, y `CLAUDE.md` exige compilar tras cada cambio.
 - La sección "Verificación final" de la plantilla se completa con lo que aplique al plan.
 
 ## 5. Autorrevisión

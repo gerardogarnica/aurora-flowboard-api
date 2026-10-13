@@ -26,7 +26,7 @@ Habla con el usuario en español. Sigue `.claude/rules/documentation.md` (estruc
 
 Dila en voz alta para que el usuario pueda corregirla:
 
-- **Acotado:** cambia un flujo que ya existe (un handler, una entidad, un endpoint). No lleva spec: presenta un diseño corto en el chat, espera la aprobación y termina aquí.
+- **Acotado:** cambia un flujo que ya existe (un handler, una entidad, un endpoint). No lleva spec: presenta un diseño corto en el chat y espera la aprobación. Con ella, esta skill termina y la implementación sigue con las skills del repo (`domain-entity`, `create-feature`, `unit-testing`) y el flujo de `CLAUDE.md`.
 - **Arquitectónico:** feature nueva, varios agregados, un patrón nuevo o una migración compleja. Sigue con el paso 3.
 - Si dudas, elige arquitectónico.
 
@@ -91,10 +91,11 @@ Revisa el fichero y corrige sin preguntar:
 4. **Alcance:** lo excluido indica dónde se cubrirá; el spec cabe en un solo plan (si no, propone dividirlo).
 5. **Ambigüedad:** ningún requisito admite dos lecturas; si alguno sí, elige una y escríbela.
 6. **Convenciones:** el diseño no contradice `domain-entity` ni `create-feature` (nombres, visibilidad, errores como `Result`, mapping, comando frente a consulta).
+7. **ADR:** si alguna decisión trasciende esta feature (un patrón transversal, una librería nueva, una convención que afecta a otros agregados), propón al usuario registrarla como ADR en `docs/architecture/adr/` con `docs/templates/adr.md`, enlazado desde el spec.
 
 ## 9. Revisión del usuario
 
 - Pide al usuario que revise el fichero. Si pide cambios, aplícalos y repite el paso 8.
-- Con su aprobación, cambia el encabezado a `**Estado:** Aprobado`.
+- Con su aprobación, cambia el encabezado a `**Estado:** Aprobado` y la columna "Estado" de su fila en `docs/README.md`.
 - No hagas commit salvo que te lo pida.
 - Siguiente paso, **automático**: en cuanto el usuario apruebe el spec, invoca la skill `write-plan` con la ruta del spec, sin preguntar. Escribir el plan no toca código, y la siguiente aprobación del usuario es la del plan. `write-plan` lo guarda en `docs/plans/` y lo enlaza desde el encabezado del spec (`**Plan:**`).

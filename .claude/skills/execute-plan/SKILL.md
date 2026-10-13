@@ -16,7 +16,7 @@ Habla con el usuario en español. Código, commits y PR van en inglés.
 
 - Si no se indicó ruta, busca en `docs/plans/` los planes con `**Estado:** Aprobado` que tengan tareas sin marcar (`- [ ]`). Si hay uno, confírmalo con el usuario antes de empezar; si hay varios, pregúntale cuál; si no hay ninguno, dilo y para.
 - El encabezado del plan dice `**Estado:** Aprobado`. Si no, para: un plan sin aprobar no autoriza ni código ni commits.
-- La rama actual es la del encabezado (`**Rama:**`) y parte de staging (`git merge-base --is-ancestor origin/staging HEAD`). Si la rama no existe, créala con `git switch --no-track -c <rama> origin/staging`.
+- La rama actual es la del encabezado (`**Rama:**`) y parte de staging (`git merge-base --is-ancestor origin/staging HEAD`). Si existe pero no es la actual, cámbiate a ella con `git switch <rama>` (avisa si hay cambios sin commitear que viajarían con el cambio). Si no existe, créala con `git switch --no-track -c <rama> origin/staging`.
 - Anota los cambios sin commitear que ya existían (p. ej. `.claude/settings.local.json`, `appsettings.Development.json`): nunca entran en los commits del plan.
 - Si hay tareas ya marcadas (`- [x]`), retoma desde la primera sin marcar y comprueba con `git log` que su commit existe.
 - Si el spec, el plan o `docs/README.md` tienen cambios sin commitear (lo normal tras `spec` y `write-plan`), pregunta al usuario si se commitean antes, en un commit de documentación propio. Ese commit **no** lo cubre la aprobación del plan: sin su respuesta, no lo hagas.
@@ -57,4 +57,6 @@ Las desviaciones que el usuario apruebe quedan anotadas en el plan.
 
 - El plan sigue en `**Estado:** Aprobado`. Cuando el usuario confirme que se fusionó en `staging`, pasa el plan y su spec a `**Estado:** Implementado` y actualiza la columna "Estado" de `docs/README.md` (commit solo si el usuario lo pide).
 - Informa con los commits creados, los recuentos de tests, el resultado de los agentes y las desviaciones.
-- Push y PR solo cuando el usuario los pida. Si el plan viene de `review-fix`, sigue en su paso 6.
+- Push y PR solo cuando el usuario los pida.
+- Si `**Tickets:**` tiene IDs de la revisión (C1, I5, M16, R3…), el cierre (PR con su plantilla y tracker) lo hace `review-fix`, que solo puede invocar el usuario: si esta sesión no empezó con `/review-fix`, pídele que ejecute `/review-fix <IDs>`; detectará el plan terminado y saltará a su paso 6.
+- Al confirmarse el merge, rellena también `**PR:**` en el encabezado del spec y del plan.

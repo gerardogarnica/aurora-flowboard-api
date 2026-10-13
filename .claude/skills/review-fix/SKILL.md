@@ -32,6 +32,11 @@ Objetivo de este paso: terminar con un **encargo** que use el resto de la skill:
 3. Verifica en el código cada entrada de `where`. Las líneas son de la revisión sobre `44f0f22` y pueden haber cambiado; si el problema ya no existe, dilo y propón marcarlo como `dismissed`.
 4. Lo que el plan asigna a otros puntos (p. ej. la concurrencia a I9) queda fuera de alcance; anótalo con su ID.
 5. Lee las rules de `.claude/rules/` que toquen las áreas afectadas.
+6. **Retomar:** busca en `docs/specs/` y `docs/plans/` documentos cuyo `**Tickets:**` incluya estos IDs. Si existen, no empieces de cero; dile al usuario dónde se quedó y sigue desde ahí:
+   - spec en `Borrador` → retoma la skill `spec` en su revisión;
+   - spec `Aprobado` sin plan, o plan en `Borrador` → `write-plan`;
+   - plan `Aprobado` con tareas sin marcar → ofrece `execute-plan` (paso 4);
+   - plan `Aprobado` con todas las tareas marcadas → paso 6.
 
 ## 2. Rama
 
@@ -55,7 +60,7 @@ Objetivo de este paso: terminar con un **encargo** que use el resto de la skill:
 ## 4. Implementación con TDD
 
 - **Si hay un plan aprobado** (encargo arquitectónico), ejecútalo con la skill `execute-plan` cuando el usuario lo pida (`write-plan` se lo ofrece al aprobarse el plan, aquí o en una sesión nueva). `execute-plan` ya incluye el TDD y la verificación de los pasos 4 y 5, y continúa en el paso 6. El resto de este paso y el paso 5 son para los encargos acotados.
-- Test primero, verlo fallar, código mínimo y verlo pasar. Orden habitual: dominio, luego handler, luego API e infraestructura.
+- Test primero, verlo fallar, código mínimo y verlo pasar. Orden habitual: dominio → application → infraestructura → API → docs.
 - Aquí manda el TDD aunque `create-feature` ponga los tests al final de su flujo: escribe primero los tests de cada pieza y después la pieza.
 - En C#, un test que llama a una API inexistente no compila; ese error de compilación cuenta como RED. Para ver fallar las **assertions**, añade antes la firma con un stub sin comportamiento y después implementa.
 - Lo que no tiene proyecto de tests (la capa Api, el seeder, `Program.cs`) se verifica a mano. Dale al usuario los pasos exactos: SQL, reinicio, petición HTTP y resultado esperado.
@@ -80,4 +85,4 @@ Objetivo de este paso: terminar con un **encargo** que use el resto de la skill:
 - En el PR, `Summary` empieza nombrando los puntos (p. ej. "Fixes finding **I5** from the full repository review").
 - Actualiza el tracker de cada punto con `ArtifactData` → `update`, usando `if_version` con la versión que leíste en el paso 1: `status: "in_progress"` y una `note` con el número de PR y un resumen de una línea. Cuando el usuario confirme el merge, pasa a `status: "done"`.
 
-**Tras el merge (general):** si el encargo tuvo spec y plan, pásalos a `**Estado:** Implementado` y actualiza la columna "Estado" de `docs/README.md` (commit solo si el usuario lo pide).
+**Tras el merge (general):** si el encargo tuvo spec y plan, pásalos a `**Estado:** Implementado`, rellena `**PR:**` en sus encabezados y actualiza la columna "Estado" de `docs/README.md` (commit solo si el usuario lo pide).

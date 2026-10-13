@@ -88,6 +88,12 @@ When a change introduces a new area-specific decision, add it to the matching ru
 4. Add or update tests when appropriate.
 5. Provide commands to verify changes.
 
+Scale the process to the change:
+- **Bounded** (an existing flow: a handler, an entity, an endpoint): short design in chat, approval, then implement with `domain-entity` / `create-feature` / `unit-testing`.
+- **Architectural** (new feature, several aggregates, a new pattern, a complex migration): `spec` → `write-plan` → `execute-plan`, with documents in `docs/` (see `.claude/rules/documentation.md`).
+- **Review findings** (`docs/reviews/review-remediation-plan.md`): `/review-fix <IDs>`, which routes to either path.
+- Never commit, push or open a PR until asked; an approved plan authorizes one commit per task, nothing more.
+
 ## Hard rules
 - Do not introduce new architectural layers.
 - Do not add frameworks we do not already use.

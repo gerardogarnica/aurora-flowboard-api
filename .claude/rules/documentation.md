@@ -44,7 +44,7 @@ Every spec, plan and ADR starts with this header right after the title, in this 
 |---|---|
 | `Borrador` | Being written or under review |
 | `Aprobado` | Approved by the user; implementation may start |
-| `Implementado` | Merged into `staging` (set it in the PR that implements it, or right after the merge) |
+| `Implementado` | Merged into `staging`. Set it (and fill `**PR:**`) once the user confirms the merge, never in the PR itself |
 | `Obsoleto` | Replaced or abandoned; add a line saying why and what replaces it |
 
 ## Content
