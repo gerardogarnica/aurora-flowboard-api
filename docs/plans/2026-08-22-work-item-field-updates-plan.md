@@ -1,5 +1,11 @@
 # Work Item Field Updates Implementation Plan
 
+**Fecha:** 2026-08-22
+**Estado:** Implementado
+**Tickets:** —
+**Rama:** `feature/milestones-components` · **PR:** #3
+**Spec:** `docs/specs/2026-08-22-work-item-field-updates-design.md`
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace the coarse `PUT work-items/{id}` with seven per-field `PATCH` endpoints so the front-end's inline autosave controls can update description, type, priority, estimated points, estimated completion date, component and milestone one field at a time.
@@ -7,8 +13,6 @@
 **Architecture:** Each field gets its own route, command, validator and handler. The field name lives in the URL, so a `null` body value unambiguously means "clear this field". Every handler derives from one abstract base that owns the load/authorise/save cycle. Each domain method records its own `WorkItemChangeType` entry and short-circuits when the value is unchanged.
 
 **Tech Stack:** .NET 10, ASP.NET Core Minimal APIs, EF Core + Npgsql, FluentValidation, Scrutor, xUnit v3 + NSubstitute + FluentAssertions.
-
-**Spec:** `docs/superpowers/specs/2026-08-22-work-item-field-updates-design.md`
 
 ## Global Constraints
 

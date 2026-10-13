@@ -1,6 +1,6 @@
 ---
 name: review-fix
-description: Arranca y lleva hasta el PR la corrección de uno o más puntos de la revisión del repositorio (C1, I5, I6 I7 M16…) siguiendo docs/review-remediation-plan.md y la página de seguimiento.
+description: Arranca y lleva hasta el PR la corrección de uno o más puntos de la revisión del repositorio (C1, I5, I6 I7 M16…) siguiendo docs/reviews/review-remediation-plan.md y la página de seguimiento.
 disable-model-invocation: true
 argument-hint: <IDs de la revisión, p. ej. "I6 I7 M16">
 ---
@@ -22,7 +22,7 @@ Objetivo de este paso: terminar con un **encargo** que use el resto de la skill:
 - **acción propuesta**;
 - **alcance**: qué entra y qué cubren otros puntos.
 
-1. Lee `docs/review-remediation-plan.md`: qué rama agrupa estos IDs, qué otros puntos van en ella y las dependencias de orden (p. ej. C1 antes que R9, R1 antes que R2–R4, una sola migración abierta a la vez). Si los IDs pedidos no coinciden con la agrupación del plan, pregunta antes de seguir.
+1. Lee `docs/reviews/review-remediation-plan.md`: qué rama agrupa estos IDs, qué otros puntos van en ella y las dependencias de orden (p. ej. C1 antes que R9, R1 antes que R2–R4, una sola migración abierta a la vez). Si los IDs pedidos no coinciden con la agrupación del plan, pregunta antes de seguir.
 2. Lee cada punto de la página de seguimiento con `ArtifactData` → `get`:
    - `url`: `https://claude.ai/artifact/HgWcansbBYbngpQjsF5u2s`
    - `collection`: `findings`, `doc_id`: el ID (p. ej. `I6`)
@@ -44,7 +44,7 @@ Objetivo de este paso: terminar con un **encargo** que use el resto de la skill:
 1. Resume lo que entiendes: el problema verificado, la acción propuesta, lo que asumes y el criterio de éxito. Separa lo que dice el encargo de tus supuestos.
 2. Clasifica y dilo en voz alta:
    - **Acotado**: cambia flujos que ya existen (un handler, una entidad, el seeder). Diseño corto en el chat.
-   - **Arquitectónico**: afecta a varios agregados, introduce un patrón nuevo o lleva una migración compleja. Spec en `docs/superpowers/specs/YYYY-MM-DD-<tema>-design.md` y plan en `docs/superpowers/plans/`. Si el plugin superpowers está disponible, usa `superpowers:brainstorming` y después `superpowers:writing-plans`.
+   - **Arquitectónico**: afecta a varios agregados, introduce un patrón nuevo o lleva una migración compleja. Usa la skill `spec` (spec en `docs/specs/`) y después el plan en `docs/plans/` (con `superpowers:writing-plans` si está disponible). Retoma esta skill en el paso 4 cuando el plan esté aprobado.
    - Si dudas, elige el más pesado.
 3. Haz las preguntas que importen **de una en una**, con `AskUserQuestion`, de 2 a 4 opciones y la recomendada primero. Pregunta solo lo que cambie el diseño; lo que tenga un valor por defecto razonable, decídelo y dilo.
 4. Presenta el diseño: capas y ficheros que cambian, tests, docs y lo que queda fuera de alcance (con dónde se cubrirá).

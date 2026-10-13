@@ -77,6 +77,7 @@ Detailed conventions live in `.claude/rules/` and load automatically when you re
 | `unit-tests.md` | Mock `DbSet` setup, pagination test across page boundaries |
 | `architecture-tests.md` | NetArchTest pitfalls, Mono.Cecil pin |
 | `build-and-packaging.md` | No spaces in project names, central package management |
+| `documentation.md` | `docs/` layout, spec/plan/ADR naming, header and status lifecycle, Spanish for new documents |
 
 When a change introduces a new area-specific decision, add it to the matching rule (or a new one), not here. This file only changes when the architecture, stack or workflow changes.
 
