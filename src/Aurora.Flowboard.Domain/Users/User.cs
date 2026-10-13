@@ -23,6 +23,7 @@ public sealed class User : BaseEntity
 
     public IReadOnlyCollection<UserToken> Tokens => _tokens.AsReadOnly();
     public IReadOnlyCollection<Role> Roles => _roles.AsReadOnly();
+    public bool IsAdministrator => _roles.Any(r => r.Name == Role.Administrator.Name);
 
     private User() : base(Guid.Empty) { } // EF Core
 
@@ -100,6 +101,21 @@ public sealed class User : BaseEntity
         UpdatedOnUtc = updatedOnUtc;
 
         AddDomainEvent(new UserDeactivatedDomainEvent(Id));
+
+        return Result.Ok();
+    }
+
+    public Result Reactivate(DateTime updatedOnUtc)
+    {
+        if (IsActive)
+        {
+            return Result.Fail(UserErrors.AlreadyActive);
+        }
+
+        IsActive = true;
+        UpdatedOnUtc = updatedOnUtc;
+
+        AddDomainEvent(new UserReactivatedDomainEvent(Id));
 
         return Result.Ok();
     }
@@ -214,13 +230,24 @@ public sealed class User : BaseEntity
         return Result.Ok();
     }
 
-    public Result ChangeRole(Role newRole, DateTime updatedOnUtc)
+    public Result ChangeRole(Role newRole, bool hasOtherActiveAdministrator, DateTime updatedOnUtc)
     {
         ArgumentNullException.ThrowIfNull(newRole);
 
         if (_roles.Any(r => r.Name == newRole.Name))
         {
             return Result.Fail(UserErrors.RoleAlreadyAssigned);
+        }
+
+        // An inactive Administrator cannot log in, so demoting one never removes the last usable admin.
+        bool isDemotingLastActiveAdministrator = IsActive
+            && !hasOtherActiveAdministrator
+            && newRole.Name != Role.Administrator.Name
+            && IsAdministrator;
+
+        if (isDemotingLastActiveAdministrator)
+        {
+            return Result.Fail(UserErrors.LastAdministrator);
         }
 
         foreach (Role role in _roles.ToList())

@@ -23,6 +23,8 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Ignore(x => x.Initials);
 
+        builder.Ignore(x => x.IsAdministrator);
+
         builder.OwnsOne(x => x.Email, email =>
         {
             email.Property(e => e.Value)

@@ -24,7 +24,21 @@ internal sealed class ChangeUserRoleHandler(
             return Result.Fail(UserErrors.NotFound);
         }
 
-        Result changeRoleResult = user.ChangeRole(roleResult.Value, dateTimeProvider.UtcNow);
+        Role newRole = roleResult.Value;
+
+        bool isDemotingActiveAdministrator = user.IsActive
+            && user.IsAdministrator
+            && newRole.Name != Role.Administrator.Name;
+
+        // Only demoting an active Administrator can leave the system without one, so only then is the
+        // query needed. IsAdministrator is not translatable to SQL, hence the explicit Roles.Any below.
+        bool hasOtherActiveAdministrator = !isDemotingActiveAdministrator || await dbContext
+            .Users
+            .AnyAsync(
+                u => u.Id != user.Id && u.IsActive && u.Roles.Any(r => r.Name == Role.Administrator.Name),
+                cancellationToken);
+
+        Result changeRoleResult = user.ChangeRole(newRole, hasOtherActiveAdministrator, dateTimeProvider.UtcNow);
 
         if (!changeRoleResult.IsSuccessful)
         {
