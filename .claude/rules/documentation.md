@@ -52,6 +52,6 @@ Every spec, plan and ADR starts with this header right after the title, in this 
 Start from the templates in `docs/templates/` (`spec.md`, `plan.md`, `adr.md`). Sections that don't apply are kept with a one-line reason, not deleted, so a reader can tell "not considered" from "not applicable".
 
 - **Spec:** design and decisions, no step-by-step code. Created with the `spec` skill.
-- **Plan:** the executable steps derived from an approved spec. Created with `superpowers:writing-plans` (saved to `docs/plans/`).
+- **Plan:** the executable steps derived from an approved spec. Created with `superpowers:writing-plans` (saved to `docs/plans/`) or from `docs/templates/plan.md`. Whoever writes it, every task carries a `**Skill:**` line naming the repo skill that implements it (`domain-entity`, `create-feature`, `unit-testing`, or `—`), and the global constraints say each task follows its skill. Executors such as `superpowers:subagent-driven-development` start without context and only load a skill the plan names.
 - **ADR:** one decision that outlives a single feature (a cross-cutting pattern, a library choice), with the alternatives that were rejected.
 - A bounded change (approved in chat) does not get a spec or a plan.

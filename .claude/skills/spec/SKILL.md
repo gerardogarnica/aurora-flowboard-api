@@ -63,6 +63,10 @@ Presenta en el chat un borrador corto (objetivo, alcance, diseño a grandes rasg
 
 ## 6. Diseño por secciones
 
+- Antes de diseñar las capas, lee las skills que se usarán al implementar, para que el diseño ya siga sus convenciones (no las ejecutes: aquí no se escribe código):
+  - `.claude/skills/domain-entity/SKILL.md` y sus referencias `aggregate-root.md`, `errors-and-events.md` y `ef-configuration.md` (la tabla "Persistence consequences" decide el mapping y la sección 8 del spec);
+  - `.claude/skills/create-feature/SKILL.md` y sus referencias `command-slice.md`, `query-slice.md` y `endpoint.md` (comando o consulta, nombres, carpeta por caso de uso, endpoint).
+  - Usa en el spec sus nombres exactos: `{Verb}{Entity}Command`, `{Verb}{Entity}Handler`, `{Entity}Errors.{Code}`, `Endpoints/{Feature}/{UseCase}.cs`.
 - Presenta el diseño en el orden de la plantilla: capas (Domain, Application, Infrastructure, API), errores y códigos HTTP, datos y migraciones, tests.
 - Ajusta la extensión a la complejidad: unas frases si es directo, hasta 200–300 palabras si tiene matices.
 - Pregunta tras cada sección si va bien. Vuelve atrás si algo no encaja.
@@ -85,10 +89,11 @@ Revisa el fichero y corrige sin preguntar:
 3. **Supuestos:** cada respuesta del paso 4 está reflejada.
 4. **Alcance:** lo excluido indica dónde se cubrirá; el spec cabe en un solo plan (si no, propone dividirlo).
 5. **Ambigüedad:** ningún requisito admite dos lecturas; si alguno sí, elige una y escríbela.
+6. **Convenciones:** el diseño no contradice `domain-entity` ni `create-feature` (nombres, visibilidad, errores como `Result`, mapping, comando frente a consulta).
 
 ## 9. Revisión del usuario
 
 - Pide al usuario que revise el fichero. Si pide cambios, aplícalos y repite el paso 8.
 - Con su aprobación, cambia el encabezado a `**Estado:** Aprobado`.
 - No hagas commit salvo que te lo pida.
-- Siguiente paso: el plan, en `docs/plans/YYYY-MM-DD-<tema>-plan.md` (misma fecha y tema), con `superpowers:writing-plans` si está disponible o a partir de `docs/templates/plan.md` si no. Enlaza el plan desde el encabezado del spec (`**Plan:**`).
+- Siguiente paso: el plan, en `docs/plans/YYYY-MM-DD-<tema>-plan.md` (misma fecha y tema), con `superpowers:writing-plans` si está disponible o a partir de `docs/templates/plan.md` si no. Enlaza el plan desde el encabezado del spec (`**Plan:**`). Cada tarea del plan lleva su línea `**Skill:**` (ver `.claude/rules/documentation.md`); si usas `superpowers:writing-plans`, díselo explícitamente, porque no conoce esta convención.

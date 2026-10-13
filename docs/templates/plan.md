@@ -13,10 +13,13 @@
 ## Restricciones globales
 
 - Reglas de `CLAUDE.md` y `.claude/rules/` que aplican a todas las tareas.
+- Cada tarea se implementa siguiendo la skill indicada en su línea **Skill:**. Invócala (Skill tool) antes de escribir el código de la tarea, aunque empieces sin contexto.
 
 ## Tareas
 
 ### Tarea 1: <nombre>
+
+**Skill:** `domain-entity` | `create-feature` | `unit-testing` | — (si ninguna aplica: config, docs, migración manual)
 
 **Ficheros:**
 - Crear: `ruta`
