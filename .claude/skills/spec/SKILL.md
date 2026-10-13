@@ -20,6 +20,7 @@ Habla con el usuario en español. Sigue `.claude/rules/documentation.md` (estruc
   - el código afectado y las rules de `.claude/rules/` de esas áreas.
 - Si el **propósito** no está claro (para quién es, qué problema resuelve, cómo se sabe que está bien), haz primero una sola pregunta sobre eso. No propongas soluciones sin saberlo.
 - Si el encargo mezcla varios subsistemas independientes, dilo y propón dividirlo; haz el spec del primero.
+- **Si te invoca `review-fix`**, el encargo ya está verificado y clasificado como arquitectónico: no repitas su resumen ni la pregunta de propósito, salta el paso 2 y empieza en el paso 3. Usa la rama del encargo en el encabezado y los IDs de la revisión en `**Tickets:**`.
 
 ## 2. Clasificación
 
@@ -78,7 +79,7 @@ Presenta en el chat un borrador corto (objetivo, alcance, diseño a grandes rasg
   - `**Estado:** Borrador` y el resto del encabezado completo;
   - los supuestos finales van a la sección 4 y los enfoques a la sección 5;
   - las secciones que no apliquen se quedan con una línea de motivo.
-- Añade la fila del spec en `docs/README.md` (tabla "Specs y planes").
+- Añade la fila del spec en `docs/README.md` (tabla "Specs y planes"), con la columna "Plan" en `—`: la rellena `write-plan`.
 
 ## 8. Autorrevisión
 
@@ -96,4 +97,4 @@ Revisa el fichero y corrige sin preguntar:
 - Pide al usuario que revise el fichero. Si pide cambios, aplícalos y repite el paso 8.
 - Con su aprobación, cambia el encabezado a `**Estado:** Aprobado`.
 - No hagas commit salvo que te lo pida.
-- Siguiente paso: el plan, en `docs/plans/YYYY-MM-DD-<tema>-plan.md` (misma fecha y tema), con `superpowers:writing-plans` si está disponible o a partir de `docs/templates/plan.md` si no. Enlaza el plan desde el encabezado del spec (`**Plan:**`). Cada tarea del plan lleva su línea `**Skill:**` (ver `.claude/rules/documentation.md`); si usas `superpowers:writing-plans`, díselo explícitamente, porque no conoce esta convención.
+- Siguiente paso, **automático**: en cuanto el usuario apruebe el spec, invoca la skill `write-plan` con la ruta del spec, sin preguntar. Escribir el plan no toca código, y la siguiente aprobación del usuario es la del plan. `write-plan` lo guarda en `docs/plans/` y lo enlaza desde el encabezado del spec (`**Plan:**`).

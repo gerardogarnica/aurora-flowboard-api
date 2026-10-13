@@ -18,7 +18,7 @@ paths:
 | `docs/templates/` | Templates for the documents above | — |
 
 - `<topic>` is lowercase kebab-case in English (`refresh-token-hardening`), matching branch names.
-- Never write specs or plans to `docs/superpowers/`. Skills that default there (`superpowers:brainstorming`, `superpowers:writing-plans`) must use `docs/specs/` and `docs/plans/` instead.
+- Never write specs or plans to `docs/superpowers/` (the old default of the superpowers plugin, no longer used in this repo).
 - When a document moves, update the links in the documents that are still live (headers, indexes, skills). Steps inside plans that were already executed are a historical record: leave them alone.
 - Keep `docs/README.md` (the index) in sync when adding, moving or retiring a document.
 
@@ -52,6 +52,7 @@ Every spec, plan and ADR starts with this header right after the title, in this 
 Start from the templates in `docs/templates/` (`spec.md`, `plan.md`, `adr.md`). Sections that don't apply are kept with a one-line reason, not deleted, so a reader can tell "not considered" from "not applicable".
 
 - **Spec:** design and decisions, no step-by-step code. Created with the `spec` skill.
-- **Plan:** the executable steps derived from an approved spec. Created with `superpowers:writing-plans` (saved to `docs/plans/`) or from `docs/templates/plan.md`. Whoever writes it, every task carries a `**Skill:**` line naming the repo skill that implements it (`domain-entity`, `create-feature`, `unit-testing`, or `—`), and the global constraints say each task follows its skill. Executors such as `superpowers:subagent-driven-development` start without context and only load a skill the plan names.
+- **Plan:** the executable steps derived from an approved spec. Written with the `write-plan` skill and executed with `execute-plan`. Every task carries a `**Skill:**` line naming the repo skill that implements it (`domain-entity`, `create-feature`, `unit-testing`, or `—`), and the global constraints say each task follows its skill: the executor may start without context and only loads a skill the plan names.
+- **Approving a plan** (`Estado: Aprobado`) authorizes one commit per task while it is executed. It never authorizes push or a PR; those wait for the user.
 - **ADR:** one decision that outlives a single feature (a cross-cutting pattern, a library choice), with the alternatives that were rejected.
 - A bounded change (approved in chat) does not get a spec or a plan.
