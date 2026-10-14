@@ -28,7 +28,7 @@ internal static class GetMySummaryQueryData
         ProjectKind kind = status == ProjectStatus.Completed ? ProjectKind.Client : ProjectKind.Product;
 
         Project project = Project.Create(
-            name, Description, ProjectCode.Create(code).Value, kind, Color, admin, UtcNow).Value;
+            name, Description, ProjectCode.Create(code).Value, kind, Color, FlowStateDefinitionData.GetMinimalFlow(), admin, UtcNow).Value;
 
         foreach (User member in additionalMembers)
         {

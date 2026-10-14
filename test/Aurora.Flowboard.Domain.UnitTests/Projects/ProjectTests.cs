@@ -17,6 +17,7 @@ public sealed class ProjectTests
                 ProjectData.Prefix,
                 ProjectData.Kind,
                 ProjectData.Color,
+                ProjectData.InitialFlowStates,
                 creator,
                 ProjectData.CreatedOnUtc);
 
@@ -40,6 +41,7 @@ public sealed class ProjectTests
                 ProjectData.Prefix,
                 ProjectData.Kind,
                 ProjectData.Color,
+                ProjectData.InitialFlowStates,
                 creator,
                 ProjectData.CreatedOnUtc);
 
@@ -60,6 +62,7 @@ public sealed class ProjectTests
                 ProjectData.Prefix,
                 ProjectData.Kind,
                 ProjectData.Color,
+                ProjectData.InitialFlowStates,
                 creator,
                 ProjectData.CreatedOnUtc);
 
@@ -80,6 +83,7 @@ public sealed class ProjectTests
                 ProjectData.Prefix,
                 ProjectData.Kind,
                 ProjectData.Color,
+                ProjectData.InitialFlowStates,
                 creator,
                 ProjectData.CreatedOnUtc);
 
@@ -101,6 +105,7 @@ public sealed class ProjectTests
                 ProjectData.Prefix,
                 ProjectData.Kind,
                 ProjectData.Color,
+                ProjectData.InitialFlowStates,
                 creator,
                 ProjectData.CreatedOnUtc);
 
@@ -122,6 +127,7 @@ public sealed class ProjectTests
                 ProjectData.Prefix,
                 ProjectData.Kind,
                 ProjectData.Color,
+                ProjectData.InitialFlowStates,
                 creator,
                 ProjectData.CreatedOnUtc);
 
@@ -143,6 +149,7 @@ public sealed class ProjectTests
                 ProjectData.Prefix,
                 ProjectData.Kind,
                 ProjectData.Color,
+                ProjectData.InitialFlowStates,
                 creator,
                 ProjectData.CreatedOnUtc);
 
@@ -164,6 +171,7 @@ public sealed class ProjectTests
                 ProjectData.Prefix,
                 ProjectData.Kind,
                 ProjectData.Color,
+                ProjectData.InitialFlowStates,
                 creator,
                 ProjectData.CreatedOnUtc);
 
@@ -185,6 +193,7 @@ public sealed class ProjectTests
                 ProjectData.Prefix,
                 ProjectData.Kind,
                 ProjectData.Color,
+                ProjectData.InitialFlowStates,
                 creator,
                 ProjectData.CreatedOnUtc);
 
@@ -207,6 +216,7 @@ public sealed class ProjectTests
                 ProjectData.Prefix,
                 ProjectData.Kind,
                 ProjectData.Color,
+                ProjectData.InitialFlowStates,
                 creator,
                 ProjectData.CreatedOnUtc);
 
@@ -229,6 +239,7 @@ public sealed class ProjectTests
                 ProjectData.Prefix,
                 ProjectData.Kind,
                 ProjectData.Color,
+                ProjectData.InitialFlowStates,
                 creator,
                 ProjectData.CreatedOnUtc);
 
@@ -250,6 +261,7 @@ public sealed class ProjectTests
                 ProjectData.Prefix,
                 ProjectData.Kind,
                 ProjectData.Color,
+                ProjectData.InitialFlowStates,
                 creator,
                 ProjectData.CreatedOnUtc);
 
@@ -271,12 +283,167 @@ public sealed class ProjectTests
                 ProjectData.Prefix,
                 ProjectKind.Client,
                 ProjectData.Color,
+                ProjectData.InitialFlowStates,
                 creator,
                 ProjectData.CreatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeTrue();
             result.Value.Kind.Should().Be(ProjectKind.Client);
+        }
+
+        public static TheoryData<FlowStateCategory, BaseError> MissingCategories => new()
+        {
+            { FlowStateCategory.Active, ProjectErrors.InitialFlowStatesMissingActiveState },
+            { FlowStateCategory.Completed, ProjectErrors.InitialFlowStatesMissingCompletedState },
+            { FlowStateCategory.Cancelled, ProjectErrors.InitialFlowStatesMissingCancelledState },
+        };
+
+        [Fact]
+        public void Should_AddInitialFlowStates_When_Created()
+        {
+            // Arrange
+            User creator = UserData.GetActiveUser();
+
+            // Act
+            Result<Project> result = Project.Create(
+                ProjectData.Name,
+                ProjectData.Description,
+                ProjectData.Prefix,
+                ProjectData.Kind,
+                ProjectData.Color,
+                ProjectData.InitialFlowStates,
+                creator,
+                ProjectData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            Project project = result.Value;
+            FlowState backlog = project.FlowStates.Single(s => s.Name == "Backlog");
+            FlowState closed = project.FlowStates.Single(s => s.Name == "Closed");
+            FlowState dropped = project.FlowStates.Single(s => s.Name == "Dropped");
+
+            project.FlowStates.Should().HaveCount(3);
+            backlog.Category.Should().Be(FlowStateCategory.Active);
+            backlog.SortOrder.Should().Be(1);
+            closed.Category.Should().Be(FlowStateCategory.Completed);
+            dropped.Category.Should().Be(FlowStateCategory.Cancelled);
+            project.FlowTransitions.Should().HaveCount(2);
+            project.FlowTransitions.Should().Contain(t => t.FromStateId == backlog.Id && t.ToStateId == closed.Id);
+            project.FlowTransitions.Should().Contain(t => t.FromStateId == backlog.Id && t.ToStateId == dropped.Id);
+        }
+
+        [Fact]
+        public void Should_AddActiveStatesFirst_When_InitialFlowStatesAreUnordered()
+        {
+            // Arrange: closing states come first, so adding them in the given order would leave
+            // them without transitions from the active states.
+            User creator = UserData.GetActiveUser();
+            FlowStateDefinition[] flowStates =
+            [
+                ProjectData.GetFlowStateDefinition("Dropped", FlowStateCategory.Cancelled),
+                ProjectData.GetFlowStateDefinition("Closed", FlowStateCategory.Completed),
+                ProjectData.GetFlowStateDefinition("Todo", FlowStateCategory.Active),
+                ProjectData.GetFlowStateDefinition("Doing", FlowStateCategory.Active)
+            ];
+
+            // Act
+            Result<Project> result = Project.Create(
+                ProjectData.Name,
+                ProjectData.Description,
+                ProjectData.Prefix,
+                ProjectData.Kind,
+                ProjectData.Color,
+                flowStates,
+                creator,
+                ProjectData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            Project project = result.Value;
+            FlowState todo = project.FlowStates.Single(s => s.Name == "Todo");
+            FlowState doing = project.FlowStates.Single(s => s.Name == "Doing");
+            FlowState closed = project.FlowStates.Single(s => s.Name == "Closed");
+            FlowState dropped = project.FlowStates.Single(s => s.Name == "Dropped");
+
+            todo.SortOrder.Should().Be(1);
+            doing.SortOrder.Should().Be(2);
+            project.FlowTransitions.Should().Contain(t => t.FromStateId == doing.Id && t.ToStateId == closed.Id);
+            project.FlowTransitions.Should().Contain(t => t.FromStateId == todo.Id && t.ToStateId == dropped.Id);
+            project.FlowTransitions.Should().Contain(t => t.FromStateId == doing.Id && t.ToStateId == dropped.Id);
+        }
+
+        [Theory]
+        [MemberData(nameof(MissingCategories))]
+        public void Should_Fail_When_InitialFlowStatesMissCategory(FlowStateCategory missingCategory, BaseError expectedError)
+        {
+            // Arrange
+            User creator = UserData.GetActiveUser();
+            FlowStateDefinition[] flowStates = [.. ProjectData.InitialFlowStates.Where(s => s.Category != missingCategory)];
+
+            // Act
+            Result<Project> result = Project.Create(
+                ProjectData.Name,
+                ProjectData.Description,
+                ProjectData.Prefix,
+                ProjectData.Kind,
+                ProjectData.Color,
+                flowStates,
+                creator,
+                ProjectData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(expectedError);
+        }
+
+        [Fact]
+        public void Should_Fail_When_InitialFlowStatesAreEmpty()
+        {
+            // Arrange
+            User creator = UserData.GetActiveUser();
+
+            // Act
+            Result<Project> result = Project.Create(
+                ProjectData.Name,
+                ProjectData.Description,
+                ProjectData.Prefix,
+                ProjectData.Kind,
+                ProjectData.Color,
+                [],
+                creator,
+                ProjectData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.InitialFlowStatesMissingActiveState);
+        }
+
+        [Fact]
+        public void Should_Fail_When_InitialFlowStateIsInvalid()
+        {
+            // Arrange
+            User creator = UserData.GetActiveUser();
+            FlowStateDefinition[] flowStates =
+            [
+                .. ProjectData.InitialFlowStates,
+                ProjectData.GetFlowStateDefinition("backlog", FlowStateCategory.Active)
+            ];
+
+            // Act
+            Result<Project> result = Project.Create(
+                ProjectData.Name,
+                ProjectData.Description,
+                ProjectData.Prefix,
+                ProjectData.Kind,
+                ProjectData.Color,
+                flowStates,
+                creator,
+                ProjectData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.DuplicateFlowStateName);
         }
     }
 
@@ -535,6 +702,55 @@ public sealed class ProjectTests
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
+
+        [Theory]
+        [InlineData(ProjectKind.Client)]
+        [InlineData(ProjectKind.Research)]
+        public void Should_Fail_When_MaintenanceProjectChangesToTimeboxedKind(ProjectKind newKind)
+        {
+            // Arrange: Maintenance does not exist in the timeboxed lifecycle, so the project would be
+            // stranded with no valid status transition.
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Maintenance, admin, ProjectKind.Product);
+
+            // Act
+            Result result = project.ChangeKind(newKind, admin, ProjectData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.KindNotSupportedInCurrentStatus);
+            project.Kind.Should().Be(ProjectKind.Product);
+        }
+
+        [Fact]
+        public void Should_ChangeKind_When_ActiveTimeboxedProjectChangesToContinuousKind()
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Active, admin, ProjectKind.Client);
+
+            // Act
+            Result result = project.ChangeKind(ProjectKind.Product, admin, ProjectData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            project.Kind.Should().Be(ProjectKind.Product);
+        }
+
+        [Fact]
+        public void Should_ChangeKind_When_MaintenanceProjectChangesToAnotherContinuousKind()
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Maintenance, admin, ProjectKind.Product);
+
+            // Act
+            Result result = project.ChangeKind(ProjectKind.Internal, admin, ProjectData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            project.Kind.Should().Be(ProjectKind.Internal);
+        }
     }
 
     public sealed class ChangeStatus : BaseTest
@@ -697,25 +913,6 @@ public sealed class ProjectTests
             // Assert
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(ProjectErrors.InvalidStatusTransition);
-        }
-
-        [Fact]
-        public void Should_FailChangeStatus_When_KindChangedMakesCurrentStatusUnreachableInNewKind()
-        {
-            // Arrange: a Product project in Maintenance, whose kind is switched to a timeboxed kind
-            // (Client) — Maintenance is not a key in TimeboxedTransitions, so the project is stranded
-            // in its current status until it is switched back to a continuous kind.
-            User admin = UserData.GetActiveUser();
-            Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Maintenance, admin, ProjectKind.Product);
-            project.ChangeKind(ProjectKind.Client, admin, ProjectData.UpdatedOnUtc);
-
-            // Act
-            Result result = project.ChangeStatus(ProjectStatus.Archived, admin, ProjectData.UpdatedOnUtc);
-
-            // Assert
-            result.IsSuccessful.Should().BeFalse();
-            result.Error.Should().Be(ProjectErrors.InvalidStatusTransition);
-            project.Status.Should().Be(ProjectStatus.Maintenance);
         }
     }
 
@@ -1069,18 +1266,6 @@ public sealed class ProjectTests
         }
     }
 
-    public sealed class FlowStates
-    {
-        [Fact]
-        public void Should_ReturnEmptyCollections_When_ProjectIsCreated()
-        {
-            Project project = ProjectData.GetProject();
-
-            project.FlowStates.Should().BeEmpty();
-            project.FlowTransitions.Should().BeEmpty();
-        }
-    }
-
     public sealed class AddFlowState : BaseTest
     {
         [Fact]
@@ -1141,13 +1326,13 @@ public sealed class ProjectTests
             // Assert
             FlowStateAddedDomainEvent domainEvent = AssertDomainEventWasPublished<FlowStateAddedDomainEvent>(project);
             domainEvent.ProjectId.Should().Be(project.Id);
-            domainEvent.FlowStateId.Should().Be(project.FlowStates.Single().Id);
+            domainEvent.FlowStateId.Should().Be(project.FlowStates.Single(s => s.Name == "In Progress").Id);
         }
 
         [Fact]
-        public void Should_SetSortOrderToOne_When_FirstActiveStateAdded()
+        public void Should_SetSortOrderAfterLastActiveState_When_ActiveStateAdded()
         {
-            // Arrange
+            // Arrange: the initial flow has a single active state (SortOrder 1)
             User admin = UserData.GetActiveUser();
             Project project = ProjectData.GetProject(admin);
 
@@ -1155,7 +1340,7 @@ public sealed class ProjectTests
             project.AddFlowState("State A", FlowStateCategory.Active, ProjectData.FlowStateColor, [], admin);
 
             // Assert
-            project.FlowStates.Single(s => s.Name == "State A").SortOrder.Should().Be(1);
+            project.FlowStates.Single(s => s.Name == "State A").SortOrder.Should().Be(2);
         }
 
         [Fact]
@@ -1170,7 +1355,8 @@ public sealed class ProjectTests
             project.AddFlowState("State B", FlowStateCategory.Active, ProjectData.FlowStateColor, [], admin);
 
             // Assert
-            project.FlowStates.Single(s => s.Name == "State B").SortOrder.Should().Be(2);
+            int stateASortOrder = project.FlowStates.Single(s => s.Name == "State A").SortOrder;
+            project.FlowStates.Single(s => s.Name == "State B").SortOrder.Should().Be(stateASortOrder + 1);
         }
 
         [Fact]
@@ -1228,6 +1414,7 @@ public sealed class ProjectTests
             Project project = ProjectData.GetProject(admin);
             project.AddFlowState("State A", FlowStateCategory.Active, ProjectData.FlowStateColor, [], admin);
             project.ClearDomainEvents();
+            int transitionCount = project.FlowTransitions.Count;
 
             // Act
             Result result = project.AddFlowState(
@@ -1240,8 +1427,8 @@ public sealed class ProjectTests
             // Assert
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(ProjectErrors.FlowViewerRoleNotAllowed);
-            project.FlowStates.Should().ContainSingle(s => s.Name == "State A");
-            project.FlowTransitions.Should().BeEmpty();
+            project.FlowStates.Should().NotContain(s => s.Name == "State B");
+            project.FlowTransitions.Should().HaveCount(transitionCount);
             project.DomainEvents.Should().NotContain(e => e is FlowStateAddedDomainEvent);
         }
 
@@ -1376,7 +1563,8 @@ public sealed class ProjectTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Project project = ProjectData.GetProject(admin);
-            for (int i = 1; i <= Project.MaxActiveFlowStates; i++)
+            int initialActiveCount = project.FlowStates.Count(s => s.Category == FlowStateCategory.Active);
+            for (int i = initialActiveCount + 1; i <= Project.MaxActiveFlowStates; i++)
             {
                 project.AddFlowState($"State {i}", FlowStateCategory.Active, ProjectData.FlowStateColor, [], admin);
             }
@@ -1469,12 +1657,13 @@ public sealed class ProjectTests
             project.AddFlowState("State C", FlowStateCategory.Active, ProjectData.FlowStateColor, [], admin);
             FlowState stateB = project.FlowStates.Single(s => s.Name == "State B");
             FlowState stateC = project.FlowStates.Single(s => s.Name == "State C");
+            int stateBSortOrder = stateB.SortOrder;
 
             // Act
             project.RemoveFlowState(stateB.Id, admin);
 
             // Assert
-            stateC.SortOrder.Should().Be(2);
+            stateC.SortOrder.Should().Be(stateBSortOrder);
         }
 
         [Fact]
@@ -1504,7 +1693,7 @@ public sealed class ProjectTests
             User admin = UserData.GetActiveUser();
             Project project = ProjectData.GetProject(admin);
             project.AddFlowState("State A", FlowStateCategory.Active, ProjectData.FlowStateColor, [], admin);
-            FlowState state = project.FlowStates.Single();
+            FlowState state = project.FlowStates.Single(s => s.Name == "State A");
             User nonAdmin = UserData.GetActiveUser();
 
             // Act
@@ -1550,7 +1739,6 @@ public sealed class ProjectTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Project project = ProjectData.GetProject(admin);
-            project.AddFlowState("Done", FlowStateCategory.Completed, ProjectData.FlowStateColor, [], admin);
             FlowState completedState = project.FlowStates.Single(s => s.Category == FlowStateCategory.Completed);
 
             // Act
@@ -1567,7 +1755,6 @@ public sealed class ProjectTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Project project = ProjectData.GetProject(admin);
-            project.AddFlowState("Cancelled", FlowStateCategory.Cancelled, ProjectData.FlowStateColor, [], admin);
             FlowState cancelledState = project.FlowStates.Single(s => s.Category == FlowStateCategory.Cancelled);
 
             // Act

@@ -40,22 +40,28 @@ internal sealed class CreateProjectHandler(
             return Result.Fail<Guid>(colorResult.Error);
         }
 
-        if (command.FlowStates.Count > 0)
+        List<FlowStateDefinition> flowStates = [];
+
+        foreach (CreateProjectState state in command.FlowStates)
         {
-            if (!command.FlowStates.Any(s => s.Category == FlowStateCategory.Active))
+            Result<Color> stateColorResult = Color.Create(state.Color);
+            if (!stateColorResult.IsSuccessful)
             {
-                return Result.Fail<Guid>(ProjectErrors.InitialFlowStatesMissingActiveState);
+                return Result.Fail<Guid>(stateColorResult.Error);
             }
 
-            if (!command.FlowStates.Any(s => s.Category == FlowStateCategory.Completed))
+            Result<FlowStateDefinition> stateResult = FlowStateDefinition.Create(
+                state.Name,
+                state.Category,
+                stateColorResult.Value,
+                state.AllowedRoles);
+
+            if (!stateResult.IsSuccessful)
             {
-                return Result.Fail<Guid>(ProjectErrors.InitialFlowStatesMissingCompletedState);
+                return Result.Fail<Guid>(stateResult.Error);
             }
 
-            if (!command.FlowStates.Any(s => s.Category == FlowStateCategory.Cancelled))
-            {
-                return Result.Fail<Guid>(ProjectErrors.InitialFlowStatesMissingCancelledState);
-            }
+            flowStates.Add(stateResult.Value);
         }
 
         Result<Project> result = Project.Create(
@@ -64,6 +70,7 @@ internal sealed class CreateProjectHandler(
             prefixResult.Value,
             command.Kind,
             colorResult.Value,
+            flowStates,
             createdBy,
             dateTimeProvider.UtcNow);
 
@@ -73,36 +80,6 @@ internal sealed class CreateProjectHandler(
         }
 
         Project project = result.Value;
-
-        IEnumerable<CreateProjectState> orderedFlowStates = command.FlowStates
-            .OrderBy(s => s.Category switch
-            {
-                FlowStateCategory.Active => 0,
-                FlowStateCategory.Completed => 1,
-                FlowStateCategory.Cancelled => 2,
-                _ => 3
-            });
-
-        foreach (CreateProjectState state in orderedFlowStates)
-        {
-            Result<Color> stateColorResult = Color.Create(state.Color);
-            if (!stateColorResult.IsSuccessful)
-            {
-                return Result.Fail<Guid>(stateColorResult.Error);
-            }
-
-            Result addStateResult = project.AddFlowState(
-                state.Name,
-                state.Category,
-                stateColorResult.Value,
-                state.AllowedRoles,
-                createdBy);
-
-            if (!addStateResult.IsSuccessful)
-            {
-                return Result.Fail<Guid>(addStateResult.Error);
-            }
-        }
 
         dbContext.Projects.Add(project);
 

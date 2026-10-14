@@ -345,7 +345,6 @@ public sealed class WorkItemTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Project blockedProject = ProjectData.GetProject(admin);
-            blockedProject.AddFlowState("Backlog", FlowStateCategory.Active, ProjectData.FlowStateColor, [ProjectRole.Admin], admin);
             blockedProject.ChangeStatus(ProjectStatus.Archived, admin, ProjectData.UpdatedOnUtc);
 
             // Act
@@ -383,7 +382,9 @@ public sealed class WorkItemTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Project project = ProjectData.GetProject(admin);
-            // No flow states added - the project has no initial state
+            // Project.Create requires an active state; RemoveFlowState is the only way to lose it
+            FlowState onlyActiveState = project.FlowStates.Single(s => s.Category == FlowStateCategory.Active);
+            project.RemoveFlowState(onlyActiveState.Id, admin);
 
             // Act
             Result<WorkItem> result = WorkItem.Create(

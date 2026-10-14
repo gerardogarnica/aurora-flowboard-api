@@ -26,6 +26,10 @@ public static class ProjectErrors
         "Project.OperationNotAllowedInCurrentStatus",
         "This operation is not allowed in the project's current status");
 
+    public static readonly BaseError KindNotSupportedInCurrentStatus = BaseError.Validation(
+        "Project.KindNotSupportedInCurrentStatus",
+        "The project's current status does not exist in the lifecycle of the requested kind");
+
     public static readonly BaseError MemberAlreadyExists = BaseError.Conflict(
         "Project.MemberAlreadyExists",
         "The user is already a member of this project");

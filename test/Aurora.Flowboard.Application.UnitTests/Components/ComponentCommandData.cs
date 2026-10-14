@@ -19,7 +19,7 @@ internal static class ComponentCommandData
     }
 
     public static Project GetProject(User admin) =>
-        Project.Create("Test Project", "Test Description", ProjectCode.Create("TST").Value, ProjectKind.Product, Color.Create("white").Value, admin, UtcNow).Value;
+        Project.Create("Test Project", "Test Description", ProjectCode.Create("TST").Value, ProjectKind.Product, Color.Create("white").Value, FlowStateDefinitionData.GetMinimalFlow(), admin, UtcNow).Value;
 
     public static Project GetProjectWithComponent(User admin, out Component component)
     {

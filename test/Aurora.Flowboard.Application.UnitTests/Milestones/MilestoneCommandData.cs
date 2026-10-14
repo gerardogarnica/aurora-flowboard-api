@@ -26,7 +26,7 @@ internal static class MilestoneCommandData
     }
 
     public static Project GetProject(User admin) =>
-        Project.Create("Test Project", "Test Description", ProjectCode.Create("TST").Value, ProjectKind.Product, Color.Create("white").Value, admin, UtcNow).Value;
+        Project.Create("Test Project", "Test Description", ProjectCode.Create("TST").Value, ProjectKind.Product, Color.Create("white").Value, FlowStateDefinitionData.GetMinimalFlow(), admin, UtcNow).Value;
 
     public static Project GetProjectWithMilestone(User admin, out Milestone milestone)
     {
