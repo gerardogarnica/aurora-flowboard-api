@@ -72,6 +72,11 @@ public sealed class Milestone : BaseEntity
             return Result.Fail<Milestone>(MilestoneErrors.OnlyAdminCanManageMilestone);
         }
 
+        if (!project.IsModifiable)
+        {
+            return Result.Fail<Milestone>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
         if (string.IsNullOrWhiteSpace(name))
         {
             return Result.Fail<Milestone>(MilestoneErrors.NameRequired);
@@ -132,6 +137,11 @@ public sealed class Milestone : BaseEntity
             return Result.Fail(MilestoneErrors.OnlyAdminCanManageMilestone);
         }
 
+        if (!Project.IsModifiable)
+        {
+            return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
         if (!IsModifiable)
         {
             return Result.Fail(MilestoneErrors.OperationNotAllowedInCurrentStatus);
@@ -174,6 +184,11 @@ public sealed class Milestone : BaseEntity
         if (!Project.IsAdmin(changedBy.Id))
         {
             return Result.Fail(MilestoneErrors.OnlyAdminCanManageMilestone);
+        }
+
+        if (!Project.IsModifiable)
+        {
+            return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
 
         if (!IsValidTransition(Status, newStatus))

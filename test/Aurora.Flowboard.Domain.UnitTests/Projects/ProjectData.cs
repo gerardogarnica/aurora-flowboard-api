@@ -1,3 +1,6 @@
+using System.Collections;
+using System.Reflection;
+
 namespace Aurora.Flowboard.Domain.UnitTests.Projects;
 
 internal static class ProjectData
@@ -13,21 +16,67 @@ internal static class ProjectData
     public const string FlowStateName = "In Progress";
     public static readonly Color FlowStateColor = Color.Create("white").Value;
 
-    // Every role that can be assigned to a flow transition; Viewer is rejected by Project.AddFlowTransition.
+    // Every role that can be assigned to a flow transition; Viewer is rejected by FlowStateDefinition.Create and Project.AddFlowState.
     public static readonly ProjectRole[] AllRoles =
         [ProjectRole.Admin, ProjectRole.Analyst, ProjectRole.Developer, ProjectRole.QA];
 
+    // The smallest flow Project.Create accepts: one state per category. The names are not reused by
+    // the flow tests, so they can add "State A", "Done" or "Cancelled" on top of it.
+    public static readonly FlowStateDefinition[] InitialFlowStates =
+    [
+        GetFlowStateDefinition("Backlog", FlowStateCategory.Active),
+        GetFlowStateDefinition("Closed", FlowStateCategory.Completed),
+        GetFlowStateDefinition("Dropped", FlowStateCategory.Cancelled)
+    ];
+
+    // A four-state flow (two active, one completed, one cancelled) with every role allowed on
+    // every transition.
+    public static readonly FlowStateDefinition[] FourStateFlowStates =
+    [
+        GetFlowStateDefinition("Todo", FlowStateCategory.Active),
+        GetFlowStateDefinition("In Progress", FlowStateCategory.Active),
+        GetFlowStateDefinition("Done", FlowStateCategory.Completed),
+        GetFlowStateDefinition("Cancelled", FlowStateCategory.Cancelled)
+    ];
+
+    public static FlowStateDefinition GetFlowStateDefinition(string name, FlowStateCategory category) =>
+        FlowStateDefinition.Create(name, category, FlowStateColor, AllRoles).Value;
+
+    // Domain events raised while building the project (creation and its initial flow) are cleared,
+    // so tests can assert on the events of the operation under test.
     public static Project GetProject(User? creator = null)
     {
         User user = creator ?? UserData.GetActiveUser();
-        return Project.Create(Name, Description, Prefix, Kind, Color, user, CreatedOnUtc).Value;
+        Project project = Project.Create(Name, Description, Prefix, Kind, Color, InitialFlowStates, user, CreatedOnUtc).Value;
+        project.ClearDomainEvents();
+
+        return project;
+    }
+
+    // A project with no flow states, like those created before Project.Create required an initial
+    // flow, which may still exist in the database. The domain cannot build one, so the private
+    // collections are cleared by reflection.
+    public static Project GetLegacyProjectWithoutFlow(User? creator = null)
+    {
+        Project project = GetProject(creator);
+        ClearPrivateList(project, "_flowStates");
+        ClearPrivateList(project, "_flowTransitions");
+
+        return project;
+    }
+
+    private static void ClearPrivateList(Project project, string fieldName)
+    {
+        IList list = typeof(Project).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(project) as IList
+            ?? throw new InvalidOperationException($"Project has no list field '{fieldName}'; update {nameof(GetLegacyProjectWithoutFlow)} if it was renamed.");
+        list.Clear();
     }
 
     public static Project GetProjectWithStatus(ProjectStatus status, User? admin = null, ProjectKind? kind = null)
     {
         User user = admin ?? UserData.GetActiveUser();
         ProjectKind resolvedKind = kind ?? (status == ProjectStatus.Completed ? ProjectKind.Client : Kind);
-        Project project = Project.Create(Name, Description, Prefix, resolvedKind, Color, user, CreatedOnUtc).Value;
+        Project project = Project.Create(Name, Description, Prefix, resolvedKind, Color, InitialFlowStates, user, CreatedOnUtc).Value;
 
         switch (status)
         {
@@ -47,17 +96,11 @@ internal static class ProjectData
         return project;
     }
 
-    // A four-state flow (two active, one completed, one cancelled) with every role allowed on
-    // every transition. Domain events are cleared so tests can assert on a single event.
+    // A project with FourStateFlowStates. Domain events are cleared so tests can assert on a single event.
     public static Project GetProjectWithFlowStates(User? admin = null)
     {
         User user = admin ?? UserData.GetActiveUser();
-        Project project = GetProject(user);
-
-        project.AddFlowState("Todo", FlowStateCategory.Active, FlowStateColor, AllRoles, user);
-        project.AddFlowState("In Progress", FlowStateCategory.Active, FlowStateColor, AllRoles, user);
-        project.AddFlowState("Done", FlowStateCategory.Completed, FlowStateColor, AllRoles, user);
-        project.AddFlowState("Cancelled", FlowStateCategory.Cancelled, FlowStateColor, AllRoles, user);
+        Project project = Project.Create(Name, Description, Prefix, Kind, Color, FourStateFlowStates, user, CreatedOnUtc).Value;
 
         project.ClearDomainEvents();
 

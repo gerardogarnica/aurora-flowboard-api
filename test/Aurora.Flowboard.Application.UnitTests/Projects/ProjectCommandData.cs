@@ -42,10 +42,10 @@ internal static class ProjectCommandData
     }
 
     public static Project GetProject(User admin) =>
-        Project.Create("Test Project", "Test Description", ProjectCode.Create("TST").Value, Kind, Color, admin, UtcNow).Value;
+        Project.Create("Test Project", "Test Description", ProjectCode.Create("TST").Value, Kind, Color, FlowStateDefinitionData.GetMinimalFlow(), admin, UtcNow).Value;
 
     public static Project GetExistingProjectWithPrefix(User admin, string prefix = Prefix) =>
-        Project.Create("Existing Project", "Existing Description", ProjectCode.Create(prefix).Value, Kind, Color, admin, UtcNow).Value;
+        Project.Create("Existing Project", "Existing Description", ProjectCode.Create(prefix).Value, Kind, Color, FlowStateDefinitionData.GetMinimalFlow(), admin, UtcNow).Value;
 
     public static Project GetArchivedProject(User admin)
     {
@@ -62,7 +62,7 @@ internal static class ProjectCommandData
     }
 
     public static CreateProjectCommand GetCreateCommand() =>
-        new(Name, Description, Prefix, Kind, Color, []);
+        new(Name, Description, Prefix, Kind, Color, GetValidCreateProjectStates());
 
     public static CreateProjectCommand GetCreateCommand(IReadOnlyCollection<CreateProjectState> flowStates) =>
         new(Name, Description, Prefix, Kind, Color, flowStates);
@@ -70,6 +70,14 @@ internal static class ProjectCommandData
     public static IReadOnlyCollection<CreateProjectState> GetValidCreateProjectStates() =>
     [
         new CreateProjectState("Backlog", FlowStateCategory.Active, FlowStateColor, [ProjectRole.Admin]),
+        new CreateProjectState("Done", FlowStateCategory.Completed, FlowStateColor, [ProjectRole.Admin]),
+        new CreateProjectState("Cancelled", FlowStateCategory.Cancelled, FlowStateColor, [ProjectRole.Admin])
+    ];
+
+    // A valid flow where the Active state is replaced by the given one, so a test isolates a single invalid state.
+    public static IReadOnlyCollection<CreateProjectState> GetCreateProjectStatesWith(CreateProjectState activeState) =>
+    [
+        activeState,
         new CreateProjectState("Done", FlowStateCategory.Completed, FlowStateColor, [ProjectRole.Admin]),
         new CreateProjectState("Cancelled", FlowStateCategory.Cancelled, FlowStateColor, [ProjectRole.Admin])
     ];
@@ -92,18 +100,8 @@ internal static class ProjectCommandData
     public const string FlowStateName = "In Review";
     public const string FlowStateColor = "white";
 
-    public static Project GetProjectWithFlowStates(User admin)
-    {
-        Project project = GetProject(admin);
-        Color stateColor = Color.Create(FlowStateColor).Value;
-        ProjectRole[] allRoles = [ProjectRole.Admin, ProjectRole.Developer];
-
-        project.AddFlowState("Backlog", FlowStateCategory.Active, stateColor, allRoles, admin);
-        project.AddFlowState("Done", FlowStateCategory.Completed, stateColor, allRoles, admin);
-        project.AddFlowState("Cancelled", FlowStateCategory.Cancelled, stateColor, allRoles, admin);
-
-        return project;
-    }
+    // GetProject already creates the minimal flow: Backlog, Done and Cancelled.
+    public static Project GetProjectWithFlowStates(User admin) => GetProject(admin);
 
     public static (Project Project, FlowTransition Transition) GetProjectWithFlowTransition(User admin)
     {

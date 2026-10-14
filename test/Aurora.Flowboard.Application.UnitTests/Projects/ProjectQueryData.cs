@@ -42,36 +42,27 @@ internal static class ProjectQueryData
     // For GetAllProjectsHandler
     public static Project GetProjectForGetAll(string name, User admin)
     {
-        Project project = Project.Create(name, Description, ProjectCode.Create("QRY").Value, Kind, Color, admin, UtcNow).Value;
+        Project project = Project.Create(name, Description, ProjectCode.Create("QRY").Value, Kind, Color, FlowStateDefinitionData.GetMinimalFlow(), admin, UtcNow).Value;
         PopulateMemberUserNavProperties(project, admin);
         return project;
     }
 
     public static Project GetActiveProject(User admin) =>
-        Project.Create("Query Project", Description, ProjectCode.Create("QRY").Value, Kind, Color, admin, UtcNow).Value;
+        Project.Create("Query Project", Description, ProjectCode.Create("QRY").Value, Kind, Color, FlowStateDefinitionData.GetMinimalFlow(), admin, UtcNow).Value;
 
-    public static Project GetProjectWithFlowStates(User admin)
-    {
-        Project project = GetActiveProject(admin);
-        ProjectRole[] allRoles = [ProjectRole.Admin, ProjectRole.Developer];
-
-        project.AddFlowState("Backlog", FlowStateCategory.Active, Color, allRoles, admin);
-        project.AddFlowState("Done", FlowStateCategory.Completed, Color, allRoles, admin);
-        project.AddFlowState("Cancelled", FlowStateCategory.Cancelled, Color, allRoles, admin);
-
-        return project;
-    }
+    // GetActiveProject already creates the minimal flow: Backlog, Done and Cancelled.
+    public static Project GetProjectWithFlowStates(User admin) => GetActiveProject(admin);
 
     public static Project GetActiveProjectForGetAll(string name, User admin)
     {
-        Project project = Project.Create(name, Description, ProjectCode.Create("QRA").Value, Kind, Color, admin, UtcNow).Value;
+        Project project = Project.Create(name, Description, ProjectCode.Create("QRA").Value, Kind, Color, FlowStateDefinitionData.GetMinimalFlow(), admin, UtcNow).Value;
         PopulateMemberUserNavProperties(project, admin);
         return project;
     }
 
     public static Project GetArchivedProjectForGetAll(string name, User admin)
     {
-        Project project = Project.Create(name, Description, ProjectCode.Create("QRH").Value, Kind, Color, admin, UtcNow).Value;
+        Project project = Project.Create(name, Description, ProjectCode.Create("QRH").Value, Kind, Color, FlowStateDefinitionData.GetMinimalFlow(), admin, UtcNow).Value;
         project.ChangeStatus(ProjectStatus.Archived, admin, UtcNow);
         PopulateMemberUserNavProperties(project, admin);
         return project;
@@ -101,7 +92,7 @@ internal static class ProjectQueryData
     // For GetProjectByIdHandler — navigation properties set via reflection
     public static Project GetProjectWithNavProperties(User admin)
     {
-        Project project = Project.Create("Nav Project", Description, ProjectCode.Create("NAV").Value, Kind, Color, admin, UtcNow).Value;
+        Project project = Project.Create("Nav Project", Description, ProjectCode.Create("NAV").Value, Kind, Color, FlowStateDefinitionData.GetMinimalFlow(), admin, UtcNow).Value;
         SetCreatorNavProperty(project, admin);
         PopulateNavProperties(project, admin);
         return project;
@@ -109,7 +100,7 @@ internal static class ProjectQueryData
 
     public static Project GetProjectWithMemberNavProperties(User admin, User member)
     {
-        Project project = Project.Create("Nav Project", Description, ProjectCode.Create("NVM").Value, Kind, Color, admin, UtcNow).Value;
+        Project project = Project.Create("Nav Project", Description, ProjectCode.Create("NVM").Value, Kind, Color, FlowStateDefinitionData.GetMinimalFlow(), admin, UtcNow).Value;
         project.AddMember(member, ProjectRole.Developer, admin, UtcNow);
         SetCreatorNavProperty(project, admin);
         PopulateNavProperties(project, admin, member);
@@ -118,7 +109,7 @@ internal static class ProjectQueryData
 
     public static Project GetProjectWithOrderedMembers(User admin, User alpha, User zeta)
     {
-        Project project = Project.Create("Order Project", Description, ProjectCode.Create("ORD").Value, Kind, Color, admin, UtcNow).Value;
+        Project project = Project.Create("Order Project", Description, ProjectCode.Create("ORD").Value, Kind, Color, FlowStateDefinitionData.GetMinimalFlow(), admin, UtcNow).Value;
         project.AddMember(alpha, ProjectRole.Developer, admin, UtcNow);
         project.AddMember(zeta, ProjectRole.Developer, admin, UtcNow);
         SetCreatorNavProperty(project, admin);
@@ -137,7 +128,7 @@ internal static class ProjectQueryData
 
     public static Project GetProjectWithOrderedChangeLogs(User admin, User member)
     {
-        Project project = Project.Create("Log Project", Description, ProjectCode.Create("LOG").Value, Kind, Color, admin, UtcNow).Value;
+        Project project = Project.Create("Log Project", Description, ProjectCode.Create("LOG").Value, Kind, Color, FlowStateDefinitionData.GetMinimalFlow(), admin, UtcNow).Value;
         project.AddMember(member, ProjectRole.Developer, admin, UtcNow.AddHours(1));
         SetCreatorNavProperty(project, admin);
         PopulateNavProperties(project, admin, member);

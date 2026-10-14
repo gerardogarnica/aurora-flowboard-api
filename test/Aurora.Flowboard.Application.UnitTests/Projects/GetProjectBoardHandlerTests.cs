@@ -162,14 +162,13 @@ public sealed class GetProjectBoardHandlerTests
     {
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
-        Color color = Color.Create("white").Value;
-        Project project = Project.Create("Board Project", "Desc", ProjectCode.Create("BRD").Value, ProjectKind.Product, color, admin, WorkItemQueryData.UtcNow).Value;
-        ProjectRole[] roles = [ProjectRole.Admin, ProjectRole.Developer];
-        project.AddFlowState("Backlog", FlowStateCategory.Active, color, roles, admin);
-        project.AddFlowState("In Progress", FlowStateCategory.Active, color, roles, admin);
-        project.AddFlowState("QA", FlowStateCategory.Active, color, roles, admin);
-        project.AddFlowState("Done", FlowStateCategory.Completed, color, roles, admin);
-        project.AddFlowState("Cancelled", FlowStateCategory.Cancelled, color, roles, admin);
+        FlowStateDefinition[] flowStates = FlowStateDefinitionData.GetFlow(
+            ("Backlog", FlowStateCategory.Active),
+            ("In Progress", FlowStateCategory.Active),
+            ("QA", FlowStateCategory.Active),
+            ("Done", FlowStateCategory.Completed),
+            ("Cancelled", FlowStateCategory.Cancelled));
+        Project project = Project.Create("Board Project", "Desc", ProjectCode.Create("BRD").Value, ProjectKind.Product, Color.Create("white").Value, flowStates, admin, WorkItemQueryData.UtcNow).Value;
 
         _userContext.UserId.Returns(admin.Id);
         DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
@@ -490,7 +489,7 @@ public sealed class GetProjectBoardHandlerTests
     {
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
-        Project project = Project.Create("Empty Project", "Desc", ProjectCode.Create("EMP").Value, ProjectKind.Product, Color.Create("white").Value, admin, WorkItemQueryData.UtcNow).Value;
+        Project project = WorkItemQueryData.GetLegacyProjectWithoutFlow(admin);
 
         ArrangeBoard(project, admin.Id, project.FlowTransitions);
 

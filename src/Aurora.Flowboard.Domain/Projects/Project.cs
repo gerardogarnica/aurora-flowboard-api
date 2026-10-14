@@ -56,7 +56,7 @@ public sealed class Project : BaseEntity
     public IReadOnlyCollection<Milestone> Milestones => _milestones.AsReadOnly();
     public IReadOnlyCollection<WorkItem> WorkItems => _workItems.AsReadOnly();
 
-    private bool IsModifiable => Status is ProjectStatus.Active or ProjectStatus.Maintenance;
+    internal bool IsModifiable => Status is ProjectStatus.Active or ProjectStatus.Maintenance;
 
     private Project() : base(Guid.Empty) { } // EF Core
 
@@ -88,6 +88,7 @@ public sealed class Project : BaseEntity
         ProjectCode prefix,
         ProjectKind kind,
         Color color,
+        IReadOnlyCollection<FlowStateDefinition> flowStates,
         User createdBy,
         DateTime createdOnUtc)
     {
@@ -106,6 +107,21 @@ public sealed class Project : BaseEntity
             return Result.Fail<Project>(ProjectErrors.DescriptionTooLong);
         }
 
+        if (!flowStates.Any(s => s.Category == FlowStateCategory.Active))
+        {
+            return Result.Fail<Project>(ProjectErrors.InitialFlowStatesMissingActiveState);
+        }
+
+        if (!flowStates.Any(s => s.Category == FlowStateCategory.Completed))
+        {
+            return Result.Fail<Project>(ProjectErrors.InitialFlowStatesMissingCompletedState);
+        }
+
+        if (!flowStates.Any(s => s.Category == FlowStateCategory.Cancelled))
+        {
+            return Result.Fail<Project>(ProjectErrors.InitialFlowStatesMissingCancelledState);
+        }
+
         var project = new Project(
             Guid.NewGuid(),
             name.Trim(),
@@ -122,6 +138,17 @@ public sealed class Project : BaseEntity
         project._changeLogs.Add(ProjectChangeLog.Create(project, createdBy, ProjectChangeType.Created, null, createdOnUtc));
 
         project.AddDomainEvent(new ProjectCreatedDomainEvent(project.Id));
+
+        // Active states go first: AddFlowState only wires a closing state to the active states that already exist.
+        foreach (FlowStateDefinition state in flowStates.OrderBy(s => GetInitialFlowOrder(s.Category)))
+        {
+            Result addStateResult = project.AddFlowState(state.Name, state.Category, state.Color, state.AllowedRoles, createdBy);
+
+            if (!addStateResult.IsSuccessful)
+            {
+                return Result.Fail<Project>(addStateResult.Error);
+            }
+        }
 
         return project;
     }
@@ -185,6 +212,11 @@ public sealed class Project : BaseEntity
         if (newKind == Kind)
         {
             return Result.Fail(ProjectErrors.KindUnchanged);
+        }
+
+        if (!GetStatusTransitions(newKind).ContainsKey(Status))
+        {
+            return Result.Fail(ProjectErrors.KindNotSupportedInCurrentStatus);
         }
 
         ProjectKind oldKind = Kind;
@@ -372,6 +404,11 @@ public sealed class Project : BaseEntity
         if (state is null)
         {
             return Result.Fail(ProjectErrors.FlowStateNotFound);
+        }
+
+        if (state.Category == FlowStateCategory.Active && _flowStates.Count(s => s.Category == FlowStateCategory.Active) == 1)
+        {
+            return Result.Fail(ProjectErrors.LastActiveFlowState);
         }
 
         if (state.Category == FlowStateCategory.Completed && _flowStates.Count(s => s.Category == FlowStateCategory.Completed) == 1)
@@ -580,11 +617,16 @@ public sealed class Project : BaseEntity
     internal FlowTransition? FindFlowTransition(Guid fromStateId, Guid toStateId) =>
         _flowTransitions.FirstOrDefault(t => t.FromStateId == fromStateId && t.ToStateId == toStateId);
 
-    private bool IsValidTransition(ProjectStatus from, ProjectStatus to)
-    {
-        Dictionary<ProjectStatus, ProjectStatus[]> transitions =
-            Kind is ProjectKind.Product or ProjectKind.Internal ? ContinuousTransitions : TimeboxedTransitions;
+    private bool IsValidTransition(ProjectStatus from, ProjectStatus to) =>
+        GetStatusTransitions(Kind).TryGetValue(from, out ProjectStatus[]? targets) && targets.Contains(to);
 
-        return transitions.TryGetValue(from, out ProjectStatus[]? targets) && targets.Contains(to);
-    }
+    private static int GetInitialFlowOrder(FlowStateCategory category) => category switch
+    {
+        FlowStateCategory.Active => 0,
+        FlowStateCategory.Completed => 1,
+        _ => 2
+    };
+
+    private static Dictionary<ProjectStatus, ProjectStatus[]> GetStatusTransitions(ProjectKind kind) =>
+        kind is ProjectKind.Product or ProjectKind.Internal ? ContinuousTransitions : TimeboxedTransitions;
 }

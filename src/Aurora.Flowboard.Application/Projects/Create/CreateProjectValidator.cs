@@ -23,6 +23,18 @@ internal sealed class CreateProjectValidator : AbstractValidator<CreateProjectCo
             .NotEmpty()
             .MaximumLength(Color.MaxLength);
 
+        RuleFor(x => x.FlowStates)
+            .NotEmpty();
+
+        RuleFor(x => x.FlowStates)
+            .Must(states => states.Any(s => s.Category == FlowStateCategory.Active))
+            .WithBaseError(ProjectErrors.InitialFlowStatesMissingActiveState)
+            .Must(states => states.Any(s => s.Category == FlowStateCategory.Completed))
+            .WithBaseError(ProjectErrors.InitialFlowStatesMissingCompletedState)
+            .Must(states => states.Any(s => s.Category == FlowStateCategory.Cancelled))
+            .WithBaseError(ProjectErrors.InitialFlowStatesMissingCancelledState)
+            .When(x => x.FlowStates is { Count: > 0 });
+
         RuleForEach(x => x.FlowStates).ChildRules(state =>
         {
             state.RuleFor(s => s.Name)

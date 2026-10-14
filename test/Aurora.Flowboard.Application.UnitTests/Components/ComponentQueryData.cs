@@ -17,7 +17,7 @@ internal static class ComponentQueryData
     }
 
     public static Project GetProject(User admin) =>
-        Project.Create("Query Project", "Query test project", ProjectCode.Create("QRY").Value, ProjectKind.Product, Color.Create("white").Value, admin, UtcNow).Value;
+        Project.Create("Query Project", "Query test project", ProjectCode.Create("QRY").Value, ProjectKind.Product, Color.Create("white").Value, FlowStateDefinitionData.GetMinimalFlow(), admin, UtcNow).Value;
 
     public static Project GetProjectWithComponents(User admin, params string[] names)
     {
