@@ -1,3 +1,6 @@
+using System.Collections;
+using System.Reflection;
+
 namespace Aurora.Flowboard.Domain.UnitTests.Projects;
 
 internal static class ProjectData
@@ -48,6 +51,25 @@ internal static class ProjectData
         project.ClearDomainEvents();
 
         return project;
+    }
+
+    // A project with no flow states, like those created before Project.Create required an initial
+    // flow, which may still exist in the database. The domain cannot build one, so the private
+    // collections are cleared by reflection.
+    public static Project GetLegacyProjectWithoutFlow(User? creator = null)
+    {
+        Project project = GetProject(creator);
+        ClearPrivateList(project, "_flowStates");
+        ClearPrivateList(project, "_flowTransitions");
+
+        return project;
+    }
+
+    private static void ClearPrivateList(Project project, string fieldName)
+    {
+        IList list = typeof(Project).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(project) as IList
+            ?? throw new InvalidOperationException($"Project has no list field '{fieldName}'; update {nameof(GetLegacyProjectWithoutFlow)} if it was renamed.");
+        list.Clear();
     }
 
     public static Project GetProjectWithStatus(ProjectStatus status, User? admin = null, ProjectKind? kind = null)

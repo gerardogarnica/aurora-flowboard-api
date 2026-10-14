@@ -106,6 +106,10 @@ public static class ProjectErrors
         "Project.MaxActiveFlowStatesReached",
         "Cannot add more active flow states to the project as it has reached the maximum limit of 10");
 
+    public static readonly BaseError LastActiveFlowState = BaseError.Validation(
+        "Project.LastActiveFlowState",
+        "Cannot remove the last active flow state from the project");
+
     public static readonly BaseError LastCompletedFlowState = BaseError.Validation(
         "Project.LastCompletedFlowState",
         "Cannot remove the last completed flow state from the project");

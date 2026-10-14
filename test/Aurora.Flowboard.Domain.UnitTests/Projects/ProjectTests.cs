@@ -1764,6 +1764,25 @@ public sealed class ProjectTests
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(ProjectErrors.LastCancelledFlowState);
         }
+
+        [Fact]
+        public void Should_Fail_When_RemovingLastActiveState()
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProject(admin);
+            FlowState activeState = project.FlowStates.Single(s => s.Category == FlowStateCategory.Active);
+            int transitionCount = project.FlowTransitions.Count;
+
+            // Act
+            Result result = project.RemoveFlowState(activeState.Id, admin);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.LastActiveFlowState);
+            project.FlowStates.Should().Contain(s => s.Id == activeState.Id);
+            project.FlowTransitions.Should().HaveCount(transitionCount);
+        }
     }
 
     public sealed class AddFlowTransitionRole : BaseTest

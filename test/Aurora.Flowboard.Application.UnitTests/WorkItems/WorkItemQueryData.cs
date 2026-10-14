@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Reflection;
 
 namespace Aurora.Flowboard.Application.UnitTests.WorkItems;
@@ -165,6 +166,25 @@ internal static class WorkItemQueryData
 
     public static Project GetActiveProjectWithFlow(User admin) =>
         Project.Create("WI Project", "Desc", ProjectCode.Create("WIP").Value, ProjectKind.Product, Color.Create("white").Value, FlowStateDefinitionData.GetMinimalFlow(), admin, UtcNow).Value;
+
+    // A project with no flow states, like those created before Project.Create required an initial
+    // flow, which may still exist in the database. The domain cannot build one, so the private
+    // collections are cleared by reflection.
+    public static Project GetLegacyProjectWithoutFlow(User admin)
+    {
+        Project project = GetActiveProjectWithFlow(admin);
+        ClearPrivateList(project, "_flowStates");
+        ClearPrivateList(project, "_flowTransitions");
+
+        return project;
+    }
+
+    private static void ClearPrivateList(Project project, string fieldName)
+    {
+        IList list = typeof(Project).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(project) as IList
+            ?? throw new InvalidOperationException($"Project has no list field '{fieldName}'; update {nameof(GetLegacyProjectWithoutFlow)} if it was renamed.");
+        list.Clear();
+    }
 
     public static void SetWorkItemFlowState(WorkItem workItem, Guid flowStateId) =>
         typeof(WorkItem)

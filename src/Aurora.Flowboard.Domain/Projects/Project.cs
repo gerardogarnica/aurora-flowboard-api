@@ -406,6 +406,11 @@ public sealed class Project : BaseEntity
             return Result.Fail(ProjectErrors.FlowStateNotFound);
         }
 
+        if (state.Category == FlowStateCategory.Active && _flowStates.Count(s => s.Category == FlowStateCategory.Active) == 1)
+        {
+            return Result.Fail(ProjectErrors.LastActiveFlowState);
+        }
+
         if (state.Category == FlowStateCategory.Completed && _flowStates.Count(s => s.Category == FlowStateCategory.Completed) == 1)
         {
             return Result.Fail(ProjectErrors.LastCompletedFlowState);

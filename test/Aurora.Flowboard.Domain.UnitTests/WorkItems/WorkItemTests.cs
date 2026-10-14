@@ -381,10 +381,7 @@ public sealed class WorkItemTests
         {
             // Arrange
             User admin = UserData.GetActiveUser();
-            Project project = ProjectData.GetProject(admin);
-            // Project.Create requires an active state; RemoveFlowState is the only way to lose it
-            FlowState onlyActiveState = project.FlowStates.Single(s => s.Category == FlowStateCategory.Active);
-            project.RemoveFlowState(onlyActiveState.Id, admin);
+            Project project = ProjectData.GetLegacyProjectWithoutFlow(admin);
 
             // Act
             Result<WorkItem> result = WorkItem.Create(

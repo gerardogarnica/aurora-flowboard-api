@@ -489,9 +489,7 @@ public sealed class GetProjectBoardHandlerTests
     {
         // Arrange
         User admin = WorkItemQueryData.GetAdminUser();
-        // Project.Create requires an active state; RemoveFlowState (or legacy data) is the only way to lose it
-        Project project = WorkItemQueryData.GetActiveProjectWithFlow(admin);
-        project.RemoveFlowState(project.FlowStates.Single(s => s.Category == FlowStateCategory.Active).Id, admin);
+        Project project = WorkItemQueryData.GetLegacyProjectWithoutFlow(admin);
 
         ArrangeBoard(project, admin.Id, project.FlowTransitions);
 
