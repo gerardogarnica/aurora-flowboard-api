@@ -8,37 +8,31 @@ internal sealed class GetProjectByIdHandler(
         GetProjectByIdQuery query,
         CancellationToken cancellationToken)
     {
-        Project? project = await dbContext
+        // Counts are computed in SQL and members are the only collection projected; the change log
+        // is served paginated by GET projects/{id}/change-logs.
+        var row = await dbContext
             .Projects
-            .Include(p => p.Members).ThenInclude(m => m.User)
-            .Include(p => p.ChangeLogs).ThenInclude(cl => cl.ChangedBy)
-            .Include(p => p.Creator)
-            .Include(p => p.WorkItems).ThenInclude(wi => wi.FlowState)
             .AsNoTracking()
-            .AsSplitQuery()
-            .SingleOrDefaultAsync(p => p.Id == query.ProjectId, cancellationToken);
+            .Where(p => p.Id == query.ProjectId && p.Members.Any(m => m.UserId == userContext.UserId))
+            .Select(p => new
+            {
+                Project = p,
+                CreatorFirstName = p.Creator.FirstName,
+                CreatorLastName = p.Creator.LastName,
+                OpenWorkItems = p.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Active),
+                ClosedWorkItems = p.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Completed),
+                Members = p.Members
+                    .Select(m => new { m.UserId, m.User.FirstName, m.User.LastName, m.Role, m.JoinedOnUtc })
+                    .ToList()
+            })
+            .SingleOrDefaultAsync(cancellationToken);
 
-        if (project is null || !project.Members.Any(m => m.UserId == userContext.UserId))
+        if (row is null)
         {
             return Result.Fail<ProjectResponse>(ProjectErrors.NotFound);
         }
 
-        // MemberAdded/MemberRemoved point AffectedEntityId at a User. A removed member is no longer
-        // in project.Members, so names are resolved against Users instead of the loaded members.
-        List<Guid> affectedUserIds = [.. project.ChangeLogs
-            .Where(cl => cl.ChangeType is ProjectChangeType.MemberAdded or ProjectChangeType.MemberRemoved)
-            .Where(cl => cl.AffectedEntityId.HasValue)
-            .Select(cl => cl.AffectedEntityId!.Value)
-            .Distinct()];
-
-        Dictionary<Guid, string> affectedUserNames = affectedUserIds.Count == 0
-            ? []
-            : await dbContext
-                .Users
-                .Where(u => affectedUserIds.Contains(u.Id))
-                .AsNoTracking()
-                .Select(u => new { u.Id, FullName = u.FirstName + " " + u.LastName })
-                .ToDictionaryAsync(u => u.Id, u => u.FullName, cancellationToken);
+        Project project = row.Project;
 
         return new ProjectResponse(
             project.Id,
@@ -48,35 +42,23 @@ internal sealed class GetProjectByIdHandler(
             project.Color,
             project.Kind,
             project.Status,
-            project.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Active),
-            project.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Completed),
+            row.OpenWorkItems,
+            row.ClosedWorkItems,
             project.CanModifyFlowStates(),
             project.CanAddOrUpdateWorkItem(),
             project.CreatedBy,
-            project.Creator.FullName,
+            User.FormatFullName(row.CreatorFirstName, row.CreatorLastName),
             project.CreatedOnUtc,
             project.UpdatedOnUtc,
-            [.. project.Members.OrderBy(m => m.User.FullName).Select(
-                m => new ProjectMemberResponse(
+            [.. row.Members
+                .Select(m => new ProjectMemberResponse(
                     m.UserId,
-                    m.User.FirstName,
-                    m.User.LastName,
-                    m.User.FullName,
-                    m.User.Initials,
+                    m.FirstName,
+                    m.LastName,
+                    User.FormatFullName(m.FirstName, m.LastName),
+                    User.FormatInitials(m.FirstName, m.LastName),
                     m.Role,
-                    m.JoinedOnUtc))],
-            [.. project.ChangeLogs.OrderBy(cl => cl.ChangedOnUtc).Select(
-                cl => new ProjectChangeLogResponse(
-                    cl.Id,
-                    cl.ChangedById,
-                    cl.ChangedBy.FullName,
-                    cl.ChangedBy.Initials,
-                    cl.ChangeType,
-                    cl.AffectedEntityId,
-                    cl.AffectedEntityId.HasValue
-                        ? affectedUserNames.GetValueOrDefault(cl.AffectedEntityId.Value)
-                        : null,
-                    cl.NewStatus,
-                    cl.ChangedOnUtc))]);
+                    m.JoinedOnUtc))
+                .OrderBy(m => m.FullName)]);
     }
 }

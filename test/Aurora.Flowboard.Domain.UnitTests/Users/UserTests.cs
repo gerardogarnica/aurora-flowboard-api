@@ -173,6 +173,54 @@ public sealed class UserTests
         }
     }
 
+    public sealed class DisplayNames : BaseTest
+    {
+        [Fact]
+        public void Should_JoinFirstAndLastName_When_FormattingFullName()
+        {
+            // Act
+            string fullName = User.FormatFullName("Ada", "Lovelace");
+
+            // Assert
+            fullName.Should().Be("Ada Lovelace");
+        }
+
+        [Fact]
+        public void Should_UppercaseFirstLetters_When_FormattingInitials()
+        {
+            // Act
+            string initials = User.FormatInitials("ada", "lovelace");
+
+            // Assert
+            initials.Should().Be("AL");
+        }
+
+        [Theory]
+        [InlineData("", "Lovelace")]
+        [InlineData("Ada", "")]
+        [InlineData(null, "Lovelace")]
+        [InlineData("Ada", null)]
+        public void Should_ReturnPlaceholder_When_FormattingInitialsWithMissingName(string? firstName, string? lastName)
+        {
+            // Act
+            string initials = User.FormatInitials(firstName, lastName);
+
+            // Assert
+            initials.Should().Be("U");
+        }
+
+        [Fact]
+        public void Should_MatchInstanceProperties_When_FormattingFromUserNames()
+        {
+            // Arrange
+            User user = UserData.GetActiveUser();
+
+            // Act & Assert
+            User.FormatFullName(user.FirstName, user.LastName).Should().Be(user.FullName);
+            User.FormatInitials(user.FirstName, user.LastName).Should().Be(user.Initials);
+        }
+    }
+
     public sealed class ChangePassword : BaseTest
     {
         [Fact]

@@ -106,8 +106,12 @@ internal sealed class GetProjectBoardHandler(
                         w.FlowStateId,
                         s.Name,
                         w.AssigneeId,
-                        BuildInitials(w.AssigneeFirstName, w.AssigneeLastName),
-                        BuildFullName(w.AssigneeFirstName, w.AssigneeLastName),
+                        w.AssigneeFirstName is null || w.AssigneeLastName is null
+                            ? null
+                            : User.FormatInitials(w.AssigneeFirstName, w.AssigneeLastName),
+                        w.AssigneeFirstName is null || w.AssigneeLastName is null
+                            ? null
+                            : User.FormatFullName(w.AssigneeFirstName, w.AssigneeLastName),
                         w.ComponentName,
                         w.MilestoneName,
                         w.MilestoneColor,
@@ -120,16 +124,6 @@ internal sealed class GetProjectBoardHandler(
 
         return board;
     }
-
-    private static string? BuildInitials(string? firstName, string? lastName) =>
-        firstName is not null && lastName is not null
-            ? $"{char.ToUpperInvariant(firstName[0])}{char.ToUpperInvariant(lastName[0])}"
-            : null;
-
-    private static string? BuildFullName(string? firstName, string? lastName) =>
-        firstName is not null && lastName is not null
-            ? $"{firstName} {lastName}"
-            : null;
 
     private sealed record FlowStateProjection(Guid Id, string Name, FlowStateCategory Category, int SortOrder, string Color);
 }

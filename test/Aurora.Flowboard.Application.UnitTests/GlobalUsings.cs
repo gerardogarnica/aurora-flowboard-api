@@ -16,6 +16,7 @@ global using Aurora.Flowboard.Application.Projects.Create;
 global using Aurora.Flowboard.Application.Projects.GetAll;
 global using Aurora.Flowboard.Application.Projects.GetBoard;
 global using Aurora.Flowboard.Application.Projects.GetById;
+global using Aurora.Flowboard.Application.Projects.GetChangeLogs;
 global using Aurora.Flowboard.Application.Projects.RemoveMember;
 global using Aurora.Flowboard.Application.Projects.Update;
 global using Aurora.Flowboard.Application.TemplateFlows.GetByKind;

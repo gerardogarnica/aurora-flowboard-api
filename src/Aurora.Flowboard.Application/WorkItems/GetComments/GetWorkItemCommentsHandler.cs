@@ -4,8 +4,6 @@ internal sealed class GetWorkItemCommentsHandler(
     IApplicationDbContext dbContext,
     IUserContext userContext) : IQueryHandler<GetWorkItemCommentsQuery, PagedResponse<WorkItemCommentResponse>>
 {
-    private const string UnknownAuthorInitials = "U";
-
     public async Task<Result<PagedResponse<WorkItemCommentResponse>>> Handle(
         GetWorkItemCommentsQuery query,
         CancellationToken cancellationToken)
@@ -51,22 +49,14 @@ internal sealed class GetWorkItemCommentsHandler(
             .Select(c => new WorkItemCommentResponse(
                 c.Id,
                 c.AuthorId,
-                BuildFullName(c.AuthorFirstName, c.AuthorLastName),
-                BuildInitials(c.AuthorFirstName, c.AuthorLastName),
+                c.AuthorFirstName is null || c.AuthorLastName is null
+                    ? string.Empty
+                    : User.FormatFullName(c.AuthorFirstName, c.AuthorLastName),
+                User.FormatInitials(c.AuthorFirstName, c.AuthorLastName),
                 c.Content,
                 c.CreatedOnUtc,
                 c.UpdatedOnUtc))];
 
         return new PagedResponse<WorkItemCommentResponse>(items, query.Page, query.PageSize, totalCount);
     }
-
-    private static string BuildInitials(string? firstName, string? lastName) =>
-        string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName)
-            ? UnknownAuthorInitials
-            : $"{char.ToUpperInvariant(firstName[0])}{char.ToUpperInvariant(lastName[0])}";
-
-    private static string BuildFullName(string? firstName, string? lastName) =>
-        firstName is not null && lastName is not null
-            ? $"{firstName} {lastName}"
-            : string.Empty;
 }
