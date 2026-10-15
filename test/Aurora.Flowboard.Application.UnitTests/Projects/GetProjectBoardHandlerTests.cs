@@ -322,6 +322,42 @@ public sealed class GetProjectBoardHandlerTests
     }
 
     [Fact]
+    public async Task Should_ReturnNullAssigneeInitialsAndFullName_When_WorkItemIsUnassigned()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        Project project = WorkItemQueryData.GetActiveProjectWithFlow(admin);
+        WorkItem workItem = WorkItem.Create("Item", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, WorkItemQueryData.UtcNow).Value;
+
+        _userContext.UserId.Returns(admin.Id);
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
+        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.FlowStates.Returns(statesMock);
+        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Users.Returns(usersMock);
+        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
+        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Milestones.Returns(milestonesMock);
+        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(project.FlowTransitions);
+        _dbContext.FlowTransitions.Returns(transitionsMock);
+
+        // Act
+        Result<IReadOnlyCollection<BoardColumnResponse>> result =
+            await _handler.Handle(new GetProjectBoardQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        BoardWorkItemResponse summary = result.Value.SelectMany(s => s.WorkItems).Single();
+        summary.AssigneeId.Should().BeNull();
+        summary.AssigneeInitials.Should().BeNull();
+        summary.AssigneeFullName.Should().BeNull();
+    }
+
+    [Fact]
     public async Task Should_MapAllWorkItemFields_When_WorkItemExists()
     {
         // Arrange

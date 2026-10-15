@@ -4,8 +4,6 @@ internal sealed class GetWorkItemByCodeHandler(
     IApplicationDbContext dbContext,
     IUserContext userContext) : IQueryHandler<GetWorkItemByCodeQuery, WorkItemResponse>
 {
-    private const string UnknownUserInitials = "U";
-
     public async Task<Result<WorkItemResponse>> Handle(
         GetWorkItemByCodeQuery query,
         CancellationToken cancellationToken)
@@ -91,26 +89,21 @@ internal sealed class GetWorkItemByCodeHandler(
 
         List<WorkItemFlowTransitionResponse> availableTransitions = transitionsByState.GetValueOrDefault(result.FlowStateId, []);
 
-        bool hasAssignee = result.AssigneeFirstName is not null && result.AssigneeLastName is not null;
-
+        // An unassigned item has no assignee name or initials; a missing creator falls back to an
+        // empty name and the placeholder initials of User.FormatInitials.
         return result.Response with
         {
-            AssigneeFullName = hasAssignee ? BuildFullName(result.AssigneeFirstName, result.AssigneeLastName) : null,
-            AssigneeInitials = hasAssignee ? BuildInitials(result.AssigneeFirstName, result.AssigneeLastName) : null,
-            CreatedByFullName = BuildFullName(result.CreatedByFirstName, result.CreatedByLastName),
-            CreatedByInitials = BuildInitials(result.CreatedByFirstName, result.CreatedByLastName),
+            AssigneeFullName = result.AssigneeFirstName is null || result.AssigneeLastName is null
+                ? null
+                : User.FormatFullName(result.AssigneeFirstName, result.AssigneeLastName),
+            AssigneeInitials = result.AssigneeFirstName is null || result.AssigneeLastName is null
+                ? null
+                : User.FormatInitials(result.AssigneeFirstName, result.AssigneeLastName),
+            CreatedByFullName = result.CreatedByFirstName is null || result.CreatedByLastName is null
+                ? string.Empty
+                : User.FormatFullName(result.CreatedByFirstName, result.CreatedByLastName),
+            CreatedByInitials = User.FormatInitials(result.CreatedByFirstName, result.CreatedByLastName),
             AvailableTransitions = availableTransitions
         };
     }
-
-    // Mirrors User.Initials, which EF ignores and therefore cannot be projected in the query.
-    private static string BuildInitials(string? firstName, string? lastName) =>
-        string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName)
-            ? UnknownUserInitials
-            : $"{char.ToUpperInvariant(firstName[0])}{char.ToUpperInvariant(lastName[0])}";
-
-    private static string BuildFullName(string? firstName, string? lastName) =>
-        firstName is not null && lastName is not null
-            ? $"{firstName} {lastName}"
-            : string.Empty;
 }
