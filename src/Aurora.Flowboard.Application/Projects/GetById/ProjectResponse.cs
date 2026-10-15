@@ -16,8 +16,7 @@ public sealed record ProjectResponse(
     string CreatedByFullName,
     DateTime CreatedOnUtc,
     DateTime? UpdatedOnUtc,
-    IReadOnlyCollection<ProjectMemberResponse> Members,
-    IReadOnlyCollection<ProjectChangeLogResponse> ChangeLogs);
+    IReadOnlyCollection<ProjectMemberResponse> Members);
 
 public sealed record ProjectMemberResponse(
     Guid UserId,
@@ -27,14 +26,3 @@ public sealed record ProjectMemberResponse(
     string Initials,
     ProjectRole Role,
     DateTime JoinedOnUtc);
-
-public sealed record ProjectChangeLogResponse(
-    Guid Id,
-    Guid ChangedById,
-    string ChangedByFullName,
-    string ChangedByInitials,
-    ProjectChangeType ChangeType,
-    Guid? AffectedEntityId,
-    string? AffectedEntityName,
-    ProjectStatus? NewStatus,
-    DateTime ChangedOnUtc);

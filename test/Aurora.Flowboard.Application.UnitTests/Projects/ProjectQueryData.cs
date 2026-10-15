@@ -135,6 +135,17 @@ internal static class ProjectQueryData
         return project;
     }
 
+    // For GetProjectChangeLogsHandler — Created, MemberAdded, MemberRemoved and StatusChanged, one hour apart
+    public static Project GetProjectWithChangeLogHistory(User admin, User member)
+    {
+        Project project = Project.Create("History Project", Description, ProjectCode.Create("HIS").Value, Kind, Color, FlowStateDefinitionData.GetMinimalFlow(), admin, UtcNow).Value;
+        project.AddMember(member, ProjectRole.Developer, admin, UtcNow.AddHours(1));
+        project.RemoveMember(member.Id, admin, UtcNow.AddHours(2));
+        project.ChangeStatus(ProjectStatus.Maintenance, admin, UtcNow.AddHours(3));
+        PopulateNavProperties(project, admin);
+        return project;
+    }
+
     private static void SetCreatorNavProperty(Project project, User creator) =>
         typeof(Project)
             .GetField("<Creator>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance)

@@ -8,35 +8,43 @@ internal sealed class GetAllProjectsHandler(
         GetAllProjectsQuery query,
         CancellationToken cancellationToken)
     {
-        List<Project> projects = await dbContext
+        // Counts are computed in SQL and members are the only collection projected.
+        var rows = await dbContext
             .Projects
-            .Include(p => p.Members).ThenInclude(m => m.User)
-            .Include(p => p.WorkItems).ThenInclude(wi => wi.FlowState)
+            .AsNoTracking()
             .Where(p => p.Members.Any(m => m.UserId == userContext.UserId))
             .OrderBy(p => p.Name)
-            .AsNoTracking()
-            .AsSplitQuery()
+            .Select(p => new
+            {
+                Project = p,
+                OpenWorkItems = p.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Active),
+                ClosedWorkItems = p.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Completed),
+                Members = p.Members
+                    .Select(m => new { m.UserId, m.User.FirstName, m.User.LastName, m.Role })
+                    .ToList()
+            })
             .ToListAsync(cancellationToken);
 
-        return projects
-            .Select(p => new ProjectSummaryResponse(
-                p.Id,
-                p.Name,
-                p.Description,
-                p.Prefix.Value,
-                p.Color,
-                p.Kind,
-                p.Status,
-                p.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Active),
-                p.WorkItems.Count(wi => wi.FlowState.Category == FlowStateCategory.Completed),
-                p.CanModifyFlowStates(),
-                p.CanAddOrUpdateWorkItem(),
-                [.. p.Members.OrderBy(m => m.User.FullName).Select(
-                    m => new ProjectMemberSummaryResponse(
+        return rows
+            .Select(row => new ProjectSummaryResponse(
+                row.Project.Id,
+                row.Project.Name,
+                row.Project.Description,
+                row.Project.Prefix.Value,
+                row.Project.Color,
+                row.Project.Kind,
+                row.Project.Status,
+                row.OpenWorkItems,
+                row.ClosedWorkItems,
+                row.Project.CanModifyFlowStates(),
+                row.Project.CanAddOrUpdateWorkItem(),
+                [.. row.Members
+                    .Select(m => new ProjectMemberSummaryResponse(
                         m.UserId,
-                        m.User.FullName,
-                        m.User.Initials,
-                        m.Role))]))
+                        User.FormatFullName(m.FirstName, m.LastName),
+                        User.FormatInitials(m.FirstName, m.LastName),
+                        m.Role))
+                    .OrderBy(m => m.FullName)]))
             .ToList();
     }
 }

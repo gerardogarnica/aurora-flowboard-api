@@ -18,29 +18,31 @@ internal sealed class GetMySummaryHandler(
             return Result.Fail<MySummaryResponse>(UserErrors.NotFound);
         }
 
-        List<Project> projects = await dbContext
+        // Three scalar queries over the same filter: nothing loads members or work items into memory.
+        IQueryable<Project> myProjects = dbContext
             .Projects
-            .Include(p => p.Members)
-            .Include(p => p.WorkItems).ThenInclude(wi => wi.FlowState)
-            .Where(p => p.Status != ProjectStatus.Archived && p.Members.Any(m => m.UserId == query.UserId))
             .AsNoTracking()
-            .AsSplitQuery()
+            .Where(p => p.Status != ProjectStatus.Archived && p.Members.Any(m => m.UserId == query.UserId));
+
+        List<MyProjectSummaryResponse> projects = await myProjects
+            .Select(p => new MyProjectSummaryResponse(p.Id, p.Name, p.Color.Value, p.Status))
             .ToListAsync(cancellationToken);
 
-        int memberCount = projects
+        int memberCount = await myProjects
             .SelectMany(p => p.Members)
             .Select(m => m.UserId)
             .Distinct()
-            .Count();
+            .CountAsync(cancellationToken);
 
-        int myOpenIssues = projects
+        int myOpenIssues = await myProjects
             .SelectMany(p => p.WorkItems)
-            .Count(wi => wi.AssigneeId == query.UserId && wi.FlowState.Category == FlowStateCategory.Active);
+            .CountAsync(
+                wi => wi.AssigneeId == query.UserId && wi.FlowState.Category == FlowStateCategory.Active,
+                cancellationToken);
 
         IReadOnlyCollection<MyProjectSummaryResponse> orderedProjects = [.. projects
             .OrderBy(p => p.Status)
-            .ThenBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
-            .Select(p => new MyProjectSummaryResponse(p.Id, p.Name, p.Color, p.Status))];
+            .ThenBy(p => p.Name, StringComparer.OrdinalIgnoreCase)];
 
         return new MySummaryResponse(
             new MyProfileResponse(user.Id, user.FullName, user.Initials, user.Email.Value, user.Roles.First().Name),
