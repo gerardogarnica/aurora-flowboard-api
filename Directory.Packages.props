@@ -5,6 +5,8 @@
   <ItemGroup>
     <!-- Aspire -->
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.4.6" />
+    <!-- MessagePack: pins the Aspire → StreamJsonRpc transitive above GHSA-qhrr-8q5h-9q3h; remove once Aspire ships a patched version -->
+    <PackageVersion Include="MessagePack" Version="2.5.307" />
     <!-- Microsoft -->
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.13" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.13" />
