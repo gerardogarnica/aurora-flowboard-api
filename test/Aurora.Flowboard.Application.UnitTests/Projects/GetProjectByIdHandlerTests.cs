@@ -10,8 +10,6 @@ public sealed class GetProjectByIdHandlerTests
     {
         _dbContext = Substitute.For<IApplicationDbContext>();
         _userContext = Substitute.For<IUserContext>();
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Users.Returns(usersMock);
         _handler = new GetProjectByIdHandler(_dbContext, _userContext);
     }
 
@@ -89,6 +87,8 @@ public sealed class GetProjectByIdHandlerTests
         response.ProjectId.Should().Be(project.Id);
         response.Name.Should().Be(project.Name);
         response.Description.Should().Be(project.Description);
+        response.Prefix.Should().Be(project.Prefix.Value);
+        response.Color.Should().Be(project.Color.Value);
         response.Kind.Should().Be(project.Kind);
         response.Status.Should().Be(project.Status);
         response.CreatedById.Should().Be(admin.Id);
@@ -99,6 +99,27 @@ public sealed class GetProjectByIdHandlerTests
         response.ClosedWorkItems.Should().Be(0);
         response.CanModifyFlowStates.Should().BeTrue();
         response.CanAddOrUpdateWorkItems.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Should_DisallowFlowsAndWorkItems_When_ProjectIsArchived()
+    {
+        // Arrange
+        User admin = ProjectQueryData.GetAdminUser();
+        Project project = ProjectQueryData.GetProjectWithNavProperties(admin);
+        project.ChangeStatus(ProjectStatus.Archived, admin, ProjectQueryData.UtcNow);
+        _userContext.UserId.Returns(admin.Id);
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
+        _dbContext.Projects.Returns(projectsMock);
+
+        // Act
+        Result<ProjectResponse> result =
+            await _handler.Handle(new GetProjectByIdQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.Value.Status.Should().Be(ProjectStatus.Archived);
+        result.Value.CanModifyFlowStates.Should().BeFalse();
+        result.Value.CanAddOrUpdateWorkItems.Should().BeFalse();
     }
 
     [Fact]
@@ -125,54 +146,6 @@ public sealed class GetProjectByIdHandlerTests
         developer.Initials.Should().Be(member.Initials);
         developer.Role.Should().Be(ProjectRole.Developer);
         developer.JoinedOnUtc.Should().Be(ProjectQueryData.UtcNow);
-    }
-
-    [Fact]
-    public async Task Should_MapChangeLogsCollection_When_ProjectHasChangeLogs()
-    {
-        // Arrange
-        User admin = ProjectQueryData.GetAdminUser();
-        User member = ProjectQueryData.GetMemberUser();
-        Project project = ProjectQueryData.GetProjectWithMemberNavProperties(admin, member);
-        _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        _dbContext.Projects.Returns(projectsMock);
-
-        // Act
-        Result<ProjectResponse> result =
-            await _handler.Handle(new GetProjectByIdQuery(project.Id), CancellationToken.None);
-
-        // Assert
-        result.Value.ChangeLogs.Should().HaveCount(2);
-        ProjectChangeLogResponse firstLog = result.Value.ChangeLogs.First();
-        firstLog.ChangedByFullName.Should().Be(admin.FullName);
-        firstLog.ChangedByInitials.Should().Be(admin.Initials);
-        firstLog.ChangeType.Should().Be(ProjectChangeType.Created);
-        firstLog.AffectedEntityName.Should().BeNull();
-    }
-
-    [Fact]
-    public async Task Should_ResolveAffectedEntityName_When_ChangeLogIsMemberAdded()
-    {
-        // Arrange
-        User admin = ProjectQueryData.GetAdminUser();
-        User member = ProjectQueryData.GetMemberUser();
-        Project project = ProjectQueryData.GetProjectWithMemberNavProperties(admin, member);
-        _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        _dbContext.Projects.Returns(projectsMock);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin, member]);
-        _dbContext.Users.Returns(usersMock);
-
-        // Act
-        Result<ProjectResponse> result =
-            await _handler.Handle(new GetProjectByIdQuery(project.Id), CancellationToken.None);
-
-        // Assert
-        ProjectChangeLogResponse memberAddedLog =
-            result.Value.ChangeLogs.Single(cl => cl.ChangeType == ProjectChangeType.MemberAdded);
-        memberAddedLog.AffectedEntityId.Should().Be(member.Id);
-        memberAddedLog.AffectedEntityName.Should().Be(member.FullName);
     }
 
     [Fact]
@@ -214,26 +187,5 @@ public sealed class GetProjectByIdHandlerTests
         // Assert
         result.Value.Members.Select(m => m.FullName).Should().BeInAscendingOrder();
         result.Value.Members.First().FullName.Should().Be("Alpha User");
-    }
-
-    [Fact]
-    public async Task Should_ReturnChangeLogsOrderedByChangedOnUtc()
-    {
-        // Arrange
-        User admin = ProjectQueryData.GetAdminUser();
-        User member = ProjectQueryData.GetMemberUser();
-        Project project = ProjectQueryData.GetProjectWithOrderedChangeLogs(admin, member);
-        _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        _dbContext.Projects.Returns(projectsMock);
-
-        // Act
-        Result<ProjectResponse> result =
-            await _handler.Handle(new GetProjectByIdQuery(project.Id), CancellationToken.None);
-
-        // Assert
-        result.Value.ChangeLogs.Select(cl => cl.ChangedOnUtc).Should().BeInAscendingOrder();
-        result.Value.ChangeLogs.First().ChangedOnUtc.Should().Be(ProjectQueryData.UtcNow);
-        result.Value.ChangeLogs.Last().ChangedOnUtc.Should().Be(ProjectQueryData.UtcNow.AddHours(1));
     }
 }

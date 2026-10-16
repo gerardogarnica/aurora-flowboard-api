@@ -26,6 +26,10 @@ public static class ProjectErrors
         "Project.OperationNotAllowedInCurrentStatus",
         "This operation is not allowed in the project's current status");
 
+    public static readonly BaseError KindNotSupportedInCurrentStatus = BaseError.Validation(
+        "Project.KindNotSupportedInCurrentStatus",
+        "The project's current status does not exist in the lifecycle of the requested kind");
+
     public static readonly BaseError MemberAlreadyExists = BaseError.Conflict(
         "Project.MemberAlreadyExists",
         "The user is already a member of this project");
@@ -101,6 +105,10 @@ public static class ProjectErrors
     public static readonly BaseError MaxActiveFlowStatesReached = BaseError.Validation(
         "Project.MaxActiveFlowStatesReached",
         "Cannot add more active flow states to the project as it has reached the maximum limit of 10");
+
+    public static readonly BaseError LastActiveFlowState = BaseError.Validation(
+        "Project.LastActiveFlowState",
+        "Cannot remove the last active flow state from the project");
 
     public static readonly BaseError LastCompletedFlowState = BaseError.Validation(
         "Project.LastCompletedFlowState",

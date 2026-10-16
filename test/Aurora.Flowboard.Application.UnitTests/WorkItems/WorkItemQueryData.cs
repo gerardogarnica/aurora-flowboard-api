@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Reflection;
 
 namespace Aurora.Flowboard.Application.UnitTests.WorkItems;
@@ -78,16 +79,15 @@ internal static class WorkItemQueryData
 
     public static (Project Project, WorkItem WorkItem) GetProjectAndWorkItemWithThreeStateTransitions(User admin)
     {
-        Project project = Project.Create("WI Project", "Desc", ProjectCode.Create("WIP").Value, ProjectKind.Product, Color.Create("white").Value, admin, UtcNow).Value;
-        ProjectRole[] allRoles = [ProjectRole.Admin, ProjectRole.Developer];
-        Color stateColor = Color.Create("white").Value;
-
         // Three consecutive Active states get bidirectional transitions between neighbours,
         // so the work item can be moved along the whole chain and end on the Completed state.
-        project.AddFlowState("Backlog", FlowStateCategory.Active, stateColor, allRoles, admin);
-        project.AddFlowState("In Progress", FlowStateCategory.Active, stateColor, allRoles, admin);
-        project.AddFlowState("Review", FlowStateCategory.Active, stateColor, allRoles, admin);
-        project.AddFlowState("Done", FlowStateCategory.Completed, stateColor, allRoles, admin);
+        FlowStateDefinition[] flowStates = FlowStateDefinitionData.GetFlow(
+            ("Backlog", FlowStateCategory.Active),
+            ("In Progress", FlowStateCategory.Active),
+            ("Review", FlowStateCategory.Active),
+            ("Done", FlowStateCategory.Completed),
+            ("Cancelled", FlowStateCategory.Cancelled));
+        Project project = Project.Create("WI Project", "Desc", ProjectCode.Create("WIP").Value, ProjectKind.Product, Color.Create("white").Value, flowStates, admin, UtcNow).Value;
 
         WorkItem workItem = WorkItem.Create("Test Work Item", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, UtcNow).Value;
 
@@ -164,15 +164,26 @@ internal static class WorkItemQueryData
         return (project, workItem1, workItem2);
     }
 
-    public static Project GetActiveProjectWithFlow(User admin)
+    public static Project GetActiveProjectWithFlow(User admin) =>
+        Project.Create("WI Project", "Desc", ProjectCode.Create("WIP").Value, ProjectKind.Product, Color.Create("white").Value, FlowStateDefinitionData.GetMinimalFlow(), admin, UtcNow).Value;
+
+    // A project with no flow states, like those created before Project.Create required an initial
+    // flow, which may still exist in the database. The domain cannot build one, so the private
+    // collections are cleared by reflection.
+    public static Project GetLegacyProjectWithoutFlow(User admin)
     {
-        Project project = Project.Create("WI Project", "Desc", ProjectCode.Create("WIP").Value, ProjectKind.Product, Color.Create("white").Value, admin, UtcNow).Value;
-        ProjectRole[] allRoles = [ProjectRole.Admin, ProjectRole.Developer];
-        Color stateColor = Color.Create("white").Value;
-        project.AddFlowState("Backlog", FlowStateCategory.Active, stateColor, allRoles, admin);
-        project.AddFlowState("Done", FlowStateCategory.Completed, stateColor, allRoles, admin);
-        project.AddFlowState("Cancelled", FlowStateCategory.Cancelled, stateColor, allRoles, admin);
+        Project project = GetActiveProjectWithFlow(admin);
+        ClearPrivateList(project, "_flowStates");
+        ClearPrivateList(project, "_flowTransitions");
+
         return project;
+    }
+
+    private static void ClearPrivateList(Project project, string fieldName)
+    {
+        IList list = typeof(Project).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(project) as IList
+            ?? throw new InvalidOperationException($"Project has no list field '{fieldName}'; update {nameof(GetLegacyProjectWithoutFlow)} if it was renamed.");
+        list.Clear();
     }
 
     public static void SetWorkItemFlowState(WorkItem workItem, Guid flowStateId) =>

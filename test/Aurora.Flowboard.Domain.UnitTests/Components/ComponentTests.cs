@@ -132,6 +132,39 @@ public sealed class ComponentTests
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(ComponentErrors.DuplicateName);
         }
+
+        [Fact]
+        public void Should_CreateComponent_When_ProjectIsInMaintenance()
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Maintenance, admin, ProjectKind.Product);
+
+            // Act
+            Result<Component> result = Component.Create(ComponentData.Name, project, admin, ComponentData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            project.Components.Should().ContainSingle();
+        }
+
+        [Theory]
+        [InlineData(ProjectKind.Client, ProjectStatus.Completed)]
+        [InlineData(ProjectKind.Product, ProjectStatus.Archived)]
+        public void Should_Fail_When_ProjectIsNotModifiable(ProjectKind kind, ProjectStatus projectStatus)
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProjectWithStatus(projectStatus, admin, kind);
+
+            // Act
+            Result<Component> result = Component.Create(ComponentData.Name, project, admin, ComponentData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+            project.Components.Should().BeEmpty();
+        }
     }
 
     public sealed class Rename : BaseTest
@@ -254,6 +287,26 @@ public sealed class ComponentTests
             result.IsSuccessful.Should().BeTrue();
             component.Name.Should().Be("billing");
         }
+
+        [Theory]
+        [InlineData(ProjectKind.Client, ProjectStatus.Completed)]
+        [InlineData(ProjectKind.Product, ProjectStatus.Archived)]
+        public void Should_Fail_When_ProjectIsNotModifiable(ProjectKind kind, ProjectStatus projectStatus)
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Active, admin, kind);
+            Component component = ComponentData.GetComponent(project, admin);
+            project.ChangeStatus(projectStatus, admin, ComponentData.UpdatedOnUtc);
+
+            // Act
+            Result result = component.Rename(ComponentData.RenamedTo, admin, ComponentData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+            component.Name.Should().Be(ComponentData.Name);
+        }
     }
 
     public sealed class Retire : BaseTest
@@ -340,6 +393,26 @@ public sealed class ComponentTests
             // Assert
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(ComponentErrors.CannotRetireWithOpenWorkItems);
+        }
+
+        [Theory]
+        [InlineData(ProjectKind.Client, ProjectStatus.Completed)]
+        [InlineData(ProjectKind.Product, ProjectStatus.Archived)]
+        public void Should_Fail_When_ProjectIsNotModifiable(ProjectKind kind, ProjectStatus projectStatus)
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Active, admin, kind);
+            Component component = ComponentData.GetComponent(project, admin);
+            project.ChangeStatus(projectStatus, admin, ComponentData.UpdatedOnUtc);
+
+            // Act
+            Result result = component.Retire(admin, 0, ComponentData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+            component.Status.Should().Be(ComponentStatus.Active);
         }
     }
 }

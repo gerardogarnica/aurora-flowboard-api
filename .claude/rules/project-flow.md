@@ -16,11 +16,14 @@ There is no `Flow` aggregate. `FlowState` and `FlowTransition` are child entitie
 
 The `projects/{id}/flow/...` endpoints (get flow, add/remove state, add/remove transition role) and their Application slices were removed — the front-end never called them and there is no plan to. **Don't reintroduce them without asking**; their absence is a deliberate scope decision. What remains:
 
-- `CreateProjectCommand` takes the `FlowStates` list, and `CreateProjectHandler` calls `Project.AddFlowState` for each. This is the only path that writes flow states; the front-end pre-fills it from `GET template-flows/{kind}`.
+- `CreateProjectCommand` takes the `FlowStates` list; `CreateProjectHandler` turns each entry into a `FlowStateDefinition` value object and passes them to `Project.Create`. This is the only path that writes flow states; the front-end pre-fills it from `GET template-flows/{kind}`.
+- **A project cannot be created without a usable flow.** `Project.Create` requires at least one `Active`, one `Completed` and one `Cancelled` state (`InitialFlowStatesMissing*`), adds the active states first (a closing state is only wired to the active states that already exist), and fails with the first `AddFlowState` error. `CreateProjectValidator` mirrors the rule (`FlowStates` not empty, plus the three categories) so the API answers 400 before reaching the domain.
+- `Project.RemoveFlowState` refuses to remove the last state of any category (`LastActiveFlowState`, `LastCompletedFlowState`, `LastCancelledFlowState`), so the domain can never leave a project without a usable flow.
+- A project with no flow states (or no `Active` one) can therefore only come from data created before `Project.Create` required an initial flow. `WorkItem.Create` (`NoInitialFlowState`) and the board (empty response) still handle it. Tests build that legacy state with `GetLegacyProjectWithoutFlow` (`ProjectData` in Domain, `WorkItemQueryData` in Application), which clears the private collections by reflection.
 - The domain methods (`Project.AddFlowState`, `RemoveFlowState`, `AddFlowTransitionRole`, `RemoveFlowTransitionRole`) and their `Domain.UnitTests` coverage are intentionally kept. Re-exposing any of them is a new slice + endpoint, not a domain change.
 - Flow states and transitions are still *read* through `GET projects/{projectId:guid}/board` (columns — `Active` category only — each with its `availableTransitions` to every category) and `GET work-items/{code}` (`availableTransitions`, every category). Both share `GetAvailableTransitionsByStateAsync`; see `work-items.md`.
 
-Consequence: a project created with the wrong flow can only be fixed by direct SQL.
+Consequence: a project created with the wrong flow can only be fixed by direct SQL — which is why `Project.Create` rejects an incomplete one.
 
 ## TemplateFlows
 

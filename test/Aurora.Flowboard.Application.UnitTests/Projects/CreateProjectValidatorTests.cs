@@ -113,7 +113,7 @@ public sealed class CreateProjectValidatorTests
     public void Should_Fail_When_FlowStateNameIsEmpty()
     {
         IReadOnlyCollection<CreateProjectState> flowStates =
-            [new CreateProjectState(string.Empty, FlowStateCategory.Active, ProjectCommandData.FlowStateColor, [ProjectRole.Admin])];
+            ProjectCommandData.GetCreateProjectStatesWith(new CreateProjectState(string.Empty, FlowStateCategory.Active, ProjectCommandData.FlowStateColor, [ProjectRole.Admin]));
         CreateProjectCommand command = ProjectCommandData.GetCreateCommand(flowStates);
 
         var result = _validator.Validate(command);
@@ -126,7 +126,7 @@ public sealed class CreateProjectValidatorTests
     {
         string longName = new('A', FlowState.MaxNameLength + 1);
         IReadOnlyCollection<CreateProjectState> flowStates =
-            [new CreateProjectState(longName, FlowStateCategory.Active, ProjectCommandData.FlowStateColor, [ProjectRole.Admin])];
+            ProjectCommandData.GetCreateProjectStatesWith(new CreateProjectState(longName, FlowStateCategory.Active, ProjectCommandData.FlowStateColor, [ProjectRole.Admin]));
         CreateProjectCommand command = ProjectCommandData.GetCreateCommand(flowStates);
 
         var result = _validator.Validate(command);
@@ -138,7 +138,7 @@ public sealed class CreateProjectValidatorTests
     public void Should_Fail_When_FlowStateCategoryIsOutOfRange()
     {
         IReadOnlyCollection<CreateProjectState> flowStates =
-            [new CreateProjectState("Backlog", (FlowStateCategory)99, ProjectCommandData.FlowStateColor, [ProjectRole.Admin])];
+            ProjectCommandData.GetCreateProjectStatesWith(new CreateProjectState("Backlog", (FlowStateCategory)99, ProjectCommandData.FlowStateColor, [ProjectRole.Admin]));
         CreateProjectCommand command = ProjectCommandData.GetCreateCommand(flowStates);
 
         var result = _validator.Validate(command);
@@ -150,7 +150,7 @@ public sealed class CreateProjectValidatorTests
     public void Should_Fail_When_FlowStateColorIsEmpty()
     {
         IReadOnlyCollection<CreateProjectState> flowStates =
-            [new CreateProjectState("Backlog", FlowStateCategory.Active, string.Empty, [ProjectRole.Admin])];
+            ProjectCommandData.GetCreateProjectStatesWith(new CreateProjectState("Backlog", FlowStateCategory.Active, string.Empty, [ProjectRole.Admin]));
         CreateProjectCommand command = ProjectCommandData.GetCreateCommand(flowStates);
 
         var result = _validator.Validate(command);
@@ -162,7 +162,7 @@ public sealed class CreateProjectValidatorTests
     public void Should_Fail_When_FlowStateAllowedRolesIsEmpty()
     {
         IReadOnlyCollection<CreateProjectState> flowStates =
-            [new CreateProjectState("Backlog", FlowStateCategory.Active, ProjectCommandData.FlowStateColor, [])];
+            ProjectCommandData.GetCreateProjectStatesWith(new CreateProjectState("Backlog", FlowStateCategory.Active, ProjectCommandData.FlowStateColor, []));
         CreateProjectCommand command = ProjectCommandData.GetCreateCommand(flowStates);
 
         var result = _validator.Validate(command);
@@ -174,7 +174,7 @@ public sealed class CreateProjectValidatorTests
     public void Should_Fail_When_FlowStateAllowedRoleIsOutOfRange()
     {
         IReadOnlyCollection<CreateProjectState> flowStates =
-            [new CreateProjectState("Backlog", FlowStateCategory.Active, ProjectCommandData.FlowStateColor, [(ProjectRole)99])];
+            ProjectCommandData.GetCreateProjectStatesWith(new CreateProjectState("Backlog", FlowStateCategory.Active, ProjectCommandData.FlowStateColor, [(ProjectRole)99]));
         CreateProjectCommand command = ProjectCommandData.GetCreateCommand(flowStates);
 
         var result = _validator.Validate(command);
@@ -183,10 +183,42 @@ public sealed class CreateProjectValidatorTests
     }
 
     [Fact]
+    public void Should_Fail_When_FlowStatesAreEmpty()
+    {
+        CreateProjectCommand command = ProjectCommandData.GetCreateCommand([]);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.PropertyName == nameof(CreateProjectCommand.FlowStates));
+    }
+
+    public static TheoryData<FlowStateCategory, string> MissingCategories => new()
+    {
+        { FlowStateCategory.Active, ProjectErrors.InitialFlowStatesMissingActiveState.Code },
+        { FlowStateCategory.Completed, ProjectErrors.InitialFlowStatesMissingCompletedState.Code },
+        { FlowStateCategory.Cancelled, ProjectErrors.InitialFlowStatesMissingCancelledState.Code },
+    };
+
+    [Theory]
+    [MemberData(nameof(MissingCategories))]
+    public void Should_Fail_When_FlowStatesMissCategory(FlowStateCategory missingCategory, string expectedErrorCode)
+    {
+        IReadOnlyCollection<CreateProjectState> flowStates =
+            [.. ProjectCommandData.GetValidCreateProjectStates().Where(s => s.Category != missingCategory)];
+        CreateProjectCommand command = ProjectCommandData.GetCreateCommand(flowStates);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().ContainSingle(e => e.ErrorCode == expectedErrorCode);
+    }
+
+    [Fact]
     public void Should_Fail_When_FlowStateAllowedRolesContainViewer()
     {
         IReadOnlyCollection<CreateProjectState> flowStates =
-            [new CreateProjectState("Backlog", FlowStateCategory.Active, ProjectCommandData.FlowStateColor, [ProjectRole.Developer, ProjectRole.Viewer])];
+            ProjectCommandData.GetCreateProjectStatesWith(new CreateProjectState("Backlog", FlowStateCategory.Active, ProjectCommandData.FlowStateColor, [ProjectRole.Developer, ProjectRole.Viewer]));
         CreateProjectCommand command = ProjectCommandData.GetCreateCommand(flowStates);
 
         var result = _validator.Validate(command);

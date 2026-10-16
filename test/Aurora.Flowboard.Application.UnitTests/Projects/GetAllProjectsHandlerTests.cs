@@ -120,6 +120,8 @@ public sealed class GetAllProjectsHandlerTests
         summary.ProjectId.Should().Be(project.Id);
         summary.Name.Should().Be("Mapped Project");
         summary.Description.Should().Be(ProjectQueryData.Description);
+        summary.Prefix.Should().Be(project.Prefix.Value);
+        summary.Color.Should().Be(ProjectQueryData.Color.Value);
         summary.Kind.Should().Be(ProjectQueryData.Kind);
         summary.Status.Should().Be(ProjectStatus.Active);
         summary.Members.Should().HaveCount(1); // creator is added as admin member automatically
@@ -151,6 +153,26 @@ public sealed class GetAllProjectsHandlerTests
         ProjectSummaryResponse summary = result.Value.Single();
         summary.CanModifyFlowStates.Should().BeTrue();
         summary.CanAddOrUpdateWorkItems.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Should_DisallowFlowsAndWorkItems_When_ProjectIsArchived()
+    {
+        // Arrange
+        User admin = ProjectQueryData.GetAdminUser();
+        Project archivedProject = ProjectQueryData.GetArchivedProjectForGetAll("Archived Project", admin);
+        _userContext.UserId.Returns(admin.Id);
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([archivedProject]);
+        _dbContext.Projects.Returns(projectsMock);
+
+        // Act
+        Result<IReadOnlyCollection<ProjectSummaryResponse>> result =
+            await _handler.Handle(new GetAllProjectsQuery(), CancellationToken.None);
+
+        // Assert
+        ProjectSummaryResponse summary = result.Value.Single();
+        summary.CanModifyFlowStates.Should().BeFalse();
+        summary.CanAddOrUpdateWorkItems.Should().BeFalse();
     }
 
     [Fact]

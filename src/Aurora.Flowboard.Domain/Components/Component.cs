@@ -44,6 +44,11 @@ public sealed class Component : BaseEntity
             return Result.Fail<Component>(ComponentErrors.OnlyAdminCanManageComponent);
         }
 
+        if (!project.IsModifiable)
+        {
+            return Result.Fail<Component>(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
         if (string.IsNullOrWhiteSpace(name))
         {
             return Result.Fail<Component>(ComponentErrors.NameRequired);
@@ -83,6 +88,11 @@ public sealed class Component : BaseEntity
             return Result.Fail(ComponentErrors.OnlyAdminCanManageComponent);
         }
 
+        if (!Project.IsModifiable)
+        {
+            return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
         if (string.IsNullOrWhiteSpace(newName))
         {
             return Result.Fail(ComponentErrors.NameRequired);
@@ -112,6 +122,11 @@ public sealed class Component : BaseEntity
         if (!Project.IsAdmin(changedBy.Id))
         {
             return Result.Fail(ComponentErrors.OnlyAdminCanManageComponent);
+        }
+
+        if (!Project.IsModifiable)
+        {
+            return Result.Fail(ProjectErrors.OperationNotAllowedInCurrentStatus);
         }
 
         if (Status == ComponentStatus.Retired)

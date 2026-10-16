@@ -38,16 +38,13 @@ internal static class WorkItemCommandData
 
     public static Project GetActiveProjectWithFlow(User admin)
     {
-        Project project = Project.Create("My Project", "Desc", ProjectCode.Create("MYP").Value, ProjectKind.Product, Color.Create("white").Value, admin, UtcNow).Value;
+        FlowStateDefinition[] flowStates = FlowStateDefinitionData.GetFlow(
+            ("Backlog", FlowStateCategory.Active),
+            ("In Progress", FlowStateCategory.Active),
+            ("Done", FlowStateCategory.Completed),
+            ("Cancelled", FlowStateCategory.Cancelled));
 
-        ProjectRole[] allRoles = [ProjectRole.Admin, ProjectRole.Developer];
-        Color stateColor = Color.Create("white").Value;
-        project.AddFlowState("Backlog", FlowStateCategory.Active, stateColor, allRoles, admin);
-        project.AddFlowState("In Progress", FlowStateCategory.Active, stateColor, allRoles, admin);
-        project.AddFlowState("Done", FlowStateCategory.Completed, stateColor, allRoles, admin);
-        project.AddFlowState("Cancelled", FlowStateCategory.Cancelled, stateColor, allRoles, admin);
-
-        return project;
+        return Project.Create("My Project", "Desc", ProjectCode.Create("MYP").Value, ProjectKind.Product, Color.Create("white").Value, flowStates, admin, UtcNow).Value;
     }
 
     public static WorkItem GetWorkItem(User admin)

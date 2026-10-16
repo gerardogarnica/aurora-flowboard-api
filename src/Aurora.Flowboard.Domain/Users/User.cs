@@ -5,16 +5,15 @@ namespace Aurora.Flowboard.Domain.Users;
 public sealed class User : BaseEntity
 {
     public const int MaxNameLength = 100;
+    private const string UnknownInitials = "U";
 
     private readonly List<UserToken> _tokens = [];
     private readonly List<Role> _roles = [];
 
     public string FirstName { get; private set; }
     public string LastName { get; private set; }
-    public string FullName => $"{FirstName} {LastName}";
-    public string Initials => string.IsNullOrEmpty(FirstName) || string.IsNullOrEmpty(LastName)
-        ? "U"
-        : $"{char.ToUpperInvariant(FirstName[0])}{char.ToUpperInvariant(LastName[0])}";
+    public string FullName => FormatFullName(FirstName, LastName);
+    public string Initials => FormatInitials(FirstName, LastName);
     public Email Email { get; private set; }
     private Password Password { get; set; }
     public bool IsActive { get; private set; }
@@ -23,8 +22,18 @@ public sealed class User : BaseEntity
 
     public IReadOnlyCollection<UserToken> Tokens => _tokens.AsReadOnly();
     public IReadOnlyCollection<Role> Roles => _roles.AsReadOnly();
+    public bool IsAdministrator => _roles.Any(r => r.Name == Role.Administrator.Name);
 
     private User() : base(Guid.Empty) { } // EF Core
+
+    // Read projections select FirstName/LastName instead of the User entity (whose owned Roles
+    // collection EF always joins), then format them with the same rules as FullName/Initials.
+    public static string FormatFullName(string firstName, string lastName) => $"{firstName} {lastName}";
+
+    public static string FormatInitials(string? firstName, string? lastName) =>
+        string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName)
+            ? UnknownInitials
+            : $"{char.ToUpperInvariant(firstName[0])}{char.ToUpperInvariant(lastName[0])}";
 
     private User(
         Guid id,
@@ -100,6 +109,21 @@ public sealed class User : BaseEntity
         UpdatedOnUtc = updatedOnUtc;
 
         AddDomainEvent(new UserDeactivatedDomainEvent(Id));
+
+        return Result.Ok();
+    }
+
+    public Result Reactivate(DateTime updatedOnUtc)
+    {
+        if (IsActive)
+        {
+            return Result.Fail(UserErrors.AlreadyActive);
+        }
+
+        IsActive = true;
+        UpdatedOnUtc = updatedOnUtc;
+
+        AddDomainEvent(new UserReactivatedDomainEvent(Id));
 
         return Result.Ok();
     }
@@ -214,13 +238,24 @@ public sealed class User : BaseEntity
         return Result.Ok();
     }
 
-    public Result ChangeRole(Role newRole, DateTime updatedOnUtc)
+    public Result ChangeRole(Role newRole, bool hasOtherActiveAdministrator, DateTime updatedOnUtc)
     {
         ArgumentNullException.ThrowIfNull(newRole);
 
         if (_roles.Any(r => r.Name == newRole.Name))
         {
             return Result.Fail(UserErrors.RoleAlreadyAssigned);
+        }
+
+        // An inactive Administrator cannot log in, so demoting one never removes the last usable admin.
+        bool isDemotingLastActiveAdministrator = IsActive
+            && !hasOtherActiveAdministrator
+            && newRole.Name != Role.Administrator.Name
+            && IsAdministrator;
+
+        if (isDemotingLastActiveAdministrator)
+        {
+            return Result.Fail(UserErrors.LastAdministrator);
         }
 
         foreach (Role role in _roles.ToList())

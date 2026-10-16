@@ -66,16 +66,41 @@ internal static class SeedingServiceExtensions
         ILogger logger = services.GetRequiredService<ILoggerFactory>()
             .CreateLogger("Aurora.Flowboard.Api.Bootstrap.AdministratorSeeder");
 
-        bool administratorExists = await dbContext.Users
-            .AnyAsync(u => u.Roles.Any(r => r.Name == Role.Administrator.Name));
+        // Inactive users cannot log in, so only an active Administrator counts.
+        bool activeAdministratorExists = await dbContext.Users
+            .AnyAsync(u => u.IsActive && u.Roles.Any(r => r.Name == Role.Administrator.Name));
 
-        if (administratorExists)
+        if (activeAdministratorExists)
         {
             return;
         }
 
         Result<Email> emailResult = Email.Create(options.AdminEmail);
         EnsureSuccess(emailResult);
+
+        string emailValue = emailResult.Value.Value;
+
+        // The bootstrap user may still exist (e.g. demoted or deactivated): restore it instead of
+        // inserting a duplicate, which the unique email index would reject and abort startup.
+        User? existingUser = await dbContext.Users
+            .Include(u => u.Roles)
+            .SingleOrDefaultAsync(u => u.Email.Value == emailValue);
+
+        if (existingUser is not null)
+        {
+            RestoreAdministrator(existingUser, dateTimeProvider.UtcNow);
+
+            await dbContext.SaveChangesAsync();
+
+            if (logger.IsEnabled(LogLevel.Warning))
+            {
+                logger.LogWarning(
+                    "No active Administrator found. Restored Administrator access for existing user {UserId}.",
+                    existingUser.Id);
+            }
+
+            return;
+        }
 
         string passwordHash = passwordHasher.HashPassword(options.AdminPassword);
 
@@ -160,6 +185,20 @@ internal static class SeedingServiceExtensions
         if (logger.IsEnabled(LogLevel.Information))
         {
             logger.LogInformation("Seeded default TemplateFlow for kinds {ProjectKinds}.", string.Join(", ", seededKinds));
+        }
+    }
+
+    private static void RestoreAdministrator(User user, DateTime utcNow)
+    {
+        if (!user.IsActive)
+        {
+            EnsureSuccess(user.Reactivate(utcNow));
+        }
+
+        if (!user.IsAdministrator)
+        {
+            // A promotion never trips the last-Administrator guard, so the flag is irrelevant here.
+            EnsureSuccess(user.ChangeRole(Role.Administrator, hasOtherActiveAdministrator: false, utcNow));
         }
     }
 

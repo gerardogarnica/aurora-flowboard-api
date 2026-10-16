@@ -276,6 +276,55 @@ public sealed class MilestoneTests
             // Assert
             milestone.Color.Should().Be(MilestoneData.MilestoneColor);
         }
+
+        [Fact]
+        public void Should_CreateMilestone_When_ProjectIsInMaintenance()
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Maintenance, admin, ProjectKind.Product);
+
+            // Act
+            Result<Milestone> result = Milestone.Create(
+                MilestoneData.Name,
+                MilestoneData.Description,
+                MilestoneData.MilestoneColor,
+                MilestoneData.TargetStartDate,
+                MilestoneData.TargetEndDate,
+                project,
+                admin,
+                MilestoneData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            project.Milestones.Should().ContainSingle();
+        }
+
+        [Theory]
+        [InlineData(ProjectKind.Client, ProjectStatus.Completed)]
+        [InlineData(ProjectKind.Product, ProjectStatus.Archived)]
+        public void Should_Fail_When_ProjectIsNotModifiable(ProjectKind kind, ProjectStatus projectStatus)
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProjectWithStatus(projectStatus, admin, kind);
+
+            // Act
+            Result<Milestone> result = Milestone.Create(
+                MilestoneData.Name,
+                MilestoneData.Description,
+                MilestoneData.MilestoneColor,
+                MilestoneData.TargetStartDate,
+                MilestoneData.TargetEndDate,
+                project,
+                admin,
+                MilestoneData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+            project.Milestones.Should().BeEmpty();
+        }
     }
 
     public sealed class Update : BaseTest
@@ -513,6 +562,33 @@ public sealed class MilestoneTests
             // Assert
             result.IsSuccessful.Should().BeTrue();
             milestone.Color.Should().Be(MilestoneData.UpdatedMilestoneColor);
+        }
+
+        [Theory]
+        [InlineData(ProjectKind.Client, ProjectStatus.Completed)]
+        [InlineData(ProjectKind.Product, ProjectStatus.Archived)]
+        public void Should_Fail_When_ProjectIsNotModifiable(ProjectKind kind, ProjectStatus projectStatus)
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Active, admin, kind);
+            Milestone milestone = MilestoneData.GetMilestone(project, admin);
+            project.ChangeStatus(projectStatus, admin, MilestoneData.UpdatedOnUtc);
+
+            // Act
+            Result result = milestone.Update(
+                MilestoneData.UpdatedName,
+                MilestoneData.UpdatedDescription,
+                MilestoneData.UpdatedMilestoneColor,
+                MilestoneData.TargetStartDate,
+                MilestoneData.TargetEndDate,
+                admin,
+                MilestoneData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+            milestone.Name.Should().Be(MilestoneData.Name);
         }
     }
 
@@ -761,6 +837,26 @@ public sealed class MilestoneTests
             // Assert
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(MilestoneErrors.CannotCloseWithOpenWorkItems);
+        }
+
+        [Theory]
+        [InlineData(ProjectKind.Client, ProjectStatus.Completed)]
+        [InlineData(ProjectKind.Product, ProjectStatus.Archived)]
+        public void Should_Fail_When_ProjectIsNotModifiable(ProjectKind kind, ProjectStatus projectStatus)
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Active, admin, kind);
+            Milestone milestone = MilestoneData.GetMilestone(project, admin);
+            project.ChangeStatus(projectStatus, admin, MilestoneData.UpdatedOnUtc);
+
+            // Act
+            Result result = milestone.ChangeStatus(MilestoneStatus.Active, admin, 0, MilestoneData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+            milestone.Status.Should().Be(MilestoneStatus.Draft);
         }
     }
 }

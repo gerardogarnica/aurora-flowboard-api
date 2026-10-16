@@ -173,6 +173,54 @@ public sealed class UserTests
         }
     }
 
+    public sealed class DisplayNames : BaseTest
+    {
+        [Fact]
+        public void Should_JoinFirstAndLastName_When_FormattingFullName()
+        {
+            // Act
+            string fullName = User.FormatFullName("Ada", "Lovelace");
+
+            // Assert
+            fullName.Should().Be("Ada Lovelace");
+        }
+
+        [Fact]
+        public void Should_UppercaseFirstLetters_When_FormattingInitials()
+        {
+            // Act
+            string initials = User.FormatInitials("ada", "lovelace");
+
+            // Assert
+            initials.Should().Be("AL");
+        }
+
+        [Theory]
+        [InlineData("", "Lovelace")]
+        [InlineData("Ada", "")]
+        [InlineData(null, "Lovelace")]
+        [InlineData("Ada", null)]
+        public void Should_ReturnPlaceholder_When_FormattingInitialsWithMissingName(string? firstName, string? lastName)
+        {
+            // Act
+            string initials = User.FormatInitials(firstName, lastName);
+
+            // Assert
+            initials.Should().Be("U");
+        }
+
+        [Fact]
+        public void Should_MatchInstanceProperties_When_FormattingFromUserNames()
+        {
+            // Arrange
+            User user = UserData.GetActiveUser();
+
+            // Act & Assert
+            User.FormatFullName(user.FirstName, user.LastName).Should().Be(user.FullName);
+            User.FormatInitials(user.FirstName, user.LastName).Should().Be(user.Initials);
+        }
+    }
+
     public sealed class ChangePassword : BaseTest
     {
         [Fact]
@@ -271,6 +319,64 @@ public sealed class UserTests
             // Assert
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(UserErrors.AlreadyDeactivated);
+        }
+    }
+
+    public sealed class Reactivate : BaseTest
+    {
+        [Fact]
+        public void Should_ReactivateUser_When_Inactive()
+        {
+            // Arrange
+            User user = UserData.GetInactiveUser();
+
+            // Act
+            Result result = user.Reactivate(UserData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            user.IsActive.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Should_UpdateUpdatedOnUtc_When_Reactivated()
+        {
+            // Arrange
+            User user = UserData.GetInactiveUser();
+
+            // Act
+            user.Reactivate(UserData.UpdatedOnUtc);
+
+            // Assert
+            user.UpdatedOnUtc.Should().Be(UserData.UpdatedOnUtc);
+        }
+
+        [Fact]
+        public void Should_RaiseUserReactivatedDomainEvent_When_Reactivated()
+        {
+            // Arrange
+            User user = UserData.GetInactiveUser();
+
+            // Act
+            user.Reactivate(UserData.UpdatedOnUtc);
+
+            // Assert
+            UserReactivatedDomainEvent domainEvent = AssertDomainEventWasPublished<UserReactivatedDomainEvent>(user);
+            domainEvent.UserId.Should().Be(user.Id);
+        }
+
+        [Fact]
+        public void Should_Fail_When_UserIsAlreadyActive()
+        {
+            // Arrange
+            User user = UserData.GetActiveUser();
+
+            // Act
+            Result result = user.Reactivate(UserData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(UserErrors.AlreadyActive);
         }
     }
 
@@ -789,7 +895,7 @@ public sealed class UserTests
             User user = UserData.GetActiveUser();
 
             // Act
-            Result result = user.ChangeRole(Role.Member, UserData.UpdatedOnUtc);
+            Result result = user.ChangeRole(Role.Member, hasOtherActiveAdministrator: true, UserData.UpdatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeTrue();
@@ -803,7 +909,7 @@ public sealed class UserTests
             User user = UserData.GetUserWithRole(Role.Member);
 
             // Act
-            Result result = user.ChangeRole(Role.Administrator, UserData.UpdatedOnUtc);
+            Result result = user.ChangeRole(Role.Administrator, hasOtherActiveAdministrator: true, UserData.UpdatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeTrue();
@@ -817,7 +923,7 @@ public sealed class UserTests
             User user = UserData.GetActiveUser();
 
             // Act
-            user.ChangeRole(Role.Member, UserData.UpdatedOnUtc);
+            user.ChangeRole(Role.Member, hasOtherActiveAdministrator: true, UserData.UpdatedOnUtc);
 
             // Assert
             user.UpdatedOnUtc.Should().Be(UserData.UpdatedOnUtc);
@@ -831,7 +937,7 @@ public sealed class UserTests
             user.ClearDomainEvents();
 
             // Act
-            user.ChangeRole(Role.Administrator, UserData.UpdatedOnUtc);
+            user.ChangeRole(Role.Administrator, hasOtherActiveAdministrator: true, UserData.UpdatedOnUtc);
 
             // Assert
             UserRoleRemovedDomainEvent removedEvent = AssertDomainEventWasPublished<UserRoleRemovedDomainEvent>(user);
@@ -848,7 +954,7 @@ public sealed class UserTests
             User user = UserData.GetUserWithRole(Role.Member);
 
             // Act
-            Result result = user.ChangeRole(Role.Member, UserData.UpdatedOnUtc);
+            Result result = user.ChangeRole(Role.Member, hasOtherActiveAdministrator: true, UserData.UpdatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -862,7 +968,7 @@ public sealed class UserTests
             User user = UserData.GetUserWithRole(Role.Member);
 
             // Act
-            user.ChangeRole(Role.Member, UserData.UpdatedOnUtc);
+            user.ChangeRole(Role.Member, hasOtherActiveAdministrator: true, UserData.UpdatedOnUtc);
 
             // Assert
             user.Roles.Should().ContainSingle(r => r.Name == Role.Member.Name);
@@ -875,10 +981,115 @@ public sealed class UserTests
             User user = UserData.GetActiveUser();
 
             // Act
-            Action act = () => user.ChangeRole(null!, UserData.UpdatedOnUtc);
+            Action act = () => user.ChangeRole(null!, hasOtherActiveAdministrator: true, UserData.UpdatedOnUtc);
 
             // Assert
             act.Should().Throw<ArgumentNullException>();
+        }
+
+        [Fact]
+        public void Should_Fail_When_DemotingTheLastActiveAdministrator()
+        {
+            // Arrange
+            User user = UserData.GetUserWithRole(Role.Administrator);
+
+            // Act
+            Result result = user.ChangeRole(Role.Member, hasOtherActiveAdministrator: false, UserData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(UserErrors.LastAdministrator);
+        }
+
+        [Fact]
+        public void Should_KeepAdministratorRole_When_DemotingTheLastActiveAdministrator()
+        {
+            // Arrange
+            User user = UserData.GetUserWithRole(Role.Administrator);
+            user.ClearDomainEvents();
+
+            // Act
+            user.ChangeRole(Role.Member, hasOtherActiveAdministrator: false, UserData.UpdatedOnUtc);
+
+            // Assert
+            user.Roles.Should().ContainSingle(r => r.Name == Role.Administrator.Name);
+            user.DomainEvents.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void Should_DemoteAdministrator_When_AnotherActiveAdministratorExists()
+        {
+            // Arrange
+            User user = UserData.GetUserWithRole(Role.Administrator);
+
+            // Act
+            Result result = user.ChangeRole(Role.Member, hasOtherActiveAdministrator: true, UserData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            user.Roles.Should().ContainSingle(r => r.Name == Role.Member.Name);
+        }
+
+        [Fact]
+        public void Should_DemoteAdministrator_When_UserIsInactive()
+        {
+            // Arrange
+            User user = UserData.GetUserWithRole(Role.Administrator);
+            user.Deactivate(UserData.CreatedOnUtc);
+
+            // Act
+            Result result = user.ChangeRole(Role.Member, hasOtherActiveAdministrator: false, UserData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            user.Roles.Should().ContainSingle(r => r.Name == Role.Member.Name);
+        }
+
+        [Fact]
+        public void Should_PromoteToAdministrator_When_NoOtherActiveAdministratorExists()
+        {
+            // Arrange
+            User user = UserData.GetUserWithRole(Role.Member);
+
+            // Act
+            Result result = user.ChangeRole(Role.Administrator, hasOtherActiveAdministrator: false, UserData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            user.Roles.Should().ContainSingle(r => r.Name == Role.Administrator.Name);
+        }
+    }
+
+    public sealed class IsAdministrator : BaseTest
+    {
+        [Fact]
+        public void Should_ReturnTrue_When_UserHasAdministratorRole()
+        {
+            // Arrange
+            User user = UserData.GetUserWithRole(Role.Administrator);
+
+            // Act & Assert
+            user.IsAdministrator.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Should_ReturnFalse_When_UserHasMemberRole()
+        {
+            // Arrange
+            User user = UserData.GetUserWithRole(Role.Member);
+
+            // Act & Assert
+            user.IsAdministrator.Should().BeFalse();
+        }
+
+        [Fact]
+        public void Should_ReturnFalse_When_UserHasNoRole()
+        {
+            // Arrange
+            User user = UserData.GetActiveUser();
+
+            // Act & Assert
+            user.IsAdministrator.Should().BeFalse();
         }
     }
 

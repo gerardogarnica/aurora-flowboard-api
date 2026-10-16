@@ -4,6 +4,8 @@ namespace Aurora.Flowboard.Application.UnitTests.Users;
 
 public sealed class ChangeUserRoleHandlerTests
 {
+    private const string OtherEmailAddress = "other.admin@example.com";
+
     private readonly IApplicationDbContext _dbContext;
     private readonly IDateTimeProvider _dateTimeProvider;
     private readonly ChangeUserRoleHandler _handler;
@@ -158,5 +160,128 @@ public sealed class ChangeUserRoleHandlerTests
 
         // Assert
         await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Should_ReturnLastAdministratorError_When_DemotingTheOnlyAdministrator()
+    {
+        // Arrange
+        User administrator = GetAdministrator(CreateUserCommandData.EmailAddress);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([administrator]);
+        _dbContext.Users.Returns(usersMock);
+
+        var command = new ChangeUserRoleCommand(administrator.Id, Role.Member.Name);
+
+        // Act
+        Result result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(UserErrors.LastAdministrator);
+    }
+
+    [Fact]
+    public async Task Should_NotPersist_When_DemotingTheOnlyAdministrator()
+    {
+        // Arrange
+        User administrator = GetAdministrator(CreateUserCommandData.EmailAddress);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([administrator]);
+        _dbContext.Users.Returns(usersMock);
+
+        var command = new ChangeUserRoleCommand(administrator.Id, Role.Member.Name);
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Should_ReturnLastAdministratorError_When_OtherAdministratorIsInactive()
+    {
+        // Arrange
+        User administrator = GetAdministrator(CreateUserCommandData.EmailAddress);
+        User inactiveAdministrator = GetAdministrator(OtherEmailAddress);
+        inactiveAdministrator.Deactivate(CreateUserCommandData.UtcNow);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([administrator, inactiveAdministrator]);
+        _dbContext.Users.Returns(usersMock);
+
+        var command = new ChangeUserRoleCommand(administrator.Id, Role.Member.Name);
+
+        // Act
+        Result result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(UserErrors.LastAdministrator);
+    }
+
+    [Fact]
+    public async Task Should_ReturnLastAdministratorError_When_OtherActiveUsersAreNotAdministrators()
+    {
+        // Arrange
+        User administrator = GetAdministrator(CreateUserCommandData.EmailAddress);
+        User member = CreateUserCommandData.GetExistingUser(OtherEmailAddress);
+        member.AssignRole(Role.Member);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([administrator, member]);
+        _dbContext.Users.Returns(usersMock);
+
+        var command = new ChangeUserRoleCommand(administrator.Id, Role.Member.Name);
+
+        // Act
+        Result result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(UserErrors.LastAdministrator);
+    }
+
+    [Fact]
+    public async Task Should_DemoteAdministrator_When_AnotherActiveAdministratorExists()
+    {
+        // Arrange
+        User administrator = GetAdministrator(CreateUserCommandData.EmailAddress);
+        User otherAdministrator = GetAdministrator(OtherEmailAddress);
+        _dateTimeProvider.UtcNow.Returns(CreateUserCommandData.UtcNow);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([administrator, otherAdministrator]);
+        _dbContext.Users.Returns(usersMock);
+
+        var command = new ChangeUserRoleCommand(administrator.Id, Role.Member.Name);
+
+        // Act
+        Result result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        administrator.Roles.Should().ContainSingle(r => r.Name == Role.Member.Name);
+        await _dbContext.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Should_DemoteAdministrator_When_AdministratorIsInactive()
+    {
+        // Arrange
+        User inactiveAdministrator = GetAdministrator(CreateUserCommandData.EmailAddress);
+        inactiveAdministrator.Deactivate(CreateUserCommandData.UtcNow);
+        _dateTimeProvider.UtcNow.Returns(CreateUserCommandData.UtcNow);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([inactiveAdministrator]);
+        _dbContext.Users.Returns(usersMock);
+
+        var command = new ChangeUserRoleCommand(inactiveAdministrator.Id, Role.Member.Name);
+
+        // Act
+        Result result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        inactiveAdministrator.Roles.Should().ContainSingle(r => r.Name == Role.Member.Name);
+    }
+
+    private static User GetAdministrator(string email)
+    {
+        User user = CreateUserCommandData.GetExistingUser(email);
+        user.AssignRole(Role.Administrator);
+        return user;
     }
 }

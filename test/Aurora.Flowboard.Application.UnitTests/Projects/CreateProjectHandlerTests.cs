@@ -241,6 +241,58 @@ public sealed class CreateProjectHandlerTests
     }
 
     [Fact]
+    public async Task Should_ReturnDomainError_When_FlowStatesAreEmpty()
+    {
+        // Arrange
+        User user = ProjectCommandData.GetUser();
+        _userContext.UserId.Returns(user.Id);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
+
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
+        _dbContext.Users.Returns(usersMock);
+        _dbContext.Projects.Returns(projectsMock);
+
+        CreateProjectCommand command = ProjectCommandData.GetCreateCommand([]);
+
+        // Act
+        Result<Guid> result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(ProjectErrors.InitialFlowStatesMissingActiveState);
+
+        await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Should_ReturnViewerRoleError_When_FlowStateAllowsViewer()
+    {
+        // Arrange
+        User user = ProjectCommandData.GetUser();
+        _userContext.UserId.Returns(user.Id);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
+
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
+        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
+        _dbContext.Users.Returns(usersMock);
+        _dbContext.Projects.Returns(projectsMock);
+
+        IReadOnlyCollection<CreateProjectState> flowStates = ProjectCommandData.GetCreateProjectStatesWith(
+            new CreateProjectState("Backlog", FlowStateCategory.Active, ProjectCommandData.FlowStateColor, [ProjectRole.Viewer]));
+        CreateProjectCommand command = ProjectCommandData.GetCreateCommand(flowStates);
+
+        // Act
+        Result<Guid> result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(ProjectErrors.FlowViewerRoleNotAllowed);
+
+        await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Should_ReturnColorError_When_FlowStateColorIsInvalid()
     {
         // Arrange
@@ -347,8 +399,8 @@ public sealed class CreateProjectHandlerTests
         _dbContext.Projects.Returns(projectsMock);
 
         // Submitted out of category order: Active, Cancelled, then a second Active added later.
-        // The handler must reorder (Active -> Completed -> Cancelled) before seeding so the
-        // second Active state still gets wired to Cancelled.
+        // Project.Create adds the active states first, so the second Active state still gets
+        // wired to Cancelled.
         IReadOnlyCollection<CreateProjectState> flowStates =
         [
             new CreateProjectState("Todo", FlowStateCategory.Active, ProjectCommandData.FlowStateColor, [ProjectRole.Admin]),
