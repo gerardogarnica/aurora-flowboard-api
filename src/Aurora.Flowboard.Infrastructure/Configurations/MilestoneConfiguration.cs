@@ -1,6 +1,7 @@
 using Aurora.Flowboard.Domain.Milestones;
 using Aurora.Flowboard.Domain.Shared;
 using Aurora.Flowboard.Domain.Users;
+using Aurora.Flowboard.Infrastructure.Database;
 
 namespace Aurora.Flowboard.Infrastructure.Configurations;
 
@@ -11,6 +12,8 @@ internal sealed class MilestoneConfiguration : IEntityTypeConfiguration<Mileston
         builder.ToTable("milestones");
 
         builder.HasKey(x => x.Id);
+
+        builder.HasXminConcurrencyToken();
 
         builder.Property(x => x.ProjectId)
             .IsRequired();

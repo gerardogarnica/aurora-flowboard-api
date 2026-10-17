@@ -1,14 +1,10 @@
 using Aurora.Flowboard.Domain.Users;
+using Aurora.Flowboard.Infrastructure.Database;
 
 namespace Aurora.Flowboard.Infrastructure.Configurations;
 
 internal sealed class UserTokenConfiguration : IEntityTypeConfiguration<UserToken>
 {
-    // Postgres' xmin system column, used as an optimistic concurrency token: two requests that
-    // redeem the same refresh token cannot both update the row. No migration column is generated.
-    private const string VersionPropertyName = "Version";
-    private const string VersionColumnName = "xmin";
-
     public void Configure(EntityTypeBuilder<UserToken> builder)
     {
         builder.ToTable("user_tokens");
@@ -39,10 +35,8 @@ internal sealed class UserTokenConfiguration : IEntityTypeConfiguration<UserToke
         builder.Property(x => x.IsRevoked)
             .IsRequired();
 
-        // Explicit column name so EFCore.NamingConventions does not rename it to "version".
-        builder.Property<uint>(VersionPropertyName)
-            .IsRowVersion()
-            .HasColumnName(VersionColumnName);
+        // Two requests that redeem the same refresh token cannot both update the row.
+        builder.HasXminConcurrencyToken();
 
         builder.HasOne<User>(x => x.User)
             .WithMany(u => u.Tokens)

@@ -1557,7 +1557,7 @@ git commit -m "Let the pipeline translate the change password concurrency confli
 
 Sin tests unitarios (Infrastructure no tiene proyecto de tests); se verifica con el build, el SQL de la migración y `has-pending-model-changes`.
 
-- [ ] **Crear la extensión** `src/Aurora.Flowboard.Infrastructure/Database/ConcurrencyTokenExtensions.cs`:
+- [x] **Crear la extensión** `src/Aurora.Flowboard.Infrastructure/Database/ConcurrencyTokenExtensions.cs`:
 
 ```csharp
 namespace Aurora.Flowboard.Infrastructure.Database;
@@ -1583,7 +1583,7 @@ internal static class ConcurrencyTokenExtensions
 }
 ```
 
-- [ ] **Llamarla en las configuraciones.** En cada uno de `ProjectConfiguration.cs`, `MilestoneConfiguration.cs`, `ComponentConfiguration.cs`, `WorkItemConfiguration.cs` y `UserConfiguration.cs`:
+- [x] **Llamarla en las configuraciones.** En cada uno de `ProjectConfiguration.cs`, `MilestoneConfiguration.cs`, `ComponentConfiguration.cs`, `WorkItemConfiguration.cs` y `UserConfiguration.cs`:
   - añadir `using Aurora.Flowboard.Infrastructure.Database;` al final del bloque de `using`;
   - justo después de `builder.HasKey(x => x.Id);`, añadir una línea en blanco y `builder.HasXminConcurrencyToken();`. Ejemplo en `ProjectConfiguration.cs`:
 
@@ -1623,7 +1623,7 @@ por
         builder.HasXminConcurrencyToken();
 ```
 
-- [ ] **Compilar:**
+- [x] **Compilar:**
 
 ```bash
 dotnet build src/Aurora.Flowboard.Api/Aurora.Flowboard.Api.csproj
@@ -1631,7 +1631,7 @@ dotnet build src/Aurora.Flowboard.Api/Aurora.Flowboard.Api.csproj
 
 Esperado: build limpio.
 
-- [ ] **Generar la migración:**
+- [x] **Generar la migración:**
 
 ```bash
 dotnet ef migrations add AddConcurrencyTokens --project src/Aurora.Flowboard.Infrastructure --startup-project src/Aurora.Flowboard.Api
@@ -1639,7 +1639,7 @@ dotnet ef migrations add AddConcurrencyTokens --project src/Aurora.Flowboard.Inf
 
 Esperado en `<timestamp>_AddConcurrencyTokens.cs`: en `Up`, cinco `migrationBuilder.AddColumn<uint>(name: "xmin", ..., type: "xid", rowVersion: true, nullable: false, defaultValue: 0u)` para `projects`, `milestones`, `components`, `work_items` y `users` (schema `flowboard`); en `Down`, los cinco `DropColumn` de `xmin`. Nada para `user_tokens` (ya estaba en el snapshot desde `HashRefreshTokens`). Si aparece cualquier otra operación, parar: el modelo ha cambiado más de lo previsto.
 
-- [ ] **Comprobar que no emite SQL:**
+- [x] **Comprobar que no emite SQL:**
 
 ```bash
 dotnet ef migrations script HashRefreshTokens AddConcurrencyTokens --project src/Aurora.Flowboard.Infrastructure --startup-project src/Aurora.Flowboard.Api
@@ -1647,7 +1647,7 @@ dotnet ef migrations script HashRefreshTokens AddConcurrencyTokens --project src
 
 Esperado: solo `START TRANSACTION;`, el `INSERT INTO flowboard."__EFMigrationsHistory" ... 'AddConcurrencyTokens' ...` y `COMMIT;`. Ningún `ALTER TABLE`. Si aparece un `ALTER TABLE ... ADD xmin`, parar e informar: aplicarlo fallaría (columna de sistema).
 
-- [ ] **Comprobar el modelo:**
+- [x] **Comprobar el modelo:**
 
 ```bash
 dotnet build src/Aurora.Flowboard.Api/Aurora.Flowboard.Api.csproj
@@ -1656,7 +1656,7 @@ dotnet ef migrations has-pending-model-changes --project src/Aurora.Flowboard.In
 
 Esperado: `No changes have been made to the model since the last migration.`
 
-- [ ] **Tests** (que nada se haya roto en las capas que compilan contra Infrastructure):
+- [x] **Tests** (que nada se haya roto en las capas que compilan contra Infrastructure):
 
 ```bash
 dotnet build "Aurora Flowboard.slnx"
@@ -1664,7 +1664,7 @@ dotnet build "Aurora Flowboard.slnx"
 ./test/Aurora.Flowboard.ArchitectureTests/bin/Debug/net10.0/Aurora.Flowboard.ArchitectureTests.exe
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/Aurora.Flowboard.Infrastructure/Database/ConcurrencyTokenExtensions.cs

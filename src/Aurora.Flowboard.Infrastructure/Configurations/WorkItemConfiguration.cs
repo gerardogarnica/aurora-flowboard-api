@@ -1,5 +1,6 @@
 using Aurora.Flowboard.Domain.Projects;
 using Aurora.Flowboard.Domain.WorkItems;
+using Aurora.Flowboard.Infrastructure.Database;
 
 namespace Aurora.Flowboard.Infrastructure.Configurations;
 
@@ -10,6 +11,8 @@ internal sealed class WorkItemConfiguration : IEntityTypeConfiguration<WorkItem>
         builder.ToTable("work_items");
 
         builder.HasKey(x => x.Id);
+
+        builder.HasXminConcurrencyToken();
 
         builder.Property(x => x.Code)
             .IsRequired()
