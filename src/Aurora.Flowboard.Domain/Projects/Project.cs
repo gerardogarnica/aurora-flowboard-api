@@ -283,6 +283,9 @@ public sealed class Project : BaseEntity
         ProjectMember member = ProjectMember.Create(Id, user.Id, role, joinedOnUtc);
         _members.Add(member);
 
+        // Writes the projects row, so its xmin makes a concurrent member add/remove conflict.
+        UpdatedOnUtc = joinedOnUtc;
+
         _changeLogs.Add(ProjectChangeLog.Create(this, changedBy, ProjectChangeType.MemberAdded, user.Id, joinedOnUtc));
 
         AddDomainEvent(new ProjectMemberAddedDomainEvent(Id, user.Id, role));

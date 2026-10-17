@@ -102,7 +102,7 @@ git commit -m "Add optimistic concurrency spec, ADR and plan" -m "Co-Authored-By
 - Modificar: `src/Aurora.Flowboard.Domain/Projects/Project.cs`
 - Test: `test/Aurora.Flowboard.Domain.UnitTests/Projects/ProjectTests.cs`
 
-- [ ] **Escribir el test que falla.** En `ProjectTests.cs`, dentro de `public sealed class AddMember : BaseTest`, justo después del test `Should_AddMemberAddedChangeLog_When_MemberAdded`, añadir:
+- [x] **Escribir el test que falla.** En `ProjectTests.cs`, dentro de `public sealed class AddMember : BaseTest`, justo después del test `Should_AddMemberAddedChangeLog_When_MemberAdded`, añadir:
 
 ```csharp
         [Fact]
@@ -121,7 +121,7 @@ git commit -m "Add optimistic concurrency spec, ADR and plan" -m "Co-Authored-By
         }
 ```
 
-- [ ] **Verlo fallar:**
+- [x] **Verlo fallar:**
 
 ```bash
 dotnet build test/Aurora.Flowboard.Domain.UnitTests/Aurora.Flowboard.Domain.UnitTests.csproj
@@ -130,7 +130,7 @@ dotnet build test/Aurora.Flowboard.Domain.UnitTests/Aurora.Flowboard.Domain.Unit
 
 Esperado: 1 test, FAIL — `Expected project.UpdatedOnUtc to be <2026-06-01 ...>, but found <null>`.
 
-- [ ] **Implementar.** En `Project.AddMember`, después de `_members.Add(member);`:
+- [x] **Implementar.** En `Project.AddMember`, después de `_members.Add(member);`:
 
 ```csharp
         ProjectMember member = ProjectMember.Create(Id, user.Id, role, joinedOnUtc);
@@ -142,7 +142,7 @@ Esperado: 1 test, FAIL — `Expected project.UpdatedOnUtc to be <2026-06-01 ...>
         _changeLogs.Add(ProjectChangeLog.Create(this, changedBy, ProjectChangeType.MemberAdded, user.Id, joinedOnUtc));
 ```
 
-- [ ] **Verlo pasar:** el mismo comando → 1 test, PASS. Después, la clase entera de dominio de proyectos para descartar regresiones:
+- [x] **Verlo pasar:** el mismo comando → 1 test, PASS. Después, la clase entera de dominio de proyectos para descartar regresiones:
 
 ```bash
 ./test/Aurora.Flowboard.Domain.UnitTests/bin/Debug/net10.0/Aurora.Flowboard.Domain.UnitTests.exe -class "Aurora.Flowboard.Domain.UnitTests.Projects.ProjectTests+AddMember"
@@ -150,7 +150,7 @@ Esperado: 1 test, FAIL — `Expected project.UpdatedOnUtc to be <2026-06-01 ...>
 
 Si el filtro `+` no encuentra tests, ejecutar el `.exe` sin filtros y comprobar que no hay fallos.
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/Aurora.Flowboard.Domain/Projects/Project.cs

@@ -972,6 +972,21 @@ public sealed class ProjectTests
         }
 
         [Fact]
+        public void Should_SetUpdatedOnUtc_When_MemberAdded()
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProject(admin);
+            User newMember = UserData.GetActiveUser();
+
+            // Act
+            project.AddMember(newMember, ProjectRole.Developer, admin, ProjectData.UpdatedOnUtc);
+
+            // Assert
+            project.UpdatedOnUtc.Should().Be(ProjectData.UpdatedOnUtc);
+        }
+
+        [Fact]
         public void Should_Fail_When_NonAdminAddsMember()
         {
             // Arrange
