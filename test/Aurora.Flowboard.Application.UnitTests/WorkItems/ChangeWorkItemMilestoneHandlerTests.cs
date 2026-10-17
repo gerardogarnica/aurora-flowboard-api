@@ -1,3 +1,6 @@
+using System.Data;
+using Microsoft.EntityFrameworkCore.Storage;
+
 namespace Aurora.Flowboard.Application.UnitTests.WorkItems;
 
 public sealed class ChangeWorkItemMilestoneHandlerTests
@@ -121,5 +124,65 @@ public sealed class ChangeWorkItemMilestoneHandlerTests
         result.IsSuccessful.Should().BeFalse();
         result.Error.Should().Be(WorkItemErrors.NotFound);
         await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Should_CommitSerializableTransaction_When_CommandIsValid()
+    {
+        // Arrange
+        User admin = WorkItemCommandData.GetAdmin();
+        WorkItem workItem = WorkItemCommandData.GetWorkItemWithProjectMilestone(admin, out Milestone milestone);
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
+        IDbContextTransaction transaction = SetupSerializableTransaction();
+
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
+        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Users.Returns(usersMock);
+        _dbContext.Milestones.Returns(milestonesMock);
+
+        ChangeWorkItemMilestoneCommand command = new(workItem.Id, milestone.Id);
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await transaction.Received(1).CommitAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Should_NotCommit_When_MilestoneDoesNotExist()
+    {
+        // Arrange
+        User admin = WorkItemCommandData.GetAdmin();
+        WorkItem workItem = WorkItemCommandData.GetWorkItem(admin);
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
+        IDbContextTransaction transaction = SetupSerializableTransaction();
+
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
+        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Users.Returns(usersMock);
+        _dbContext.Milestones.Returns(milestonesMock);
+
+        ChangeWorkItemMilestoneCommand command = new(workItem.Id, Guid.NewGuid());
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await transaction.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
+    }
+
+    private IDbContextTransaction SetupSerializableTransaction()
+    {
+        IDbContextTransaction transaction = Substitute.For<IDbContextTransaction>();
+        _dbContext.BeginTransactionAsync(Arg.Is(IsolationLevel.Serializable), Arg.Any<CancellationToken>())
+            .Returns(transaction);
+        return transaction;
     }
 }

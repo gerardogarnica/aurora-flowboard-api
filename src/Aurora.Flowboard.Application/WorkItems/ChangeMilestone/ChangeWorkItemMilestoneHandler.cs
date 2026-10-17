@@ -1,3 +1,5 @@
+using System.Data;
+
 namespace Aurora.Flowboard.Application.WorkItems.ChangeMilestone;
 
 internal sealed class ChangeWorkItemMilestoneHandler(
@@ -7,6 +9,9 @@ internal sealed class ChangeWorkItemMilestoneHandler(
     : WorkItemFieldUpdateHandler<ChangeWorkItemMilestoneCommand>(dbContext, dateTimeProvider, userContext)
 {
     protected override Guid GetWorkItemId(ChangeWorkItemMilestoneCommand command) => command.Id;
+
+    // The milestone status read in ApplyAsync races with ChangeMilestoneStatus closing it.
+    protected override IsolationLevel? TransactionIsolationLevel => IsolationLevel.Serializable;
 
     protected override async Task<Result> ApplyAsync(
         WorkItem workItem,

@@ -1,3 +1,5 @@
+using System.Data;
+
 namespace Aurora.Flowboard.Application.WorkItems.Create;
 
 internal sealed class CreateWorkItemHandler(
@@ -9,8 +11,10 @@ internal sealed class CreateWorkItemHandler(
         CreateWorkItemCommand command,
         CancellationToken cancellationToken)
     {
+        // Serializable (SSI): the milestone and component status checks below race with
+        // ChangeMilestoneStatus / RetireComponent, which count the open work items this inserts.
         await using IDbContextTransaction transaction =
-            await dbContext.BeginTransactionAsync(cancellationToken);
+            await dbContext.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
 
         // Pessimistic row-level lock prevents duplicate sequence numbers under concurrency.
         // Table/column names must match the EF Core Infrastructure configuration.

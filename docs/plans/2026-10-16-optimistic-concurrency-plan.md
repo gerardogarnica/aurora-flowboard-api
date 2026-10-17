@@ -947,7 +947,7 @@ git commit -m "Run milestone status changes and component retirement as serializ
 - Test: `test/Aurora.Flowboard.Application.UnitTests/WorkItems/ChangeWorkItemMilestoneHandlerTests.cs`
 - Test: `test/Aurora.Flowboard.Application.UnitTests/WorkItems/ChangeWorkItemComponentHandlerTests.cs`
 
-- [ ] **Escribir los tests.** En `ChangeWorkItemMilestoneHandlerTests.cs`, añadir antes de `namespace`:
+- [x] **Escribir los tests.** En `ChangeWorkItemMilestoneHandlerTests.cs`, añadir antes de `namespace`:
 
 ```csharp
 using System.Data;
@@ -1082,7 +1082,7 @@ En `ChangeWorkItemComponentHandlerTests.cs`, los mismos `using` antes de `namesp
     }
 ```
 
-- [ ] **Verlo fallar:**
+- [x] **Verlo fallar:**
 
 ```bash
 dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Application.UnitTests.csproj
@@ -1091,7 +1091,7 @@ dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Applic
 
 Esperado: FAIL los dos `Should_CommitSerializableTransaction_When_CommandIsValid`; los `Should_NotCommit_*` ya pasan.
 
-- [ ] **Implementar.** `WorkItemFieldUpdateHandler.cs` completo:
+- [x] **Implementar.** `WorkItemFieldUpdateHandler.cs` completo:
 
 ```csharp
 using System.Data;
@@ -1220,7 +1220,7 @@ por
 
 (el `FOR UPDATE` sobre `projects` y el resto del handler no cambian).
 
-- [ ] **Verlo pasar:** el mismo comando → todas PASS. Después toda la suite de Application (los ocho handlers de campo heredan del base) y la de arquitectura (`WorkItemFieldUpdateHandler` es un handler abstracto incluido en sus reglas):
+- [x] **Verlo pasar:** el mismo comando → todas PASS. Después toda la suite de Application (los ocho handlers de campo heredan del base) y la de arquitectura (`WorkItemFieldUpdateHandler` es un handler abstracto incluido en sus reglas):
 
 ```bash
 ./test/Aurora.Flowboard.Application.UnitTests/bin/Debug/net10.0/Aurora.Flowboard.Application.UnitTests.exe
@@ -1228,7 +1228,7 @@ dotnet build test/Aurora.Flowboard.ArchitectureTests/Aurora.Flowboard.Architectu
 ./test/Aurora.Flowboard.ArchitectureTests/bin/Debug/net10.0/Aurora.Flowboard.ArchitectureTests.exe
 ```
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/Aurora.Flowboard.Application/WorkItems/Shared/WorkItemFieldUpdateHandler.cs

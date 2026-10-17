@@ -1,3 +1,5 @@
+using System.Data;
+
 namespace Aurora.Flowboard.Application.WorkItems.ChangeComponent;
 
 internal sealed class ChangeWorkItemComponentHandler(
@@ -7,6 +9,9 @@ internal sealed class ChangeWorkItemComponentHandler(
     : WorkItemFieldUpdateHandler<ChangeWorkItemComponentCommand>(dbContext, dateTimeProvider, userContext)
 {
     protected override Guid GetWorkItemId(ChangeWorkItemComponentCommand command) => command.Id;
+
+    // The component status read in ApplyAsync races with RetireComponent retiring it.
+    protected override IsolationLevel? TransactionIsolationLevel => IsolationLevel.Serializable;
 
     protected override async Task<Result> ApplyAsync(
         WorkItem workItem,
