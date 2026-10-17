@@ -175,9 +175,10 @@ public sealed class ChangePasswordHandlerTests
     }
 
     [Fact]
-    public async Task Should_ReturnSessionChangedConcurrently_When_TokensChangeDuringSave()
+    public async Task Should_PropagateConcurrencyException_When_TokensChangeDuringSave()
     {
         // Arrange — a refresh rotated one of the tokens between the read and the save.
+        // PersistenceConflictBehavior turns the exception into Persistence.ConcurrencyConflict (409).
         User user = ChangePasswordCommandData.GetUser();
         user.IssueToken(
             "access-token-id-1",
@@ -197,12 +198,10 @@ public sealed class ChangePasswordHandlerTests
             .ThrowsAsync(new DbUpdateConcurrencyException("user_tokens row changed"));
 
         // Act
-        Result result = await _handler.Handle(ChangePasswordCommandData.GetCommand(), CancellationToken.None);
+        Func<Task> act = () => _handler.Handle(ChangePasswordCommandData.GetCommand(), CancellationToken.None);
 
         // Assert
-        result.IsSuccessful.Should().BeFalse();
-        result.Error.Should().Be(AuthenticationErrors.SessionChangedConcurrently);
-        result.Error.ErrorType.Should().Be(BaseErrorType.Conflict);
+        await act.Should().ThrowAsync<DbUpdateConcurrencyException>();
     }
 
 }

@@ -1444,7 +1444,7 @@ git commit -m "Run administrator demotion as serializable" -m "Co-Authored-By: C
 - Modificar: `src/Aurora.Flowboard.Application/Authentication/AuthenticationErrors.cs`
 - Test: `test/Aurora.Flowboard.Application.UnitTests/Authentication/ChangePasswordHandlerTests.cs`
 
-- [ ] **Cambiar el test.** En `ChangePasswordHandlerTests.cs`, sustituir el test `Should_ReturnSessionChangedConcurrently_When_TokensChangeDuringSave` completo por:
+- [x] **Cambiar el test.** En `ChangePasswordHandlerTests.cs`, sustituir el test `Should_ReturnSessionChangedConcurrently_When_TokensChangeDuringSave` completo por:
 
 ```csharp
     [Fact]
@@ -1478,7 +1478,7 @@ git commit -m "Run administrator demotion as serializable" -m "Co-Authored-By: C
     }
 ```
 
-- [ ] **Verlo fallar:**
+- [x] **Verlo fallar:**
 
 ```bash
 dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Application.UnitTests.csproj
@@ -1487,7 +1487,7 @@ dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Applic
 
 Esperado: FAIL `Should_PropagateConcurrencyException_When_TokensChangeDuringSave` (`Expected a <DbUpdateConcurrencyException> to be thrown, but no exception was thrown`).
 
-- [ ] **Implementar.** En `ChangePasswordHandler.cs`, sustituir
+- [x] **Implementar.** En `ChangePasswordHandler.cs`, sustituir
 
 ```csharp
         try
@@ -1531,9 +1531,9 @@ grep -rn "SessionChangedConcurrently" src test --include=*.cs
 
 Esperado: sin resultados.
 
-- [ ] **Verlo pasar:** el mismo comando de tests → todas PASS.
+- [x] **Verlo pasar:** el mismo comando de tests → todas PASS.
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/Aurora.Flowboard.Application/Authentication/ChangePassword/ChangePasswordHandler.cs
