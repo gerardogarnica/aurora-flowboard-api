@@ -200,8 +200,9 @@ builder.HasIndex(x => x.Email)
 ## Concurrency, shadow properties, ignoring
 
 ```csharp
-builder.Property<byte[]>("row_version")
-    .IsRowVersion();
+// Optimistic concurrency on an aggregate root: Postgres' xmin (Infrastructure/Database/ConcurrencyTokenExtensions.cs).
+// Never a byte[] row_version: Postgres has no rowversion type. See .claude/rules/concurrency.md.
+builder.HasXminConcurrencyToken();
 
 // Shadow property — audit or FK not exposed on the domain model
 builder.Property<DateTime>("created_at")

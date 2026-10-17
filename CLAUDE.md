@@ -53,7 +53,7 @@ Tests live under `test/`: `Aurora.Flowboard.Domain.UnitTests`, `Aurora.Flowboard
 
 ## Key patterns
 
-- **CQRS** — every operation is an `ICommand`/`IQuery` + handler returning `Result` or `Result<T>`. Validators are auto-wired via `ValidationBehavior`. Pipeline: `LoggingBehavior → PerformanceBehavior → ValidationBehavior → Handler`.
+- **CQRS** — every operation is an `ICommand`/`IQuery` + handler returning `Result` or `Result<T>`. Validators are auto-wired via `ValidationBehavior`. Pipeline: `LoggingBehavior → PerformanceBehavior → ValidationBehavior → PersistenceConflictBehavior → Handler` (the last one, commands only, turns concurrency and unique-index conflicts into a 409 `Result`).
 - **Result type** — railway-oriented `Result`/`Result<TValue>` with `BaseError` categories `Failure`, `Validation`, `NotFound`, `Conflict`, `Forbidden`. Endpoints map them with `ResultExtensions.Match(...)`.
 - **Minimal APIs** — endpoints implement `IBaseEndpoint`, auto-registered via Scrutor, grouped under `/api/v1/flowboard`.
 - **Data access** — no repository pattern: handlers query `IApplicationDbContext` directly with LINQ. One `IEntityTypeConfiguration<T>` per entity in `Infrastructure/Configurations/`, schema `flowboard`, snake_case, private field navigations mapped explicitly. Migrations auto-apply on startup.
@@ -73,6 +73,7 @@ Detailed conventions live in `.claude/rules/` and load automatically when you re
 | `milestones-components.md` | Aggregate ownership, admin-only changes, milestone state machine |
 | `domain-model.md` | Enum placement, value object conventions |
 | `authentication.md` | Refresh token hashing, `jti`, `xmin` concurrency on `user_tokens`, token cleanup job, 401 vs 400 |
+| `concurrency.md` | `xmin` on aggregate roots, writing the root for child changes, `Serializable` for write skew, 409 translation in `PersistenceConflictBehavior` |
 | `startup-and-seeding.md` | Migrations on startup, Administrator and template seeding, `Bootstrap` config |
 | `unit-tests.md` | Mock `DbSet` setup, pagination test across page boundaries |
 | `architecture-tests.md` | NetArchTest pitfalls, Mono.Cecil pin |

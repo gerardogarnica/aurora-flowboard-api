@@ -1745,7 +1745,7 @@ Antes de commitear, `git status` debe mostrar solo los 30 endpoints y el plan co
 - Crear: `.claude/rules/concurrency.md`
 - Modificar: `.claude/rules/authentication.md`, `CLAUDE.md`, `.claude/skills/create-feature/SKILL.md`, `.claude/skills/domain-entity/SKILL.md`, `.claude/skills/domain-entity/references/ef-configuration.md`
 
-- [ ] **Crear `.claude/rules/concurrency.md`:**
+- [x] **Crear `.claude/rules/concurrency.md`:**
 
 ````markdown
 ---
@@ -1794,7 +1794,7 @@ Decision record: `docs/architecture/adr/0001-optimistic-concurrency.md`.
 - Uniqueness pre-checks (`AnyAsync` on prefix, email, names) stay: they return the specific domain error in the normal case; the behavior only covers the race.
 ````
 
-- [ ] **`.claude/rules/authentication.md`.** Sustituir
+- [x] **`.claude/rules/authentication.md`.** Sustituir
 
 ```markdown
 - `UserToken` has a shadow `uint` property `Version` mapped to Postgres' `xmin` (`IsRowVersion()` + explicit `HasColumnName("xmin")`, otherwise EFCore.NamingConventions renames it). EF scaffolds an `AddColumn` for it in the migration, but Npgsql emits no SQL for `xmin`.
@@ -1814,7 +1814,7 @@ por
 - Change password does not catch it: `PersistenceConflictBehavior` returns `Persistence.ConcurrencyConflict` (409), the client retries and the retry revokes the rotated token.
 ```
 
-- [ ] **`CLAUDE.md`.** Sustituir en la viñeta **CQRS**
+- [x] **`CLAUDE.md`.** Sustituir en la viñeta **CQRS**
 
 ```markdown
 Pipeline: `LoggingBehavior → PerformanceBehavior → ValidationBehavior → Handler`.
@@ -1832,7 +1832,7 @@ y, en la tabla de "Area-specific rules", debajo de la fila de `authentication.md
 | `concurrency.md` | `xmin` on aggregate roots, writing the root for child changes, `Serializable` for write skew, 409 translation in `PersistenceConflictBehavior` |
 ```
 
-- [ ] **`.claude/skills/create-feature/SKILL.md`.** En la sección `## The behavior pipeline`, sustituir
+- [x] **`.claude/skills/create-feature/SKILL.md`.** En la sección `## The behavior pipeline`, sustituir
 
 ````markdown
 ```
@@ -1852,13 +1852,13 @@ LoggingBehavior → PerformanceBehavior → ValidationBehavior → PersistenceCo
 Logging wraps validation so the log captures the full round-trip, including validation failures. The first three decorate commands **and** queries. `PersistenceConflictBehavior` decorates commands only and turns `DbUpdateConcurrencyException`, `40001` and `23505` into a 409 `Result`, so a handler doesn't catch them itself. A handler that reads another row or aggregate to decide (a milestone's status, "another active Administrator") runs in a `Serializable` transaction — see `.claude/rules/concurrency.md`.
 ````
 
-- [ ] **`.claude/skills/domain-entity/SKILL.md`.** En la tabla de "Persistence consequences", añadir al final:
+- [x] **`.claude/skills/domain-entity/SKILL.md`.** En la tabla de "Persistence consequences", añadir al final:
 
 ```markdown
 | Aggregate root editable over HTTP | `builder.HasXminConcurrencyToken()` — optimistic concurrency on Postgres' `xmin` (`.claude/rules/concurrency.md`) |
 ```
 
-- [ ] **`.claude/skills/domain-entity/references/ef-configuration.md`.** En `## Concurrency, shadow properties, ignoring`, sustituir
+- [x] **`.claude/skills/domain-entity/references/ef-configuration.md`.** En `## Concurrency, shadow properties, ignoring`, sustituir
 
 ```csharp
 builder.Property<byte[]>("row_version")
@@ -1873,7 +1873,7 @@ por
 builder.HasXminConcurrencyToken();
 ```
 
-- [ ] **Comprobar enlaces y nombres:**
+- [x] **Comprobar enlaces y nombres:**
 
 ```bash
 grep -rn "SessionChangedConcurrently\|row_version" .claude CLAUDE.md
@@ -1881,7 +1881,9 @@ grep -rn "SessionChangedConcurrently\|row_version" .claude CLAUDE.md
 
 Esperado: sin resultados.
 
-- [ ] **Commit:**
+> Desviación: queda un único resultado, intencionado: el comentario nuevo de `ef-configuration.md` ("Never a byte[] row_version") que el propio plan introduce.
+
+- [x] **Commit:**
 
 ```bash
 git add .claude/rules/concurrency.md
