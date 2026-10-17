@@ -1,3 +1,5 @@
+using System.Data;
+
 namespace Aurora.Flowboard.Application.Users.ChangeRole;
 
 internal sealed class ChangeUserRoleHandler(
@@ -30,14 +32,40 @@ internal sealed class ChangeUserRoleHandler(
             && user.IsAdministrator
             && newRole.Name != Role.Administrator.Name;
 
-        // Only demoting an active Administrator can leave the system without one, so only then is the
-        // query needed. IsAdministrator is not translatable to SQL, hence the explicit Roles.Any below.
-        bool hasOtherActiveAdministrator = !isDemotingActiveAdministrator || await dbContext
+        // Only demoting an active Administrator can leave the system without one.
+        if (!isDemotingActiveAdministrator)
+        {
+            return await ChangeRoleAsync(user, newRole, hasOtherActiveAdministrator: true, cancellationToken);
+        }
+
+        // Serializable (SSI): two concurrent demotions of two different Administrators each see the other
+        // as active and write different rows (write skew); Postgres aborts one with 40001 (→ 409).
+        await using IDbContextTransaction transaction =
+            await dbContext.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+
+        // IsAdministrator is not translatable to SQL, hence the explicit Roles.Any below.
+        bool hasOtherActiveAdministrator = await dbContext
             .Users
             .AnyAsync(
                 u => u.Id != user.Id && u.IsActive && u.Roles.Any(r => r.Name == Role.Administrator.Name),
                 cancellationToken);
 
+        Result result = await ChangeRoleAsync(user, newRole, hasOtherActiveAdministrator, cancellationToken);
+
+        if (result.IsSuccessful)
+        {
+            await transaction.CommitAsync(cancellationToken);
+        }
+
+        return result;
+    }
+
+    private async Task<Result> ChangeRoleAsync(
+        User user,
+        Role newRole,
+        bool hasOtherActiveAdministrator,
+        CancellationToken cancellationToken)
+    {
         Result changeRoleResult = user.ChangeRole(newRole, hasOtherActiveAdministrator, dateTimeProvider.UtcNow);
 
         if (!changeRoleResult.IsSuccessful)

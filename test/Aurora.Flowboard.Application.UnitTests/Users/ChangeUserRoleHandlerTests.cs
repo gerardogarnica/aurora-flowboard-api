@@ -1,4 +1,6 @@
+using System.Data;
 using Aurora.Flowboard.Application.Users.ChangeRole;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Aurora.Flowboard.Application.UnitTests.Users;
 
@@ -276,6 +278,71 @@ public sealed class ChangeUserRoleHandlerTests
         // Assert
         result.IsSuccessful.Should().BeTrue();
         inactiveAdministrator.Roles.Should().ContainSingle(r => r.Name == Role.Member.Name);
+    }
+
+    [Fact]
+    public async Task Should_CommitSerializableTransaction_When_DemotingAdministratorWithAnotherActiveAdministrator()
+    {
+        // Arrange
+        User administrator = GetAdministrator(CreateUserCommandData.EmailAddress);
+        User otherAdministrator = GetAdministrator(OtherEmailAddress);
+        _dateTimeProvider.UtcNow.Returns(CreateUserCommandData.UtcNow);
+        IDbContextTransaction transaction = SetupSerializableTransaction();
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([administrator, otherAdministrator]);
+        _dbContext.Users.Returns(usersMock);
+
+        var command = new ChangeUserRoleCommand(administrator.Id, Role.Member.Name);
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await transaction.Received(1).CommitAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Should_NotCommit_When_DemotingTheOnlyAdministrator()
+    {
+        // Arrange
+        User administrator = GetAdministrator(CreateUserCommandData.EmailAddress);
+        IDbContextTransaction transaction = SetupSerializableTransaction();
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([administrator]);
+        _dbContext.Users.Returns(usersMock);
+
+        var command = new ChangeUserRoleCommand(administrator.Id, Role.Member.Name);
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await transaction.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Should_NotOpenTransaction_When_NotDemotingAnAdministrator()
+    {
+        // Arrange
+        User user = CreateUserCommandData.GetExistingUser();
+        _dateTimeProvider.UtcNow.Returns(CreateUserCommandData.UtcNow);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
+        _dbContext.Users.Returns(usersMock);
+
+        var command = new ChangeUserRoleCommand(user.Id, Role.Member.Name);
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await _dbContext.DidNotReceive()
+            .BeginTransactionAsync(Arg.Any<IsolationLevel>(), Arg.Any<CancellationToken>());
+    }
+
+    private IDbContextTransaction SetupSerializableTransaction()
+    {
+        IDbContextTransaction transaction = Substitute.For<IDbContextTransaction>();
+        _dbContext.BeginTransactionAsync(Arg.Is(IsolationLevel.Serializable), Arg.Any<CancellationToken>())
+            .Returns(transaction);
+        return transaction;
     }
 
     private static User GetAdministrator(string email)

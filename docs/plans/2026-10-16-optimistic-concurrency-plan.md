@@ -1251,7 +1251,7 @@ git commit -m "Run work item milestone and component changes as serializable" -m
 - Modificar: `src/Aurora.Flowboard.Application/Users/ChangeRole/ChangeUserRoleHandler.cs`
 - Test: `test/Aurora.Flowboard.Application.UnitTests/Users/ChangeUserRoleHandlerTests.cs`
 
-- [ ] **Escribir los tests.** En `ChangeUserRoleHandlerTests.cs`, cambiar la cabecera a:
+- [x] **Escribir los tests.** En `ChangeUserRoleHandlerTests.cs`, cambiar la cabecera a:
 
 ```csharp
 using System.Data;
@@ -1328,7 +1328,7 @@ y añadir antes de `private static User GetAdministrator(string email)`:
     }
 ```
 
-- [ ] **Verlo fallar:**
+- [x] **Verlo fallar:**
 
 ```bash
 dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Application.UnitTests.csproj
@@ -1337,7 +1337,7 @@ dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Applic
 
 Esperado: FAIL `Should_CommitSerializableTransaction_When_DemotingAdministratorWithAnotherActiveAdministrator`. `Should_NotCommit_When_DemotingTheOnlyAdministrator` y `Should_NotOpenTransaction_When_NotDemotingAnAdministrator` ya pasan: protegen que la transacción solo se abra al degradar y nunca se confirme con un error.
 
-- [ ] **Implementar.** `ChangeUserRoleHandler.cs` completo:
+- [x] **Implementar.** `ChangeUserRoleHandler.cs` completo:
 
 ```csharp
 using System.Data;
@@ -1422,9 +1422,9 @@ internal sealed class ChangeUserRoleHandler(
 }
 ```
 
-- [ ] **Verlo pasar:** el mismo comando → todas PASS (incluidos los tests existentes de último Administrator).
+- [x] **Verlo pasar:** el mismo comando → todas PASS (incluidos los tests existentes de último Administrator).
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/Aurora.Flowboard.Application/Users/ChangeRole/ChangeUserRoleHandler.cs
