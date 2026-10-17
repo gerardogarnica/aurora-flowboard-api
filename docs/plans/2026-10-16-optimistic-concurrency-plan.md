@@ -582,7 +582,7 @@ git commit -m "Translate persistence conflicts to 409 in a command behavior" -m 
 - Modificar: `src/Aurora.Flowboard.Application/Abstractions/Data/IApplicationDbContext.cs`
 - Modificar: `src/Aurora.Flowboard.Infrastructure/Database/ApplicationDbContext.cs`
 
-- [ ] **Interfaz.** En `IApplicationDbContext.cs`, añadir `using System.Data;` como primera línea (antes de `namespace`) y, debajo de la sobrecarga existente:
+- [x] **Interfaz.** En `IApplicationDbContext.cs`, añadir `using System.Data;` como primera línea (antes de `namespace`) y, debajo de la sobrecarga existente:
 
 ```csharp
     Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
@@ -592,7 +592,7 @@ git commit -m "Translate persistence conflicts to 409 in a command behavior" -m 
         CancellationToken cancellationToken = default);
 ```
 
-- [ ] **Implementación.** En `ApplicationDbContext.cs`, añadir `using System.Data;` como primera línea y, debajo del `BeginTransactionAsync` existente:
+- [x] **Implementación.** En `ApplicationDbContext.cs`, añadir `using System.Data;` como primera línea y, debajo del `BeginTransactionAsync` existente:
 
 ```csharp
     public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) =>
@@ -604,7 +604,7 @@ git commit -m "Translate persistence conflicts to 409 in a command behavior" -m 
         Database.BeginTransactionAsync(isolationLevel, cancellationToken);
 ```
 
-- [ ] **Compilar** (no hay test que falle: es una delegación al `DatabaseFacade`):
+- [x] **Compilar** (no hay test que falle: es una delegación al `DatabaseFacade`):
 
 ```bash
 dotnet build src/Aurora.Flowboard.Infrastructure/Aurora.Flowboard.Infrastructure.csproj
@@ -614,7 +614,7 @@ dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Applic
 
 Esperado: build limpio y todos los tests de Application PASS.
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/Aurora.Flowboard.Application/Abstractions/Data/IApplicationDbContext.cs

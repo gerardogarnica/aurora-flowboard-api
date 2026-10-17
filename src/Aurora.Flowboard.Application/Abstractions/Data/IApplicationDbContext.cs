@@ -1,3 +1,5 @@
+using System.Data;
+
 namespace Aurora.Flowboard.Application.Abstractions.Data;
 
 public interface IApplicationDbContext : IAsyncDisposable
@@ -21,6 +23,10 @@ public interface IApplicationDbContext : IAsyncDisposable
     DbSet<StateTransitionHistory> StateTransitionHistories { get; }
 
     Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
+
+    Task<IDbContextTransaction> BeginTransactionAsync(
+        IsolationLevel isolationLevel,
+        CancellationToken cancellationToken = default);
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

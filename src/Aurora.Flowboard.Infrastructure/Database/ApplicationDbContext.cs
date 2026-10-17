@@ -1,3 +1,4 @@
+using System.Data;
 using Aurora.Flowboard.Domain.Components;
 using Aurora.Flowboard.Domain.Milestones;
 using Aurora.Flowboard.Domain.Projects;
@@ -34,6 +35,11 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
     public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) =>
         Database.BeginTransactionAsync(cancellationToken);
+
+    public Task<IDbContextTransaction> BeginTransactionAsync(
+        IsolationLevel isolationLevel,
+        CancellationToken cancellationToken = default) =>
+        Database.BeginTransactionAsync(isolationLevel, cancellationToken);
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
