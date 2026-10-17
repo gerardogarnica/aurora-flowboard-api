@@ -1693,7 +1693,7 @@ git commit -m "Map xmin as concurrency token on aggregate roots" -m "Co-Authored
 
 Sin tests (la API no tiene proyecto de tests); se verifica con grep, build y Swagger.
 
-- [ ] **Añadir la línea.** Cada uno tiene exactamente una línea `.Produces<ProblemDetails>(StatusCodes.Status404NotFound)`; insertar debajo `.Produces<ProblemDetails>(StatusCodes.Status409Conflict)` con la misma sangría (el patrón respeta ficheros CRLF y LF):
+- [x] **Añadir la línea.** Cada uno tiene exactamente una línea `.Produces<ProblemDetails>(StatusCodes.Status404NotFound)`; insertar debajo `.Produces<ProblemDetails>(StatusCodes.Status409Conflict)` con la misma sangría (el patrón respeta ficheros CRLF y LF):
 
 ```bash
 cd src/Aurora.Flowboard.Api/Endpoints
@@ -1714,7 +1714,7 @@ Resultado en `CompleteMilestone.cs`:
             .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
 ```
 
-- [ ] **Compilar:**
+- [x] **Compilar:**
 
 ```bash
 dotnet build src/Aurora.Flowboard.Api/Aurora.Flowboard.Api.csproj
@@ -1723,7 +1723,9 @@ dotnet build src/Aurora.Flowboard.Api/Aurora.Flowboard.Api.csproj
 
 - [ ] **Verificación manual:** arrancar la API (`dotnet run --project "src/Aurora.Flowboard.AppHost"`), abrir Swagger y comprobar que `PATCH /api/v1/flowboard/milestones/{id}/complete` y `DELETE /api/v1/flowboard/projects/{id}/members/{userId}` listan la respuesta 409. Detener la API.
 
-- [ ] **Commit:**
+> Desviación: el `sed -i` del plan se sustituyó por `perl -pi` con el mismo patrón (en Git Bash, `sed -i` reescribe los ficheros CRLF como LF). La verificación en Swagger queda pendiente del usuario (requiere arrancar Aspire); se incluye en la verificación manual final.
+
+- [x] **Commit:**
 
 ```bash
 for f in $(git diff --name-only src/Aurora.Flowboard.Api/Endpoints); do git add "$f"; done
