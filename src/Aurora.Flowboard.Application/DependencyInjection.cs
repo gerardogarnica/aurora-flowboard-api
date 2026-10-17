@@ -37,6 +37,11 @@ public static class DependencyInjection
 
     private static IServiceCollection AddBehaviors(this IServiceCollection services)
     {
+        // Registered first, so it is the innermost decorator: it only sees exceptions thrown by the
+        // handler, and the outer behaviors log and time the translated Result. Commands only: queries don't write.
+        services.Decorate(typeof(ICommandHandler<,>), typeof(PersistenceConflictBehavior.CommandHandler<,>));
+        services.Decorate(typeof(ICommandHandler<>), typeof(PersistenceConflictBehavior.CommandBaseHandler<>));
+
         services.Decorate(typeof(IQueryHandler<,>), typeof(ValidationBehavior.QueryHandler<,>));
         services.Decorate(typeof(ICommandHandler<,>), typeof(ValidationBehavior.CommandHandler<,>));
         services.Decorate(typeof(ICommandHandler<>), typeof(ValidationBehavior.CommandBaseHandler<>));

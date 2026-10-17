@@ -172,7 +172,7 @@ git commit -m "Touch the project root when adding a member" -m "Co-Authored-By: 
 - Crear: `test/Aurora.Flowboard.Application.UnitTests/Abstractions/FakeDbException.cs`
 - Test: `test/Aurora.Flowboard.Application.UnitTests/Abstractions/Behaviors/PersistenceConflictBehaviorTests.cs`
 
-- [ ] **Escribir el helper de test** `test/Aurora.Flowboard.Application.UnitTests/Abstractions/FakeDbException.cs`:
+- [x] **Escribir el helper de test** `test/Aurora.Flowboard.Application.UnitTests/Abstractions/FakeDbException.cs`:
 
 ```csharp
 using System.Data.Common;
@@ -186,7 +186,7 @@ public sealed class FakeDbException(string sqlState) : DbException("Simulated da
 }
 ```
 
-- [ ] **Escribir los tests que fallan** `test/Aurora.Flowboard.Application.UnitTests/Abstractions/Behaviors/PersistenceConflictBehaviorTests.cs`:
+- [x] **Escribir los tests que fallan** `test/Aurora.Flowboard.Application.UnitTests/Abstractions/Behaviors/PersistenceConflictBehaviorTests.cs`:
 
 ```csharp
 using Aurora.Flowboard.Application.Abstractions.Behaviors;
@@ -398,7 +398,7 @@ public sealed class PersistenceConflictBehaviorTests
 }
 ```
 
-- [ ] **Verlo fallar (compilación).** `dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Application.UnitTests.csproj` → `CS0234`/`CS0103`: no existen `PersistenceConflictBehavior` ni `PersistenceErrors`. Para ver fallar las assertions, crear los stubs:
+- [x] **Verlo fallar (compilación).** `dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Application.UnitTests.csproj` → `CS0234`/`CS0103`: no existen `PersistenceConflictBehavior` ni `PersistenceErrors`. Para ver fallar las assertions, crear los stubs:
 
 `src/Aurora.Flowboard.Application/Abstractions/Data/PersistenceErrors.cs` (definitivo, no cambia en el paso de implementación):
 
@@ -465,7 +465,7 @@ dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Applic
 
 Esperado: 11 tests; FAIL 7 — los 6 de traducción (la excepción se propaga en vez de devolver el error) y el del log; PASS 4: `Should_Rethrow_*` (2), `Should_ReturnHandlerResult_When_HandlerDoesNotThrow` y `Should_ReturnHandlerValue_When_HandlerWithResponseSucceeds`.
 
-- [ ] **Implementar.** Sustituir `PersistenceConflictBehavior.cs` por:
+- [x] **Implementar.** Sustituir `PersistenceConflictBehavior.cs` por:
 
 ```csharp
 using System.Data.Common;
@@ -551,7 +551,7 @@ En `src/Aurora.Flowboard.Application/DependencyInjection.cs`, al principio de `A
 
 (el resto del método no cambia).
 
-- [ ] **Verlo pasar:** los mismos dos comandos → 11 tests, PASS. Después la suite de arquitectura (behavior nuevo en `Abstractions/Behaviors`, sellado, visibilidad):
+- [x] **Verlo pasar:** los mismos dos comandos → 11 tests, PASS. Después la suite de arquitectura (behavior nuevo en `Abstractions/Behaviors`, sellado, visibilidad):
 
 ```bash
 dotnet build test/Aurora.Flowboard.ArchitectureTests/Aurora.Flowboard.ArchitectureTests.csproj
@@ -560,7 +560,7 @@ dotnet build test/Aurora.Flowboard.ArchitectureTests/Aurora.Flowboard.Architectu
 
 Esperado: todos PASS.
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/Aurora.Flowboard.Application/Abstractions/Data/PersistenceErrors.cs
