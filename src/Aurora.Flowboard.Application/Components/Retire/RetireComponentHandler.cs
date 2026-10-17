@@ -1,3 +1,5 @@
+using System.Data;
+
 namespace Aurora.Flowboard.Application.Components.Retire;
 
 internal sealed class RetireComponentHandler(
@@ -9,6 +11,12 @@ internal sealed class RetireComponentHandler(
         RetireComponentCommand command,
         CancellationToken cancellationToken)
     {
+        // Serializable (SSI): retiring counts the open work items and writes the component, while
+        // ChangeWorkItemComponent and CreateWorkItem read the component status and write work_items.
+        // Postgres aborts one of two concurrent requests with 40001 (PersistenceConflictBehavior → 409).
+        await using IDbContextTransaction transaction =
+            await dbContext.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+
         Component? component = await dbContext
             .Components
             .Include(c => c.Project)
@@ -44,6 +52,7 @@ internal sealed class RetireComponentHandler(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return Result.Ok();
     }

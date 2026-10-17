@@ -1,3 +1,5 @@
+using System.Data;
+
 namespace Aurora.Flowboard.Application.Milestones.ChangeStatus;
 
 internal sealed class ChangeMilestoneStatusHandler(
@@ -9,6 +11,12 @@ internal sealed class ChangeMilestoneStatusHandler(
         ChangeMilestoneStatusCommand command,
         CancellationToken cancellationToken)
     {
+        // Serializable (SSI): closing counts the open work items and writes the milestone, while
+        // ChangeWorkItemMilestone and CreateWorkItem read the milestone status and write work_items.
+        // Postgres aborts one of two concurrent requests with 40001 (PersistenceConflictBehavior → 409).
+        await using IDbContextTransaction transaction =
+            await dbContext.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+
         Milestone? milestone = await dbContext
             .Milestones
             .Include(m => m.Project)
@@ -45,6 +53,7 @@ internal sealed class ChangeMilestoneStatusHandler(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return Result.Ok();
     }

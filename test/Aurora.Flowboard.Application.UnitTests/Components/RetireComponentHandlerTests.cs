@@ -1,4 +1,6 @@
+using System.Data;
 using Aurora.Flowboard.Application.UnitTests.WorkItems;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Aurora.Flowboard.Application.UnitTests.Components;
 
@@ -333,5 +335,66 @@ public sealed class RetireComponentHandlerTests
 
         // Assert
         await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Should_CommitSerializableTransaction_When_CommandIsValid()
+    {
+        // Arrange
+        User admin = ComponentCommandData.GetAdmin();
+        ComponentCommandData.GetProjectWithComponent(admin, out Component component);
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
+        IDbContextTransaction transaction = SetupSerializableTransaction();
+
+        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
+        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Users.Returns(usersMock);
+        _dbContext.WorkItems.Returns(workItemsMock);
+
+        RetireComponentCommand command = ComponentCommandData.GetRetireCommand(component.Id);
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await transaction.Received(1).CommitAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Should_NotCommit_When_ComponentAlreadyRetired()
+    {
+        // Arrange
+        User admin = ComponentCommandData.GetAdmin();
+        ComponentCommandData.GetProjectWithComponent(admin, out Component component);
+        component.Retire(admin, 0, ComponentCommandData.UtcNow);
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
+        IDbContextTransaction transaction = SetupSerializableTransaction();
+
+        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
+        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Users.Returns(usersMock);
+        _dbContext.WorkItems.Returns(workItemsMock);
+
+        RetireComponentCommand command = ComponentCommandData.GetRetireCommand(component.Id);
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await transaction.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
+    }
+
+    private IDbContextTransaction SetupSerializableTransaction()
+    {
+        IDbContextTransaction transaction = Substitute.For<IDbContextTransaction>();
+        _dbContext.BeginTransactionAsync(Arg.Is(IsolationLevel.Serializable), Arg.Any<CancellationToken>())
+            .Returns(transaction);
+        return transaction;
     }
 }

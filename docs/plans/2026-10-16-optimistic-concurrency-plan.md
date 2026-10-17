@@ -635,7 +635,7 @@ git commit -m "Add isolation level overload to BeginTransactionAsync" -m "Co-Aut
 - Test: `test/Aurora.Flowboard.Application.UnitTests/Milestones/ChangeMilestoneStatusHandlerTests.cs`
 - Test: `test/Aurora.Flowboard.Application.UnitTests/Components/RetireComponentHandlerTests.cs`
 
-- [ ] **Escribir los tests.** En `ChangeMilestoneStatusHandlerTests.cs`, cambiar la cabecera a:
+- [x] **Escribir los tests.** En `ChangeMilestoneStatusHandlerTests.cs`, cambiar la cabecera a:
 
 ```csharp
 using System.Data;
@@ -780,7 +780,7 @@ y añadir al final de la clase:
     }
 ```
 
-- [ ] **Verlo fallar:**
+- [x] **Verlo fallar:**
 
 ```bash
 dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Application.UnitTests.csproj
@@ -789,7 +789,7 @@ dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Applic
 
 Esperado: FAIL los dos `Should_CommitSerializableTransaction_When_CommandIsValid` (`Expected to receive exactly 1 call matching: CommitAsync(any CancellationToken)`). Los `Should_NotCommit_*` ya pasan (hoy no hay transacción); quedan como protección.
 
-- [ ] **Implementar.** `ChangeMilestoneStatusHandler.cs` completo:
+- [x] **Implementar.** `ChangeMilestoneStatusHandler.cs` completo:
 
 ```csharp
 using System.Data;
@@ -920,9 +920,9 @@ internal sealed class RetireComponentHandler(
 
 Antes de sustituir, comparar con el fichero actual: si alguna línea (usings, consultas) difiere de lo que aquí se copia, conservar la del fichero y añadir solo la transacción, el comentario y el `CommitAsync`.
 
-- [ ] **Verlo pasar:** el mismo comando → todas PASS (incluidos los tests existentes de ambas clases).
+- [x] **Verlo pasar:** el mismo comando → todas PASS (incluidos los tests existentes de ambas clases).
 
-- [ ] **Commit:**
+- [x] **Commit:**
 
 ```bash
 git add src/Aurora.Flowboard.Application/Milestones/ChangeStatus/ChangeMilestoneStatusHandler.cs
