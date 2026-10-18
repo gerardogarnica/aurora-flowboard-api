@@ -1,9 +1,9 @@
 # Concurrencia optimista y conflictos de persistencia — Diseño
 
 **Fecha:** 2026-10-16
-**Estado:** Aprobado
+**Estado:** Implementado
 **Tickets:** I9 (ver `docs/reviews/review-remediation-plan.md` y la página de seguimiento)
-**Rama:** `fix/optimistic-concurrency` · **PR:** —
+**Rama:** `fix/optimistic-concurrency` · **PR:** #41
 **Plan:** `docs/plans/2026-10-16-optimistic-concurrency-plan.md`
 **ADR:** `docs/architecture/adr/0001-optimistic-concurrency.md`
 

@@ -1,9 +1,9 @@
 # 0001 — Concurrencia optimista con `xmin`, SSI y traducción en el pipeline
 
 **Fecha:** 2026-10-16
-**Estado:** Aprobado
+**Estado:** Implementado
 **Tickets:** I9
-**Rama:** `fix/optimistic-concurrency` · **PR:** —
+**Rama:** `fix/optimistic-concurrency` · **PR:** #41
 **Relacionado:** `docs/specs/2026-10-16-optimistic-concurrency-design.md`
 
 ## Contexto

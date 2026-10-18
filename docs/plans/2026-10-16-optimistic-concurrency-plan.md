@@ -1,9 +1,9 @@
 # Concurrencia optimista y conflictos de persistencia — Plan de implementación
 
 **Fecha:** 2026-10-16
-**Estado:** Aprobado
+**Estado:** Implementado
 **Tickets:** I9
-**Rama:** `fix/optimistic-concurrency` · **PR:** —
+**Rama:** `fix/optimistic-concurrency` · **PR:** #41
 **Spec:** `docs/specs/2026-10-16-optimistic-concurrency-design.md`
 
 **Objetivo:** que las carreras entre peticiones devuelvan 409 en vez de 500 o de romper invariantes (proyecto sin admin, milestone cerrado o componente retirado con trabajo abierto, sistema sin Administrator).
