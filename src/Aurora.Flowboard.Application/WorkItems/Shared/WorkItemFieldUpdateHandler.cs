@@ -1,5 +1,3 @@
-using System.Data;
-
 namespace Aurora.Flowboard.Application.WorkItems.Shared;
 
 internal abstract class WorkItemFieldUpdateHandler<TCommand>(

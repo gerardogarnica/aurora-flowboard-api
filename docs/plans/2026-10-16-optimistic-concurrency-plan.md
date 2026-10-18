@@ -1898,9 +1898,16 @@ git commit -m "Document optimistic concurrency conventions" -m "Co-Authored-By: 
 
 ## Verificación final
 
-- [ ] `dotnet-test-runner` limpio (build + los tres ejecutables de tests).
-- [ ] `dotnet ef migrations has-pending-model-changes --project src/Aurora.Flowboard.Infrastructure --startup-project src/Aurora.Flowboard.Api` → sin cambios pendientes.
-- [ ] `arch-guard` y `code-reviewer` en paralelo, con la lista de ficheros del mapa, el diseño del spec y su "Fuera de alcance".
+- [x] `dotnet-test-runner` limpio (build + los tres ejecutables de tests).
+- [x] `dotnet ef migrations has-pending-model-changes --project src/Aurora.Flowboard.Infrastructure --startup-project src/Aurora.Flowboard.Api` → sin cambios pendientes.
+- [x] `arch-guard` y `code-reviewer` en paralelo, con la lista de ficheros del mapa, el diseño del spec y su "Fuera de alcance".
+
+> Desviación (aprobada por el usuario tras la revisión final):
+> - `CreateWorkItemHandler` seleccionaba `SELECT *`, que no devuelve `xmin` (columna de sistema): toda alta de work item fallaba con `42703`. Pasa a `SELECT *, xmin`.
+> - `CreateWorkItemHandler` solo abre `Serializable` con milestone o componente (supuesto 15 del spec): en `Serializable`, su `FOR UPDATE` sobre `projects` hacía que dos altas concurrentes en el mismo proyecto acabaran en 409.
+> - `PersistenceConflictBehavior` traduce también `40P01` (deadlock) a `ConcurrencyConflict` (supuesto 16), con tests para `40P01` y para que `OperationCanceledException` se propague.
+> - Actualizados spec, ADR, `concurrency.md` y la skill `create-feature`. La verificación manual añade el paso 4.
+> - `dotnet ef migrations script AddConcurrencyTokens HashRefreshTokens` (el `Down`) tampoco emite SQL.
 - [ ] Verificación manual contra Postgres. Arrancar con `dotnet run --project "src/Aurora.Flowboard.AppHost"` (aplica la migración al arrancar), obtener un token con `POST /api/v1/flowboard/auth/login` del Administrator sembrado (credenciales de la sección `Bootstrap` de la configuración local) y abrir `psql` contra la base del contenedor de Aspire (cadena de conexión en el dashboard).
   1. **`xmin` → 409.** Con un proyecto con dos admins `A` y `B`:
      - `psql`: `BEGIN; SELECT id FROM flowboard.projects WHERE id = '<projectId>' FOR UPDATE;`
@@ -1917,3 +1924,5 @@ git commit -m "Document optimistic concurrency conventions" -m "Co-Authored-By: 
      - Lanzar `PATCH /api/v1/flowboard/milestones/<M>/complete`: responde 202 (no ve la asignación sin confirmar).
      - `psql`: `COMMIT;`
      - Esperado: `ERROR: could not serialize access due to read/write dependencies among transactions` (SQLSTATE `40001`); `W` queda sin milestone y `M` en `Completed`. Si la API no usara `Serializable`, el `COMMIT` pasaría y el milestone quedaría cerrado con un work item abierto. Cuando es la transacción de la API la que aborta, el `40001` llega al behavior y sale como 409; ese camino lo cubren `PersistenceConflictBehaviorTests`.
+  4. **Alta de work items.** `POST /api/v1/flowboard/work-items` sin milestone ni componente, y otro con un milestone `Active`: ambos responden **201** con códigos consecutivos (cubre `SELECT *, xmin` y los dos niveles de aislamiento).
+  5. **Swagger** (pendiente de la Tarea 9): `PATCH /api/v1/flowboard/milestones/{id}/complete` y `DELETE /api/v1/flowboard/projects/{id}/members/{userId}` listan la respuesta 409.

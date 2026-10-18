@@ -61,6 +61,8 @@
 | 12 | Sin tests de integración; los unitarios cubren dominio, behavior y handlers, y el 409 real se verifica a mano | No hay proyecto de integración y crearlo queda fuera de I9. |
 | 13 | El behavior se llama `PersistenceConflictBehavior` y solo decora comandos | Traduce también `23505`, que no es concurrencia optimista; las queries no escriben. |
 | 14 | `ChangePasswordHandler` deja de devolver `Auth.SessionChangedConcurrently`; se elimina `AuthenticationErrors.SessionChangedConcurrently` | Mismo HTTP (409) y misma acción del cliente; un solo mecanismo. |
+| 15 | `CreateWorkItemHandler` solo abre `Serializable` cuando recibe milestone o componente; sin ellos sigue en Read Committed | Bajo `Serializable`, su `FOR UPDATE` sobre `projects` falla con `40001` cuando otra alta en el mismo proyecto confirma antes (en Read Committed espera y relee el contador). Se acepta el 409 entre altas concurrentes solo cuando una lleva milestone o componente. Detectado en la revisión final. |
+| 16 | `40P01` (deadlock) se traduce como `40001` | Postgres revierte la transacción en ambos casos y el cliente puede reintentar; detectado en la revisión final. |
 
 ## 5. Enfoques considerados
 
@@ -87,10 +89,10 @@ Se eligió A porque centraliza la traducción en el sitio donde ya viven las res
 - **`Abstractions/Data/PersistenceErrors.cs`** (`public static class`):
   - `ConcurrencyConflict` = `BaseError.Conflict("Persistence.ConcurrencyConflict", "The resource was modified by another request. Reload it and try again.")`.
   - `UniqueViolation` = `BaseError.Conflict("Persistence.UniqueViolation", "A resource with the same unique value already exists.")`.
-  - Constantes `UniqueViolationSqlState = "23505"` y `SerializationFailureSqlState = "40001"`.
+  - Constantes `UniqueViolationSqlState = "23505"`, `SerializationFailureSqlState = "40001"` y `DeadlockDetectedSqlState = "40P01"` (supuesto 16).
 - **`Abstractions/Behaviors/PersistenceConflictBehavior.cs`** (`internal static class`, como `ValidationBehavior`), con `CommandHandler<TCommand, TResponse>` y `CommandBaseHandler<TCommand>` (`internal sealed`). Envuelve `innerHandler.Handle` en `try/catch`:
   - `DbUpdateConcurrencyException` → `PersistenceErrors.ConcurrencyConflict`;
-  - `DbException { SqlState: "40001" }`, directa o como `InnerException` de `DbUpdateException` → `ConcurrencyConflict`;
+  - `DbException { SqlState: "40001" o "40P01" }`, directa o como `InnerException` de `DbUpdateException` → `ConcurrencyConflict`;
   - `DbUpdateException` con `InnerException` `DbException { SqlState: "23505" }` → `UniqueViolation`;
   - cualquier otra excepción se propaga (500 en `GlobalExceptionHandler`).
   - Registra `LogWarning` con la excepción (para conservar el nombre de la constraint y el SQL afectado). `DbException` es `System.Data.Common`: Application no depende de Npgsql.
@@ -99,7 +101,7 @@ Se eligió A porque centraliza la traducción en el sitio donde ya viven las res
 - **Handlers con transacción `Serializable`** (abren la transacción antes de la primera lectura, guardan y llaman a `CommitAsync`; un error de dominio sale sin commit y la transacción se descarta con `await using`):
   - `ChangeMilestoneStatusHandler` y `RetireComponentHandler`.
   - `WorkItemFieldUpdateHandler<TCommand>`: nuevo `protected virtual IsolationLevel? TransactionIsolationLevel => null`. Si no es `null`, `Handle` envuelve la carga, `ApplyAsync`, `SaveChangesAsync` y el commit en una transacción con ese nivel. `ChangeWorkItemMilestoneHandler` y `ChangeWorkItemComponentHandler` lo sobrescriben con `IsolationLevel.Serializable`; el resto de actualizaciones de campo no cambia.
-  - `CreateWorkItemHandler`: su transacción existente pasa a `Serializable`; conserva el `FOR UPDATE` sobre `projects`.
+  - `CreateWorkItemHandler`: su transacción existente pasa a `Serializable` solo cuando recibe milestone o componente (supuesto 15); conserva el `FOR UPDATE` sobre `projects`, que ahora selecciona `xmin` explícitamente (`SELECT *, xmin`: `SELECT *` no devuelve columnas de sistema y `Project` mapea `xmin`).
   - `ChangeUserRoleHandler`: abre la transacción `Serializable` solo cuando `isDemotingActiveAdministrator`; en el resto de casos sigue sin transacción.
 - **`ChangePasswordHandler`**: se quita el `try/catch`; se elimina `AuthenticationErrors.SessionChangedConcurrently`.
 - `RefreshTokenHandler` y `LogoutHandler` no cambian.
@@ -120,7 +122,7 @@ Se eligió A porque centraliza la traducción en el sitio donde ya viven las res
 | Caso | Error | HTTP |
 |---|---|---|
 | Otra petición modificó la fila entre la lectura y la escritura (`xmin`) | `Persistence.ConcurrencyConflict` | 409 |
-| Postgres aborta una transacción serializable (`40001`) | `Persistence.ConcurrencyConflict` | 409 |
+| Postgres aborta una transacción serializable (`40001`) o detecta un deadlock (`40P01`) | `Persistence.ConcurrencyConflict` | 409 |
 | Índice único violado por una carrera (`23505`) | `Persistence.UniqueViolation` | 409 |
 | Cambio de contraseña concurrente con un refresh (antes `Auth.SessionChangedConcurrently`) | `Persistence.ConcurrencyConflict` | 409 |
 | Refresh concurrente con el mismo token (sin cambios) | `Auth.InvalidRefreshToken` | 401 |
@@ -137,7 +139,7 @@ Se eligió A porque centraliza la traducción en el sitio donde ya viven las res
 
 - **Domain:** `ProjectTests` — `AddMember` fija `UpdatedOnUtc`.
 - **Application:**
-  - `PersistenceConflictBehaviorTests` (ambas variantes): `DbUpdateConcurrencyException` → `ConcurrencyConflict`; `40001` directa y envuelta en `DbUpdateException` → `ConcurrencyConflict`; `23505` envuelta → `UniqueViolation`; otra excepción (incluida una `DbUpdateException` con otro SqlState) → se propaga; resultado del handler (éxito o fallo) → se devuelve sin tocar.
+  - `PersistenceConflictBehaviorTests` (ambas variantes): `DbUpdateConcurrencyException` → `ConcurrencyConflict`; `40001` y `40P01` directas y envueltas en `DbUpdateException` → `ConcurrencyConflict`; `23505` envuelta → `UniqueViolation`; otra excepción (incluidas una `DbUpdateException` con otro SqlState y una `OperationCanceledException`) → se propaga; resultado del handler (éxito o fallo) → se devuelve sin tocar.
   - `ChangeMilestoneStatusHandlerTests`, `RetireComponentHandlerTests`, `ChangeWorkItemMilestoneHandlerTests`, `ChangeWorkItemComponentHandlerTests`: con éxito se pide `BeginTransactionAsync(IsolationLevel.Serializable, …)` y se llama a `CommitAsync`; con un error de dominio no hay commit.
   - `ChangeUserRoleHandlerTests`: al degradar a un Administrator activo se abre la transacción `Serializable` y se hace commit; en los demás casos no se abre transacción.
   - `ChangePasswordHandlerTests`: el test de `SessionChangedConcurrently` pasa a comprobar que la `DbUpdateConcurrencyException` se propaga.
@@ -146,6 +148,7 @@ Se eligió A porque centraliza la traducción en el sitio donde ya viven las res
   1. `xmin` → 409: en `psql`, `BEGIN; SELECT * FROM flowboard.projects WHERE id = '<id>' FOR UPDATE;`. Lanzar `DELETE /api/v1/flowboard/projects/<id>/members/<userId>` (queda bloqueado en el `UPDATE`). En `psql`, `UPDATE flowboard.projects SET updated_on_utc = now() WHERE id = '<id>'; COMMIT;`. Esperado: 409 `Persistence.ConcurrencyConflict`.
   2. `23505` → 409: en `psql`, `BEGIN;` + `INSERT` de un usuario con email X, sin commit. Lanzar `POST /api/v1/flowboard/users` con el email X (la comprobación previa no ve la fila; el `INSERT` se bloquea en el índice). `COMMIT;` en `psql`. Esperado: 409 `Persistence.UniqueViolation`.
   3. `40001` → 409: en `psql`, `BEGIN ISOLATION LEVEL SERIALIZABLE;`, leer el milestone (`SELECT status FROM flowboard.milestones WHERE id = '<m>'`) y asignarle un work item abierto (`UPDATE flowboard.work_items SET milestone_id = '<m>' WHERE id = '<w>'`), sin commit. Cerrar el milestone por la API y, mientras, `COMMIT;` en `psql`. Esperado: una de las dos transacciones aborta con `40001`; si es la de la API, responde 409 `Persistence.ConcurrencyConflict`; si es la de `psql`, el milestone queda cerrado y el work item sin asignar.
+  4. Alta de work items (regresión de `SELECT *, xmin` y del nivel de aislamiento): `POST /api/v1/flowboard/work-items` sin milestone ni componente y otro con milestone responden 201 con códigos consecutivos.
 
 ## 10. Riesgos y preguntas abiertas
 

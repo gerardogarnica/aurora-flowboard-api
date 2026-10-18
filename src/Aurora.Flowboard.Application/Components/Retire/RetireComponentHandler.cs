@@ -1,5 +1,3 @@
-using System.Data;
-
 namespace Aurora.Flowboard.Application.Components.Retire;
 
 internal sealed class RetireComponentHandler(

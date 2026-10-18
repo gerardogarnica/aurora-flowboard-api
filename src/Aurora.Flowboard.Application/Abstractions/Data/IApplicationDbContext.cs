@@ -1,5 +1,3 @@
-using System.Data;
-
 namespace Aurora.Flowboard.Application.Abstractions.Data;
 
 public interface IApplicationDbContext : IAsyncDisposable

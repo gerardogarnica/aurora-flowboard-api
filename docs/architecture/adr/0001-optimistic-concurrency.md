@@ -20,7 +20,7 @@ Todas acababan en un 500 de `GlobalExceptionHandler`. Restricciones: los handler
 
 1. Cada aggregate root editable por HTTP mapea `xmin` como concurrency token (shadow `uint Version`, `IsRowVersion()`, `HasColumnName("xmin")`) con `HasXminConcurrencyToken()`. Un método de dominio que cambia hijos de los que depende una invariante del root también escribe el root (`UpdatedOnUtc`).
 2. El write skew se resuelve con transacciones `Serializable` (SSI de Postgres) en los handlers que leen una fila para decidir y escriben otra, mediante `IApplicationDbContext.BeginTransactionAsync(IsolationLevel, …)`.
-3. `PersistenceConflictBehavior`, el decorador más interno de los comandos, traduce `DbUpdateConcurrencyException` y `40001` a `Persistence.ConcurrencyConflict`, y `23505` a `Persistence.UniqueViolation`, ambos `Conflict` → 409. Un handler solo captura la excepción él mismo cuando la semántica no es un 409 (refresh → 401, logout → 200).
+3. `PersistenceConflictBehavior`, el decorador más interno de los comandos, traduce `DbUpdateConcurrencyException`, `40001` y `40P01` (deadlock) a `Persistence.ConcurrencyConflict`, y `23505` a `Persistence.UniqueViolation`, ambos `Conflict` → 409. Un handler solo captura la excepción él mismo cuando la semántica no es un 409 (refresh → 401, logout → 200).
 
 ## Alternativas descartadas
 
@@ -37,7 +37,7 @@ Todas acababan en un 500 de `GlobalExceptionHandler`. Restricciones: los handler
 ## Consecuencias
 
 - **Positivas:** las carreras devuelven 409 en vez de 500 o de corromper invariantes; un solo punto de traducción, probado; los handlers no cambian salvo los que necesitan `Serializable`; sin dependencia de Npgsql en Application; la migración no emite SQL.
-- **Negativas / costes:** SSI puede abortar transacciones sin conflicto real (falsos positivos → 409); solo protege si **todas** las transacciones implicadas son `Serializable`; un `CreateWorkItem` concurrente provoca un 409 en una edición del proyecto que coincida en el tiempo; R9 (refactor de behaviors) debe incluir el behavior nuevo.
+- **Negativas / costes:** SSI puede abortar transacciones sin conflicto real (falsos positivos → 409); solo protege si **todas** las transacciones implicadas son `Serializable`; un `CreateWorkItem` concurrente provoca un 409 en una edición del proyecto que coincida en el tiempo; un `CreateWorkItem` con milestone o componente (el único `Serializable`) puede dar 409 si coincide con otro alta en el mismo proyecto, porque su `FOR UPDATE` sobre `projects` falla con `40001` en vez de esperar; R9 (refactor de behaviors) debe incluir el behavior nuevo.
 - **Qué hay que hacer a partir de ahora:**
   - Un aggregate root nuevo editable por HTTP llama a `HasXminConcurrencyToken()` en su configuración (skill `domain-entity`, `references/ef-configuration.md`).
   - Un handler que lee el estado de otra fila u otro agregado para decidir (estado de milestone o componente, "otro Administrator activo") abre una transacción `Serializable`, igual que el handler del otro lado de la carrera.

@@ -1,5 +1,3 @@
-using System.Data;
-
 namespace Aurora.Flowboard.Application.Users.ChangeRole;
 
 internal sealed class ChangeUserRoleHandler(

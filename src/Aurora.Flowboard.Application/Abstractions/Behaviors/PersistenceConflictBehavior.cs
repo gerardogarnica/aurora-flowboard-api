@@ -47,14 +47,21 @@ internal static class PersistenceConflictBehavior
         }
     }
 
-    // A serialization failure surfaces directly from a query or CommitAsync, or wrapped by SaveChanges.
+    // A serialization failure or a deadlock surfaces directly from a query or CommitAsync, or wrapped by
+    // SaveChanges; Postgres rolls the transaction back in both cases, so the client can retry.
     // DbException (System.Data.Common) exposes SqlState without depending on Npgsql.
     private static BaseError? GetConflictError(Exception exception) => exception switch
     {
         DbUpdateConcurrencyException => PersistenceErrors.ConcurrencyConflict,
-        DbException { SqlState: PersistenceErrors.SerializationFailureSqlState } => PersistenceErrors.ConcurrencyConflict,
-        DbUpdateException { InnerException: DbException { SqlState: PersistenceErrors.SerializationFailureSqlState } }
+        DbException { SqlState: PersistenceErrors.SerializationFailureSqlState or PersistenceErrors.DeadlockDetectedSqlState }
             => PersistenceErrors.ConcurrencyConflict,
+        DbUpdateException
+        {
+            InnerException: DbException
+            {
+                SqlState: PersistenceErrors.SerializationFailureSqlState or PersistenceErrors.DeadlockDetectedSqlState
+            }
+        } => PersistenceErrors.ConcurrencyConflict,
         DbUpdateException { InnerException: DbException { SqlState: PersistenceErrors.UniqueViolationSqlState } }
             => PersistenceErrors.UniqueViolation,
         _ => null

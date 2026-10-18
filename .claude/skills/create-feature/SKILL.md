@@ -54,7 +54,7 @@ Handlers are wrapped by decorators registered with `Scrutor`'s `Decorate(...)`. 
 LoggingBehavior → PerformanceBehavior → ValidationBehavior → PersistenceConflictBehavior → handler
 ```
 
-Logging wraps validation so the log captures the full round-trip, including validation failures. The first three decorate commands **and** queries. `PersistenceConflictBehavior` decorates commands only and turns `DbUpdateConcurrencyException`, `40001` and `23505` into a 409 `Result`, so a handler doesn't catch them itself. A handler that reads another row or aggregate to decide (a milestone's status, "another active Administrator") runs in a `Serializable` transaction — see `.claude/rules/concurrency.md`.
+Logging wraps validation so the log captures the full round-trip, including validation failures. The first three decorate commands **and** queries. `PersistenceConflictBehavior` decorates commands only and turns `DbUpdateConcurrencyException`, `40001`, `40P01` and `23505` into a 409 `Result`, so a handler doesn't catch them itself. A handler that reads another row or aggregate to decide (a milestone's status, "another active Administrator") runs in a `Serializable` transaction — see `.claude/rules/concurrency.md`.
 
 ## Naming
 

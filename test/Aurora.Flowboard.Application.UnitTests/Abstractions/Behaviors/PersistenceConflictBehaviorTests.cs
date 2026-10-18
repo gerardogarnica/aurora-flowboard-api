@@ -81,6 +81,38 @@ public sealed class PersistenceConflictBehaviorTests
     }
 
     [Fact]
+    public async Task Should_ReturnConcurrencyConflict_When_QueryOrCommitThrowsDeadlock()
+    {
+        // Arrange
+        _innerHandler.Handle(_command, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new FakeDbException(PersistenceErrors.DeadlockDetectedSqlState));
+
+        // Act
+        Result result = await _behavior.Handle(_command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(PersistenceErrors.ConcurrencyConflict);
+    }
+
+    [Fact]
+    public async Task Should_ReturnConcurrencyConflict_When_SaveChangesWrapsDeadlock()
+    {
+        // Arrange
+        _innerHandler.Handle(_command, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new DbUpdateException(
+                "save failed",
+                new FakeDbException(PersistenceErrors.DeadlockDetectedSqlState)));
+
+        // Act
+        Result result = await _behavior.Handle(_command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(PersistenceErrors.ConcurrencyConflict);
+    }
+
+    [Fact]
     public async Task Should_ReturnUniqueViolation_When_SaveChangesWrapsUniqueViolation()
     {
         // Arrange
@@ -124,6 +156,20 @@ public sealed class PersistenceConflictBehaviorTests
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
+    public async Task Should_Rethrow_When_HandlerIsCancelled()
+    {
+        // Arrange
+        _innerHandler.Handle(_command, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new OperationCanceledException());
+
+        // Act
+        Func<Task> act = () => _behavior.Handle(_command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<OperationCanceledException>();
     }
 
     [Fact]

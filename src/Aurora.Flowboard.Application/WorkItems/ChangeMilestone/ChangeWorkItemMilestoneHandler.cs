@@ -1,5 +1,3 @@
-using System.Data;
-
 namespace Aurora.Flowboard.Application.WorkItems.ChangeMilestone;
 
 internal sealed class ChangeWorkItemMilestoneHandler(
