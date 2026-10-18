@@ -82,6 +82,7 @@ Each domain shape forces a specific mapping. Decide these while designing the en
 | Computed property (`FullName`) | `builder.Ignore(x => x.FullName)` |
 | Navigation to the creator (`User Creator`) | `HasOne(x => x.Creator).WithMany().HasForeignKey(x => x.CreatedBy).OnDelete(DeleteBehavior.Restrict)` |
 | Child collection owned by the root | `HasMany(x => x.Children).WithOne().HasForeignKey(x => x.{Entity}Id).OnDelete(DeleteBehavior.Cascade)` |
+| Aggregate root editable over HTTP | `builder.HasXminConcurrencyToken()` — optimistic concurrency on Postgres' `xmin` (`.claude/rules/concurrency.md`) |
 
 ## Notes
 

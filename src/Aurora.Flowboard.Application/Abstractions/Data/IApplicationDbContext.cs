@@ -22,5 +22,9 @@ public interface IApplicationDbContext : IAsyncDisposable
 
     Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
 
+    Task<IDbContextTransaction> BeginTransactionAsync(
+        IsolationLevel isolationLevel,
+        CancellationToken cancellationToken = default);
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -16,11 +16,11 @@ paths:
 
 ## Redeeming a refresh token once
 
-- `UserToken` has a shadow `uint` property `Version` mapped to Postgres' `xmin` (`IsRowVersion()` + explicit `HasColumnName("xmin")`, otherwise EFCore.NamingConventions renames it). EF scaffolds an `AddColumn` for it in the migration, but Npgsql emits no SQL for `xmin`.
-- Refresh, logout and change password catch `DbUpdateConcurrencyException` on `SaveChangesAsync`:
+- `UserToken` maps Postgres' `xmin` as concurrency token with `HasXminConcurrencyToken()`, like every aggregate root (see `concurrency.md`).
+- Refresh and logout catch `DbUpdateConcurrencyException` on `SaveChangesAsync`, because their answer is not a 409:
   - refresh → `InvalidRefreshToken` (another request redeemed the token first);
-  - logout → `Ok` (the session is closed either way);
-  - change password → `SessionChangedConcurrently` (409), so the client retries and the retry revokes the rotated token.
+  - logout → `Ok` (the session is closed either way).
+- Change password does not catch it: `PersistenceConflictBehavior` returns `Persistence.ConcurrencyConflict` (409), the client retries and the retry revokes the rotated token.
 - A replayed (already revoked) refresh token is only rejected. It does not revoke the user's other sessions or a token family; `LoggingBehavior` already logs the failure code.
 
 ## Load only the tokens you need

@@ -9,17 +9,26 @@ internal sealed class CreateWorkItemHandler(
         CreateWorkItemCommand command,
         CancellationToken cancellationToken)
     {
+        // Serializable (SSI) only with a milestone or component: their status checks below race with
+        // ChangeMilestoneStatus / RetireComponent, which count the open work items this inserts.
+        // Without them, Read Committed keeps the FOR UPDATE below a queue: under Serializable, a create
+        // waiting on the lock fails with 40001 once the other create commits its counter update.
+        IsolationLevel isolationLevel = command.MilestoneId.HasValue || command.ComponentId.HasValue
+            ? IsolationLevel.Serializable
+            : IsolationLevel.ReadCommitted;
+
         await using IDbContextTransaction transaction =
-            await dbContext.BeginTransactionAsync(cancellationToken);
+            await dbContext.BeginTransactionAsync(isolationLevel, cancellationToken);
 
         // Pessimistic row-level lock prevents duplicate sequence numbers under concurrency.
         // Table/column names must match the EF Core Infrastructure configuration.
+        // xmin is selected explicitly: SELECT * never returns Postgres system columns, and Project maps it.
         // Tracked (not AsNoTracking): IncrementWorkItemCounter mutates the project, and the initial
         // FlowState assigned to WorkItem.FlowState below must be tracked or EF inserts a duplicate.
         // Single query (no AsSplitQuery): splitting would re-execute the FOR UPDATE subquery per split.
         Project? project = await dbContext
             .Projects
-            .FromSqlRaw("SELECT * FROM flowboard.projects WHERE id = {0} FOR UPDATE", command.ProjectId)
+            .FromSqlRaw("SELECT *, xmin FROM flowboard.projects WHERE id = {0} FOR UPDATE", command.ProjectId)
             .Include(p => p.Members)
             .Include(p => p.FlowStates)
             .SingleOrDefaultAsync(cancellationToken);
