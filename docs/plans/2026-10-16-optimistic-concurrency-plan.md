@@ -1721,9 +1721,9 @@ dotnet build src/Aurora.Flowboard.Api/Aurora.Flowboard.Api.csproj
 ./test/Aurora.Flowboard.ArchitectureTests/bin/Debug/net10.0/Aurora.Flowboard.ArchitectureTests.exe
 ```
 
-- [ ] **Verificación manual:** arrancar la API (`dotnet run --project "src/Aurora.Flowboard.AppHost"`), abrir Swagger y comprobar que `PATCH /api/v1/flowboard/milestones/{id}/complete` y `DELETE /api/v1/flowboard/projects/{id}/members/{userId}` listan la respuesta 409. Detener la API.
+- [x] **Verificación manual:** arrancar la API (`dotnet run --project "src/Aurora.Flowboard.AppHost"`), abrir Swagger y comprobar que `PATCH /api/v1/flowboard/milestones/{id}/complete` y `DELETE /api/v1/flowboard/projects/{id}/members/{userId}` listan la respuesta 409. Detener la API.
 
-> Desviación: el `sed -i` del plan se sustituyó por `perl -pi` con el mismo patrón (en Git Bash, `sed -i` reescribe los ficheros CRLF como LF). La verificación en Swagger queda pendiente del usuario (requiere arrancar Aspire); se incluye en la verificación manual final.
+> Desviación: el `sed -i` del plan se sustituyó por `perl -pi` con el mismo patrón (en Git Bash, `sed -i` reescribe los ficheros CRLF como LF). La verificación en Swagger la hizo el usuario dentro de la verificación manual final.
 
 - [x] **Commit:**
 
@@ -1908,7 +1908,7 @@ git commit -m "Document optimistic concurrency conventions" -m "Co-Authored-By: 
 > - `PersistenceConflictBehavior` traduce también `40P01` (deadlock) a `ConcurrencyConflict` (supuesto 16), con tests para `40P01` y para que `OperationCanceledException` se propague.
 > - Actualizados spec, ADR, `concurrency.md` y la skill `create-feature`. La verificación manual añade el paso 4.
 > - `dotnet ef migrations script AddConcurrencyTokens HashRefreshTokens` (el `Down`) tampoco emite SQL.
-- [ ] Verificación manual contra Postgres. Arrancar con `dotnet run --project "src/Aurora.Flowboard.AppHost"` (aplica la migración al arrancar), obtener un token con `POST /api/v1/flowboard/auth/login` del Administrator sembrado (credenciales de la sección `Bootstrap` de la configuración local) y abrir `psql` contra la base del contenedor de Aspire (cadena de conexión en el dashboard).
+- [x] Verificación manual contra Postgres. Arrancar con `dotnet run --project "src/Aurora.Flowboard.AppHost"` (aplica la migración al arrancar), obtener un token con `POST /api/v1/flowboard/auth/login` del Administrator sembrado (credenciales de la sección `Bootstrap` de la configuración local) y abrir `psql` contra la base del contenedor de Aspire (cadena de conexión en el dashboard).
   1. **`xmin` → 409.** Con un proyecto con dos admins `A` y `B`:
      - `psql`: `BEGIN; SELECT id FROM flowboard.projects WHERE id = '<projectId>' FOR UPDATE;`
      - Lanzar `DELETE /api/v1/flowboard/projects/<projectId>/members/<B>` como `A`: queda esperando (su `UPDATE projects` espera el bloqueo).
@@ -1925,4 +1925,4 @@ git commit -m "Document optimistic concurrency conventions" -m "Co-Authored-By: 
      - `psql`: `COMMIT;`
      - Esperado: `ERROR: could not serialize access due to read/write dependencies among transactions` (SQLSTATE `40001`); `W` queda sin milestone y `M` en `Completed`. Si la API no usara `Serializable`, el `COMMIT` pasaría y el milestone quedaría cerrado con un work item abierto. Cuando es la transacción de la API la que aborta, el `40001` llega al behavior y sale como 409; ese camino lo cubren `PersistenceConflictBehaviorTests`.
   4. **Alta de work items.** `POST /api/v1/flowboard/work-items` sin milestone ni componente, y otro con un milestone `Active`: ambos responden **201** con códigos consecutivos (cubre `SELECT *, xmin` y los dos niveles de aislamiento).
-  5. **Swagger** (pendiente de la Tarea 9): `PATCH /api/v1/flowboard/milestones/{id}/complete` y `DELETE /api/v1/flowboard/projects/{id}/members/{userId}` listan la respuesta 409.
+  5. **Swagger** (de la Tarea 9): `PATCH /api/v1/flowboard/milestones/{id}/complete` y `DELETE /api/v1/flowboard/projects/{id}/members/{userId}` listan la respuesta 409.
