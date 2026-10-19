@@ -22,7 +22,8 @@ Los documentos nuevos se escriben en español; código, rutas e identificadores 
 
 ### Arquitectura
 - [.NET Clean Architecture — plantilla de arranque](architecture/clean-architecture-template.md)
-- ADRs: ninguno todavía.
+- ADRs:
+  - [0001 — Concurrencia optimista con `xmin`, SSI y traducción en el pipeline](architecture/adr/0001-optimistic-concurrency.md)
 
 ### Specs y planes
 
@@ -30,6 +31,7 @@ Los documentos nuevos se escriben en español; código, rutas e identificadores 
 |---|---|---|---|---|
 | 2026-08-22 | Actualización por campo de work items | Implementado | [spec](specs/2026-08-22-work-item-field-updates-design.md) | [plan](plans/2026-08-22-work-item-field-updates-plan.md) |
 | 2026-10-07 | Endurecimiento de refresh tokens (I3, I4, M11) | Implementado | [spec](specs/2026-10-07-refresh-token-hardening-design.md) | [plan](plans/2026-10-07-refresh-token-hardening-plan.md) |
+| 2026-10-16 | Concurrencia optimista y conflictos de persistencia (I9) | Implementado | [spec](specs/2026-10-16-optimistic-concurrency-design.md) | [plan](plans/2026-10-16-optimistic-concurrency-plan.md) |
 
 ### Revisiones
 - [Plan de ramas para las correcciones de la revisión](reviews/review-remediation-plan.md)

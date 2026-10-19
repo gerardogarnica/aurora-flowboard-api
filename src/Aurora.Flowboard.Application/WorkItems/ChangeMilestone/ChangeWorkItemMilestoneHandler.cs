@@ -8,6 +8,9 @@ internal sealed class ChangeWorkItemMilestoneHandler(
 {
     protected override Guid GetWorkItemId(ChangeWorkItemMilestoneCommand command) => command.Id;
 
+    // The milestone status read in ApplyAsync races with ChangeMilestoneStatus closing it.
+    protected override IsolationLevel? TransactionIsolationLevel => IsolationLevel.Serializable;
+
     protected override async Task<Result> ApplyAsync(
         WorkItem workItem,
         ChangeWorkItemMilestoneCommand command,

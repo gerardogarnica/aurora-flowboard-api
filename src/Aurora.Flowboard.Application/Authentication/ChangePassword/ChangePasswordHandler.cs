@@ -53,16 +53,9 @@ internal sealed class ChangePasswordHandler(
             return Result.Fail(revokeResult.Error);
         }
 
-        try
-        {
-            await dbContext.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            // A refresh rotated one of these tokens meanwhile, so the rotated token would survive the
-            // password change. Nothing was saved; the client retries and the retry revokes it too.
-            return Result.Fail(AuthenticationErrors.SessionChangedConcurrently);
-        }
+        // If a refresh rotated one of these tokens meanwhile, xmin makes SaveChanges throw and nothing is
+        // saved; PersistenceConflictBehavior returns a 409, and the client's retry revokes the rotated token too.
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return Result.Ok();
     }

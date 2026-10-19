@@ -1,5 +1,6 @@
 using Aurora.Flowboard.Domain.Components;
 using Aurora.Flowboard.Domain.Users;
+using Aurora.Flowboard.Infrastructure.Database;
 
 namespace Aurora.Flowboard.Infrastructure.Configurations;
 
@@ -10,6 +11,8 @@ internal sealed class ComponentConfiguration : IEntityTypeConfiguration<Componen
         builder.ToTable("components");
 
         builder.HasKey(x => x.Id);
+
+        builder.HasXminConcurrencyToken();
 
         builder.Property(x => x.ProjectId)
             .IsRequired();

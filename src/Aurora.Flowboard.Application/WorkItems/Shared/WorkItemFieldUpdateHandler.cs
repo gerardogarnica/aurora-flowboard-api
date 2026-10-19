@@ -8,7 +8,40 @@ internal abstract class WorkItemFieldUpdateHandler<TCommand>(
 {
     protected IApplicationDbContext DbContext => dbContext;
 
+    // Updates that read another aggregate's state to decide (milestone, component status) race with the
+    // handler that closes it; they return Serializable so Postgres (SSI) aborts one of the two requests.
+    protected virtual IsolationLevel? TransactionIsolationLevel => null;
+
     public async Task<Result> Handle(TCommand command, CancellationToken cancellationToken)
+    {
+        if (TransactionIsolationLevel is not { } isolationLevel)
+        {
+            return await UpdateAsync(command, cancellationToken);
+        }
+
+        await using IDbContextTransaction transaction =
+            await dbContext.BeginTransactionAsync(isolationLevel, cancellationToken);
+
+        Result result = await UpdateAsync(command, cancellationToken);
+
+        if (result.IsSuccessful)
+        {
+            await transaction.CommitAsync(cancellationToken);
+        }
+
+        return result;
+    }
+
+    protected abstract Guid GetWorkItemId(TCommand command);
+
+    protected abstract Task<Result> ApplyAsync(
+        WorkItem workItem,
+        TCommand command,
+        User changedBy,
+        DateTime utcNow,
+        CancellationToken cancellationToken);
+
+    private async Task<Result> UpdateAsync(TCommand command, CancellationToken cancellationToken)
     {
         Guid workItemId = GetWorkItemId(command);
 
@@ -50,13 +83,4 @@ internal abstract class WorkItemFieldUpdateHandler<TCommand>(
 
         return Result.Ok();
     }
-
-    protected abstract Guid GetWorkItemId(TCommand command);
-
-    protected abstract Task<Result> ApplyAsync(
-        WorkItem workItem,
-        TCommand command,
-        User changedBy,
-        DateTime utcNow,
-        CancellationToken cancellationToken);
 }

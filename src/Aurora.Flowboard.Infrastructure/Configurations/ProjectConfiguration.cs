@@ -1,6 +1,7 @@
 using Aurora.Flowboard.Domain.Projects;
 using Aurora.Flowboard.Domain.Shared;
 using Aurora.Flowboard.Domain.Users;
+using Aurora.Flowboard.Infrastructure.Database;
 
 namespace Aurora.Flowboard.Infrastructure.Configurations;
 
@@ -11,6 +12,8 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.ToTable("projects");
 
         builder.HasKey(x => x.Id);
+
+        builder.HasXminConcurrencyToken();
 
         builder.Property(x => x.Name)
             .IsRequired()
