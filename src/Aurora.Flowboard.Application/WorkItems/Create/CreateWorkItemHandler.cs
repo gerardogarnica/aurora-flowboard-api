@@ -39,15 +39,12 @@ internal sealed class CreateWorkItemHandler(
             return Result.Fail<Guid>(ProjectErrors.NotFound);
         }
 
-        User? createdBy = await dbContext
-            .Users
-            .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+        Result<User> createdByResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
 
-        if (createdBy is null)
+        if (!createdByResult.IsSuccessful)
         {
             await transaction.RollbackAsync(cancellationToken);
-            return Result.Fail<Guid>(UserErrors.NotFound);
+            return Result.Fail<Guid>(createdByResult.Error);
         }
 
         User? assignee = null;
@@ -104,7 +101,7 @@ internal sealed class CreateWorkItemHandler(
             command.Type,
             command.Priority,
             project,
-            createdBy,
+            createdByResult.Value,
             command.EstimatedPoints,
             command.EstimatedCompletionDate,
             dateTimeProvider.UtcNow,
