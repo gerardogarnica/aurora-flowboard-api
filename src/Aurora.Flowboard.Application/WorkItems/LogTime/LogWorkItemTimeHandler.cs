@@ -21,18 +21,15 @@ internal sealed class LogWorkItemTimeHandler(
             return Result.Fail(WorkItemErrors.NotFound);
         }
 
-        User? user = await dbContext
-            .Users
-            .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+        Result<User> userResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
 
-        if (user is null)
+        if (!userResult.IsSuccessful)
         {
-            return Result.Fail(UserErrors.NotFound);
+            return Result.Fail(userResult.Error);
         }
 
         Result result = workItem.LogTime(
-            user,
+            userResult.Value,
             command.Hours,
             command.Description,
             command.LoggedOnUtc,

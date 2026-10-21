@@ -27,13 +27,11 @@ internal sealed class ChangeMilestoneStatusHandler(
             return Result.Fail(MilestoneErrors.NotFound);
         }
 
-        User? changedBy = await dbContext.Users
-            .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+        Result<User> changedByResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
 
-        if (changedBy is null)
+        if (!changedByResult.IsSuccessful)
         {
-            return Result.Fail(UserErrors.NotFound);
+            return Result.Fail(changedByResult.Error);
         }
 
         int openWorkItemCount = await dbContext
@@ -43,7 +41,7 @@ internal sealed class ChangeMilestoneStatusHandler(
                 && w.FlowState.Category != FlowStateCategory.Cancelled)
             .CountAsync(cancellationToken);
 
-        Result result = milestone.ChangeStatus(command.NewStatus, changedBy, openWorkItemCount, dateTimeProvider.UtcNow);
+        Result result = milestone.ChangeStatus(command.NewStatus, changedByResult.Value, openWorkItemCount, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {

@@ -33,17 +33,14 @@ internal sealed class MoveWorkItemHandler(
             return Result.Fail(ProjectErrors.FlowStateNotFound);
         }
 
-        User? changedBy = await dbContext
-            .Users
-            .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+        Result<User> changedByResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
 
-        if (changedBy is null)
+        if (!changedByResult.IsSuccessful)
         {
-            return Result.Fail(UserErrors.NotFound);
+            return Result.Fail(changedByResult.Error);
         }
 
-        Result result = workItem.Move(toState, changedBy, command.Reason, dateTimeProvider.UtcNow);
+        Result result = workItem.Move(toState, changedByResult.Value, command.Reason, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {

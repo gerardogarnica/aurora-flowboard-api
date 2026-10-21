@@ -32,17 +32,14 @@ internal sealed class AssignWorkItemHandler(
             return Result.Fail(WorkItemErrors.AssigneeNotFound);
         }
 
-        User? changedBy = await dbContext
-            .Users
-            .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+        Result<User> changedByResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
 
-        if (changedBy is null)
+        if (!changedByResult.IsSuccessful)
         {
-            return Result.Fail(UserErrors.NotFound);
+            return Result.Fail(changedByResult.Error);
         }
 
-        Result result = workItem.Assign(assignee, changedBy, dateTimeProvider.UtcNow);
+        Result result = workItem.Assign(assignee, changedByResult.Value, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {

@@ -21,17 +21,14 @@ internal sealed class CreateComponentHandler(
             return Result.Fail<Guid>(ProjectErrors.NotFound);
         }
 
-        User? createdBy = await dbContext
-            .Users
-            .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+        Result<User> createdByResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
 
-        if (createdBy is null)
+        if (!createdByResult.IsSuccessful)
         {
-            return Result.Fail<Guid>(UserErrors.NotFound);
+            return Result.Fail<Guid>(createdByResult.Error);
         }
 
-        Result<Component> result = Component.Create(command.Name, project, createdBy, dateTimeProvider.UtcNow);
+        Result<Component> result = Component.Create(command.Name, project, createdByResult.Value, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {
