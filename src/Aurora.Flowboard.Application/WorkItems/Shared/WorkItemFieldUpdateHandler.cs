@@ -34,6 +34,9 @@ internal abstract class WorkItemFieldUpdateHandler<TCommand>(
 
     protected abstract Guid GetWorkItemId(TCommand command);
 
+    // Adds the includes ApplyAsync needs beyond Project.Members (tags, comments, flow state...).
+    protected virtual IQueryable<WorkItem> Shape(IQueryable<WorkItem> query) => query;
+
     protected abstract Task<Result> ApplyAsync(
         WorkItem workItem,
         TCommand command,
@@ -45,10 +48,12 @@ internal abstract class WorkItemFieldUpdateHandler<TCommand>(
     {
         Guid workItemId = GetWorkItemId(command);
 
-        WorkItem? workItem = await dbContext
+        IQueryable<WorkItem> query = dbContext
             .WorkItems
             .Include(w => w.Project)
-            .ThenInclude(p => p.Members)
+            .ThenInclude(p => p.Members);
+
+        WorkItem? workItem = await Shape(query)
             .AsSplitQuery()
             .SingleOrDefaultAsync(w => w.Id == workItemId, cancellationToken);
 

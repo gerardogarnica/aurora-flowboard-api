@@ -100,9 +100,10 @@ public sealed class AssignWorkItemHandlerTests
         // Arrange
         User admin = WorkItemCommandData.GetAdmin();
         WorkItem workItem = WorkItemCommandData.GetWorkItem(admin);
+        _userContext.UserId.Returns(admin.Id);
 
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
 
@@ -122,9 +123,10 @@ public sealed class AssignWorkItemHandlerTests
         // Arrange
         User admin = WorkItemCommandData.GetAdmin();
         WorkItem workItem = WorkItemCommandData.GetWorkItem(admin);
+        _userContext.UserId.Returns(admin.Id);
 
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.Users.Returns(usersMock);
 
@@ -180,6 +182,29 @@ public sealed class AssignWorkItemHandlerTests
 
         // Assert
         await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Should_ReturnUserNotFoundError_When_CallerAndAssigneeDoNotExist()
+    {
+        // Arrange
+        User admin = WorkItemCommandData.GetAdmin();
+        WorkItem workItem = WorkItemCommandData.GetWorkItem(admin);
+        _userContext.UserId.Returns(Guid.NewGuid());
+
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
+        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Users.Returns(usersMock);
+
+        AssignWorkItemCommand command = new(workItem.Id, Guid.NewGuid());
+
+        // Act
+        Result result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(UserErrors.NotFound);
     }
 
     [Fact]

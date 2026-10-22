@@ -536,7 +536,7 @@ public class ApplicationLayerTests : BaseTest
             .Where(t => t.IsClass && !t.IsDefined(typeof(CompilerGeneratedAttribute), inherit: false));
 
     // Abstract handlers are included on purpose: WorkItemFieldUpdateHandler holds the
-    // body shared by eight concrete handlers, so it must obey the same rules.
+    // body shared by the work item command handlers, so it must obey the same rules.
     private static IEnumerable<Type> GetHandlerTypes() =>
         GetApplicationTypes().Where(IsHandler);
 
