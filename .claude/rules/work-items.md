@@ -35,6 +35,14 @@ Do not move these back into the detail payload. Projecting five sibling collecti
 
 `WorkItemChangeLog.AffectedEntityId` points at a different table depending on `ChangeType`: a `User` for `Assigned`, a `FlowState` for `Moved`, a `Component` for `ComponentChanged`, a `Milestone` for `MilestoneChanged`; null for the rest. `GetWorkItemChangeLogsHandler` resolves it into `AffectedEntityName` accordingly. `WorkItem.Create` writes `MilestoneChanged`/`ComponentChanged` entries when created with a milestone or component, mirroring `ChangeMilestone`/`ChangeComponent`.
 
+## Command handlers on an existing work item
+
+Every command that mutates an existing work item derives from `WorkItemFieldUpdateHandler<TCommand>` (`WorkItems/Shared/`): it loads the work item with `Project.Members`, resolves the current user, calls `ApplyAsync` and saves. Don't write that body again in a new handler.
+
+- Extra includes go in the `Shape` override (`Tags`, `Comments`, `FlowState`, `Project.FlowTransitions`); the base adds `AsSplitQuery()` after it.
+- Lookups of other entities (assignee, target state, milestone, component) go in `ApplyAsync`, so the current user is resolved first and `UserErrors.NotFound` takes precedence over the lookup's own not-found error.
+- Override `TransactionIsolationLevel` only for the write-skew cases in `concurrency.md`.
+
 ## `Viewer` is read-only on work items, except comments
 
 - `WorkItem.EnsureCanBeModifiedBy` rejects `ProjectRole.Viewer` with `WorkItemErrors.ViewerCannotModify` (403); `Create`/`Assign`/`Unassign` apply the same check inline. A Viewer cannot be an assignee (`AssigneeIsViewer`).
