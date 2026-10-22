@@ -19,16 +19,14 @@ internal sealed class ChangeProjectStatusHandler(
             return Result.Fail(ProjectErrors.NotFound);
         }
 
-        User? changedBy = await dbContext.Users
-            .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+        Result<User> changedByResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
 
-        if (changedBy is null)
+        if (!changedByResult.IsSuccessful)
         {
-            return Result.Fail(UserErrors.NotFound);
+            return Result.Fail(changedByResult.Error);
         }
 
-        Result result = project.ChangeStatus(command.NewStatus, changedBy, dateTimeProvider.UtcNow);
+        Result result = project.ChangeStatus(command.NewStatus, changedByResult.Value, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {

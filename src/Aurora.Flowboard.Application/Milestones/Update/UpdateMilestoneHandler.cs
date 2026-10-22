@@ -21,13 +21,11 @@ internal sealed class UpdateMilestoneHandler(
             return Result.Fail(MilestoneErrors.NotFound);
         }
 
-        User? changedBy = await dbContext.Users
-            .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+        Result<User> changedByResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
 
-        if (changedBy is null)
+        if (!changedByResult.IsSuccessful)
         {
-            return Result.Fail(UserErrors.NotFound);
+            return Result.Fail(changedByResult.Error);
         }
 
         Result<Color> colorResult = Color.Create(command.Color);
@@ -42,7 +40,7 @@ internal sealed class UpdateMilestoneHandler(
             colorResult.Value,
             command.TargetStartDate,
             command.TargetEndDate,
-            changedBy,
+            changedByResult.Value,
             dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)

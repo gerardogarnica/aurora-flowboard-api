@@ -22,17 +22,14 @@ internal sealed class UnassignWorkItemHandler(
             return Result.Fail(WorkItemErrors.NotFound);
         }
 
-        User? changedBy = await dbContext
-            .Users
-            .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+        Result<User> changedByResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
 
-        if (changedBy is null)
+        if (!changedByResult.IsSuccessful)
         {
-            return Result.Fail(UserErrors.NotFound);
+            return Result.Fail(changedByResult.Error);
         }
 
-        Result result = workItem.Unassign(changedBy, dateTimeProvider.UtcNow);
+        Result result = workItem.Unassign(changedByResult.Value, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {

@@ -57,20 +57,17 @@ internal abstract class WorkItemFieldUpdateHandler<TCommand>(
             return Result.Fail(WorkItemErrors.NotFound);
         }
 
-        User? changedBy = await dbContext
-            .Users
-            .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+        Result<User> changedByResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
 
-        if (changedBy is null)
+        if (!changedByResult.IsSuccessful)
         {
-            return Result.Fail(UserErrors.NotFound);
+            return Result.Fail(changedByResult.Error);
         }
 
         Result result = await ApplyAsync(
             workItem,
             command,
-            changedBy,
+            changedByResult.Value,
             dateTimeProvider.UtcNow,
             cancellationToken);
 

@@ -19,16 +19,14 @@ internal sealed class ChangeProjectKindHandler(
             return Result.Fail(ProjectErrors.NotFound);
         }
 
-        User? changedBy = await dbContext.Users
-            .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+        Result<User> changedByResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
 
-        if (changedBy is null)
+        if (!changedByResult.IsSuccessful)
         {
-            return Result.Fail(UserErrors.NotFound);
+            return Result.Fail(changedByResult.Error);
         }
 
-        Result result = project.ChangeKind(command.NewKind, changedBy, dateTimeProvider.UtcNow);
+        Result result = project.ChangeKind(command.NewKind, changedByResult.Value, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {

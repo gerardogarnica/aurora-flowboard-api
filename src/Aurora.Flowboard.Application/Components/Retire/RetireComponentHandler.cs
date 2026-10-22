@@ -26,13 +26,11 @@ internal sealed class RetireComponentHandler(
             return Result.Fail(ComponentErrors.NotFound);
         }
 
-        User? changedBy = await dbContext.Users
-            .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+        Result<User> changedByResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
 
-        if (changedBy is null)
+        if (!changedByResult.IsSuccessful)
         {
-            return Result.Fail(UserErrors.NotFound);
+            return Result.Fail(changedByResult.Error);
         }
 
         int openWorkItemCount = await dbContext
@@ -42,7 +40,7 @@ internal sealed class RetireComponentHandler(
                 && w.FlowState.Category != FlowStateCategory.Cancelled)
             .CountAsync(cancellationToken);
 
-        Result result = component.Retire(changedBy, openWorkItemCount, dateTimeProvider.UtcNow);
+        Result result = component.Retire(changedByResult.Value, openWorkItemCount, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {

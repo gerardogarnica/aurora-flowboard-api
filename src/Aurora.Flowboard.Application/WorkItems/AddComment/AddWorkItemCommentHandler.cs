@@ -21,17 +21,14 @@ internal sealed class AddWorkItemCommentHandler(
             return Result.Fail(WorkItemErrors.NotFound);
         }
 
-        User? author = await dbContext
-            .Users
-            .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+        Result<User> authorResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
 
-        if (author is null)
+        if (!authorResult.IsSuccessful)
         {
-            return Result.Fail(UserErrors.NotFound);
+            return Result.Fail(authorResult.Error);
         }
 
-        Result result = workItem.AddComment(author, command.Content, dateTimeProvider.UtcNow);
+        Result result = workItem.AddComment(authorResult.Value, command.Content, dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
         {

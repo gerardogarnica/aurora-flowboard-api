@@ -9,14 +9,11 @@ internal sealed class CreateProjectHandler(
         CreateProjectCommand command,
         CancellationToken cancellationToken)
     {
-        User? createdBy = await dbContext
-            .Users
-            .AsNoTracking()
-            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+        Result<User> createdByResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
 
-        if (createdBy is null)
+        if (!createdByResult.IsSuccessful)
         {
-            return Result.Fail<Guid>(UserErrors.NotFound);
+            return Result.Fail<Guid>(createdByResult.Error);
         }
 
         Result<ProjectCode> prefixResult = ProjectCode.Create(command.Prefix);
@@ -71,7 +68,7 @@ internal sealed class CreateProjectHandler(
             command.Kind,
             colorResult.Value,
             flowStates,
-            createdBy,
+            createdByResult.Value,
             dateTimeProvider.UtcNow);
 
         if (!result.IsSuccessful)
