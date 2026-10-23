@@ -3,28 +3,24 @@ namespace Aurora.Flowboard.Application.WorkItems.Move;
 internal sealed class MoveWorkItemHandler(
     IApplicationDbContext dbContext,
     IDateTimeProvider dateTimeProvider,
-    IUserContext userContext) : ICommandHandler<MoveWorkItemCommand>
+    IUserContext userContext) : WorkItemFieldUpdateHandler<MoveWorkItemCommand>(dbContext, dateTimeProvider, userContext)
 {
-    public async Task<Result> Handle(
-        MoveWorkItemCommand command,
-        CancellationToken cancellationToken)
-    {
-        WorkItem? workItem = await dbContext
-            .WorkItems
+    protected override Guid GetWorkItemId(MoveWorkItemCommand command) => command.Id;
+
+    protected override IQueryable<WorkItem> Shape(IQueryable<WorkItem> query) =>
+        query
             .Include(w => w.FlowState)
             .Include(w => w.Project)
-            .ThenInclude(p => p.Members)
-            .Include(w => w.Project)
-            .ThenInclude(p => p.FlowTransitions)
-            .AsSplitQuery()
-            .SingleOrDefaultAsync(w => w.Id == command.Id, cancellationToken);
+            .ThenInclude(p => p.FlowTransitions);
 
-        if (workItem is null)
-        {
-            return Result.Fail(WorkItemErrors.NotFound);
-        }
-
-        FlowState? toState = await dbContext
+    protected override async Task<Result> ApplyAsync(
+        WorkItem workItem,
+        MoveWorkItemCommand command,
+        User changedBy,
+        DateTime utcNow,
+        CancellationToken cancellationToken)
+    {
+        FlowState? toState = await DbContext
             .FlowStates
             .SingleOrDefaultAsync(s => s.Id == command.ToStateId, cancellationToken);
 
@@ -33,22 +29,6 @@ internal sealed class MoveWorkItemHandler(
             return Result.Fail(ProjectErrors.FlowStateNotFound);
         }
 
-        Result<User> changedByResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
-
-        if (!changedByResult.IsSuccessful)
-        {
-            return Result.Fail(changedByResult.Error);
-        }
-
-        Result result = workItem.Move(toState, changedByResult.Value, command.Reason, dateTimeProvider.UtcNow);
-
-        if (!result.IsSuccessful)
-        {
-            return Result.Fail(result.Error);
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return Result.Ok();
+        return workItem.Move(toState, changedBy, command.Reason, utcNow);
     }
 }

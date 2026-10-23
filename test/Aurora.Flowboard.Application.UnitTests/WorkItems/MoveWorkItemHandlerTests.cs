@@ -104,11 +104,14 @@ public sealed class MoveWorkItemHandlerTests
         // Arrange
         User admin = WorkItemCommandData.GetAdmin();
         (WorkItem workItem, _) = WorkItemCommandData.GetWorkItemForMove(admin);
+        _userContext.UserId.Returns(admin.Id);
 
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
         DbSet<FlowState> flowStatesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<FlowState>());
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.FlowStates.Returns(flowStatesMock);
+        _dbContext.Users.Returns(usersMock);
 
         MoveWorkItemCommand command = new(workItem.Id, Guid.NewGuid(), null);
 
@@ -126,11 +129,14 @@ public sealed class MoveWorkItemHandlerTests
         // Arrange
         User admin = WorkItemCommandData.GetAdmin();
         (WorkItem workItem, _) = WorkItemCommandData.GetWorkItemForMove(admin);
+        _userContext.UserId.Returns(admin.Id);
 
         DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
         DbSet<FlowState> flowStatesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<FlowState>());
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
         _dbContext.WorkItems.Returns(workItemsMock);
         _dbContext.FlowStates.Returns(flowStatesMock);
+        _dbContext.Users.Returns(usersMock);
 
         MoveWorkItemCommand command = new(workItem.Id, Guid.NewGuid(), null);
 
@@ -188,6 +194,31 @@ public sealed class MoveWorkItemHandlerTests
 
         // Assert
         await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Should_ReturnUserNotFoundError_When_UserAndToStateDoNotExist()
+    {
+        // Arrange
+        User admin = WorkItemCommandData.GetAdmin();
+        (WorkItem workItem, _) = WorkItemCommandData.GetWorkItemForMove(admin);
+        _userContext.UserId.Returns(Guid.NewGuid());
+
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
+        DbSet<FlowState> flowStatesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<FlowState>());
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
+        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.FlowStates.Returns(flowStatesMock);
+        _dbContext.Users.Returns(usersMock);
+
+        MoveWorkItemCommand command = new(workItem.Id, Guid.NewGuid(), null);
+
+        // Act
+        Result result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(UserErrors.NotFound);
     }
 
     [Fact]

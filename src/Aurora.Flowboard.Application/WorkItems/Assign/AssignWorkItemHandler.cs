@@ -3,26 +3,21 @@ namespace Aurora.Flowboard.Application.WorkItems.Assign;
 internal sealed class AssignWorkItemHandler(
     IApplicationDbContext dbContext,
     IDateTimeProvider dateTimeProvider,
-    IUserContext userContext) : ICommandHandler<AssignWorkItemCommand>
+    IUserContext userContext) : WorkItemFieldUpdateHandler<AssignWorkItemCommand>(dbContext, dateTimeProvider, userContext)
 {
-    public async Task<Result> Handle(
+    protected override Guid GetWorkItemId(AssignWorkItemCommand command) => command.Id;
+
+    protected override IQueryable<WorkItem> Shape(IQueryable<WorkItem> query) =>
+        query.Include(w => w.FlowState);
+
+    protected override async Task<Result> ApplyAsync(
+        WorkItem workItem,
         AssignWorkItemCommand command,
+        User changedBy,
+        DateTime utcNow,
         CancellationToken cancellationToken)
     {
-        WorkItem? workItem = await dbContext
-            .WorkItems
-            .Include(w => w.Project)
-            .ThenInclude(p => p.Members)
-            .Include(w => w.FlowState)
-            .AsSplitQuery()
-            .SingleOrDefaultAsync(w => w.Id == command.Id, cancellationToken);
-
-        if (workItem is null)
-        {
-            return Result.Fail(WorkItemErrors.NotFound);
-        }
-
-        User? assignee = await dbContext
+        User? assignee = await DbContext
             .Users
             .AsNoTracking()
             .SingleOrDefaultAsync(u => u.Id == command.AssigneeId, cancellationToken);
@@ -32,22 +27,6 @@ internal sealed class AssignWorkItemHandler(
             return Result.Fail(WorkItemErrors.AssigneeNotFound);
         }
 
-        Result<User> changedByResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
-
-        if (!changedByResult.IsSuccessful)
-        {
-            return Result.Fail(changedByResult.Error);
-        }
-
-        Result result = workItem.Assign(assignee, changedByResult.Value, dateTimeProvider.UtcNow);
-
-        if (!result.IsSuccessful)
-        {
-            return Result.Fail(result.Error);
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return Result.Ok();
+        return workItem.Assign(assignee, changedBy, utcNow);
     }
 }

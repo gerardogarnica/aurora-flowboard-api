@@ -3,41 +3,18 @@ namespace Aurora.Flowboard.Application.WorkItems.RemoveTag;
 internal sealed class RemoveWorkItemTagHandler(
     IApplicationDbContext dbContext,
     IDateTimeProvider dateTimeProvider,
-    IUserContext userContext) : ICommandHandler<RemoveWorkItemTagCommand>
+    IUserContext userContext) : WorkItemFieldUpdateHandler<RemoveWorkItemTagCommand>(dbContext, dateTimeProvider, userContext)
 {
-    public async Task<Result> Handle(
+    protected override Guid GetWorkItemId(RemoveWorkItemTagCommand command) => command.WorkItemId;
+
+    protected override IQueryable<WorkItem> Shape(IQueryable<WorkItem> query) =>
+        query.Include(w => w.Tags);
+
+    protected override Task<Result> ApplyAsync(
+        WorkItem workItem,
         RemoveWorkItemTagCommand command,
-        CancellationToken cancellationToken)
-    {
-        WorkItem? workItem = await dbContext
-            .WorkItems
-            .Include(w => w.Tags)
-            .Include(w => w.Project)
-            .ThenInclude(p => p.Members)
-            .AsSplitQuery()
-            .SingleOrDefaultAsync(w => w.Id == command.WorkItemId, cancellationToken);
-
-        if (workItem is null)
-        {
-            return Result.Fail(WorkItemErrors.NotFound);
-        }
-
-        Result<User> changedByResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
-
-        if (!changedByResult.IsSuccessful)
-        {
-            return Result.Fail(changedByResult.Error);
-        }
-
-        Result result = workItem.RemoveTag(command.TagId, changedByResult.Value, dateTimeProvider.UtcNow);
-
-        if (!result.IsSuccessful)
-        {
-            return Result.Fail(result.Error);
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return Result.Ok();
-    }
+        User changedBy,
+        DateTime utcNow,
+        CancellationToken cancellationToken) =>
+        Task.FromResult(workItem.RemoveTag(command.TagId, changedBy, utcNow));
 }
