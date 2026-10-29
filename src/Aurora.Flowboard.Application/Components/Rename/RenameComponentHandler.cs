@@ -3,42 +3,22 @@ namespace Aurora.Flowboard.Application.Components.Rename;
 internal sealed class RenameComponentHandler(
     IApplicationDbContext dbContext,
     IDateTimeProvider dateTimeProvider,
-    IUserContext userContext) : ICommandHandler<RenameComponentCommand>
+    IUserContext userContext) : ComponentCommandHandler<RenameComponentCommand>(dbContext, dateTimeProvider, userContext)
 {
-    public async Task<Result> Handle(
-        RenameComponentCommand command,
-        CancellationToken cancellationToken)
-    {
-        Component? component = await dbContext
-            .Components
-            .Include(c => c.Project)
-            .ThenInclude(p => p.Members)
+    protected override Guid GetComponentId(RenameComponentCommand command) => command.ComponentId;
+
+    // Project.Components backs the sibling name check; next to Project.Members that is two collections.
+    protected override IQueryable<Component> Shape(IQueryable<Component> query) =>
+        query
             .Include(c => c.Project)
             .ThenInclude(p => p.Components)
-            .AsSplitQuery()
-            .SingleOrDefaultAsync(c => c.Id == command.ComponentId, cancellationToken);
+            .AsSplitQuery();
 
-        if (component is null)
-        {
-            return Result.Fail(ComponentErrors.NotFound);
-        }
-
-        Result<User> changedByResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
-
-        if (!changedByResult.IsSuccessful)
-        {
-            return Result.Fail(changedByResult.Error);
-        }
-
-        Result result = component.Rename(command.Name, changedByResult.Value, dateTimeProvider.UtcNow);
-
-        if (!result.IsSuccessful)
-        {
-            return Result.Fail(result.Error);
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return Result.Ok();
-    }
+    protected override Task<Result> ApplyAsync(
+        Component component,
+        RenameComponentCommand command,
+        User changedBy,
+        DateTime utcNow,
+        CancellationToken cancellationToken) =>
+        Task.FromResult(component.Rename(command.Name, changedBy, utcNow));
 }

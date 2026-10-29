@@ -8,31 +8,19 @@ internal abstract class WorkItemFieldUpdateHandler<TCommand>(
 {
     protected IApplicationDbContext DbContext => dbContext;
 
-    // Updates that read another aggregate's state to decide (milestone, component status) race with the
-    // handler that closes it; they return Serializable so Postgres (SSI) aborts one of the two requests.
+    // Override only for the write-skew cases in concurrency.md; the override documents its own race.
     protected virtual IsolationLevel? TransactionIsolationLevel => null;
 
-    public async Task<Result> Handle(TCommand command, CancellationToken cancellationToken)
-    {
-        if (TransactionIsolationLevel is not { } isolationLevel)
-        {
-            return await UpdateAsync(command, cancellationToken);
-        }
-
-        await using IDbContextTransaction transaction =
-            await dbContext.BeginTransactionAsync(isolationLevel, cancellationToken);
-
-        Result result = await UpdateAsync(command, cancellationToken);
-
-        if (result.IsSuccessful)
-        {
-            await transaction.CommitAsync(cancellationToken);
-        }
-
-        return result;
-    }
+    public Task<Result> Handle(TCommand command, CancellationToken cancellationToken) =>
+        dbContext.ExecuteInTransactionAsync(
+            TransactionIsolationLevel,
+            ct => UpdateAsync(command, ct),
+            cancellationToken);
 
     protected abstract Guid GetWorkItemId(TCommand command);
+
+    // Adds the includes ApplyAsync needs beyond Project.Members (tags, comments, flow state...).
+    protected virtual IQueryable<WorkItem> Shape(IQueryable<WorkItem> query) => query;
 
     protected abstract Task<Result> ApplyAsync(
         WorkItem workItem,
@@ -45,10 +33,12 @@ internal abstract class WorkItemFieldUpdateHandler<TCommand>(
     {
         Guid workItemId = GetWorkItemId(command);
 
-        WorkItem? workItem = await dbContext
+        IQueryable<WorkItem> query = dbContext
             .WorkItems
             .Include(w => w.Project)
-            .ThenInclude(p => p.Members)
+            .ThenInclude(p => p.Members);
+
+        WorkItem? workItem = await Shape(query)
             .AsSplitQuery()
             .SingleOrDefaultAsync(w => w.Id == workItemId, cancellationToken);
 

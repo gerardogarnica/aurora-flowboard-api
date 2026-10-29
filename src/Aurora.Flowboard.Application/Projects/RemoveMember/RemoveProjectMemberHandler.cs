@@ -3,23 +3,18 @@ namespace Aurora.Flowboard.Application.Projects.RemoveMember;
 internal sealed class RemoveProjectMemberHandler(
     IApplicationDbContext dbContext,
     IDateTimeProvider dateTimeProvider,
-    IUserContext userContext) : ICommandHandler<RemoveProjectMemberCommand>
+    IUserContext userContext) : ProjectAdminCommandHandler<RemoveProjectMemberCommand>(dbContext, dateTimeProvider, userContext)
 {
-    public async Task<Result> Handle(
+    protected override Guid GetProjectId(RemoveProjectMemberCommand command) => command.ProjectId;
+
+    protected override async Task<Result> ApplyAsync(
+        Project project,
         RemoveProjectMemberCommand command,
+        User changedBy,
+        DateTime utcNow,
         CancellationToken cancellationToken)
     {
-        Project? project = await dbContext
-            .Projects
-            .Include(p => p.Members)
-            .SingleOrDefaultAsync(p => p.Id == command.ProjectId, cancellationToken);
-
-        if (project is null)
-        {
-            return Result.Fail(ProjectErrors.NotFound);
-        }
-
-        bool userExists = await dbContext
+        bool userExists = await DbContext
             .Users
             .AnyAsync(u => u.Id == command.UserId, cancellationToken);
 
@@ -28,22 +23,6 @@ internal sealed class RemoveProjectMemberHandler(
             return Result.Fail(UserErrors.NotFound);
         }
 
-        Result<User> changedByResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
-
-        if (!changedByResult.IsSuccessful)
-        {
-            return Result.Fail(changedByResult.Error);
-        }
-
-        Result result = project.RemoveMember(command.UserId, changedByResult.Value, dateTimeProvider.UtcNow);
-
-        if (!result.IsSuccessful)
-        {
-            return Result.Fail(result.Error);
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return Result.Ok();
+        return project.RemoveMember(command.UserId, changedBy, utcNow);
     }
 }

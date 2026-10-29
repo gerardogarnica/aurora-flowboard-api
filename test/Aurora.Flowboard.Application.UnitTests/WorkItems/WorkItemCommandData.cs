@@ -184,4 +184,58 @@ internal static class WorkItemCommandData
             null,
             UtcNow).Value;
     }
+
+    // A work item moved from the first active state to the project's first state of the given category.
+    public static WorkItem GetWorkItemInCategory(
+        Project project,
+        User admin,
+        FlowStateCategory category,
+        Milestone? milestone = null,
+        Component? component = null)
+    {
+        WorkItem workItem = WorkItem.Create(
+            Title,
+            null,
+            WorkItemType.Story,
+            Priority.Medium,
+            project,
+            admin,
+            null,
+            null,
+            UtcNow,
+            milestone: milestone,
+            component: component).Value;
+
+        if (category == FlowStateCategory.Active)
+        {
+            return workItem;
+        }
+
+        // Completed is only wired from the last active state; Cancelled from every active state.
+        if (category == FlowStateCategory.Completed)
+        {
+            FlowState lastActiveState = project.FlowStates
+                .Where(s => s.Category == FlowStateCategory.Active)
+                .MaxBy(s => s.SortOrder)!;
+
+            if (workItem.FlowStateId != lastActiveState.Id)
+            {
+                MoveOrThrow(workItem, lastActiveState, admin);
+            }
+        }
+
+        MoveOrThrow(workItem, project.FlowStates.First(s => s.Category == category), admin);
+
+        return workItem;
+    }
+
+    private static void MoveOrThrow(WorkItem workItem, FlowState toState, User admin)
+    {
+        Result moveResult = workItem.Move(toState, admin, null, UtcNow);
+
+        if (!moveResult.IsSuccessful)
+        {
+            throw new InvalidOperationException($"Could not move the work item to {toState.Name}: {moveResult.Error.Code}");
+        }
+    }
 }

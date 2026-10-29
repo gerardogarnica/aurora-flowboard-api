@@ -38,9 +38,17 @@ internal sealed class ChangeUserRoleHandler(
 
         // Serializable (SSI): two concurrent demotions of two different Administrators each see the other
         // as active and write different rows (write skew); Postgres aborts one with 40001 (→ 409).
-        await using IDbContextTransaction transaction =
-            await dbContext.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+        return await dbContext.ExecuteInTransactionAsync(
+            IsolationLevel.Serializable,
+            ct => DemoteActiveAdministratorAsync(user, newRole, ct),
+            cancellationToken);
+    }
 
+    private async Task<Result> DemoteActiveAdministratorAsync(
+        User user,
+        Role newRole,
+        CancellationToken cancellationToken)
+    {
         // IsAdministrator is not translatable to SQL, hence the explicit Roles.Any below.
         bool hasOtherActiveAdministrator = await dbContext
             .Users
@@ -48,14 +56,7 @@ internal sealed class ChangeUserRoleHandler(
                 u => u.Id != user.Id && u.IsActive && u.Roles.Any(r => r.Name == Role.Administrator.Name),
                 cancellationToken);
 
-        Result result = await ChangeRoleAsync(user, newRole, hasOtherActiveAdministrator, cancellationToken);
-
-        if (result.IsSuccessful)
-        {
-            await transaction.CommitAsync(cancellationToken);
-        }
-
-        return result;
+        return await ChangeRoleAsync(user, newRole, hasOtherActiveAdministrator, cancellationToken);
     }
 
     private async Task<Result> ChangeRoleAsync(

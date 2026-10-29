@@ -3,41 +3,18 @@ namespace Aurora.Flowboard.Application.WorkItems.UpdateComment;
 internal sealed class UpdateWorkItemCommentHandler(
     IApplicationDbContext dbContext,
     IDateTimeProvider dateTimeProvider,
-    IUserContext userContext) : ICommandHandler<UpdateWorkItemCommentCommand>
+    IUserContext userContext) : WorkItemFieldUpdateHandler<UpdateWorkItemCommentCommand>(dbContext, dateTimeProvider, userContext)
 {
-    public async Task<Result> Handle(
+    protected override Guid GetWorkItemId(UpdateWorkItemCommentCommand command) => command.WorkItemId;
+
+    protected override IQueryable<WorkItem> Shape(IQueryable<WorkItem> query) =>
+        query.Include(w => w.Comments);
+
+    protected override Task<Result> ApplyAsync(
+        WorkItem workItem,
         UpdateWorkItemCommentCommand command,
-        CancellationToken cancellationToken)
-    {
-        WorkItem? workItem = await dbContext
-            .WorkItems
-            .Include(w => w.Comments)
-            .Include(w => w.Project)
-            .ThenInclude(p => p.Members)
-            .AsSplitQuery()
-            .SingleOrDefaultAsync(w => w.Id == command.WorkItemId, cancellationToken);
-
-        if (workItem is null)
-        {
-            return Result.Fail(WorkItemErrors.NotFound);
-        }
-
-        Result<User> changedByResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
-
-        if (!changedByResult.IsSuccessful)
-        {
-            return Result.Fail(changedByResult.Error);
-        }
-
-        Result result = workItem.UpdateComment(command.CommentId, changedByResult.Value, command.Content, dateTimeProvider.UtcNow);
-
-        if (!result.IsSuccessful)
-        {
-            return Result.Fail(result.Error);
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return Result.Ok();
-    }
+        User changedBy,
+        DateTime utcNow,
+        CancellationToken cancellationToken) =>
+        Task.FromResult(workItem.UpdateComment(command.CommentId, changedBy, command.Content, utcNow));
 }

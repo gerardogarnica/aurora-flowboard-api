@@ -390,6 +390,66 @@ public sealed class RetireComponentHandlerTests
         await transaction.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task Should_RetireComponent_When_ItsWorkItemsAreClosed()
+    {
+        // Arrange
+        User admin = ComponentCommandData.GetAdmin();
+        Project project = WorkItemCommandData.GetActiveProjectWithFlow(admin);
+        Component component = Component.Create(ComponentCommandData.Name, project, admin, ComponentCommandData.UtcNow).Value;
+        WorkItem completed = WorkItemCommandData.GetWorkItemInCategory(project, admin, FlowStateCategory.Completed, component: component);
+        WorkItem cancelled = WorkItemCommandData.GetWorkItemInCategory(project, admin, FlowStateCategory.Cancelled, component: component);
+
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
+
+        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([completed, cancelled]);
+        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Users.Returns(usersMock);
+        _dbContext.WorkItems.Returns(workItemsMock);
+
+        RetireComponentCommand command = ComponentCommandData.GetRetireCommand(component.Id);
+
+        // Act
+        Result result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        component.Status.Should().Be(ComponentStatus.Retired);
+    }
+
+    [Fact]
+    public async Task Should_RetireComponent_When_OpenWorkItemsBelongToAnotherComponent()
+    {
+        // Arrange
+        User admin = ComponentCommandData.GetAdmin();
+        Project project = WorkItemCommandData.GetActiveProjectWithFlow(admin);
+        Component component = Component.Create(ComponentCommandData.Name, project, admin, ComponentCommandData.UtcNow).Value;
+        Component otherComponent = Component.Create(ComponentCommandData.RenamedTo, project, admin, ComponentCommandData.UtcNow).Value;
+        WorkItem openInOther = WorkItemCommandData.GetWorkItemInCategory(project, admin, FlowStateCategory.Active, component: otherComponent);
+
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
+
+        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component, otherComponent]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([openInOther]);
+        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Users.Returns(usersMock);
+        _dbContext.WorkItems.Returns(workItemsMock);
+
+        RetireComponentCommand command = ComponentCommandData.GetRetireCommand(component.Id);
+
+        // Act
+        Result result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        component.Status.Should().Be(ComponentStatus.Retired);
+    }
+
     private IDbContextTransaction SetupSerializableTransaction()
     {
         IDbContextTransaction transaction = Substitute.For<IDbContextTransaction>();

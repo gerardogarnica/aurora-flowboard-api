@@ -70,7 +70,8 @@ Detailed conventions live in `.claude/rules/` and load automatically when you re
 | `ef-core-queries.md` | Query shape (no sibling collections, correlated subqueries, expression-tree limits), tracking with `ValueGeneratedNever` keys, raw SQL, pagination |
 | `work-items.md` | Board endpoint, detail vs. paginated activity endpoints, change log semantics, `Viewer` permissions |
 | `project-flow.md` | One flow per project, removed flow endpoints (don't reintroduce), TemplateFlows |
-| `milestones-components.md` | Aggregate ownership, admin-only changes, milestone state machine |
+| `projects.md` | Command handler base for project mutations |
+| `milestones-components.md` | Aggregate ownership, admin-only changes, milestone state machine, command handler bases |
 | `domain-model.md` | Enum placement, value object conventions |
 | `authentication.md` | Refresh token hashing, `jti`, `xmin` concurrency on `user_tokens`, token cleanup job, 401 vs 400 |
 | `concurrency.md` | `xmin` on aggregate roots, writing the root for child changes, `Serializable` for write skew, 409 translation in `PersistenceConflictBehavior` |
