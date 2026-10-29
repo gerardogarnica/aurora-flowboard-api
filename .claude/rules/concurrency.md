@@ -28,7 +28,7 @@ Decision record: `docs/architecture/adr/0001-optimistic-concurrency.md`.
 
 - SSI only protects transactions that are **all** serializable: a new handler on either side of these races must open one too.
 - Don't make a transaction Serializable when it doesn't need it if it takes a `FOR UPDATE` on a row that concurrent requests update: under Read Committed the second request waits and re-reads the row; under Serializable it fails with `40001` once the first commits. That is why `CreateWorkItemHandler` (whose `FOR UPDATE` on `projects` serializes `WorkItemCounter`) stays Read Committed without a milestone or component; with one, two concurrent creates in the same project can end in a 409.
-- `WorkItemFieldUpdateHandler<TCommand>` opens the transaction when a subclass overrides `TransactionIsolationLevel`.
+- `WorkItemFieldUpdateHandler<TCommand>`, `MilestoneCommandHandler<TCommand>` and `ComponentCommandHandler<TCommand>` open the transaction when a subclass overrides `TransactionIsolationLevel`.
 - Handler tests substitute `IDbContextTransaction` for `BeginTransactionAsync(Arg.Is(IsolationLevel.Serializable), ...)` and assert `CommitAsync` on success and no commit on a domain error. `CreateWorkItemHandler` has no handler tests (`FromSqlRaw` can't run on the mocked `DbSet`).
 
 ## Translation to 409

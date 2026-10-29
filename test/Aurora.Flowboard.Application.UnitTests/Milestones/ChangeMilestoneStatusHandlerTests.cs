@@ -401,6 +401,82 @@ public sealed class ChangeMilestoneStatusHandlerTests
         await transaction.DidNotReceive().CommitAsync(Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task Should_CloseMilestone_When_ItsWorkItemsAreClosed()
+    {
+        // Arrange
+        User admin = MilestoneCommandData.GetAdmin();
+        Project project = WorkItemCommandData.GetActiveProjectWithFlow(admin);
+        Milestone milestone = CreateActiveMilestone(project, admin, MilestoneCommandData.Name);
+        WorkItem completed = WorkItemCommandData.GetWorkItemInCategory(project, admin, FlowStateCategory.Completed, milestone: milestone);
+        WorkItem cancelled = WorkItemCommandData.GetWorkItemInCategory(project, admin, FlowStateCategory.Cancelled, milestone: milestone);
+
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
+
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([completed, cancelled]);
+        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Users.Returns(usersMock);
+        _dbContext.WorkItems.Returns(workItemsMock);
+
+        ChangeMilestoneStatusCommand command = MilestoneCommandData.GetChangeStatusCommand(milestone.Id, MilestoneStatus.Completed);
+
+        // Act
+        Result result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        milestone.Status.Should().Be(MilestoneStatus.Completed);
+    }
+
+    [Fact]
+    public async Task Should_CloseMilestone_When_OpenWorkItemsBelongToAnotherMilestone()
+    {
+        // Arrange
+        User admin = MilestoneCommandData.GetAdmin();
+        Project project = WorkItemCommandData.GetActiveProjectWithFlow(admin);
+        Milestone milestone = CreateActiveMilestone(project, admin, MilestoneCommandData.Name);
+        Milestone otherMilestone = CreateActiveMilestone(project, admin, MilestoneCommandData.UpdatedName);
+        WorkItem openInOther = WorkItemCommandData.GetWorkItemInCategory(project, admin, FlowStateCategory.Active, milestone: otherMilestone);
+
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
+
+        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone, otherMilestone]);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([openInOther]);
+        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Users.Returns(usersMock);
+        _dbContext.WorkItems.Returns(workItemsMock);
+
+        ChangeMilestoneStatusCommand command = MilestoneCommandData.GetChangeStatusCommand(milestone.Id, MilestoneStatus.Completed);
+
+        // Act
+        Result result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        milestone.Status.Should().Be(MilestoneStatus.Completed);
+    }
+
+    private static Milestone CreateActiveMilestone(Project project, User admin, string name)
+    {
+        Milestone milestone = Milestone.Create(
+            name,
+            MilestoneCommandData.Description,
+            MilestoneCommandData.MilestoneColor,
+            null,
+            null,
+            project,
+            admin,
+            MilestoneCommandData.UtcNow).Value;
+        milestone.ChangeStatus(MilestoneStatus.Active, admin, 0, MilestoneCommandData.UtcNow);
+
+        return milestone;
+    }
+
     private IDbContextTransaction SetupSerializableTransaction()
     {
         IDbContextTransaction transaction = Substitute.For<IDbContextTransaction>();

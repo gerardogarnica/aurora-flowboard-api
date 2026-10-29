@@ -4,6 +4,8 @@ global using Aurora.Flowboard.Application.Abstractions.Messaging;
 global using Aurora.Flowboard.Application.Abstractions.Pagination;
 global using Aurora.Flowboard.Application.Abstractions.Time;
 global using Aurora.Flowboard.Application.Abstractions.Validations;
+global using Aurora.Flowboard.Application.Components.Shared;
+global using Aurora.Flowboard.Application.Milestones.Shared;
 global using Aurora.Flowboard.Application.Projects.Shared;
 global using Aurora.Flowboard.Application.WorkItems.Shared;
 global using Aurora.Flowboard.Domain.Abstractions;

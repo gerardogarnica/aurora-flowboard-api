@@ -3,49 +3,28 @@ namespace Aurora.Flowboard.Application.Projects.Update;
 internal sealed class UpdateProjectHandler(
     IApplicationDbContext dbContext,
     IDateTimeProvider dateTimeProvider,
-    IUserContext userContext) : ICommandHandler<UpdateProjectCommand>
+    IUserContext userContext) : ProjectAdminCommandHandler<UpdateProjectCommand>(dbContext, dateTimeProvider, userContext)
 {
-    public async Task<Result> Handle(
+    protected override Guid GetProjectId(UpdateProjectCommand command) => command.Id;
+
+    protected override Task<Result> ApplyAsync(
+        Project project,
         UpdateProjectCommand command,
+        User changedBy,
+        DateTime utcNow,
         CancellationToken cancellationToken)
     {
-        Project? project = await dbContext
-            .Projects
-            .Include(p => p.Members)
-            .SingleOrDefaultAsync(p => p.Id == command.Id, cancellationToken);
-
-        if (project is null)
-        {
-            return Result.Fail(ProjectErrors.NotFound);
-        }
-
-        Result<User> changedByResult = await dbContext.GetCurrentUserAsync(userContext, cancellationToken);
-
-        if (!changedByResult.IsSuccessful)
-        {
-            return Result.Fail(changedByResult.Error);
-        }
-
         Result<Color> colorResult = Color.Create(command.Color);
         if (!colorResult.IsSuccessful)
         {
-            return Result.Fail(colorResult.Error);
+            return Task.FromResult(Result.Fail(colorResult.Error));
         }
 
-        Result result = project.Update(
+        return Task.FromResult(project.Update(
             command.Name,
             command.Description,
             colorResult.Value,
-            changedByResult.Value,
-            dateTimeProvider.UtcNow);
-
-        if (!result.IsSuccessful)
-        {
-            return Result.Fail(result.Error);
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return Result.Ok();
+            changedBy,
+            utcNow));
     }
 }
