@@ -18,7 +18,7 @@ Decision record: `docs/architecture/adr/0001-optimistic-concurrency.md`.
 
 ## Serializable for write skew
 
-`xmin` cannot see a race where each request reads one row and writes another. Those handlers open `dbContext.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken)` before their first read, save, and `CommitAsync`; a domain error returns without committing. Postgres (SSI) aborts one side with `40001`.
+`xmin` cannot see a race where each request reads one row and writes another. Those handlers open a Serializable transaction before the read the decision depends on, save, and commit; a domain error returns without committing. Postgres (SSI) aborts one side with `40001`.
 
 | Reads to decide | Writes | Handlers (all Serializable) |
 |---|---|---|
@@ -28,7 +28,10 @@ Decision record: `docs/architecture/adr/0001-optimistic-concurrency.md`.
 
 - SSI only protects transactions that are **all** serializable: a new handler on either side of these races must open one too.
 - Don't make a transaction Serializable when it doesn't need it if it takes a `FOR UPDATE` on a row that concurrent requests update: under Read Committed the second request waits and re-reads the row; under Serializable it fails with `40001` once the first commits. That is why `CreateWorkItemHandler` (whose `FOR UPDATE` on `projects` serializes `WorkItemCounter`) stays Read Committed without a milestone or component; with one, two concurrent creates in the same project can end in a 409.
-- `WorkItemFieldUpdateHandler<TCommand>`, `MilestoneCommandHandler<TCommand>` and `ComponentCommandHandler<TCommand>` open the transaction when a subclass overrides `TransactionIsolationLevel`.
+- Open it with `dbContext.ExecuteInTransactionAsync(isolationLevel, operation, cancellationToken)` (`Abstractions/Data/TransactionExtensions.cs`): it commits only when the operation's `Result` succeeds, and a `null` level runs the operation without a transaction. Don't write the begin/commit block again in a handler.
+  - `WorkItemFieldUpdateHandler<TCommand>`, `MilestoneCommandHandler<TCommand>` and `ComponentCommandHandler<TCommand>` pass it their `TransactionIsolationLevel`, which a subclass overrides only for these races and documents in the override.
+  - `ChangeUserRoleHandler` calls it only on the demotion path.
+  - `CreateWorkItemHandler` keeps its own transaction: it always opens one (Read Committed or Serializable) for the `FOR UPDATE`, returns `Result<Guid>` and rolls back explicitly.
 - Handler tests substitute `IDbContextTransaction` for `BeginTransactionAsync(Arg.Is(IsolationLevel.Serializable), ...)` and assert `CommitAsync` on success and no commit on a domain error. `CreateWorkItemHandler` has no handler tests (`FromSqlRaw` can't run on the mocked `DbSet`).
 
 ## Translation to 409
