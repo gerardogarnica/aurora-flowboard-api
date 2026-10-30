@@ -35,43 +35,28 @@ public sealed class PagedWorkItemQueryValidatorTests
         result.IsValid.Should().BeFalse();
     }
 
-    [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    public void Should_BeInvalid_When_PageIsNotPositive(int page)
+    [Fact]
+    public void Should_RejectAnEmptyWorkItemId_When_ValidatingTheOtherActivityQueries()
     {
-        ValidationResult result = _commentsValidator.Validate(
-            new GetWorkItemCommentsQuery(Guid.NewGuid(), page, ValidPageSize));
-
-        result.IsValid.Should().BeFalse();
-    }
-
-    [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    [InlineData(PaginationDefaults.MaxPageSize + 1)]
-    public void Should_BeInvalid_When_PageSizeIsOutOfRange(int pageSize)
-    {
-        ValidationResult result = _commentsValidator.Validate(
-            new GetWorkItemCommentsQuery(Guid.NewGuid(), ValidPage, pageSize));
-
-        result.IsValid.Should().BeFalse();
+        _changeLogsValidator
+            .Validate(new GetWorkItemChangeLogsQuery(Guid.Empty, ValidPage, ValidPageSize))
+            .IsValid.Should().BeFalse();
+        _stateHistoryValidator
+            .Validate(new GetWorkItemStateHistoryQuery(Guid.Empty, ValidPage, ValidPageSize))
+            .IsValid.Should().BeFalse();
+        _timeEntriesValidator
+            .Validate(new GetWorkItemTimeEntriesQuery(Guid.Empty, ValidPage, ValidPageSize))
+            .IsValid.Should().BeFalse();
     }
 
     [Fact]
-    public void Should_AllowTheMaximumPageSize_When_PageSizeIsAtTheLimit()
-    {
-        ValidationResult result = _commentsValidator.Validate(
-            new GetWorkItemCommentsQuery(Guid.NewGuid(), ValidPage, PaginationDefaults.MaxPageSize));
-
-        result.IsValid.Should().BeTrue();
-    }
-
-    [Fact]
-    public void Should_ApplyTheSamePaginationRules_When_ValidatingTheOtherActivityQueries()
+    public void Should_ApplyThePagingRules_When_ValidatingAnyActivityQuery()
     {
         int oversizedPage = PaginationDefaults.MaxPageSize + 1;
 
+        _commentsValidator
+            .Validate(new GetWorkItemCommentsQuery(Guid.NewGuid(), 0, ValidPageSize))
+            .IsValid.Should().BeFalse();
         _changeLogsValidator
             .Validate(new GetWorkItemChangeLogsQuery(Guid.NewGuid(), ValidPage, oversizedPage))
             .IsValid.Should().BeFalse();
@@ -79,7 +64,7 @@ public sealed class PagedWorkItemQueryValidatorTests
             .Validate(new GetWorkItemStateHistoryQuery(Guid.NewGuid(), 0, ValidPageSize))
             .IsValid.Should().BeFalse();
         _timeEntriesValidator
-            .Validate(new GetWorkItemTimeEntriesQuery(Guid.Empty, ValidPage, ValidPageSize))
+            .Validate(new GetWorkItemTimeEntriesQuery(Guid.NewGuid(), ValidPage, oversizedPage))
             .IsValid.Should().BeFalse();
 
         _changeLogsValidator

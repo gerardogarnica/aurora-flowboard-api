@@ -138,6 +138,31 @@ public sealed class GetWorkItemCommentsHandlerTests
     }
 
     [Fact]
+    public async Task Should_ReturnEmptyPage_When_PageIsTheLargestInt()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithComment(admin);
+        _userContext.UserId.Returns(admin.Id);
+        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
+        DbSet<Comment> commentsMock = MockDbSetHelper.CreateMockDbSet(workItem.Comments);
+        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
+        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Comments.Returns(commentsMock);
+        _dbContext.Users.Returns(usersMock);
+
+        // Act
+        Result<PagedResponse<WorkItemCommentResponse>> result = await _handler.Handle(
+            new GetWorkItemCommentsQuery(workItem.Id, int.MaxValue, PaginationDefaults.MaxPageSize),
+            CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        result.Value.Items.Should().BeEmpty();
+        result.Value.TotalCount.Should().Be(1);
+    }
+
+    [Fact]
     public async Task Should_ExcludeDeletedComments_When_CountingAndListing()
     {
         // Arrange

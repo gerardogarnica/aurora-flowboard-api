@@ -15,41 +15,37 @@ internal sealed class GetProjectChangeLogsHandler(
             return Result.Fail<PagedResponse<ProjectChangeLogResponse>>(ProjectErrors.NotFound);
         }
 
-        IQueryable<ProjectChangeLog> changeLogs = dbContext
-            .ProjectChangeLogs
-            .AsNoTracking()
-            .Where(cl => cl.ProjectId == query.ProjectId);
-
-        int totalCount = await changeLogs.CountAsync(cancellationToken);
-
         // MemberAdded/MemberRemoved point AffectedEntityId at a User. A removed member is no longer
         // in the project, so the name is resolved against Users rather than the members.
-        var rows = await changeLogs
+        var rows = await dbContext
+            .ProjectChangeLogs
+            .AsNoTracking()
+            .Where(cl => cl.ProjectId == query.ProjectId)
             .OrderByDescending(cl => cl.ChangedOnUtc)
             .ThenByDescending(cl => cl.Id)
-            .Skip((query.Page - 1) * query.PageSize)
-            .Take(query.PageSize)
-            .Select(cl => new
-            {
-                cl.Id,
-                cl.ChangedById,
-                ChangedByFirstName = cl.ChangedBy.FirstName,
-                ChangedByLastName = cl.ChangedBy.LastName,
-                cl.ChangeType,
-                cl.AffectedEntityId,
-                AffectedEntityName =
-                    cl.ChangeType == ProjectChangeType.MemberAdded || cl.ChangeType == ProjectChangeType.MemberRemoved
-                        ? dbContext.Users
-                            .Where(u => u.Id == cl.AffectedEntityId)
-                            .Select(u => u.FirstName + " " + u.LastName)
-                            .FirstOrDefault()
-                        : null,
-                cl.NewStatus,
-                cl.ChangedOnUtc
-            })
-            .ToListAsync(cancellationToken);
+            .ToPagedResponseAsync(
+                query,
+                cl => new
+                {
+                    cl.Id,
+                    cl.ChangedById,
+                    ChangedByFirstName = cl.ChangedBy.FirstName,
+                    ChangedByLastName = cl.ChangedBy.LastName,
+                    cl.ChangeType,
+                    cl.AffectedEntityId,
+                    AffectedEntityName =
+                        cl.ChangeType == ProjectChangeType.MemberAdded || cl.ChangeType == ProjectChangeType.MemberRemoved
+                            ? dbContext.Users
+                                .Where(u => u.Id == cl.AffectedEntityId)
+                                .Select(u => u.FirstName + " " + u.LastName)
+                                .FirstOrDefault()
+                            : null,
+                    cl.NewStatus,
+                    cl.ChangedOnUtc
+                },
+                cancellationToken);
 
-        List<ProjectChangeLogResponse> items = [.. rows.Select(cl => new ProjectChangeLogResponse(
+        return rows.Map(cl => new ProjectChangeLogResponse(
             cl.Id,
             cl.ChangedById,
             User.FormatFullName(cl.ChangedByFirstName, cl.ChangedByLastName),
@@ -58,8 +54,6 @@ internal sealed class GetProjectChangeLogsHandler(
             cl.AffectedEntityId,
             cl.AffectedEntityName,
             cl.NewStatus,
-            cl.ChangedOnUtc))];
-
-        return new PagedResponse<ProjectChangeLogResponse>(items, query.Page, query.PageSize, totalCount);
+            cl.ChangedOnUtc));
     }
 }

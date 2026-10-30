@@ -7,10 +7,6 @@ internal sealed class GetWorkItemStateHistoryValidator : AbstractValidator<GetWo
         RuleFor(x => x.WorkItemId)
             .NotEmpty();
 
-        RuleFor(x => x.Page)
-            .MustBeValidPage();
-
-        RuleFor(x => x.PageSize)
-            .MustBeValidPageSize();
+        Include(new PagedQueryValidator());
     }
 }

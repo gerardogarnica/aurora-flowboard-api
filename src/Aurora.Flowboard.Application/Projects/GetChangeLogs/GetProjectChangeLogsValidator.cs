@@ -7,10 +7,6 @@ internal sealed class GetProjectChangeLogsValidator : AbstractValidator<GetProje
         RuleFor(x => x.ProjectId)
             .NotEmpty();
 
-        RuleFor(x => x.Page)
-            .MustBeValidPage();
-
-        RuleFor(x => x.PageSize)
-            .MustBeValidPageSize();
+        Include(new PagedQueryValidator());
     }
 }
