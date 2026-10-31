@@ -147,6 +147,18 @@ public sealed class CreateProjectValidatorTests
     }
 
     [Fact]
+    public void Should_Fail_When_ColorIsEmpty()
+    {
+        var command = new CreateProjectCommand(
+            ProjectCommandData.Name, null, ProjectCommandData.Prefix, ProjectCommandData.Kind, string.Empty, []);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.PropertyName == nameof(CreateProjectCommand.Color));
+    }
+
+    [Fact]
     public void Should_Fail_When_FlowStateColorIsEmpty()
     {
         IReadOnlyCollection<CreateProjectState> flowStates =
