@@ -20,8 +20,7 @@ internal sealed class CreateProjectValidator : AbstractValidator<CreateProjectCo
             .MaximumLength(Project.MaxDescriptionLength);
 
         RuleFor(x => x.Color)
-            .NotEmpty()
-            .MaximumLength(Color.MaxLength);
+            .MustBeValidColor();
 
         RuleFor(x => x.FlowStates)
             .NotEmpty();
@@ -45,8 +44,7 @@ internal sealed class CreateProjectValidator : AbstractValidator<CreateProjectCo
                 .IsInEnum();
 
             state.RuleFor(s => s.Color)
-                .NotEmpty()
-                .MaximumLength(Color.MaxLength);
+                .MustBeValidColor();
 
             state.RuleFor(s => s.AllowedRoles)
                 .NotEmpty();
