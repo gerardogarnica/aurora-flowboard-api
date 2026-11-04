@@ -35,6 +35,8 @@ Schema-qualified raw SQL (`FromSqlRaw` / `ExecuteSqlRawAsync`, e.g. `FROM flowbo
 
 - `PagedResponse<T>` (`Application/Abstractions/Pagination/`) is the shared envelope: `Items`, `Page`, `PageSize`, `TotalCount`, and a computed `TotalPages`. Offset-based, `Page` is 1-based.
 - `PaginationDefaults` holds `DefaultPage = 1`, `DefaultPageSize = 20`, `MaxPageSize = 100`; endpoints take `page`/`pageSize` as optional query params defaulted from those constants.
-- Validators apply `MustBeValidPage()` / `MustBeValidPageSize()` (`Abstractions/Validations/PaginationRuleExtensions.cs`) — exceeding `MaxPageSize` is a 400, not a silent clamp.
+- Paginated queries implement `IPagedQuery` (`Page`, `PageSize`), and their validators keep only their own rules (the parent `Id`) plus `Include(new PagedQueryValidator())` (`Abstractions/Validations/`): `Page > 0`, `0 < PageSize <= MaxPageSize`. Exceeding `MaxPageSize` is a 400, not a silent clamp. There is no upper bound on `Page`.
+- Handlers page with `ToPagedResponseAsync(query, selector, cancellationToken)` (`Abstractions/Pagination/QueryablePagingExtensions.cs`) instead of writing Count + Skip/Take + `PagedResponse` again. It takes an `IOrderedQueryable`, so a query cannot be paged unordered; it counts, then applies `Skip`/`Take` before the `Select`. When the response needs formatting that can't be translated (`User.FormatFullName`/`FormatInitials`), project an anonymous row and finish with `PagedResponse.Map(...)`, as `GetWorkItemCommentsHandler` and `GetProjectChangeLogsHandler` do.
+- The offset is computed in `long`: `(page - 1) * pageSize` in `int` overflows for a huge `page` into a negative `OFFSET`, which Postgres rejects (500). An offset at or past `TotalCount` returns the empty page without running the items query.
 - Activity collections are ordered newest-first, always with the entity `Id` as tie-breaker so paging stays stable.
-- A page past the end returns 200 with an empty `Items` and the real `TotalCount`, never a 404.
+- A page past the end returns 200 with an empty `Items` and the real `TotalCount`, never a 404 — however large `page` is.

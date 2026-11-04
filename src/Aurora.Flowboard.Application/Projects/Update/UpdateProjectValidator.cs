@@ -15,7 +15,6 @@ internal sealed class UpdateProjectValidator : AbstractValidator<UpdateProjectCo
             .MaximumLength(Project.MaxDescriptionLength);
 
         RuleFor(x => x.Color)
-            .NotEmpty()
-            .MaximumLength(Color.MaxLength);
+            .MustBeValidColor();
     }
 }

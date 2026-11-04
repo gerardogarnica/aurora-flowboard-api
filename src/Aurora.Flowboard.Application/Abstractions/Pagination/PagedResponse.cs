@@ -9,4 +9,7 @@ public sealed record PagedResponse<T>(
     public int TotalPages => PageSize > 0
         ? (int)Math.Ceiling(TotalCount / (double)PageSize)
         : 0;
+
+    public PagedResponse<TResult> Map<TResult>(Func<T, TResult> map) =>
+        new([.. Items.Select(map)], Page, PageSize, TotalCount);
 }

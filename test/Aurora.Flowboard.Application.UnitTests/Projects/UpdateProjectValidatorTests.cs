@@ -63,4 +63,16 @@ public sealed class UpdateProjectValidatorTests
 
         result.IsValid.Should().BeFalse();
     }
+
+    [Fact]
+    public void Should_Fail_When_ColorIsEmpty()
+    {
+        var command = new UpdateProjectCommand(
+            Guid.NewGuid(), ProjectCommandData.UpdatedName, null, string.Empty);
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().Contain(e => e.PropertyName == nameof(UpdateProjectCommand.Color));
+    }
 }
