@@ -24,6 +24,7 @@ public sealed class GetProjectById : IBaseEndpoint
             .WithTags(EndpointTags.Projects)
             .Produces<ProjectResponse>(StatusCodes.Status200OK)
             .ProducesStandardProblems(
+                StatusCodes.Status400BadRequest,
                 StatusCodes.Status404NotFound);
     }
 }

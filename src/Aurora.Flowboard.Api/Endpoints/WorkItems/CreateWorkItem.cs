@@ -39,6 +39,7 @@ public sealed class CreateWorkItem : IBaseEndpoint
             .ProducesStandardProblems(
                 StatusCodes.Status400BadRequest,
                 StatusCodes.Status403Forbidden,
+                StatusCodes.Status404NotFound,
                 StatusCodes.Status409Conflict);
     }
 

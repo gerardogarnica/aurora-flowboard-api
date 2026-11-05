@@ -24,6 +24,7 @@ public sealed class GetWorkItemByCode : IBaseEndpoint
             .WithTags(EndpointTags.WorkItems)
             .Produces<WorkItemResponse>(StatusCodes.Status200OK)
             .ProducesStandardProblems(
+                StatusCodes.Status400BadRequest,
                 StatusCodes.Status404NotFound);
     }
 }

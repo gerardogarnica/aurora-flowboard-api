@@ -28,6 +28,7 @@ public sealed class UpdateWorkItemEstimatedCompletionDate : IBaseEndpoint
             .Produces(StatusCodes.Status202Accepted)
             .ProducesStandardProblems(
                 StatusCodes.Status400BadRequest,
+                StatusCodes.Status403Forbidden,
                 StatusCodes.Status404NotFound,
                 StatusCodes.Status409Conflict);
     }
