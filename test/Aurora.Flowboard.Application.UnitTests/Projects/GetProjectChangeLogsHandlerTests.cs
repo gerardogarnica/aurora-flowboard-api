@@ -176,11 +176,8 @@ public sealed class GetProjectChangeLogsHandlerTests
 
     private void ArrangeDbSets(IReadOnlyCollection<Project> projects, User[] users)
     {
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(projects);
-        DbSet<ProjectChangeLog> changeLogsMock = MockDbSetHelper.CreateMockDbSet(projects.SelectMany(p => p.ChangeLogs));
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(users);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.ProjectChangeLogs.Returns(changeLogsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, projects);
+        _dbContext.Seed(c => c.ProjectChangeLogs, projects.SelectMany(p => p.ChangeLogs));
+        _dbContext.Seed(c => c.Users, users);
     }
 }

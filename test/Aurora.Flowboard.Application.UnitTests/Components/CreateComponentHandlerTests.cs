@@ -24,12 +24,9 @@ public sealed class CreateComponentHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Components);
 
         CreateComponentCommand command = ComponentCommandData.GetCreateCommand(project.Id);
 
@@ -50,12 +47,9 @@ public sealed class CreateComponentHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Components);
 
         CreateComponentCommand command = ComponentCommandData.GetCreateCommand(project.Id);
 
@@ -71,8 +65,7 @@ public sealed class CreateComponentHandlerTests
     public async Task Should_ReturnProjectNotFoundError_When_ProjectDoesNotExist()
     {
         // Arrange
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects);
 
         CreateComponentCommand command = ComponentCommandData.GetCreateCommand(Guid.NewGuid());
 
@@ -88,8 +81,7 @@ public sealed class CreateComponentHandlerTests
     public async Task Should_NotPersist_When_ProjectDoesNotExist()
     {
         // Arrange
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects);
 
         CreateComponentCommand command = ComponentCommandData.GetCreateCommand(Guid.NewGuid());
 
@@ -108,10 +100,8 @@ public sealed class CreateComponentHandlerTests
         Project project = ComponentCommandData.GetProject(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
 
         CreateComponentCommand command = ComponentCommandData.GetCreateCommand(project.Id);
 
@@ -131,10 +121,8 @@ public sealed class CreateComponentHandlerTests
         Project project = ComponentCommandData.GetProject(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
 
         CreateComponentCommand command = ComponentCommandData.GetCreateCommand(project.Id);
 
@@ -155,10 +143,8 @@ public sealed class CreateComponentHandlerTests
         _userContext.UserId.Returns(nonAdmin.Id);
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonAdmin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, nonAdmin);
 
         CreateComponentCommand command = ComponentCommandData.GetCreateCommand(project.Id);
 
@@ -180,10 +166,8 @@ public sealed class CreateComponentHandlerTests
         _userContext.UserId.Returns(nonAdmin.Id);
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonAdmin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, nonAdmin);
 
         CreateComponentCommand command = ComponentCommandData.GetCreateCommand(project.Id);
 
@@ -204,10 +188,8 @@ public sealed class CreateComponentHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
 
         CreateComponentCommand command = ComponentCommandData.GetCreateCommand(project.Id);
 
@@ -229,10 +211,8 @@ public sealed class CreateComponentHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
 
         CreateComponentCommand command = ComponentCommandData.GetCreateCommand(project.Id);
 
@@ -252,10 +232,8 @@ public sealed class CreateComponentHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
 
         var command = new CreateComponentCommand(project.Id, string.Empty);
 
@@ -276,10 +254,8 @@ public sealed class CreateComponentHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
 
         var command = new CreateComponentCommand(project.Id, string.Empty);
 

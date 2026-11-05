@@ -24,10 +24,8 @@ public sealed class UpdateMilestoneHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
 
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Milestones.Returns(milestonesMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Milestones, milestone);
+        _dbContext.Seed(c => c.Users, admin);
 
         UpdateMilestoneCommand command = MilestoneCommandData.GetUpdateCommand(milestone.Id);
 
@@ -49,10 +47,8 @@ public sealed class UpdateMilestoneHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
 
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Milestones.Returns(milestonesMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Milestones, milestone);
+        _dbContext.Seed(c => c.Users, admin);
 
         UpdateMilestoneCommand command = MilestoneCommandData.GetUpdateCommand(milestone.Id);
 
@@ -67,8 +63,7 @@ public sealed class UpdateMilestoneHandlerTests
     public async Task Should_ReturnMilestoneNotFoundError_When_MilestoneDoesNotExist()
     {
         // Arrange
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.Milestones);
 
         UpdateMilestoneCommand command = MilestoneCommandData.GetUpdateCommand(Guid.NewGuid());
 
@@ -84,8 +79,7 @@ public sealed class UpdateMilestoneHandlerTests
     public async Task Should_NotPersist_When_MilestoneDoesNotExist()
     {
         // Arrange
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.Milestones);
 
         UpdateMilestoneCommand command = MilestoneCommandData.GetUpdateCommand(Guid.NewGuid());
 
@@ -104,10 +98,8 @@ public sealed class UpdateMilestoneHandlerTests
         MilestoneCommandData.GetProjectWithMilestone(admin, out Milestone milestone);
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Milestones.Returns(milestonesMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Milestones, milestone);
+        _dbContext.Seed(c => c.Users, admin);
 
         UpdateMilestoneCommand command = MilestoneCommandData.GetUpdateCommand(milestone.Id);
 
@@ -127,10 +119,8 @@ public sealed class UpdateMilestoneHandlerTests
         MilestoneCommandData.GetProjectWithMilestone(admin, out Milestone milestone);
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Milestones.Returns(milestonesMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Milestones, milestone);
+        _dbContext.Seed(c => c.Users, admin);
 
         UpdateMilestoneCommand command = MilestoneCommandData.GetUpdateCommand(milestone.Id);
 
@@ -151,10 +141,8 @@ public sealed class UpdateMilestoneHandlerTests
         _userContext.UserId.Returns(nonAdmin.Id);
         _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
 
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonAdmin]);
-        _dbContext.Milestones.Returns(milestonesMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Milestones, milestone);
+        _dbContext.Seed(c => c.Users, nonAdmin);
 
         UpdateMilestoneCommand command = MilestoneCommandData.GetUpdateCommand(milestone.Id);
 
@@ -176,10 +164,8 @@ public sealed class UpdateMilestoneHandlerTests
         _userContext.UserId.Returns(nonAdmin.Id);
         _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
 
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonAdmin]);
-        _dbContext.Milestones.Returns(milestonesMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Milestones, milestone);
+        _dbContext.Seed(c => c.Users, nonAdmin);
 
         UpdateMilestoneCommand command = MilestoneCommandData.GetUpdateCommand(milestone.Id);
 
@@ -199,10 +185,8 @@ public sealed class UpdateMilestoneHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
 
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Milestones.Returns(milestonesMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Milestones, milestone);
+        _dbContext.Seed(c => c.Users, admin);
 
         var command = new UpdateMilestoneCommand(milestone.Id, string.Empty, null, MilestoneCommandData.ColorValue, null, null);
 
@@ -223,10 +207,8 @@ public sealed class UpdateMilestoneHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
 
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Milestones.Returns(milestonesMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Milestones, milestone);
+        _dbContext.Seed(c => c.Users, admin);
 
         var command = new UpdateMilestoneCommand(milestone.Id, string.Empty, null, MilestoneCommandData.ColorValue, null, null);
 
@@ -248,10 +230,8 @@ public sealed class UpdateMilestoneHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
 
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Milestones.Returns(milestonesMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Milestones, milestone);
+        _dbContext.Seed(c => c.Users, admin);
 
         UpdateMilestoneCommand command = MilestoneCommandData.GetUpdateCommand(milestone.Id);
 
@@ -271,10 +251,8 @@ public sealed class UpdateMilestoneHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
 
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Milestones.Returns(milestonesMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Milestones, milestone);
+        _dbContext.Seed(c => c.Users, admin);
 
         UpdateMilestoneCommand command = MilestoneCommandData.GetUpdateCommand(milestone.Id);
 
@@ -295,10 +273,8 @@ public sealed class UpdateMilestoneHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
 
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Milestones.Returns(milestonesMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Milestones, milestone);
+        _dbContext.Seed(c => c.Users, admin);
 
         var command = new UpdateMilestoneCommand(
             milestone.Id,

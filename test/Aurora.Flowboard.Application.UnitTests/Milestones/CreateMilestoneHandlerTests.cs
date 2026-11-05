@@ -24,12 +24,9 @@ public sealed class CreateMilestoneHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Milestones);
 
         CreateMilestoneCommand command = MilestoneCommandData.GetCreateCommand(project.Id);
 
@@ -50,12 +47,9 @@ public sealed class CreateMilestoneHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Milestones);
 
         CreateMilestoneCommand command = MilestoneCommandData.GetCreateCommand(project.Id);
 
@@ -71,8 +65,7 @@ public sealed class CreateMilestoneHandlerTests
     public async Task Should_ReturnProjectNotFoundError_When_ProjectDoesNotExist()
     {
         // Arrange
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects);
 
         CreateMilestoneCommand command = MilestoneCommandData.GetCreateCommand(Guid.NewGuid());
 
@@ -88,8 +81,7 @@ public sealed class CreateMilestoneHandlerTests
     public async Task Should_NotPersist_When_ProjectDoesNotExist()
     {
         // Arrange
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects);
 
         CreateMilestoneCommand command = MilestoneCommandData.GetCreateCommand(Guid.NewGuid());
 
@@ -108,10 +100,8 @@ public sealed class CreateMilestoneHandlerTests
         Project project = MilestoneCommandData.GetProject(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
 
         CreateMilestoneCommand command = MilestoneCommandData.GetCreateCommand(project.Id);
 
@@ -131,10 +121,8 @@ public sealed class CreateMilestoneHandlerTests
         Project project = MilestoneCommandData.GetProject(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
 
         CreateMilestoneCommand command = MilestoneCommandData.GetCreateCommand(project.Id);
 
@@ -155,12 +143,9 @@ public sealed class CreateMilestoneHandlerTests
         _userContext.UserId.Returns(nonAdmin.Id);
         _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonAdmin]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, nonAdmin);
+        _dbContext.Seed(c => c.Milestones);
 
         CreateMilestoneCommand command = MilestoneCommandData.GetCreateCommand(project.Id);
 
@@ -182,12 +167,9 @@ public sealed class CreateMilestoneHandlerTests
         _userContext.UserId.Returns(nonAdmin.Id);
         _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonAdmin]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, nonAdmin);
+        _dbContext.Seed(c => c.Milestones);
 
         CreateMilestoneCommand command = MilestoneCommandData.GetCreateCommand(project.Id);
 
@@ -216,12 +198,9 @@ public sealed class CreateMilestoneHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([existing]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Milestones, existing);
 
         CreateMilestoneCommand command = MilestoneCommandData.GetCreateCommand(project.Id);
 
@@ -251,12 +230,9 @@ public sealed class CreateMilestoneHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([existing]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Milestones, existing);
 
         CreateMilestoneCommand command = MilestoneCommandData.GetCreateCommand(project.Id);
 
@@ -276,12 +252,9 @@ public sealed class CreateMilestoneHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Milestones);
 
         var command = new CreateMilestoneCommand(project.Id, string.Empty, null, MilestoneCommandData.ColorValue, null, null);
 
@@ -302,12 +275,9 @@ public sealed class CreateMilestoneHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Milestones);
 
         var laterDate = new DateOnly(2026, 2, 15);
         var earlierDate = new DateOnly(2026, 1, 15);
@@ -335,12 +305,9 @@ public sealed class CreateMilestoneHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Milestones);
 
         CreateMilestoneCommand command = MilestoneCommandData.GetCreateCommand(project.Id);
 
@@ -360,12 +327,9 @@ public sealed class CreateMilestoneHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(MilestoneCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Milestones);
 
         var command = new CreateMilestoneCommand(
             project.Id,

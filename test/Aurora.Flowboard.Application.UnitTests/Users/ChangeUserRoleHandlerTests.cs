@@ -25,8 +25,7 @@ public sealed class ChangeUserRoleHandlerTests
         // Arrange
         User user = CreateUserCommandData.GetExistingUser();
         _dateTimeProvider.UtcNow.Returns(CreateUserCommandData.UtcNow);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, user);
 
         var command = new ChangeUserRoleCommand(user.Id, Role.Member.Name);
 
@@ -45,8 +44,7 @@ public sealed class ChangeUserRoleHandlerTests
         User user = CreateUserCommandData.GetExistingUser();
         user.AssignRole(Role.Member);
         _dateTimeProvider.UtcNow.Returns(CreateUserCommandData.UtcNow);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, user);
 
         var command = new ChangeUserRoleCommand(user.Id, Role.Administrator.Name);
 
@@ -64,8 +62,7 @@ public sealed class ChangeUserRoleHandlerTests
         // Arrange
         User user = CreateUserCommandData.GetExistingUser();
         _dateTimeProvider.UtcNow.Returns(CreateUserCommandData.UtcNow);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, user);
 
         var command = new ChangeUserRoleCommand(user.Id, Role.Member.Name);
 
@@ -80,8 +77,7 @@ public sealed class ChangeUserRoleHandlerTests
     public async Task Should_ReturnUserNotFoundError_When_UserDoesNotExist()
     {
         // Arrange
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users);
 
         var command = new ChangeUserRoleCommand(Guid.NewGuid(), Role.Member.Name);
 
@@ -97,8 +93,7 @@ public sealed class ChangeUserRoleHandlerTests
     public async Task Should_NotPersist_When_UserDoesNotExist()
     {
         // Arrange
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users);
 
         var command = new ChangeUserRoleCommand(Guid.NewGuid(), Role.Member.Name);
 
@@ -114,8 +109,7 @@ public sealed class ChangeUserRoleHandlerTests
     {
         // Arrange
         User user = CreateUserCommandData.GetExistingUser();
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, user);
 
         var command = new ChangeUserRoleCommand(user.Id, "NotARole");
 
@@ -133,8 +127,7 @@ public sealed class ChangeUserRoleHandlerTests
         // Arrange
         User user = CreateUserCommandData.GetExistingUser();
         user.AssignRole(Role.Member);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, user);
 
         var command = new ChangeUserRoleCommand(user.Id, Role.Member.Name);
 
@@ -152,8 +145,7 @@ public sealed class ChangeUserRoleHandlerTests
         // Arrange
         User user = CreateUserCommandData.GetExistingUser();
         user.AssignRole(Role.Member);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, user);
 
         var command = new ChangeUserRoleCommand(user.Id, Role.Member.Name);
 
@@ -169,8 +161,7 @@ public sealed class ChangeUserRoleHandlerTests
     {
         // Arrange
         User administrator = GetAdministrator(CreateUserCommandData.EmailAddress);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([administrator]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, administrator);
 
         var command = new ChangeUserRoleCommand(administrator.Id, Role.Member.Name);
 
@@ -187,8 +178,7 @@ public sealed class ChangeUserRoleHandlerTests
     {
         // Arrange
         User administrator = GetAdministrator(CreateUserCommandData.EmailAddress);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([administrator]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, administrator);
 
         var command = new ChangeUserRoleCommand(administrator.Id, Role.Member.Name);
 
@@ -206,8 +196,7 @@ public sealed class ChangeUserRoleHandlerTests
         User administrator = GetAdministrator(CreateUserCommandData.EmailAddress);
         User inactiveAdministrator = GetAdministrator(OtherEmailAddress);
         inactiveAdministrator.Deactivate(CreateUserCommandData.UtcNow);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([administrator, inactiveAdministrator]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, administrator, inactiveAdministrator);
 
         var command = new ChangeUserRoleCommand(administrator.Id, Role.Member.Name);
 
@@ -226,8 +215,7 @@ public sealed class ChangeUserRoleHandlerTests
         User administrator = GetAdministrator(CreateUserCommandData.EmailAddress);
         User member = CreateUserCommandData.GetExistingUser(OtherEmailAddress);
         member.AssignRole(Role.Member);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([administrator, member]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, administrator, member);
 
         var command = new ChangeUserRoleCommand(administrator.Id, Role.Member.Name);
 
@@ -246,8 +234,7 @@ public sealed class ChangeUserRoleHandlerTests
         User administrator = GetAdministrator(CreateUserCommandData.EmailAddress);
         User otherAdministrator = GetAdministrator(OtherEmailAddress);
         _dateTimeProvider.UtcNow.Returns(CreateUserCommandData.UtcNow);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([administrator, otherAdministrator]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, administrator, otherAdministrator);
 
         var command = new ChangeUserRoleCommand(administrator.Id, Role.Member.Name);
 
@@ -267,8 +254,7 @@ public sealed class ChangeUserRoleHandlerTests
         User inactiveAdministrator = GetAdministrator(CreateUserCommandData.EmailAddress);
         inactiveAdministrator.Deactivate(CreateUserCommandData.UtcNow);
         _dateTimeProvider.UtcNow.Returns(CreateUserCommandData.UtcNow);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([inactiveAdministrator]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, inactiveAdministrator);
 
         var command = new ChangeUserRoleCommand(inactiveAdministrator.Id, Role.Member.Name);
 
@@ -288,8 +274,7 @@ public sealed class ChangeUserRoleHandlerTests
         User otherAdministrator = GetAdministrator(OtherEmailAddress);
         _dateTimeProvider.UtcNow.Returns(CreateUserCommandData.UtcNow);
         IDbContextTransaction transaction = SetupSerializableTransaction();
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([administrator, otherAdministrator]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, administrator, otherAdministrator);
 
         var command = new ChangeUserRoleCommand(administrator.Id, Role.Member.Name);
 
@@ -306,8 +291,7 @@ public sealed class ChangeUserRoleHandlerTests
         // Arrange
         User administrator = GetAdministrator(CreateUserCommandData.EmailAddress);
         IDbContextTransaction transaction = SetupSerializableTransaction();
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([administrator]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, administrator);
 
         var command = new ChangeUserRoleCommand(administrator.Id, Role.Member.Name);
 
@@ -324,8 +308,7 @@ public sealed class ChangeUserRoleHandlerTests
         // Arrange
         User user = CreateUserCommandData.GetExistingUser();
         _dateTimeProvider.UtcNow.Returns(CreateUserCommandData.UtcNow);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, user);
 
         var command = new ChangeUserRoleCommand(user.Id, Role.Member.Name);
 

@@ -18,8 +18,7 @@ public sealed class GetMilestonesByProjectHandlerTests
     {
         // Arrange
         _userContext.UserId.Returns(Guid.NewGuid());
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects);
 
         // Act
         Result<IReadOnlyCollection<MilestoneResponse>> result =
@@ -38,8 +37,7 @@ public sealed class GetMilestonesByProjectHandlerTests
         User other = MilestoneQueryData.GetOtherUser();
         Project project = MilestoneQueryData.GetProjectWithMilestones(admin, "Phase 1");
         _userContext.UserId.Returns(other.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects, project);
 
         // Act
         Result<IReadOnlyCollection<MilestoneResponse>> result =
@@ -57,10 +55,8 @@ public sealed class GetMilestonesByProjectHandlerTests
         User admin = MilestoneQueryData.GetAdminUser();
         Project project = MilestoneQueryData.GetProject(admin);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Milestones);
 
         // Act
         Result<IReadOnlyCollection<MilestoneResponse>> result =
@@ -79,10 +75,8 @@ public sealed class GetMilestonesByProjectHandlerTests
         Project project = MilestoneQueryData.GetProjectWithMilestones(admin, "Phase 1");
         Milestone milestone = project.Milestones.Single();
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(project.Milestones);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Milestones, project.Milestones);
 
         // Act
         Result<IReadOnlyCollection<MilestoneResponse>> result =
@@ -105,10 +99,8 @@ public sealed class GetMilestonesByProjectHandlerTests
         User admin = MilestoneQueryData.GetAdminUser();
         Project project = MilestoneQueryData.GetProjectWithMilestones(admin, "Phase 1");
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(project.Milestones);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Milestones, project.Milestones);
 
         // Act
         Result<IReadOnlyCollection<MilestoneResponse>> result =
@@ -125,10 +117,8 @@ public sealed class GetMilestonesByProjectHandlerTests
         User admin = MilestoneQueryData.GetAdminUser();
         Project project = MilestoneQueryData.GetProjectWithMilestones(admin, "Phase 2", "Phase 0", "Phase 1");
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(project.Milestones);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Milestones, project.Milestones);
 
         // Act
         Result<IReadOnlyCollection<MilestoneResponse>> result =

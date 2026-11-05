@@ -24,8 +24,7 @@ public sealed class GetAllProjectsHandlerTests
         Project userProject = ProjectQueryData.GetProjectForGetAll("My Project", admin);
         Project otherProject = ProjectQueryData.GetProjectForGetAll("Other Project", other);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([userProject, otherProject]);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects, userProject, otherProject);
 
         // Act
         Result<IReadOnlyCollection<ProjectSummaryResponse>> result =
@@ -45,8 +44,7 @@ public sealed class GetAllProjectsHandlerTests
         Project archivedProject = ProjectQueryData.GetArchivedProjectForGetAll("Archived Project", admin);
         Project activeProject = ProjectQueryData.GetActiveProjectForGetAll("Active Project", admin);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([archivedProject, activeProject]);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects, archivedProject, activeProject);
 
         // Act
         Result<IReadOnlyCollection<ProjectSummaryResponse>> result =
@@ -65,8 +63,7 @@ public sealed class GetAllProjectsHandlerTests
         User other = ProjectQueryData.GetOtherUser();
         Project otherProject = ProjectQueryData.GetProjectForGetAll("Other Project", other);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([otherProject]);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects, otherProject);
 
         // Act
         Result<IReadOnlyCollection<ProjectSummaryResponse>> result =
@@ -86,8 +83,7 @@ public sealed class GetAllProjectsHandlerTests
         Project alphaProject = ProjectQueryData.GetProjectForGetAll("Alpha Project", admin);
         Project muProject = ProjectQueryData.GetProjectForGetAll("Mu Project", admin);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([zetaProject, alphaProject, muProject]);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects, zetaProject, alphaProject, muProject);
 
         // Act
         Result<IReadOnlyCollection<ProjectSummaryResponse>> result =
@@ -107,8 +103,7 @@ public sealed class GetAllProjectsHandlerTests
         User admin = ProjectQueryData.GetAdminUser();
         Project project = ProjectQueryData.GetProjectForGetAll("Mapped Project", admin);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects, project);
 
         // Act
         Result<IReadOnlyCollection<ProjectSummaryResponse>> result =
@@ -142,8 +137,7 @@ public sealed class GetAllProjectsHandlerTests
         User admin = ProjectQueryData.GetAdminUser();
         Project activeProject = ProjectQueryData.GetActiveProjectForGetAll("Active Project", admin);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([activeProject]);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects, activeProject);
 
         // Act
         Result<IReadOnlyCollection<ProjectSummaryResponse>> result =
@@ -162,8 +156,7 @@ public sealed class GetAllProjectsHandlerTests
         User admin = ProjectQueryData.GetAdminUser();
         Project archivedProject = ProjectQueryData.GetArchivedProjectForGetAll("Archived Project", admin);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([archivedProject]);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects, archivedProject);
 
         // Act
         Result<IReadOnlyCollection<ProjectSummaryResponse>> result =
@@ -182,8 +175,7 @@ public sealed class GetAllProjectsHandlerTests
         User admin = ProjectQueryData.GetAdminUser();
         Project project = ProjectQueryData.GetProjectForGetAllWithWorkItems("Count Project", admin, openCount: 3, closedCount: 2, cancelledCount: 1);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects, project);
 
         // Act
         Result<IReadOnlyCollection<ProjectSummaryResponse>> result =

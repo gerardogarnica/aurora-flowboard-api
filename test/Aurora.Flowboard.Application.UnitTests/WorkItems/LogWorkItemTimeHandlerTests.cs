@@ -24,10 +24,8 @@ public sealed class LogWorkItemTimeHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, admin);
 
         LogWorkItemTimeCommand command = new(workItem.Id, 2.5m, "Worked on feature", WorkItemCommandData.UtcNow);
 
@@ -47,10 +45,8 @@ public sealed class LogWorkItemTimeHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, admin);
 
         LogWorkItemTimeCommand command = new(workItem.Id, 2.5m, "Worked on feature", WorkItemCommandData.UtcNow);
 
@@ -65,8 +61,7 @@ public sealed class LogWorkItemTimeHandlerTests
     public async Task Should_ReturnWorkItemNotFoundError_When_WorkItemDoesNotExist()
     {
         // Arrange
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
-        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Seed(c => c.WorkItems);
 
         LogWorkItemTimeCommand command = new(Guid.NewGuid(), 2.5m, null, WorkItemCommandData.UtcNow);
 
@@ -82,8 +77,7 @@ public sealed class LogWorkItemTimeHandlerTests
     public async Task Should_NotPersist_When_WorkItemDoesNotExist()
     {
         // Arrange
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
-        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Seed(c => c.WorkItems);
 
         LogWorkItemTimeCommand command = new(Guid.NewGuid(), 2.5m, null, WorkItemCommandData.UtcNow);
 
@@ -102,10 +96,8 @@ public sealed class LogWorkItemTimeHandlerTests
         WorkItem workItem = WorkItemCommandData.GetWorkItem(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users);
 
         LogWorkItemTimeCommand command = new(workItem.Id, 2.5m, null, WorkItemCommandData.UtcNow);
 
@@ -125,10 +117,8 @@ public sealed class LogWorkItemTimeHandlerTests
         WorkItem workItem = WorkItemCommandData.GetWorkItem(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users);
 
         LogWorkItemTimeCommand command = new(workItem.Id, 2.5m, null, WorkItemCommandData.UtcNow);
 
@@ -149,10 +139,8 @@ public sealed class LogWorkItemTimeHandlerTests
         _userContext.UserId.Returns(nonMember.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonMember]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, nonMember);
 
         LogWorkItemTimeCommand command = new(workItem.Id, 2.5m, null, WorkItemCommandData.UtcNow);
 
@@ -174,10 +162,8 @@ public sealed class LogWorkItemTimeHandlerTests
         _userContext.UserId.Returns(nonMember.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonMember]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, nonMember);
 
         LogWorkItemTimeCommand command = new(workItem.Id, 2.5m, null, WorkItemCommandData.UtcNow);
 
