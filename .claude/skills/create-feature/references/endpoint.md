@@ -11,7 +11,7 @@ The endpoint binds the request, dispatches, and maps the `Result`. Nothing else.
 | Create | `Create{Entity}` | POST | 201 Created |
 | Update | `Update{Entity}` | PUT | 202 Accepted |
 | Delete | `Delete{Entity}` | DELETE | 202 Accepted |
-| State change | `{Verb}{Entity}` | PATCH | 202 Accepted |
+| State change | `{Verb}{Entity}`, or `Change{Entity}Status` for several statuses on one command | PATCH | 202 Accepted |
 | Get by id | `Get{Entity}ById` | GET | 200 OK |
 | Get all | `Get{Entities}` | GET | 200 OK |
 
@@ -51,10 +51,10 @@ public sealed class Create{Entity} : IBaseEndpoint
             .WithName("Create{Entity}")
             .WithTags(EndpointTags.{Feature})
             .Produces<Guid>(StatusCodes.Status201Created)
-            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
-            .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
-            .Produces<ProblemDetails>(StatusCodes.Status409Conflict)
-            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+            .ProducesStandardProblems(
+                StatusCodes.Status400BadRequest,
+                StatusCodes.Status403Forbidden,
+                StatusCodes.Status409Conflict);
     }
 
     internal sealed record Create{Entity}Request(
@@ -93,17 +93,15 @@ public sealed class Update{Entity} : IBaseEndpoint
 
                 Result result = await handler.Handle(command, cancellationToken);
 
-                return result.Match(
-                    () => Results.Accepted(string.Empty),
-                    ApiResponses.Problem);
+                return result.Match(ApiResponses.Accepted, ApiResponses.Problem);
             })
             .RequireAuthorization()
             .WithName("Update{Entity}")
             .WithTags(EndpointTags.{Feature})
             .Produces(StatusCodes.Status202Accepted)
-            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
-            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
-            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+            .ProducesStandardProblems(
+                StatusCodes.Status400BadRequest,
+                StatusCodes.Status404NotFound);
     }
 
     internal sealed record Update{Entity}Request(
@@ -132,36 +130,76 @@ public sealed class Delete{Entity} : IBaseEndpoint
 
                 Result result = await handler.Handle(command, cancellationToken);
 
-                return result.Match(
-                    () => Results.Accepted(string.Empty),
-                    ApiResponses.Problem);
+                return result.Match(ApiResponses.Accepted, ApiResponses.Problem);
             })
             .RequireAuthorization()
             .WithName("Delete{Entity}")
             .WithTags(EndpointTags.{Feature})
             .Produces(StatusCodes.Status202Accepted)
-            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
-            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+            .ProducesStandardProblems(
+                StatusCodes.Status404NotFound);
     }
 }
 ```
 
 ## State change — PATCH
 
-A transition (archive, activate, hold, complete) is **not** a PUT. It gets its own endpoint class and `MapPatch`:
+A transition (archive, activate, hold, complete) is **not** a PUT: it is a `MapPatch` on its own route segment. A transition with its own command (`RetireComponent`) gets its own `{Verb}{Entity}` class:
 
 ```csharp
 app.MapPatch(
-    "{feature}/{id:guid}/archive",
+    "{feature}/{id:guid}/retire",
     async (
         Guid id,
-        ICommandHandler<Archive{Entity}Command> handler,
+        ICommandHandler<Retire{Entity}Command> handler,
         CancellationToken cancellationToken) =>
     {
-        Result result = await handler.Handle(new Archive{Entity}Command(id), cancellationToken);
+        Result result = await handler.Handle(new Retire{Entity}Command(id), cancellationToken);
 
-        return result.Match(() => Results.Accepted(string.Empty), ApiResponses.Problem);
+        return result.Match(ApiResponses.Accepted, ApiResponses.Problem);
     })
+```
+
+When several routes dispatch the **same** command and differ only in the target status (`ChangeProjectStatusCommand`, `ChangeMilestoneStatusCommand`), one `Change{Entity}Status` class maps them all from a table. Each route keeps its own segment and `WithName` (`ActivateProject`, `ArchiveProject`...), because those are the public contract. Keep the fluent chain inside `MapEndpoint`, not in a helper method: `ApiLayerTests` inspects the IL of `MapEndpoint` for `RequireAuthorization`, `WithName`, `WithTags` and `Produces`.
+
+```csharp
+public sealed class Change{Entity}Status : IBaseEndpoint
+{
+    private static readonly (string Segment, {Entity}Status Status, string Name)[] Transitions =
+    [
+        ("activate", {Entity}Status.Active, "Activate{Entity}"),
+        ("archive", {Entity}Status.Archived, "Archive{Entity}"),
+    ];
+
+    public void MapEndpoint(IEndpointRouteBuilder app)
+    {
+        foreach ((string segment, {Entity}Status status, string name) in Transitions)
+        {
+            app.MapPatch(
+                $"{feature}/{{id:guid}}/{segment}",
+                async (
+                    Guid id,
+                    ICommandHandler<Change{Entity}StatusCommand> handler,
+                    CancellationToken cancellationToken) =>
+                {
+                    var command = new Change{Entity}StatusCommand(id, status);
+
+                    Result result = await handler.Handle(command, cancellationToken);
+
+                    return result.Match(ApiResponses.Accepted, ApiResponses.Problem);
+                })
+                .RequireAuthorization()
+                .WithName(name)
+                .WithTags(EndpointTags.{Feature})
+                .Produces(StatusCodes.Status202Accepted)
+                .ProducesStandardProblems(
+                    StatusCodes.Status400BadRequest,
+                    StatusCodes.Status403Forbidden,
+                    StatusCodes.Status404NotFound,
+                    StatusCodes.Status409Conflict);
+        }
+    }
+}
 ```
 
 ## Get by id — GET
@@ -188,8 +226,8 @@ public sealed class Get{Entity}ById : IBaseEndpoint
             .WithName("Get{Entity}ById")
             .WithTags(EndpointTags.{Feature})
             .Produces<{Entity}Response>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
-            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+            .ProducesStandardProblems(
+                StatusCodes.Status404NotFound);
     }
 }
 ```
@@ -221,7 +259,7 @@ public sealed class Get{Entities} : IBaseEndpoint
             .WithName("Get{Entities}")
             .WithTags(EndpointTags.{Feature})
             .Produces<IReadOnlyCollection<{Entity}ListResponse>>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+            .ProducesStandardProblems();
     }
 }
 ```
@@ -243,5 +281,6 @@ Only `auth/login` is anonymous. Authorization that depends on the *data* (only a
 3. Never return a domain entity.
 4. Always pass `CancellationToken` to `handler.Handle(...)`.
 5. No manual validation — the validator runs in the pipeline.
-6. Declare every status code the route can produce with `.Produces(...)`, so the OpenAPI document matches reality.
+6. Declare every status code the route can produce, so the OpenAPI document matches reality: the success code with `.Produces(...)`, and the error codes with `.ProducesStandardProblems(...)` (`Endpoints/RouteHandlerBuilderExtensions.cs`). It always adds the 500 from `GlobalExceptionHandler`, so list only the codes the handler can return as a `Result` (a `Forbidden` error in the domain means 403). Never write `.Produces<ProblemDetails>(...)` by hand.
 7. Do not put `[JsonStringEnumConverter]` on collection properties — configure enum serialization at the serializer-options level instead.
+8. A successful command without a body returns `result.Match(ApiResponses.Accepted, ApiResponses.Problem)`. Don't write `() => Results.Accepted(string.Empty)` again.
