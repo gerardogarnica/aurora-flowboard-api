@@ -23,7 +23,7 @@ public sealed class GetProjectBoard : IBaseEndpoint
             .WithName("GetProjectBoard")
             .WithTags(EndpointTags.Projects)
             .Produces<IReadOnlyCollection<BoardColumnResponse>>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
-            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+            .ProducesStandardProblems(
+                StatusCodes.Status404NotFound);
     }
 }

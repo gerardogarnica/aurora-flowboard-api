@@ -23,7 +23,7 @@ public sealed class GetProjectById : IBaseEndpoint
             .WithName("GetProjectById")
             .WithTags(EndpointTags.Projects)
             .Produces<ProjectResponse>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
-            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+            .ProducesStandardProblems(
+                StatusCodes.Status404NotFound);
     }
 }

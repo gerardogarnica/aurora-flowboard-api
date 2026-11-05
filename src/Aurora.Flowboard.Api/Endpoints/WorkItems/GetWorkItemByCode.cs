@@ -23,7 +23,7 @@ public sealed class GetWorkItemByCode : IBaseEndpoint
             .WithName("GetWorkItemByCode")
             .WithTags(EndpointTags.WorkItems)
             .Produces<WorkItemResponse>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
-            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+            .ProducesStandardProblems(
+                StatusCodes.Status404NotFound);
     }
 }

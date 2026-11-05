@@ -24,8 +24,8 @@ public sealed class GetTemplateFlowByKind : IBaseEndpoint
             .WithName("GetTemplateFlowByKind")
             .WithTags(EndpointTags.TemplateFlows)
             .Produces<TemplateFlowResponse>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
-            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
-            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+            .ProducesStandardProblems(
+                StatusCodes.Status400BadRequest,
+                StatusCodes.Status404NotFound);
     }
 }
