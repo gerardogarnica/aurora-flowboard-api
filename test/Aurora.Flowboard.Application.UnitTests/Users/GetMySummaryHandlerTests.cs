@@ -17,10 +17,8 @@ public sealed class GetMySummaryHandlerTests
     public async Task Should_ReturnNotFoundError_When_UserDoesNotExist()
     {
         // Arrange
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users);
+        _dbContext.Seed(c => c.Projects);
 
         // Act
         Result<MySummaryResponse> result =
@@ -36,10 +34,8 @@ public sealed class GetMySummaryHandlerTests
     {
         // Arrange
         User caller = GetMySummaryQueryData.GetUser();
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([caller]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, caller);
+        _dbContext.Seed(c => c.Projects);
 
         // Act
         Result<MySummaryResponse> result =
@@ -60,10 +56,8 @@ public sealed class GetMySummaryHandlerTests
     {
         // Arrange
         User caller = GetMySummaryQueryData.GetUser(role: Role.Administrator);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([caller]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, caller);
+        _dbContext.Seed(c => c.Projects);
 
         // Act
         Result<MySummaryResponse> result =
@@ -80,10 +74,8 @@ public sealed class GetMySummaryHandlerTests
         User caller = GetMySummaryQueryData.GetUser();
         User other = GetMySummaryQueryData.GetUser("Other", "User");
         Project otherProject = GetMySummaryQueryData.CreateProject("Other Project", "OTP", ProjectStatus.Active, other);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([caller]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([otherProject]);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, caller);
+        _dbContext.Seed(c => c.Projects, otherProject);
 
         // Act
         Result<MySummaryResponse> result =
@@ -104,10 +96,8 @@ public sealed class GetMySummaryHandlerTests
         // Arrange
         User caller = GetMySummaryQueryData.GetUser();
         Project project = GetMySummaryQueryData.CreateProject("Aurora Web", "AWB", ProjectStatus.Active, caller);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([caller]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, caller);
+        _dbContext.Seed(c => c.Projects, project);
 
         // Act
         Result<MySummaryResponse> result =
@@ -124,10 +114,8 @@ public sealed class GetMySummaryHandlerTests
         User caller = GetMySummaryQueryData.GetUser();
         Project activeProject = GetMySummaryQueryData.CreateProject("Active Project", "ACT", ProjectStatus.Active, caller);
         Project archivedProject = GetMySummaryQueryData.CreateProject("Archived Project", "ARC", ProjectStatus.Archived, caller);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([caller]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([activeProject, archivedProject]);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, caller);
+        _dbContext.Seed(c => c.Projects, activeProject, archivedProject);
 
         // Act
         Result<MySummaryResponse> result =
@@ -149,10 +137,8 @@ public sealed class GetMySummaryHandlerTests
             "First Project", "FST", ProjectStatus.Active, caller, sharedMember, onlyInFirst);
         Project secondProject = GetMySummaryQueryData.CreateProject(
             "Second Project", "SND", ProjectStatus.Active, caller, sharedMember);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([caller]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([firstProject, secondProject]);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, caller);
+        _dbContext.Seed(c => c.Projects, firstProject, secondProject);
 
         // Act
         Result<MySummaryResponse> result =
@@ -174,10 +160,8 @@ public sealed class GetMySummaryHandlerTests
         GetMySummaryQueryData.AddWorkItem(project, caller.Id, FlowStateCategory.Completed);
         GetMySummaryQueryData.AddWorkItem(project, caller.Id, FlowStateCategory.Cancelled);
         GetMySummaryQueryData.AddWorkItem(project, other.Id, FlowStateCategory.Active);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([caller]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, caller);
+        _dbContext.Seed(c => c.Projects, project);
 
         // Act
         Result<MySummaryResponse> result =
@@ -194,10 +178,8 @@ public sealed class GetMySummaryHandlerTests
         User caller = GetMySummaryQueryData.GetUser();
         Project archivedProject = GetMySummaryQueryData.CreateProject("Archived Project", "ARW", ProjectStatus.Archived, caller);
         GetMySummaryQueryData.AddWorkItem(archivedProject, caller.Id, FlowStateCategory.Active);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([caller]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([archivedProject]);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, caller);
+        _dbContext.Seed(c => c.Projects, archivedProject);
 
         // Act
         Result<MySummaryResponse> result =
@@ -216,11 +198,8 @@ public sealed class GetMySummaryHandlerTests
         Project alphaActive = GetMySummaryQueryData.CreateProject("Alpha Active", "AAC", ProjectStatus.Active, caller);
         Project maintenance = GetMySummaryQueryData.CreateProject("Middle Maintenance", "MMT", ProjectStatus.Maintenance, caller);
         Project completed = GetMySummaryQueryData.CreateProject("Done Completed", "DCM", ProjectStatus.Completed, caller);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([caller]);
-        DbSet<Project> projectsMock =
-            MockDbSetHelper.CreateMockDbSet([completed, maintenance, zetaActive, alphaActive]);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, caller);
+        _dbContext.Seed(c => c.Projects, completed, maintenance, zetaActive, alphaActive);
 
         // Act
         Result<MySummaryResponse> result =
@@ -237,10 +216,8 @@ public sealed class GetMySummaryHandlerTests
         // Arrange
         User caller = GetMySummaryQueryData.GetUser();
         Project project = GetMySummaryQueryData.CreateProject("Aurora Web", "AWB", ProjectStatus.Active, caller);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([caller]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, caller);
+        _dbContext.Seed(c => c.Projects, project);
 
         // Act
         Result<MySummaryResponse> result =

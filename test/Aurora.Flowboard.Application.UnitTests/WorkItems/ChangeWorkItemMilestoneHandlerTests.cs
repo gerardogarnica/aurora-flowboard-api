@@ -27,12 +27,9 @@ public sealed class ChangeWorkItemMilestoneHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Milestones, milestone);
 
         ChangeWorkItemMilestoneCommand command = new(workItem.Id, milestone.Id);
 
@@ -54,12 +51,9 @@ public sealed class ChangeWorkItemMilestoneHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Milestones);
 
         ChangeWorkItemMilestoneCommand command = new(workItem.Id, Guid.NewGuid());
 
@@ -82,10 +76,8 @@ public sealed class ChangeWorkItemMilestoneHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, admin);
 
         ChangeWorkItemMilestoneCommand command = new(workItem.Id, null);
 
@@ -108,12 +100,9 @@ public sealed class ChangeWorkItemMilestoneHandlerTests
         _userContext.UserId.Returns(nonMember.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonMember]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, nonMember);
+        _dbContext.Seed(c => c.Milestones, milestone);
 
         ChangeWorkItemMilestoneCommand command = new(workItem.Id, milestone.Id);
 
@@ -136,12 +125,9 @@ public sealed class ChangeWorkItemMilestoneHandlerTests
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
         IDbContextTransaction transaction = SetupSerializableTransaction();
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Milestones, milestone);
 
         ChangeWorkItemMilestoneCommand command = new(workItem.Id, milestone.Id);
 
@@ -162,12 +148,9 @@ public sealed class ChangeWorkItemMilestoneHandlerTests
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
         IDbContextTransaction transaction = SetupSerializableTransaction();
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Milestones);
 
         ChangeWorkItemMilestoneCommand command = new(workItem.Id, Guid.NewGuid());
 

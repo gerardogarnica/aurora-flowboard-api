@@ -22,6 +22,6 @@ public sealed class GetUsers : IBaseEndpoint
             .WithName("GetUsers")
             .WithTags(EndpointTags.Users)
             .Produces<IReadOnlyCollection<UserSummaryResponse>>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+            .ProducesStandardProblems();
     }
 }

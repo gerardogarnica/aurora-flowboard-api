@@ -2,6 +2,8 @@
 
 internal static class ApiResponses
 {
+    internal static IResult Accepted() => Results.Accepted(string.Empty);
+
     internal static IResult Problem(Result result)
     {
         if (result.IsSuccessful)

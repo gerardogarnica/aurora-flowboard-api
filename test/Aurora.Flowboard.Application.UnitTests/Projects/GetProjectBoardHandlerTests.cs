@@ -21,8 +21,7 @@ public sealed class GetProjectBoardHandlerTests
     {
         // Arrange
         _userContext.UserId.Returns(Guid.NewGuid());
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -41,8 +40,7 @@ public sealed class GetProjectBoardHandlerTests
         User other = WorkItemQueryData.GetDeveloperUser();
         Project project = WorkItemQueryData.GetActiveProjectWithFlow(admin);
         _userContext.UserId.Returns(other.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects, project);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -61,20 +59,13 @@ public sealed class GetProjectBoardHandlerTests
         Project project = WorkItemQueryData.GetActiveProjectWithFlow(admin);
 
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.FlowStates.Returns(statesMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(project.FlowTransitions);
-        _dbContext.FlowTransitions.Returns(transitionsMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.FlowStates, project.FlowStates);
+        _dbContext.Seed(c => c.WorkItems);
+        _dbContext.Seed(c => c.Users);
+        _dbContext.Seed(c => c.Components);
+        _dbContext.Seed(c => c.Milestones);
+        _dbContext.Seed(c => c.FlowTransitions, project.FlowTransitions);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -98,20 +89,13 @@ public sealed class GetProjectBoardHandlerTests
         WorkItemQueryData.SetWorkItemFlowState(workItem, cancelledState.Id);
 
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.FlowStates.Returns(statesMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(project.FlowTransitions);
-        _dbContext.FlowTransitions.Returns(transitionsMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.FlowStates, project.FlowStates);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users);
+        _dbContext.Seed(c => c.Components);
+        _dbContext.Seed(c => c.Milestones);
+        _dbContext.Seed(c => c.FlowTransitions, project.FlowTransitions);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -133,20 +117,13 @@ public sealed class GetProjectBoardHandlerTests
         WorkItemQueryData.SetWorkItemFlowState(workItem, completedState.Id);
 
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.FlowStates.Returns(statesMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(project.FlowTransitions);
-        _dbContext.FlowTransitions.Returns(transitionsMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.FlowStates, project.FlowStates);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users);
+        _dbContext.Seed(c => c.Components);
+        _dbContext.Seed(c => c.Milestones);
+        _dbContext.Seed(c => c.FlowTransitions, project.FlowTransitions);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -171,20 +148,13 @@ public sealed class GetProjectBoardHandlerTests
         Project project = Project.Create("Board Project", "Desc", ProjectCode.Create("BRD").Value, ProjectKind.Product, Color.Create("white").Value, flowStates, admin, WorkItemQueryData.UtcNow).Value;
 
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.FlowStates.Returns(statesMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(project.FlowTransitions);
-        _dbContext.FlowTransitions.Returns(transitionsMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.FlowStates, project.FlowStates);
+        _dbContext.Seed(c => c.WorkItems);
+        _dbContext.Seed(c => c.Users);
+        _dbContext.Seed(c => c.Components);
+        _dbContext.Seed(c => c.Milestones);
+        _dbContext.Seed(c => c.FlowTransitions, project.FlowTransitions);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -213,20 +183,13 @@ public sealed class GetProjectBoardHandlerTests
         WorkItemQueryData.SetWorkItemFlowState(wi2, inProgressState.Id);
 
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([wi1, wi2]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.FlowStates.Returns(statesMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(project.FlowTransitions);
-        _dbContext.FlowTransitions.Returns(transitionsMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.FlowStates, project.FlowStates);
+        _dbContext.Seed(c => c.WorkItems, wi1, wi2);
+        _dbContext.Seed(c => c.Users);
+        _dbContext.Seed(c => c.Components);
+        _dbContext.Seed(c => c.Milestones);
+        _dbContext.Seed(c => c.FlowTransitions, project.FlowTransitions);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -254,20 +217,13 @@ public sealed class GetProjectBoardHandlerTests
         WorkItem highPriority = WorkItem.Create("High", null, WorkItemType.Story, Priority.High, project, admin, null, null, WorkItemQueryData.UtcNow.AddHours(3)).Value;
 
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([lowPriority, criticalLate, highPriority, criticalEarly]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.FlowStates.Returns(statesMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(project.FlowTransitions);
-        _dbContext.FlowTransitions.Returns(transitionsMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.FlowStates, project.FlowStates);
+        _dbContext.Seed(c => c.WorkItems, lowPriority, criticalLate, highPriority, criticalEarly);
+        _dbContext.Seed(c => c.Users);
+        _dbContext.Seed(c => c.Components);
+        _dbContext.Seed(c => c.Milestones);
+        _dbContext.Seed(c => c.FlowTransitions, project.FlowTransitions);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -294,20 +250,13 @@ public sealed class GetProjectBoardHandlerTests
         WorkItem workItem = WorkItem.Create("Item", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, WorkItemQueryData.UtcNow, assignee).Value;
 
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([assignee]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.FlowStates.Returns(statesMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(project.FlowTransitions);
-        _dbContext.FlowTransitions.Returns(transitionsMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.FlowStates, project.FlowStates);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, assignee);
+        _dbContext.Seed(c => c.Components);
+        _dbContext.Seed(c => c.Milestones);
+        _dbContext.Seed(c => c.FlowTransitions, project.FlowTransitions);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -330,20 +279,13 @@ public sealed class GetProjectBoardHandlerTests
         WorkItem workItem = WorkItem.Create("Item", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, WorkItemQueryData.UtcNow).Value;
 
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.FlowStates.Returns(statesMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(project.FlowTransitions);
-        _dbContext.FlowTransitions.Returns(transitionsMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.FlowStates, project.FlowStates);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Components);
+        _dbContext.Seed(c => c.Milestones);
+        _dbContext.Seed(c => c.FlowTransitions, project.FlowTransitions);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -369,20 +311,13 @@ public sealed class GetProjectBoardHandlerTests
         workItem.LogTime(admin, 1.5m, null, WorkItemQueryData.UtcNow, WorkItemQueryData.UtcNow);
 
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.FlowStates.Returns(statesMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(project.FlowTransitions);
-        _dbContext.FlowTransitions.Returns(transitionsMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.FlowStates, project.FlowStates);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users);
+        _dbContext.Seed(c => c.Components);
+        _dbContext.Seed(c => c.Milestones);
+        _dbContext.Seed(c => c.FlowTransitions, project.FlowTransitions);
 
         // Act
         Result<IReadOnlyCollection<BoardColumnResponse>> result =
@@ -543,19 +478,12 @@ public sealed class GetProjectBoardHandlerTests
     private void ArrangeBoard(Project project, Guid userId, IEnumerable<FlowTransition> transitions)
     {
         _userContext.UserId.Returns(userId);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(project.FlowStates);
-        DbSet<FlowTransition> transitionsMock = MockDbSetHelper.CreateMockDbSet(transitions);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Milestone>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.FlowStates.Returns(statesMock);
-        _dbContext.FlowTransitions.Returns(transitionsMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.FlowStates, project.FlowStates);
+        _dbContext.Seed(c => c.FlowTransitions, transitions);
+        _dbContext.Seed(c => c.WorkItems);
+        _dbContext.Seed(c => c.Users);
+        _dbContext.Seed(c => c.Components);
+        _dbContext.Seed(c => c.Milestones);
     }
 }

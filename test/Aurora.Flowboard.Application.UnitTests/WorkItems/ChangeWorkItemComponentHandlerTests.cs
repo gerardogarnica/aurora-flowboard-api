@@ -27,12 +27,9 @@ public sealed class ChangeWorkItemComponentHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Components, component);
 
         ChangeWorkItemComponentCommand command = new(workItem.Id, component.Id);
 
@@ -54,12 +51,9 @@ public sealed class ChangeWorkItemComponentHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Components);
 
         ChangeWorkItemComponentCommand command = new(workItem.Id, Guid.NewGuid());
 
@@ -82,10 +76,8 @@ public sealed class ChangeWorkItemComponentHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, admin);
 
         ChangeWorkItemComponentCommand command = new(workItem.Id, null);
 
@@ -108,12 +100,9 @@ public sealed class ChangeWorkItemComponentHandlerTests
         _userContext.UserId.Returns(nonMember.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonMember]);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, nonMember);
+        _dbContext.Seed(c => c.Components, component);
 
         ChangeWorkItemComponentCommand command = new(workItem.Id, component.Id);
 
@@ -136,12 +125,9 @@ public sealed class ChangeWorkItemComponentHandlerTests
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
         IDbContextTransaction transaction = SetupSerializableTransaction();
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Components, component);
 
         ChangeWorkItemComponentCommand command = new(workItem.Id, component.Id);
 
@@ -162,12 +148,9 @@ public sealed class ChangeWorkItemComponentHandlerTests
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
         IDbContextTransaction transaction = SetupSerializableTransaction();
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Components);
 
         ChangeWorkItemComponentCommand command = new(workItem.Id, Guid.NewGuid());
 

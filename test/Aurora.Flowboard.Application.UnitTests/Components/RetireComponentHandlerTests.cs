@@ -28,12 +28,9 @@ public sealed class RetireComponentHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
 
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Seed(c => c.Components, component);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems);
 
         RetireComponentCommand command = ComponentCommandData.GetRetireCommand(component.Id);
 
@@ -54,12 +51,9 @@ public sealed class RetireComponentHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
 
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Seed(c => c.Components, component);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems);
 
         RetireComponentCommand command = ComponentCommandData.GetRetireCommand(component.Id);
 
@@ -74,8 +68,7 @@ public sealed class RetireComponentHandlerTests
     public async Task Should_ReturnComponentNotFoundError_When_ComponentDoesNotExist()
     {
         // Arrange
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
-        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Seed(c => c.Components);
 
         RetireComponentCommand command = ComponentCommandData.GetRetireCommand(Guid.NewGuid());
 
@@ -91,8 +84,7 @@ public sealed class RetireComponentHandlerTests
     public async Task Should_NotPersist_When_ComponentDoesNotExist()
     {
         // Arrange
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
-        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Seed(c => c.Components);
 
         RetireComponentCommand command = ComponentCommandData.GetRetireCommand(Guid.NewGuid());
 
@@ -111,12 +103,9 @@ public sealed class RetireComponentHandlerTests
         ComponentCommandData.GetProjectWithComponent(admin, out Component component);
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Seed(c => c.Components, component);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems);
 
         RetireComponentCommand command = ComponentCommandData.GetRetireCommand(component.Id);
 
@@ -136,12 +125,9 @@ public sealed class RetireComponentHandlerTests
         ComponentCommandData.GetProjectWithComponent(admin, out Component component);
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Seed(c => c.Components, component);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems);
 
         RetireComponentCommand command = ComponentCommandData.GetRetireCommand(component.Id);
 
@@ -162,12 +148,9 @@ public sealed class RetireComponentHandlerTests
         _userContext.UserId.Returns(nonAdmin.Id);
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
 
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonAdmin]);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Seed(c => c.Components, component);
+        _dbContext.Seed(c => c.Users, nonAdmin);
+        _dbContext.Seed(c => c.WorkItems);
 
         RetireComponentCommand command = ComponentCommandData.GetRetireCommand(component.Id);
 
@@ -189,12 +172,9 @@ public sealed class RetireComponentHandlerTests
         _userContext.UserId.Returns(nonAdmin.Id);
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
 
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonAdmin]);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Seed(c => c.Components, component);
+        _dbContext.Seed(c => c.Users, nonAdmin);
+        _dbContext.Seed(c => c.WorkItems);
 
         RetireComponentCommand command = ComponentCommandData.GetRetireCommand(component.Id);
 
@@ -215,12 +195,9 @@ public sealed class RetireComponentHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
 
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Seed(c => c.Components, component);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems);
 
         RetireComponentCommand command = ComponentCommandData.GetRetireCommand(component.Id);
 
@@ -242,12 +219,9 @@ public sealed class RetireComponentHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
 
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Seed(c => c.Components, component);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems);
 
         RetireComponentCommand command = ComponentCommandData.GetRetireCommand(component.Id);
 
@@ -281,12 +255,9 @@ public sealed class RetireComponentHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
 
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Seed(c => c.Components, component);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems, workItem);
 
         RetireComponentCommand command = ComponentCommandData.GetRetireCommand(component.Id);
 
@@ -321,12 +292,9 @@ public sealed class RetireComponentHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
 
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Seed(c => c.Components, component);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems, workItem);
 
         RetireComponentCommand command = ComponentCommandData.GetRetireCommand(component.Id);
 
@@ -347,12 +315,9 @@ public sealed class RetireComponentHandlerTests
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
         IDbContextTransaction transaction = SetupSerializableTransaction();
 
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Seed(c => c.Components, component);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems);
 
         RetireComponentCommand command = ComponentCommandData.GetRetireCommand(component.Id);
 
@@ -374,12 +339,9 @@ public sealed class RetireComponentHandlerTests
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
         IDbContextTransaction transaction = SetupSerializableTransaction();
 
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Seed(c => c.Components, component);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems);
 
         RetireComponentCommand command = ComponentCommandData.GetRetireCommand(component.Id);
 
@@ -403,12 +365,9 @@ public sealed class RetireComponentHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
 
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([completed, cancelled]);
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Seed(c => c.Components, component);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems, completed, cancelled);
 
         RetireComponentCommand command = ComponentCommandData.GetRetireCommand(component.Id);
 
@@ -433,12 +392,9 @@ public sealed class RetireComponentHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ComponentCommandData.UtcNow);
 
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component, otherComponent]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([openInOther]);
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Seed(c => c.Components, component, otherComponent);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems, openInOther);
 
         RetireComponentCommand command = ComponentCommandData.GetRetireCommand(component.Id);
 

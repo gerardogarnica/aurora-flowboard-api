@@ -17,8 +17,7 @@ public sealed class GetUserByIdHandlerTests
     public async Task Should_ReturnNotFoundError_When_UserDoesNotExist()
     {
         // Arrange
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users);
 
         // Act
         Result<UserProfileResponse> result =
@@ -34,8 +33,7 @@ public sealed class GetUserByIdHandlerTests
     {
         // Arrange
         User user = CreateUserCommandData.GetExistingUser();
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, user);
 
         // Act
         Result<UserProfileResponse> result =
@@ -50,8 +48,7 @@ public sealed class GetUserByIdHandlerTests
     {
         // Arrange
         User user = CreateUserCommandData.GetExistingUser();
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, user);
 
         // Act
         Result<UserProfileResponse> result =
@@ -75,8 +72,7 @@ public sealed class GetUserByIdHandlerTests
     {
         // Arrange
         User user = CreateUserCommandData.GetExistingUser();
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, user);
 
         // Act
         Result<UserProfileResponse> result =
@@ -93,8 +89,7 @@ public sealed class GetUserByIdHandlerTests
         User user = CreateUserCommandData.GetExistingUser();
         user.AssignRole(Role.Member);
         user.AssignRole(Role.Administrator);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, user);
 
         // Act
         Result<UserProfileResponse> result =

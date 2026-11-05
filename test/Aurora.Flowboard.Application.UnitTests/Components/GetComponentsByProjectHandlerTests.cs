@@ -18,8 +18,7 @@ public sealed class GetComponentsByProjectHandlerTests
     {
         // Arrange
         _userContext.UserId.Returns(Guid.NewGuid());
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects);
 
         // Act
         Result<IReadOnlyCollection<ComponentResponse>> result =
@@ -38,8 +37,7 @@ public sealed class GetComponentsByProjectHandlerTests
         User other = ComponentQueryData.GetOtherUser();
         Project project = ComponentQueryData.GetProjectWithComponents(admin, "Billing");
         _userContext.UserId.Returns(other.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects, project);
 
         // Act
         Result<IReadOnlyCollection<ComponentResponse>> result =
@@ -57,10 +55,8 @@ public sealed class GetComponentsByProjectHandlerTests
         User admin = ComponentQueryData.GetAdminUser();
         Project project = ComponentQueryData.GetProject(admin);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Component>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Components);
 
         // Act
         Result<IReadOnlyCollection<ComponentResponse>> result =
@@ -79,10 +75,8 @@ public sealed class GetComponentsByProjectHandlerTests
         Project project = ComponentQueryData.GetProjectWithComponents(admin, "Billing");
         Component component = project.Components.Single();
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(project.Components);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Components, project.Components);
 
         // Act
         Result<IReadOnlyCollection<ComponentResponse>> result =
@@ -107,10 +101,8 @@ public sealed class GetComponentsByProjectHandlerTests
         Component component = project.Components.Single();
         component.Retire(admin, 0, ComponentQueryData.UtcNow);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(project.Components);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Components, project.Components);
 
         // Act
         Result<IReadOnlyCollection<ComponentResponse>> result =
@@ -128,10 +120,8 @@ public sealed class GetComponentsByProjectHandlerTests
         User admin = ComponentQueryData.GetAdminUser();
         Project project = ComponentQueryData.GetProjectWithComponents(admin, "Portal", "Api", "Billing");
         _userContext.UserId.Returns(admin.Id);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet(project.Components);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Components.Returns(componentsMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Components, project.Components);
 
         // Act
         Result<IReadOnlyCollection<ComponentResponse>> result =

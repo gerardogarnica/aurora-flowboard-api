@@ -24,10 +24,8 @@ public sealed class AssignWorkItemHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([assignee, admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, assignee, admin);
 
         AssignWorkItemCommand command = new(workItem.Id, assignee.Id);
 
@@ -47,10 +45,8 @@ public sealed class AssignWorkItemHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([assignee, admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, assignee, admin);
 
         AssignWorkItemCommand command = new(workItem.Id, assignee.Id);
 
@@ -65,8 +61,7 @@ public sealed class AssignWorkItemHandlerTests
     public async Task Should_ReturnWorkItemNotFoundError_When_WorkItemDoesNotExist()
     {
         // Arrange
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
-        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Seed(c => c.WorkItems);
 
         AssignWorkItemCommand command = new(Guid.NewGuid(), Guid.NewGuid());
 
@@ -82,8 +77,7 @@ public sealed class AssignWorkItemHandlerTests
     public async Task Should_NotPersist_When_WorkItemDoesNotExist()
     {
         // Arrange
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
-        _dbContext.WorkItems.Returns(workItemsMock);
+        _dbContext.Seed(c => c.WorkItems);
 
         AssignWorkItemCommand command = new(Guid.NewGuid(), Guid.NewGuid());
 
@@ -102,10 +96,8 @@ public sealed class AssignWorkItemHandlerTests
         WorkItem workItem = WorkItemCommandData.GetWorkItem(admin);
         _userContext.UserId.Returns(admin.Id);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, admin);
 
         AssignWorkItemCommand command = new(workItem.Id, Guid.NewGuid());
 
@@ -125,10 +117,8 @@ public sealed class AssignWorkItemHandlerTests
         WorkItem workItem = WorkItemCommandData.GetWorkItem(admin);
         _userContext.UserId.Returns(admin.Id);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, admin);
 
         AssignWorkItemCommand command = new(workItem.Id, Guid.NewGuid());
 
@@ -147,10 +137,8 @@ public sealed class AssignWorkItemHandlerTests
         (WorkItem workItem, User assignee) = WorkItemCommandData.GetWorkItemForAssign(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([assignee]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, assignee);
 
         AssignWorkItemCommand command = new(workItem.Id, assignee.Id);
 
@@ -170,10 +158,8 @@ public sealed class AssignWorkItemHandlerTests
         (WorkItem workItem, User assignee) = WorkItemCommandData.GetWorkItemForAssign(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([assignee]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, assignee);
 
         AssignWorkItemCommand command = new(workItem.Id, assignee.Id);
 
@@ -192,10 +178,8 @@ public sealed class AssignWorkItemHandlerTests
         WorkItem workItem = WorkItemCommandData.GetWorkItem(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users);
 
         AssignWorkItemCommand command = new(workItem.Id, Guid.NewGuid());
 
@@ -217,10 +201,8 @@ public sealed class AssignWorkItemHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonMember, admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, nonMember, admin);
 
         AssignWorkItemCommand command = new(workItem.Id, nonMember.Id);
 
@@ -242,10 +224,8 @@ public sealed class AssignWorkItemHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonMember, admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, nonMember, admin);
 
         AssignWorkItemCommand command = new(workItem.Id, nonMember.Id);
 

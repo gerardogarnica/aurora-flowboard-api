@@ -15,8 +15,7 @@ public sealed class CurrentUserExtensionsTests
         User member = ProjectCommandData.GetMember();
         _userContext.UserId.Returns(member.Id);
 
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin, member]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, admin, member);
 
         // Act
         Result<User> result = await _dbContext.GetCurrentUserAsync(_userContext, CancellationToken.None);
@@ -33,8 +32,7 @@ public sealed class CurrentUserExtensionsTests
         User admin = ProjectCommandData.GetAdmin();
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, admin);
 
         // Act
         Result<User> result = await _dbContext.GetCurrentUserAsync(_userContext, CancellationToken.None);

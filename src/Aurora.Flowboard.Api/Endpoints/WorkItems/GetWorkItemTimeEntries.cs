@@ -26,8 +26,8 @@ public sealed class GetWorkItemTimeEntries : IBaseEndpoint
             .WithName("GetWorkItemTimeEntries")
             .WithTags(EndpointTags.WorkItems)
             .Produces<PagedResponse<WorkItemTimeEntryResponse>>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
-            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
-            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+            .ProducesStandardProblems(
+                StatusCodes.Status400BadRequest,
+                StatusCodes.Status404NotFound);
     }
 }

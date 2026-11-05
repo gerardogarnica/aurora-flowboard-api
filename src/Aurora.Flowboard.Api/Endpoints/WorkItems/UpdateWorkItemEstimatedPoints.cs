@@ -18,18 +18,17 @@ public sealed class UpdateWorkItemEstimatedPoints : IBaseEndpoint
 
                 Result result = await handler.Handle(command, cancellationToken);
 
-                return result.Match(
-                    () => Results.Accepted(string.Empty),
-                    ApiResponses.Problem);
+                return result.Match(ApiResponses.Accepted, ApiResponses.Problem);
             })
             .RequireAuthorization()
             .WithName("UpdateWorkItemEstimatedPoints")
             .WithTags(EndpointTags.WorkItems)
             .Produces(StatusCodes.Status202Accepted)
-            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
-            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
-            .Produces<ProblemDetails>(StatusCodes.Status409Conflict)
-            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+            .ProducesStandardProblems(
+                StatusCodes.Status400BadRequest,
+                StatusCodes.Status403Forbidden,
+                StatusCodes.Status404NotFound,
+                StatusCodes.Status409Conflict);
     }
 
     internal sealed record UpdateWorkItemEstimatedPointsRequest(int? EstimatedPoints);

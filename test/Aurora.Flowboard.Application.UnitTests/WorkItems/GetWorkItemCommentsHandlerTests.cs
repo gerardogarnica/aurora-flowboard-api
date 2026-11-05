@@ -26,12 +26,9 @@ public sealed class GetWorkItemCommentsHandlerTests
         User admin = WorkItemQueryData.GetAdminUser();
         (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithComment(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<Comment> commentsMock = MockDbSetHelper.CreateMockDbSet(workItem.Comments);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Comments.Returns(commentsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Comments, workItem.Comments);
+        _dbContext.Seed(c => c.Users, admin);
 
         // Act
         Result<PagedResponse<WorkItemCommentResponse>> result =
@@ -47,12 +44,9 @@ public sealed class GetWorkItemCommentsHandlerTests
     {
         // Arrange
         _userContext.UserId.Returns(Guid.NewGuid());
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<WorkItem>());
-        DbSet<Comment> commentsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Comment>());
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Comments.Returns(commentsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems);
+        _dbContext.Seed(c => c.Comments);
+        _dbContext.Seed(c => c.Users);
 
         // Act
         Result<PagedResponse<WorkItemCommentResponse>> result =
@@ -70,12 +64,9 @@ public sealed class GetWorkItemCommentsHandlerTests
         User admin = WorkItemQueryData.GetAdminUser();
         (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithComment(admin);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<Comment> commentsMock = MockDbSetHelper.CreateMockDbSet(workItem.Comments);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Comments.Returns(commentsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Comments, workItem.Comments);
+        _dbContext.Seed(c => c.Users, admin);
 
         // Act
         Result<PagedResponse<WorkItemCommentResponse>> result =
@@ -97,12 +88,9 @@ public sealed class GetWorkItemCommentsHandlerTests
         User admin = WorkItemQueryData.GetAdminUser();
         (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithComment(admin);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<Comment> commentsMock = MockDbSetHelper.CreateMockDbSet(workItem.Comments);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Comments.Returns(commentsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Comments, workItem.Comments);
+        _dbContext.Seed(c => c.Users);
 
         // Act
         Result<PagedResponse<WorkItemCommentResponse>> result =
@@ -120,12 +108,9 @@ public sealed class GetWorkItemCommentsHandlerTests
         User admin = WorkItemQueryData.GetAdminUser();
         (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithComment(admin);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<Comment> commentsMock = MockDbSetHelper.CreateMockDbSet(workItem.Comments);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Comments.Returns(commentsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Comments, workItem.Comments);
+        _dbContext.Seed(c => c.Users, admin);
 
         // Act
         Result<PagedResponse<WorkItemCommentResponse>> result =
@@ -144,12 +129,9 @@ public sealed class GetWorkItemCommentsHandlerTests
         User admin = WorkItemQueryData.GetAdminUser();
         (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithComment(admin);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<Comment> commentsMock = MockDbSetHelper.CreateMockDbSet(workItem.Comments);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Comments.Returns(commentsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Comments, workItem.Comments);
+        _dbContext.Seed(c => c.Users, admin);
 
         // Act
         Result<PagedResponse<WorkItemCommentResponse>> result = await _handler.Handle(
@@ -171,12 +153,9 @@ public sealed class GetWorkItemCommentsHandlerTests
         Guid commentId = workItem.Comments.Single().Id;
         workItem.RemoveComment(commentId, admin, WorkItemQueryData.UtcNow);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<Comment> commentsMock = MockDbSetHelper.CreateMockDbSet(workItem.Comments);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Comments.Returns(commentsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Comments, workItem.Comments);
+        _dbContext.Seed(c => c.Users, admin);
 
         // Act
         Result<PagedResponse<WorkItemCommentResponse>> result =
@@ -195,12 +174,9 @@ public sealed class GetWorkItemCommentsHandlerTests
         User admin = WorkItemQueryData.GetAdminUser();
         (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithThreeComments(admin);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<Comment> commentsMock = MockDbSetHelper.CreateMockDbSet(workItem.Comments);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Comments.Returns(commentsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Comments, workItem.Comments);
+        _dbContext.Seed(c => c.Users, admin);
 
         // Act
         Result<PagedResponse<WorkItemCommentResponse>> firstPage =
@@ -225,12 +201,9 @@ public sealed class GetWorkItemCommentsHandlerTests
         workItem.AddComment(admin, "oldest", WorkItemQueryData.UtcNow);
         workItem.AddComment(admin, "newest", WorkItemQueryData.UtcNow.AddHours(1));
         _userContext.UserId.Returns(admin.Id);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<Comment> commentsMock = MockDbSetHelper.CreateMockDbSet(workItem.Comments);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Comments.Returns(commentsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Comments, workItem.Comments);
+        _dbContext.Seed(c => c.Users, admin);
 
         // Act
         Result<PagedResponse<WorkItemCommentResponse>> result =

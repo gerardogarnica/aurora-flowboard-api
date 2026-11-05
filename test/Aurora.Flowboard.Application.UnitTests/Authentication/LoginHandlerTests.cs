@@ -36,8 +36,7 @@ public sealed class LoginHandlerTests
     {
         // Arrange
         User user = CreateUser();
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, user);
 
         _passwordHasher.VerifyHashedPassword(HashedPassword, PlainPassword).Returns(true);
 
@@ -62,8 +61,7 @@ public sealed class LoginHandlerTests
     public async Task Should_ReturnInvalidCredentials_When_EmailIsUnknown()
     {
         // Arrange
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users);
 
         var command = new LoginCommand("missing@example.com", PlainPassword);
 
@@ -81,8 +79,7 @@ public sealed class LoginHandlerTests
     {
         // Arrange
         User user = CreateUser();
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, user);
         _passwordHasher.VerifyHashedPassword(HashedPassword, Arg.Any<string>()).Returns(false);
 
         var command = new LoginCommand("john.doe@example.com", "wrong-password");
@@ -101,8 +98,7 @@ public sealed class LoginHandlerTests
     {
         // Arrange
         User user = CreateUser();
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, user);
         _passwordHasher.VerifyHashedPassword(HashedPassword, Arg.Any<string>()).Returns(false);
 
         var command = new LoginCommand("john.doe@example.com", "wrong-password");
@@ -120,8 +116,7 @@ public sealed class LoginHandlerTests
         // Arrange
         User user = CreateUser();
         user.Deactivate(UtcNow);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, user);
 
         var command = new LoginCommand("john.doe@example.com", PlainPassword);
 
@@ -138,8 +133,7 @@ public sealed class LoginHandlerTests
     public async Task Should_RunDummyHashVerification_When_EmailIsUnknown()
     {
         // Arrange — equalizes response time vs. wrong-password case to mitigate account enumeration.
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users);
 
         var command = new LoginCommand("missing@example.com", PlainPassword);
 
@@ -172,8 +166,7 @@ public sealed class LoginHandlerTests
         User user = CreateUser();
         user.AssignRole(Role.Administrator);
         user.AssignRole(Role.Member);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, user);
 
         _passwordHasher.VerifyHashedPassword(HashedPassword, PlainPassword).Returns(true);
         _tokenProvider.CreateToken(Arg.Any<TokenRequest>()).Returns(CreateIssuedToken());

@@ -22,6 +22,6 @@ public sealed class GetProjects : IBaseEndpoint
             .WithName("GetProjects")
             .WithTags(EndpointTags.Projects)
             .Produces<IReadOnlyCollection<ProjectSummaryResponse>>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+            .ProducesStandardProblems();
     }
 }

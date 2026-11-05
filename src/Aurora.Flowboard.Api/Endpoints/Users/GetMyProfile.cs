@@ -24,7 +24,7 @@ public sealed class GetMyProfile : IBaseEndpoint
             .WithName("GetMyProfile")
             .WithTags(EndpointTags.Users)
             .Produces<UserProfileResponse>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
-            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+            .ProducesStandardProblems(
+                StatusCodes.Status404NotFound);
     }
 }

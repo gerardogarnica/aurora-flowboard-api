@@ -25,10 +25,8 @@ public sealed class AddProjectMemberHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin, newUser]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin, newUser);
 
         AddProjectMemberCommand command = ProjectCommandData.GetAddMemberCommand(project.Id, newUser.Id);
 
@@ -49,10 +47,8 @@ public sealed class AddProjectMemberHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin, newUser]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin, newUser);
 
         AddProjectMemberCommand command = ProjectCommandData.GetAddMemberCommand(project.Id, newUser.Id);
 
@@ -67,8 +63,7 @@ public sealed class AddProjectMemberHandlerTests
     public async Task Should_ReturnProjectNotFoundError_When_ProjectDoesNotExist()
     {
         // Arrange
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects);
 
         AddProjectMemberCommand command = ProjectCommandData.GetAddMemberCommand(Guid.NewGuid(), Guid.NewGuid());
 
@@ -84,8 +79,7 @@ public sealed class AddProjectMemberHandlerTests
     public async Task Should_NotPersist_When_ProjectDoesNotExist()
     {
         // Arrange
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects);
 
         AddProjectMemberCommand command = ProjectCommandData.GetAddMemberCommand(Guid.NewGuid(), Guid.NewGuid());
 
@@ -104,10 +98,8 @@ public sealed class AddProjectMemberHandlerTests
         Project project = ProjectCommandData.GetProject(admin);
         _userContext.UserId.Returns(admin.Id);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
 
         AddProjectMemberCommand command = ProjectCommandData.GetAddMemberCommand(project.Id, Guid.NewGuid());
 
@@ -127,10 +119,8 @@ public sealed class AddProjectMemberHandlerTests
         Project project = ProjectCommandData.GetProject(admin);
         _userContext.UserId.Returns(admin.Id);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
 
         AddProjectMemberCommand command = ProjectCommandData.GetAddMemberCommand(project.Id, Guid.NewGuid());
 
@@ -150,10 +140,8 @@ public sealed class AddProjectMemberHandlerTests
         Project project = ProjectCommandData.GetProject(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([newUser]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, newUser);
 
         AddProjectMemberCommand command = ProjectCommandData.GetAddMemberCommand(project.Id, newUser.Id);
 
@@ -174,10 +162,8 @@ public sealed class AddProjectMemberHandlerTests
         Project project = ProjectCommandData.GetProject(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([newUser]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, newUser);
 
         AddProjectMemberCommand command = ProjectCommandData.GetAddMemberCommand(project.Id, newUser.Id);
 
@@ -199,10 +185,8 @@ public sealed class AddProjectMemberHandlerTests
         _userContext.UserId.Returns(nonAdmin.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonAdmin, newUser]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, nonAdmin, newUser);
 
         AddProjectMemberCommand command = ProjectCommandData.GetAddMemberCommand(project.Id, newUser.Id);
 
@@ -225,10 +209,8 @@ public sealed class AddProjectMemberHandlerTests
         _userContext.UserId.Returns(nonAdmin.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonAdmin, newUser]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, nonAdmin, newUser);
 
         AddProjectMemberCommand command = ProjectCommandData.GetAddMemberCommand(project.Id, newUser.Id);
 

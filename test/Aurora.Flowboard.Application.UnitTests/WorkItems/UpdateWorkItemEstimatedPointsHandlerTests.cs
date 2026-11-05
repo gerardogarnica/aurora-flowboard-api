@@ -26,10 +26,8 @@ public sealed class UpdateWorkItemEstimatedPointsHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, admin);
 
         UpdateWorkItemEstimatedPointsCommand command = new(workItem.Id, NewPoints);
 
@@ -51,10 +49,8 @@ public sealed class UpdateWorkItemEstimatedPointsHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, admin);
 
         UpdateWorkItemEstimatedPointsCommand command = new(workItem.Id, 0);
 
@@ -77,10 +73,8 @@ public sealed class UpdateWorkItemEstimatedPointsHandlerTests
         _userContext.UserId.Returns(nonMember.Id);
         _dateTimeProvider.UtcNow.Returns(WorkItemCommandData.UtcNow);
 
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonMember]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, nonMember);
 
         UpdateWorkItemEstimatedPointsCommand command = new(workItem.Id, NewPoints);
 
