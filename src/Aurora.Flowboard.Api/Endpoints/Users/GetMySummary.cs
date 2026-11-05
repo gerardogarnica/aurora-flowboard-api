@@ -24,7 +24,7 @@ public sealed class GetMySummary : IBaseEndpoint
             .WithName("GetMySummary")
             .WithTags(EndpointTags.Users)
             .Produces<MySummaryResponse>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status404NotFound)
-            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+            .ProducesStandardProblems(
+                StatusCodes.Status404NotFound);
     }
 }

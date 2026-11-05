@@ -24,9 +24,9 @@ public sealed class RefreshToken : IBaseEndpoint
             .WithName("RefreshToken")
             .WithTags(EndpointTags.Authentication)
             .Produces<IdentityToken>(StatusCodes.Status200OK)
-            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
-            .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
-            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+            .ProducesStandardProblems(
+                StatusCodes.Status400BadRequest,
+                StatusCodes.Status401Unauthorized);
     }
 
     internal sealed record RefreshTokenRequest(string RefreshToken);

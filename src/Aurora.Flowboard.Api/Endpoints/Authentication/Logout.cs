@@ -23,8 +23,8 @@ public sealed class Logout : IBaseEndpoint
             .WithName("Logout")
             .WithTags(EndpointTags.Authentication)
             .Produces(StatusCodes.Status204NoContent)
-            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
-            .Produces<ProblemDetails>(StatusCodes.Status500InternalServerError);
+            .ProducesStandardProblems(
+                StatusCodes.Status400BadRequest);
     }
 
     internal sealed record LogoutRequest(string RefreshToken);
