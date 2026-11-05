@@ -24,10 +24,8 @@ public sealed class ChangeProjectKindHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
 
         ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(project.Id);
 
@@ -47,10 +45,8 @@ public sealed class ChangeProjectKindHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
 
         ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(project.Id);
 
@@ -65,8 +61,7 @@ public sealed class ChangeProjectKindHandlerTests
     public async Task Should_ReturnProjectNotFoundError_When_ProjectDoesNotExist()
     {
         // Arrange
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects);
 
         ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(Guid.NewGuid());
 
@@ -82,8 +77,7 @@ public sealed class ChangeProjectKindHandlerTests
     public async Task Should_NotPersist_When_ProjectDoesNotExist()
     {
         // Arrange
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Projects);
 
         ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(Guid.NewGuid());
 
@@ -102,10 +96,8 @@ public sealed class ChangeProjectKindHandlerTests
         Project project = ProjectCommandData.GetProject(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users);
 
         ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(project.Id);
 
@@ -125,10 +117,8 @@ public sealed class ChangeProjectKindHandlerTests
         Project project = ProjectCommandData.GetProject(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users);
 
         ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(project.Id);
 
@@ -149,10 +139,8 @@ public sealed class ChangeProjectKindHandlerTests
         _userContext.UserId.Returns(nonAdmin.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonAdmin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, nonAdmin);
 
         ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(project.Id);
 
@@ -174,10 +162,8 @@ public sealed class ChangeProjectKindHandlerTests
         _userContext.UserId.Returns(nonAdmin.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([nonAdmin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, nonAdmin);
 
         ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(project.Id);
 
@@ -197,10 +183,8 @@ public sealed class ChangeProjectKindHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
 
         var command = new ChangeProjectKindCommand(project.Id, ProjectCommandData.Kind);
 
@@ -221,10 +205,8 @@ public sealed class ChangeProjectKindHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
 
         var command = new ChangeProjectKindCommand(project.Id, ProjectCommandData.Kind);
 
@@ -244,10 +226,8 @@ public sealed class ChangeProjectKindHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
 
         ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(project.Id);
 
@@ -268,10 +248,8 @@ public sealed class ChangeProjectKindHandlerTests
         _userContext.UserId.Returns(admin.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([project]);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.Projects.Returns(projectsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
 
         ChangeProjectKindCommand command = ProjectCommandData.GetChangeKindCommand(project.Id);
 

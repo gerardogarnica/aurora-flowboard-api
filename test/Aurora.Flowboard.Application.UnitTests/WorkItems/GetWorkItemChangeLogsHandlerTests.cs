@@ -26,12 +26,9 @@ public sealed class GetWorkItemChangeLogsHandlerTests
         User admin = WorkItemQueryData.GetAdminUser();
         (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItem(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<WorkItemChangeLog> changeLogsMock = MockDbSetHelper.CreateMockDbSet(workItem.ChangeLogs);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.WorkItemChangeLogs.Returns(changeLogsMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.WorkItemChangeLogs, workItem.ChangeLogs);
+        _dbContext.Seed(c => c.Users, admin);
 
         // Act
         Result<PagedResponse<WorkItemChangeLogResponse>> result =
@@ -49,14 +46,10 @@ public sealed class GetWorkItemChangeLogsHandlerTests
         User admin = WorkItemQueryData.GetAdminUser();
         (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItem(admin);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<WorkItemChangeLog> changeLogsMock = MockDbSetHelper.CreateMockDbSet(workItem.ChangeLogs);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowStates);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.WorkItemChangeLogs.Returns(changeLogsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.FlowStates.Returns(statesMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.WorkItemChangeLogs, workItem.ChangeLogs);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.FlowStates, workItem.Project.FlowStates);
 
         // Act
         Result<PagedResponse<WorkItemChangeLogResponse>> result =
@@ -78,18 +71,12 @@ public sealed class GetWorkItemChangeLogsHandlerTests
         (Project _, WorkItem workItem, Component component, Milestone milestone) =
             WorkItemQueryData.GetProjectAndWorkItemWithAllChangeLogTypes(admin, assignee);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<WorkItemChangeLog> changeLogsMock = MockDbSetHelper.CreateMockDbSet(workItem.ChangeLogs);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin, assignee]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowStates);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.WorkItemChangeLogs.Returns(changeLogsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.FlowStates.Returns(statesMock);
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.WorkItemChangeLogs, workItem.ChangeLogs);
+        _dbContext.Seed(c => c.Users, admin, assignee);
+        _dbContext.Seed(c => c.FlowStates, workItem.Project.FlowStates);
+        _dbContext.Seed(c => c.Components, component);
+        _dbContext.Seed(c => c.Milestones, milestone);
 
         // Act
         Result<PagedResponse<WorkItemChangeLogResponse>> result =
@@ -113,18 +100,12 @@ public sealed class GetWorkItemChangeLogsHandlerTests
         (Project _, WorkItem workItem, Component component, Milestone milestone) =
             WorkItemQueryData.GetProjectAndWorkItemWithAllChangeLogTypes(admin, assignee);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<WorkItemChangeLog> changeLogsMock = MockDbSetHelper.CreateMockDbSet(workItem.ChangeLogs);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin, assignee]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowStates);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.WorkItemChangeLogs.Returns(changeLogsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.FlowStates.Returns(statesMock);
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.WorkItemChangeLogs, workItem.ChangeLogs);
+        _dbContext.Seed(c => c.Users, admin, assignee);
+        _dbContext.Seed(c => c.FlowStates, workItem.Project.FlowStates);
+        _dbContext.Seed(c => c.Components, component);
+        _dbContext.Seed(c => c.Milestones, milestone);
 
         // Act
         Result<PagedResponse<WorkItemChangeLogResponse>> result =
@@ -147,18 +128,12 @@ public sealed class GetWorkItemChangeLogsHandlerTests
         (Project _, WorkItem workItem, Component component, Milestone milestone) =
             WorkItemQueryData.GetProjectAndWorkItemWithAllChangeLogTypes(admin, assignee);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<WorkItemChangeLog> changeLogsMock = MockDbSetHelper.CreateMockDbSet(workItem.ChangeLogs);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin, assignee]);
-        DbSet<FlowState> statesMock = MockDbSetHelper.CreateMockDbSet(workItem.Project.FlowStates);
-        DbSet<Component> componentsMock = MockDbSetHelper.CreateMockDbSet([component]);
-        DbSet<Milestone> milestonesMock = MockDbSetHelper.CreateMockDbSet([milestone]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.WorkItemChangeLogs.Returns(changeLogsMock);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.FlowStates.Returns(statesMock);
-        _dbContext.Components.Returns(componentsMock);
-        _dbContext.Milestones.Returns(milestonesMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.WorkItemChangeLogs, workItem.ChangeLogs);
+        _dbContext.Seed(c => c.Users, admin, assignee);
+        _dbContext.Seed(c => c.FlowStates, workItem.Project.FlowStates);
+        _dbContext.Seed(c => c.Components, component);
+        _dbContext.Seed(c => c.Milestones, milestone);
 
         // Act
         Result<PagedResponse<WorkItemChangeLogResponse>> firstPage =

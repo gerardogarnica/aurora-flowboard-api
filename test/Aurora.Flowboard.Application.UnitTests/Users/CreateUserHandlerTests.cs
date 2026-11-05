@@ -22,8 +22,7 @@ public sealed class CreateUserHandlerTests
             .HashPassword(CreateUserCommandData.PlainPassword)
             .Returns(CreateUserCommandData.PasswordHash);
 
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users);
     }
 
     [Fact]
@@ -108,8 +107,7 @@ public sealed class CreateUserHandlerTests
     {
         // Arrange
         User existing = CreateUserCommandData.GetExistingUser();
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([existing]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, existing);
 
         CreateUserCommand command = CreateUserCommandData.GetCreateCommand();
 

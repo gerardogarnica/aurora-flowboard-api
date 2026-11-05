@@ -37,7 +37,7 @@ public sealed class RefreshTokenHandlerTests
         // Arrange — the stored token only holds the hash, so a match proves the handler hashed the input.
         User user = CreateUser();
         UserToken oldToken = IssueValidToken(user);
-        SetupUsers(user);
+        _dbContext.Seed(c => c.Users, user);
 
         IssuedToken issued = CreateIssuedToken();
         _tokenProvider.CreateToken(Arg.Any<TokenRequest>()).Returns(issued);
@@ -62,7 +62,7 @@ public sealed class RefreshTokenHandlerTests
         // Arrange — the user has a token, but not the presented one.
         User user = CreateUser();
         user.IssueToken("other-access-token-id", "other-refresh-token-hash", UtcNow.AddMinutes(60), UtcNow.AddDays(7), UtcNow);
-        SetupUsers(user);
+        _dbContext.Seed(c => c.Users, user);
 
         // Act
         Result<IdentityToken> result = await _handler.Handle(new RefreshTokenCommand(PresentedRefreshToken), CancellationToken.None);
@@ -81,7 +81,7 @@ public sealed class RefreshTokenHandlerTests
         User user = CreateUser();
         UserToken oldToken = IssueValidToken(user);
         user.RevokeToken(oldToken.UserTokenId);
-        SetupUsers(user);
+        _dbContext.Seed(c => c.Users, user);
 
         // Act
         Result<IdentityToken> result = await _handler.Handle(new RefreshTokenCommand(PresentedRefreshToken), CancellationToken.None);
@@ -104,7 +104,7 @@ public sealed class RefreshTokenHandlerTests
             UtcNow.AddDays(-9),
             UtcNow.AddDays(-3),
             UtcNow.AddDays(-10));
-        SetupUsers(user);
+        _dbContext.Seed(c => c.Users, user);
 
         // Act
         Result<IdentityToken> result = await _handler.Handle(new RefreshTokenCommand(PresentedRefreshToken), CancellationToken.None);
@@ -122,7 +122,7 @@ public sealed class RefreshTokenHandlerTests
         User user = CreateUser();
         IssueValidToken(user);
         user.Deactivate(UtcNow);
-        SetupUsers(user);
+        _dbContext.Seed(c => c.Users, user);
 
         // Act
         Result<IdentityToken> result = await _handler.Handle(new RefreshTokenCommand(PresentedRefreshToken), CancellationToken.None);
@@ -139,7 +139,7 @@ public sealed class RefreshTokenHandlerTests
         // Arrange — another request revoked the same row first, so the xmin check fails on save.
         User user = CreateUser();
         IssueValidToken(user);
-        SetupUsers(user);
+        _dbContext.Seed(c => c.Users, user);
         _tokenProvider.CreateToken(Arg.Any<TokenRequest>()).Returns(CreateIssuedToken());
         _dbContext.SaveChangesAsync(Arg.Any<CancellationToken>())
             .ThrowsAsync(new DbUpdateConcurrencyException("user_tokens row changed"));
@@ -158,7 +158,7 @@ public sealed class RefreshTokenHandlerTests
         // Arrange — CreateToken returns an access token that already expires at issuance time.
         User user = CreateUser();
         IssueValidToken(user);
-        SetupUsers(user);
+        _dbContext.Seed(c => c.Users, user);
         _tokenProvider.CreateToken(Arg.Any<TokenRequest>()).Returns(CreateIssuedToken(accessTokenExpiresOnUtc: UtcNow));
 
         // Act
@@ -177,7 +177,7 @@ public sealed class RefreshTokenHandlerTests
         User user = CreateUser();
         user.AssignRole(Role.Administrator);
         IssueValidToken(user);
-        SetupUsers(user);
+        _dbContext.Seed(c => c.Users, user);
         _tokenProvider.CreateToken(Arg.Any<TokenRequest>()).Returns(CreateIssuedToken());
 
         // Act
@@ -188,12 +188,6 @@ public sealed class RefreshTokenHandlerTests
             r.UserId == user.Id &&
             r.Email == user.Email.Value &&
             r.Roles.Contains(Role.Administrator.Name)));
-    }
-
-    private void SetupUsers(params User[] users)
-    {
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(users);
-        _dbContext.Users.Returns(usersMock);
     }
 
     private static User CreateUser()

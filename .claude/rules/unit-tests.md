@@ -7,20 +7,21 @@ paths:
 # Unit test conventions
 
 - **Domain tests** assert entity behavior and domain events. Use `BaseTest` helpers. Pattern: `*Data.cs` builders + `*Tests.cs` xUnit facts. Stack: xUnit **v3** + FluentAssertions.
-- **Application tests** test CQRS handler logic with NSubstitute mocks and `MockDbSetHelper`. Stack: xUnit **v3** + NSubstitute + FluentAssertions.
+- **Application tests** test CQRS handler logic with NSubstitute mocks, seeding `DbSet`s with `_dbContext.Seed(...)` (built on `MockDbSetHelper`). Stack: xUnit **v3** + NSubstitute + FluentAssertions.
 
-## Assign mock `DbSet`s to a local before `Returns(...)`
+## Seed mock `DbSet`s with `_dbContext.Seed(...)`
 
-`MockDbSetHelper.CreateMockDbSet(...)` builds a substitute internally, and NSubstitute throws `CouldNotSetReturnDueToNoLastCallException` if you nest it inside `Returns(...)`.
+Arrange a handler's data with `DbContextSeedExtensions.Seed` (`Abstractions/`), one line per `DbSet`. It accepts items, an existing collection, or nothing (an empty set), and returns the mock set for the rare test that asserts on it (`projectsMock.Received(1).Add(...)`).
 
 ```csharp
-// Correct
-DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-_dbContext.Users.Returns(usersMock);
-
-// Throws
-_dbContext.Users.Returns(MockDbSetHelper.CreateMockDbSet([user]));
+_dbContext.Seed(c => c.WorkItems, workItem);
+_dbContext.Seed(c => c.Users, assignee, admin);
+_dbContext.Seed(c => c.Projects);   // empty
 ```
+
+Don't go back to calling `MockDbSetHelper.CreateMockDbSet` in a test. It builds a substitute internally, and NSubstitute throws `CouldNotSetReturnDueToNoLastCallException` when it is nested inside `Returns(...)` (`_dbContext.Users.Returns(MockDbSetHelper.CreateMockDbSet([user]))`). `Seed` creates the set before touching the context property, so the trap is handled in one place.
+
+Per-aggregate fixtures that hide what each `DbSet` holds were considered and rejected: each test should still say what data its scenario has.
 
 ## Paginated handlers must be tested across a page boundary
 

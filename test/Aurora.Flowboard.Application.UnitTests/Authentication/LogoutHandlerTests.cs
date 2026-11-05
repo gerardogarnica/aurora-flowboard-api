@@ -32,7 +32,7 @@ public sealed class LogoutHandlerTests
         // Arrange
         User user = CreateUser();
         UserToken token = IssueToken(user);
-        SetupUsers(user);
+        _dbContext.Seed(c => c.Users, user);
         _userContext.UserId.Returns(user.Id);
 
         // Act
@@ -50,7 +50,7 @@ public sealed class LogoutHandlerTests
         // Arrange
         User user = CreateUser();
         user.IssueToken("other-access-token-id", "other-refresh-token-hash", UtcNow.AddMinutes(60), UtcNow.AddDays(7), UtcNow);
-        SetupUsers(user);
+        _dbContext.Seed(c => c.Users, user);
         _userContext.UserId.Returns(user.Id);
 
         // Act
@@ -67,7 +67,7 @@ public sealed class LogoutHandlerTests
         // Arrange
         User user = CreateUser();
         UserToken token = IssueToken(user);
-        SetupUsers(user);
+        _dbContext.Seed(c => c.Users, user);
         _userContext.UserId.Returns(Guid.NewGuid());
 
         // Act
@@ -86,7 +86,7 @@ public sealed class LogoutHandlerTests
         User user = CreateUser();
         UserToken token = IssueToken(user);
         user.RevokeToken(token.UserTokenId);
-        SetupUsers(user);
+        _dbContext.Seed(c => c.Users, user);
         _userContext.UserId.Returns(user.Id);
 
         // Act
@@ -105,7 +105,7 @@ public sealed class LogoutHandlerTests
         User user = CreateUser();
         UserToken token = IssueToken(user);
         user.Deactivate(UtcNow);
-        SetupUsers(user);
+        _dbContext.Seed(c => c.Users, user);
         _userContext.UserId.Returns(user.Id);
 
         // Act
@@ -122,7 +122,7 @@ public sealed class LogoutHandlerTests
         // Arrange — a concurrent refresh or logout changed the row first; the session is closed either way.
         User user = CreateUser();
         IssueToken(user);
-        SetupUsers(user);
+        _dbContext.Seed(c => c.Users, user);
         _userContext.UserId.Returns(user.Id);
         _dbContext.SaveChangesAsync(Arg.Any<CancellationToken>())
             .ThrowsAsync(new DbUpdateConcurrencyException("user_tokens row changed"));
@@ -132,12 +132,6 @@ public sealed class LogoutHandlerTests
 
         // Assert
         result.IsSuccessful.Should().BeTrue();
-    }
-
-    private void SetupUsers(params User[] users)
-    {
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(users);
-        _dbContext.Users.Returns(usersMock);
     }
 
     private static User CreateUser()

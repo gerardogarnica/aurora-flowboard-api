@@ -17,8 +17,7 @@ public sealed class GetAllUsersHandlerTests
     public async Task Should_ReturnEmptyCollection_When_NoUsersExist()
     {
         // Arrange
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users);
 
         // Act
         Result<IReadOnlyCollection<UserSummaryResponse>> result =
@@ -37,8 +36,7 @@ public sealed class GetAllUsersHandlerTests
         first.AssignRole(Role.Member);
         User second = CreateUserCommandData.GetExistingUser("second@example.com");
         second.AssignRole(Role.Member);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([first, second]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, first, second);
 
         // Act
         Result<IReadOnlyCollection<UserSummaryResponse>> result =
@@ -55,8 +53,7 @@ public sealed class GetAllUsersHandlerTests
         // Arrange
         User user = CreateUserCommandData.GetExistingUser();
         user.AssignRole(Role.Member);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users, user);
 
         // Act
         Result<IReadOnlyCollection<UserSummaryResponse>> result =

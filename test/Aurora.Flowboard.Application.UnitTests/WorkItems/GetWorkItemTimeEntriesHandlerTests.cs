@@ -26,12 +26,9 @@ public sealed class GetWorkItemTimeEntriesHandlerTests
         User admin = WorkItemQueryData.GetAdminUser();
         (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithTimeEntry(admin);
         _userContext.UserId.Returns(Guid.NewGuid());
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<TimeEntry> timeEntriesMock = MockDbSetHelper.CreateMockDbSet(workItem.TimeEntries);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.TimeEntries.Returns(timeEntriesMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.TimeEntries, workItem.TimeEntries);
+        _dbContext.Seed(c => c.Users, admin);
 
         // Act
         Result<PagedResponse<WorkItemTimeEntryResponse>> result =
@@ -49,12 +46,9 @@ public sealed class GetWorkItemTimeEntriesHandlerTests
         User admin = WorkItemQueryData.GetAdminUser();
         (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithTimeEntry(admin);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<TimeEntry> timeEntriesMock = MockDbSetHelper.CreateMockDbSet(workItem.TimeEntries);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.TimeEntries.Returns(timeEntriesMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.TimeEntries, workItem.TimeEntries);
+        _dbContext.Seed(c => c.Users, admin);
 
         // Act
         Result<PagedResponse<WorkItemTimeEntryResponse>> result =
@@ -75,12 +69,9 @@ public sealed class GetWorkItemTimeEntriesHandlerTests
         User admin = WorkItemQueryData.GetAdminUser();
         (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithThreeTimeEntries(admin);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<TimeEntry> timeEntriesMock = MockDbSetHelper.CreateMockDbSet(workItem.TimeEntries);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.TimeEntries.Returns(timeEntriesMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.TimeEntries, workItem.TimeEntries);
+        _dbContext.Seed(c => c.Users, admin);
 
         // Act
         Result<PagedResponse<WorkItemTimeEntryResponse>> firstPage =
@@ -102,12 +93,9 @@ public sealed class GetWorkItemTimeEntriesHandlerTests
         User admin = WorkItemQueryData.GetAdminUser();
         (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItem(admin);
         _userContext.UserId.Returns(admin.Id);
-        DbSet<WorkItem> workItemsMock = MockDbSetHelper.CreateMockDbSet([workItem]);
-        DbSet<TimeEntry> timeEntriesMock = MockDbSetHelper.CreateMockDbSet(workItem.TimeEntries);
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([admin]);
-        _dbContext.WorkItems.Returns(workItemsMock);
-        _dbContext.TimeEntries.Returns(timeEntriesMock);
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.TimeEntries, workItem.TimeEntries);
+        _dbContext.Seed(c => c.Users, admin);
 
         // Act
         Result<PagedResponse<WorkItemTimeEntryResponse>> result =

@@ -15,8 +15,7 @@ public sealed class GetTemplateFlowByKindHandlerTests
     public async Task Should_ReturnNotFoundError_When_TemplateFlowDoesNotExist()
     {
         // Arrange
-        DbSet<TemplateFlow> templatesMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<TemplateFlow>());
-        _dbContext.TemplateFlows.Returns(templatesMock);
+        _dbContext.Seed(c => c.TemplateFlows);
 
         GetTemplateFlowByKindQuery query = new(ProjectKind.Product);
 
@@ -34,8 +33,7 @@ public sealed class GetTemplateFlowByKindHandlerTests
         // Arrange
         TemplateFlow template = TemplateFlowQueryData.GetTemplateFlow(ProjectKind.Client);
 
-        DbSet<TemplateFlow> templatesMock = MockDbSetHelper.CreateMockDbSet([template]);
-        _dbContext.TemplateFlows.Returns(templatesMock);
+        _dbContext.Seed(c => c.TemplateFlows, template);
 
         GetTemplateFlowByKindQuery query = new(ProjectKind.Client);
 
@@ -55,8 +53,7 @@ public sealed class GetTemplateFlowByKindHandlerTests
         // Arrange
         TemplateFlow template = TemplateFlowQueryData.GetTemplateFlowWithStates();
 
-        DbSet<TemplateFlow> templatesMock = MockDbSetHelper.CreateMockDbSet([template]);
-        _dbContext.TemplateFlows.Returns(templatesMock);
+        _dbContext.Seed(c => c.TemplateFlows, template);
 
         GetTemplateFlowByKindQuery query = new(ProjectKind.Product);
 
@@ -78,8 +75,7 @@ public sealed class GetTemplateFlowByKindHandlerTests
         // Arrange
         TemplateFlow template = TemplateFlowQueryData.GetTemplateFlowWithStates();
 
-        DbSet<TemplateFlow> templatesMock = MockDbSetHelper.CreateMockDbSet([template]);
-        _dbContext.TemplateFlows.Returns(templatesMock);
+        _dbContext.Seed(c => c.TemplateFlows, template);
 
         GetTemplateFlowByKindQuery query = new(ProjectKind.Product);
 

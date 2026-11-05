@@ -23,10 +23,8 @@ public sealed class CreateProjectHandlerTests
         _userContext.UserId.Returns(user.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, user);
+        _dbContext.Seed(c => c.Projects);
 
         CreateProjectCommand command = ProjectCommandData.GetCreateCommand();
 
@@ -46,10 +44,8 @@ public sealed class CreateProjectHandlerTests
         _userContext.UserId.Returns(user.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, user);
+        _dbContext.Seed(c => c.Projects);
 
         CreateProjectCommand command = ProjectCommandData.GetCreateCommand();
 
@@ -66,8 +62,7 @@ public sealed class CreateProjectHandlerTests
         // Arrange
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users);
 
         CreateProjectCommand command = ProjectCommandData.GetCreateCommand();
 
@@ -85,8 +80,7 @@ public sealed class CreateProjectHandlerTests
         // Arrange
         _userContext.UserId.Returns(Guid.NewGuid());
 
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<User>());
-        _dbContext.Users.Returns(usersMock);
+        _dbContext.Seed(c => c.Users);
 
         CreateProjectCommand command = ProjectCommandData.GetCreateCommand();
 
@@ -105,10 +99,8 @@ public sealed class CreateProjectHandlerTests
         _userContext.UserId.Returns(user.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, user);
+        _dbContext.Seed(c => c.Projects);
 
         var command = new CreateProjectCommand(string.Empty, null, ProjectCommandData.Prefix, ProjectCommandData.Kind, ProjectCommandData.Color, []);
 
@@ -128,10 +120,8 @@ public sealed class CreateProjectHandlerTests
         _userContext.UserId.Returns(user.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, user);
+        _dbContext.Seed(c => c.Projects);
 
         var command = new CreateProjectCommand(string.Empty, null, ProjectCommandData.Prefix, ProjectCommandData.Kind, ProjectCommandData.Color, []);
 
@@ -152,10 +142,8 @@ public sealed class CreateProjectHandlerTests
 
         Project existingProject = ProjectCommandData.GetExistingProjectWithPrefix(user);
 
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([existingProject]);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, user);
+        _dbContext.Seed(c => c.Projects, existingProject);
 
         CreateProjectCommand command = ProjectCommandData.GetCreateCommand();
 
@@ -177,10 +165,8 @@ public sealed class CreateProjectHandlerTests
 
         Project existingProject = ProjectCommandData.GetExistingProjectWithPrefix(user);
 
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet([existingProject]);
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, user);
+        _dbContext.Seed(c => c.Projects, existingProject);
 
         CreateProjectCommand command = ProjectCommandData.GetCreateCommand();
 
@@ -199,10 +185,8 @@ public sealed class CreateProjectHandlerTests
         _userContext.UserId.Returns(user.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, user);
+        DbSet<Project> projectsMock = _dbContext.Seed(c => c.Projects);
 
         CreateProjectCommand command = ProjectCommandData.GetCreateCommand(ProjectCommandData.GetValidCreateProjectStates());
 
@@ -223,10 +207,8 @@ public sealed class CreateProjectHandlerTests
         _userContext.UserId.Returns(user.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, user);
+        _dbContext.Seed(c => c.Projects);
 
         IReadOnlyCollection<CreateProjectState> flowStates =
             [new CreateProjectState("Backlog", FlowStateCategory.Active, ProjectCommandData.FlowStateColor, [ProjectRole.Admin])];
@@ -248,10 +230,8 @@ public sealed class CreateProjectHandlerTests
         _userContext.UserId.Returns(user.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, user);
+        _dbContext.Seed(c => c.Projects);
 
         CreateProjectCommand command = ProjectCommandData.GetCreateCommand([]);
 
@@ -273,10 +253,8 @@ public sealed class CreateProjectHandlerTests
         _userContext.UserId.Returns(user.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, user);
+        _dbContext.Seed(c => c.Projects);
 
         IReadOnlyCollection<CreateProjectState> flowStates = ProjectCommandData.GetCreateProjectStatesWith(
             new CreateProjectState("Backlog", FlowStateCategory.Active, ProjectCommandData.FlowStateColor, [ProjectRole.Viewer]));
@@ -300,10 +278,8 @@ public sealed class CreateProjectHandlerTests
         _userContext.UserId.Returns(user.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, user);
+        _dbContext.Seed(c => c.Projects);
 
         string invalidColor = new('A', Color.MaxLength + 1);
         IReadOnlyCollection<CreateProjectState> flowStates =
@@ -332,10 +308,8 @@ public sealed class CreateProjectHandlerTests
         _userContext.UserId.Returns(user.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, user);
+        _dbContext.Seed(c => c.Projects);
 
         IReadOnlyCollection<CreateProjectState> flowStates =
         [
@@ -363,10 +337,8 @@ public sealed class CreateProjectHandlerTests
         _userContext.UserId.Returns(user.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, user);
+        _dbContext.Seed(c => c.Projects);
 
         List<CreateProjectState> flowStates = [.. Enumerable.Range(1, Project.MaxActiveFlowStates + 1)
             .Select(i => new CreateProjectState($"Active {i}", FlowStateCategory.Active, ProjectCommandData.FlowStateColor, [ProjectRole.Admin]))];
@@ -393,10 +365,8 @@ public sealed class CreateProjectHandlerTests
         _userContext.UserId.Returns(user.Id);
         _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
 
-        DbSet<User> usersMock = MockDbSetHelper.CreateMockDbSet([user]);
-        DbSet<Project> projectsMock = MockDbSetHelper.CreateMockDbSet(Array.Empty<Project>());
-        _dbContext.Users.Returns(usersMock);
-        _dbContext.Projects.Returns(projectsMock);
+        _dbContext.Seed(c => c.Users, user);
+        DbSet<Project> projectsMock = _dbContext.Seed(c => c.Projects);
 
         // Submitted out of category order: Active, Cancelled, then a second Active added later.
         // Project.Create adds the active states first, so the second Active state still gets
