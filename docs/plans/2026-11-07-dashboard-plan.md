@@ -2583,7 +2583,7 @@ internal static class DashboardCalculator
 - Crear: `src/Aurora.Flowboard.Application/Dashboard/GetDashboard/GetDashboardQuery.cs`, `GetDashboardHandler.cs`
 - Test: `test/Aurora.Flowboard.Application.UnitTests/Dashboard/GetDashboardHandlerTests.cs`
 
-- [ ] **Escribir el test que falla.** Crea `test/Aurora.Flowboard.Application.UnitTests/Dashboard/GetDashboardHandlerTests.cs`:
+- [x] **Escribir el test que falla.** Crea `test/Aurora.Flowboard.Application.UnitTests/Dashboard/GetDashboardHandlerTests.cs`:
 
 ```csharp
 using Aurora.Flowboard.Application.Users.GetMySummary;
@@ -2844,7 +2844,7 @@ public sealed class GetDashboardHandlerTests
 }
 ```
 
-- [ ] **Verlo fallar.** Para que compile, crea `GetDashboardQuery.cs` con su código final y un handler stub:
+- [x] **Verlo fallar.** Para que compile, crea `GetDashboardQuery.cs` con su código final y un handler stub:
 
 ```csharp
 namespace Aurora.Flowboard.Application.Dashboard.GetDashboard;
@@ -2871,7 +2871,7 @@ dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Applic
 
   Fallo esperado: fallan todos salvo `Should_ReturnTheEmptyDashboard_When_UserHasNoProjects`. Si alguno falla con `Fixture step '...' failed`, corrige la fixture antes de seguir.
 
-- [ ] **Implementar.** `GetDashboardQuery.cs`:
+- [x] **Implementar.** `GetDashboardQuery.cs`:
 
 ```csharp
 namespace Aurora.Flowboard.Application.Dashboard.GetDashboard;
@@ -3075,9 +3075,9 @@ internal sealed class GetDashboardHandler(
 }
 ```
 
-- [ ] **Verlo pasar.** Repite los comandos (10 en verde) y ejecuta la suite de Application completa sin filtro.
-- [ ] `dotnet build "Aurora Flowboard.slnx"` y `./test/Aurora.Flowboard.ArchitectureTests/bin/Debug/net10.0/Aurora.Flowboard.ArchitectureTests.exe` (`Queries_Should_HaveValidator` excluye a `GetDashboardQuery` porque no tiene propiedades públicas).
-- [ ] Commit: `Read the dashboard rows with one aggregate query over open work` con `GetDashboardQuery.cs`, `GetDashboardHandler.cs`, `GetDashboardHandlerTests.cs` y este plan.
+- [x] **Verlo pasar.** Repite los comandos (10 en verde) y ejecuta la suite de Application completa sin filtro.
+- [x] `dotnet build "Aurora Flowboard.slnx"` y `./test/Aurora.Flowboard.ArchitectureTests/bin/Debug/net10.0/Aurora.Flowboard.ArchitectureTests.exe` (`Queries_Should_HaveValidator` excluye a `GetDashboardQuery` porque no tiene propiedades públicas).
+- [x] Commit: `Read the dashboard rows with one aggregate query over open work` con `GetDashboardQuery.cs`, `GetDashboardHandler.cs`, `GetDashboardHandlerTests.cs` y este plan.
 
 ### Tarea 10: endpoints `GET work-items` y `GET dashboard`
 
