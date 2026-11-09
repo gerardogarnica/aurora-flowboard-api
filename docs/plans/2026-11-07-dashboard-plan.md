@@ -1156,7 +1156,8 @@ internal sealed class GetWorkItemsValidator : AbstractValidator<GetWorkItemsQuer
 - [x] **Verlo pasar.** Repite los comandos (15 en verde).
 - [x] `dotnet build "Aurora Flowboard.slnx"` y `./test/Aurora.Flowboard.ArchitectureTests/bin/Debug/net10.0/Aurora.Flowboard.ArchitectureTests.exe`. La query aún no tiene handler; ningún test de arquitectura lo exige.
 - [x] Commit: `Validate the filters of the cross-project work item search` con los cuatro ficheros del slice, `GlobalUsings.cs`, `GetWorkItemsValidatorTests.cs` y este plan.
-> Desviación: IDE0200 (warning como error) en `WorkItemSearchFilters.ParsePriorities`; la lambda `name => Enum.Parse<Priority>(name)` pasa a ser el grupo de métodos `Enum.Parse<Priority>`. Mismo comportamiento.
+
+  > Desviación: IDE0200 (warning como error) en `WorkItemSearchFilters.ParsePriorities`; la lambda `name => Enum.Parse<Priority>(name)` pasa a ser el grupo de métodos `Enum.Parse<Priority>`. Mismo comportamiento.
 
 ### Tarea 7: handler de `GET work-items`
 
@@ -1168,7 +1169,7 @@ internal sealed class GetWorkItemsValidator : AbstractValidator<GetWorkItemsQuer
 - Crear: `test/Aurora.Flowboard.Application.UnitTests/WorkItems/GetWorkItemsQueryData.cs`
 - Test: `test/Aurora.Flowboard.Application.UnitTests/WorkItems/GetWorkItemsHandlerTests.cs`
 
-- [ ] **Escribir las fixtures.** Crea `test/Aurora.Flowboard.Application.UnitTests/WorkItems/GetWorkItemsQueryData.cs`:
+- [x] **Escribir las fixtures.** Crea `test/Aurora.Flowboard.Application.UnitTests/WorkItems/GetWorkItemsQueryData.cs`:
 
 ```csharp
 using System.Reflection;
@@ -1325,7 +1326,7 @@ internal static class GetWorkItemsQueryData
 }
 ```
 
-- [ ] **Escribir el test que falla.** Crea `test/Aurora.Flowboard.Application.UnitTests/WorkItems/GetWorkItemsHandlerTests.cs`:
+- [x] **Escribir el test que falla.** Crea `test/Aurora.Flowboard.Application.UnitTests/WorkItems/GetWorkItemsHandlerTests.cs`:
 
 ```csharp
 using Aurora.Flowboard.Application.Abstractions.Pagination;
@@ -1639,7 +1640,7 @@ public sealed class GetWorkItemsHandlerTests
 }
 ```
 
-- [ ] **Verlo fallar.** Para que compile, crea `FlowStateStageResolver.cs` con su código final y un handler stub:
+- [x] **Verlo fallar.** Para que compile, crea `FlowStateStageResolver.cs` con su código final y un handler stub:
 
 ```csharp
 namespace Aurora.Flowboard.Application.WorkItems.GetWorkItems;
@@ -1669,7 +1670,7 @@ dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Applic
 
   Fallo esperado: fallan todos salvo `Should_ReturnEmptyPage_When_StageIsBacklogAndStalledIsTrue` y, quizá, `Should_ReturnEmptyPage_When_UserHasNoActiveProjects` (el stub no lee `WorkItems`). Si algún fallo es una excepción de las fixtures (`Fixture step '...' failed`), corrige la fixture antes de seguir: el fallo tiene que ser de assertion.
 
-- [ ] **Implementar.** Crea `src/Aurora.Flowboard.Application/Projects/Shared/FlowStateStageResolver.cs`:
+- [x] **Implementar.** Crea `src/Aurora.Flowboard.Application/Projects/Shared/FlowStateStageResolver.cs`:
 
 ```csharp
 namespace Aurora.Flowboard.Application.Projects.Shared;
@@ -1837,9 +1838,9 @@ internal sealed class GetWorkItemsHandler(
 }
 ```
 
-- [ ] **Verlo pasar.** Repite los comandos (13 en verde). Ejecuta también la suite de Application completa sin filtro.
-- [ ] `dotnet build "Aurora Flowboard.slnx"` y `./test/Aurora.Flowboard.ArchitectureTests/bin/Debug/net10.0/Aurora.Flowboard.ArchitectureTests.exe`.
-- [ ] Commit: `Search open work items across my active projects` con `FlowStateStageResolver.cs`, `GetWorkItemsHandler.cs`, `GetWorkItemsQueryData.cs`, `GetWorkItemsHandlerTests.cs` y este plan.
+- [x] **Verlo pasar.** Repite los comandos (13 en verde). Ejecuta también la suite de Application completa sin filtro.
+- [x] `dotnet build "Aurora Flowboard.slnx"` y `./test/Aurora.Flowboard.ArchitectureTests/bin/Debug/net10.0/Aurora.Flowboard.ArchitectureTests.exe`.
+- [x] Commit: `Search open work items across my active projects` con `FlowStateStageResolver.cs`, `GetWorkItemsHandler.cs`, `GetWorkItemsQueryData.cs`, `GetWorkItemsHandlerTests.cs` y este plan.
 
 ### Tarea 8: contrato del dashboard y `DashboardCalculator`
 
