@@ -25,7 +25,7 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                 type: "timestamp with time zone",
                 nullable: true);
 
-            // The last transition is when the item entered its current state; an item never moved is
+            // The last transition into the current state is when the item entered it; an item never moved is
             // still in the state it was created in.
             migrationBuilder.Sql(
                 """
@@ -33,7 +33,8 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                 SET entered_current_state_on_utc = COALESCE(
                     (SELECT MAX(h.changed_on_utc)
                      FROM flowboard.work_item_state_transition_histories h
-                     WHERE h.work_item_id = w.id),
+                     WHERE h.work_item_id = w.id
+                       AND h.to_state_id = w.flow_state_id),
                     w.created_on_utc);
                 """);
 

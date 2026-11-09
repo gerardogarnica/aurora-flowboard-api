@@ -427,7 +427,8 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                 SET entered_current_state_on_utc = COALESCE(
                     (SELECT MAX(h.changed_on_utc)
                      FROM flowboard.work_item_state_transition_histories h
-                     WHERE h.work_item_id = w.id),
+                     WHERE h.work_item_id = w.id
+                       AND h.to_state_id = w.flow_state_id),
                     w.created_on_utc);
                 """);
 
@@ -494,13 +495,14 @@ dotnet ef migrations script AddWorkItemEnteredCurrentState AddConcurrencyTokens 
 - [ ] **Verificación manual contra Postgres.** Arranca la app con `dotnet run --project src/Aurora.Flowboard.AppHost`, que aplica la migración al iniciar, y en la base ejecuta:
 
 ```sql
--- 0 filas: todo item tiene la fecha de su último movimiento o, sin historial, la de creación.
+-- 0 filas: todo item tiene la fecha de su último movimiento al estado actual o, sin él, la de creación.
 SELECT w.code
 FROM flowboard.work_items w
 WHERE w.entered_current_state_on_utc IS DISTINCT FROM COALESCE(
     (SELECT MAX(h.changed_on_utc)
      FROM flowboard.work_item_state_transition_histories h
-     WHERE h.work_item_id = w.id),
+     WHERE h.work_item_id = w.id
+       AND h.to_state_id = w.flow_state_id),
     w.created_on_utc);
 
 -- is_nullable = NO y column_default vacío.

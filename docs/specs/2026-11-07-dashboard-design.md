@@ -125,7 +125,7 @@ Se eligió A porque es la única que garantiza que los números cuadren sin carg
 - `GetMySummaryHandler` los adopta. `myOpenIssues` usa los activos, y lo demás no cambia.
 
 **Respuestas existentes**
-- `BoardColumnResponse` añade `FlowStateStage Stage`, calculado con `FlowStateStages` en `GetProjectBoardHandler`.
+- `BoardColumnResponse` añade `FlowStateStage Stage`, calculado con `FlowState.GetBacklogStateId` en `GetProjectBoardHandler`.
 - `BoardWorkItemResponse` y `WorkItemResponse` añaden `DateTime EnteredCurrentStateOnUtc`.
 
 **`WorkItems/GetWorkItems/`**: `GetWorkItemsQuery` (`IPagedQuery`), `GetWorkItemsHandler`, `GetWorkItemsValidator`, `WorkItemListItemResponse`.
@@ -252,7 +252,8 @@ Forma de cada item:
    SET entered_current_state_on_utc = COALESCE(
        (SELECT MAX(h.changed_on_utc)
         FROM flowboard.work_item_state_transition_histories h
-        WHERE h.work_item_id = w.id),
+        WHERE h.work_item_id = w.id
+          AND h.to_state_id = w.flow_state_id),
        w.created_on_utc);
    ```
 3. La pasa a `NOT NULL`, sin valor por defecto.
