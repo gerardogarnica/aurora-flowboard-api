@@ -534,7 +534,7 @@ dotnet ef database update --project src/Aurora.Flowboard.Infrastructure --startu
 - Modificar: `src/Aurora.Flowboard.Application/Users/GetMySummary/GetMySummaryHandler.cs`
 - Test: `test/Aurora.Flowboard.Application.UnitTests/Users/GetMySummaryHandlerTests.cs`
 
-- [ ] **Escribir los tests.** Añade al final de `GetMySummaryHandlerTests`. El primero falla hoy; el segundo protege que `Maintenance` siga contando.
+- [x] **Escribir los tests.** Añade al final de `GetMySummaryHandlerTests`. El primero falla hoy; el segundo protege que `Maintenance` siga contando.
 
 ```csharp
     [Fact]
@@ -576,7 +576,7 @@ dotnet ef database update --project src/Aurora.Flowboard.Infrastructure --startu
     }
 ```
 
-- [ ] **Verlo fallar.**
+- [x] **Verlo fallar.**
 
 ```bash
 dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Application.UnitTests.csproj
@@ -585,7 +585,7 @@ dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Applic
 
   Fallo esperado: `Should_ExcludeOpenIssues_InCompletedProjects_ButKeepListingThem` con `Expected result.Value.Counts.MyOpenIssues to be 0, but found 1`. El resto pasa.
 
-- [ ] **Implementar.** Crea `src/Aurora.Flowboard.Application/Projects/Shared/MyProjectsQueryExtensions.cs`:
+- [x] **Implementar.** Crea `src/Aurora.Flowboard.Application/Projects/Shared/MyProjectsQueryExtensions.cs`:
 
 ```csharp
 namespace Aurora.Flowboard.Application.Projects.Shared;
@@ -650,8 +650,8 @@ internal static class MyProjectsQueryExtensions
 
   El `return` final no cambia.
 
-- [ ] **Verlo pasar.** Repite los dos comandos (todos en verde, `Should_OrderProjects_ByStatusThenAlphabeticallyByName` incluido).
-- [ ] Commit: `Count my open issues only in projects that still accept work` con `MyProjectsQueryExtensions.cs`, `GetMySummaryHandler.cs`, `GetMySummaryHandlerTests.cs` y este plan.
+- [x] **Verlo pasar.** Repite los dos comandos (todos en verde, `Should_OrderProjects_ByStatusThenAlphabeticallyByName` incluido).
+- [x] Commit: `Count my open issues only in projects that still accept work` con `MyProjectsQueryExtensions.cs`, `GetMySummaryHandler.cs`, `GetMySummaryHandlerTests.cs` y este plan.
 
 ### Tarea 5: `stage` en el board y `enteredCurrentStateOnUtc` en board y detalle
 

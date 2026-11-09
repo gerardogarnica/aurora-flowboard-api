@@ -230,4 +230,42 @@ public sealed class GetMySummaryHandlerTests
         summary.Color.Should().Be(project.Color.Value);
         summary.Status.Should().Be(ProjectStatus.Active);
     }
+
+    [Fact]
+    public async Task Should_ExcludeOpenIssues_InCompletedProjects_ButKeepListingThem()
+    {
+        // Arrange
+        User caller = GetMySummaryQueryData.GetUser();
+        Project completedProject = GetMySummaryQueryData.CreateProject("Done Project", "DNP", ProjectStatus.Completed, caller);
+        GetMySummaryQueryData.AddWorkItem(completedProject, caller.Id, FlowStateCategory.Active);
+        _dbContext.Seed(c => c.Users, caller);
+        _dbContext.Seed(c => c.Projects, completedProject);
+
+        // Act
+        Result<MySummaryResponse> result =
+            await _handler.Handle(new GetMySummaryQuery(caller.Id), CancellationToken.None);
+
+        // Assert
+        result.Value.Counts.MyOpenIssues.Should().Be(0);
+        result.Value.Counts.Projects.Should().Be(1);
+        result.Value.Projects.Should().ContainSingle(p => p.ProjectId == completedProject.Id);
+    }
+
+    [Fact]
+    public async Task Should_CountOpenIssues_InMaintenanceProjects()
+    {
+        // Arrange
+        User caller = GetMySummaryQueryData.GetUser();
+        Project maintenanceProject = GetMySummaryQueryData.CreateProject("Kept Project", "KPT", ProjectStatus.Maintenance, caller);
+        GetMySummaryQueryData.AddWorkItem(maintenanceProject, caller.Id, FlowStateCategory.Active);
+        _dbContext.Seed(c => c.Users, caller);
+        _dbContext.Seed(c => c.Projects, maintenanceProject);
+
+        // Act
+        Result<MySummaryResponse> result =
+            await _handler.Handle(new GetMySummaryQuery(caller.Id), CancellationToken.None);
+
+        // Assert
+        result.Value.Counts.MyOpenIssues.Should().Be(1);
+    }
 }
