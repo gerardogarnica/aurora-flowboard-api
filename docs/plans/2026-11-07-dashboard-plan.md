@@ -3090,7 +3090,7 @@ internal sealed class GetDashboardHandler(
 
 Api no tiene tests unitarios: la tarea se cubre con los tests de arquitectura y con verificación manual.
 
-- [ ] **Implementar.** En `EndpointTags`, en orden alfabético:
+- [x] **Implementar.** En `EndpointTags`, en orden alfabético:
 
 ```csharp
     internal const string Dashboard = "Dashboard";
@@ -3225,7 +3225,7 @@ Accept: application/json
 
   No pongas credenciales reales en el `.http`: el fichero se versiona.
 
-- [ ] **Compilar y pasar los tests de arquitectura.**
+- [x] **Compilar y pasar los tests de arquitectura.**
 
 ```bash
 dotnet build src/Aurora.Flowboard.Api/Aurora.Flowboard.Api.csproj
@@ -3242,7 +3242,9 @@ dotnet build test/Aurora.Flowboard.ArchitectureTests/Aurora.Flowboard.Architectu
   4. `GET work-items?assignee=me` devuelve `items`, `page`, `pageSize`, `totalCount` y `totalPages`; `?stage=Done` responde 400; sin `Authorization`, los dos endpoints responden 401.
   5. `GET projects/{id}/board` tiene `stage` en cada columna y `enteredCurrentStateOnUtc` en cada card; `GET work-items/{code}` tiene `enteredCurrentStateOnUtc`. Mueve un item y comprueba que la fecha cambia a la del movimiento.
   6. **SQL en los logs de EF** (dashboard de Aspire, logs de la Api): el dashboard ejecuta un único `GROUP BY` sobre `work_items`, con un `CASE WHEN ... entered_current_state_on_utc > @...` para el tramo y `flow_state_id = ANY (@...)`; la prioridad se compara con `'High'`/`'Critical'` como texto. La búsqueda filtra `priority = ANY (@...)` con un array de texto y ordena por `flow_state_id = ANY (@...)`, `entered_current_state_on_utc`, `id`. Si alguna consulta falla con `could not be translated` o evalúa en cliente, para y avisa.
-- [ ] Commit: `Expose the dashboard and the cross-project work item search` con `EndpointTags.cs`, `GetWorkItems.cs`, `GetDashboard.cs`, `Aurora.Flowboard.Api.http` y este plan.
+  > Pendiente: la verificación manual (puntos 1 a 6: peticiones del `.http` y SQL en los logs de EF) la hace el usuario al final. Build de la Api y tests de arquitectura en verde.
+
+- [x] Commit: `Expose the dashboard and the cross-project work item search` con `EndpointTags.cs`, `GetWorkItems.cs`, `GetDashboard.cs`, `Aurora.Flowboard.Api.http` y este plan.
 
 ### Tarea 11: documentación de las reglas
 

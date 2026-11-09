@@ -4,3 +4,40 @@ GET {{Aurora.Flowboard.Api_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+### Login: copy accessToken from the response into @token
+POST {{Aurora.Flowboard.Api_HostAddress}}/api/v1/flowboard/auth/login
+Content-Type: application/json
+
+{
+  "email": "<email of a seeded user>",
+  "password": "<password>"
+}
+
+###
+@token = <accessToken>
+
+### Dashboard of the current user
+GET {{Aurora.Flowboard.Api_HostAddress}}/api/v1/flowboard/dashboard
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### My Issues: assigned to me
+GET {{Aurora.Flowboard.Api_HostAddress}}/api/v1/flowboard/work-items?assignee=me&page=1&pageSize=25
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### My Issues: reported by me
+GET {{Aurora.Flowboard.Api_HostAddress}}/api/v1/flowboard/work-items?createdBy=me
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### Stalled critical and high work in flight
+GET {{Aurora.Flowboard.Api_HostAddress}}/api/v1/flowboard/work-items?stage=InFlight&stalled=true&priority=High,Critical
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### Invalid filter: 400
+GET {{Aurora.Flowboard.Api_HostAddress}}/api/v1/flowboard/work-items?stage=Done
+Authorization: Bearer {{token}}
+Accept: application/json
