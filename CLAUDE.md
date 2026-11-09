@@ -68,7 +68,8 @@ Detailed conventions live in `.claude/rules/` and load automatically when you re
 | Rule | Covers |
 |---|---|
 | `ef-core-queries.md` | Query shape (no sibling collections, correlated subqueries, expression-tree limits), tracking with `ValueGeneratedNever` keys, raw SQL, pagination |
-| `work-items.md` | Board endpoint, detail vs. paginated activity endpoints, change log semantics, `Viewer` permissions |
+| `work-items.md` | Board endpoint, cross-project search, time in state, stage and stalled, detail vs. paginated activity endpoints, change log semantics, `Viewer` permissions |
+| `dashboard.md` | The two project sets for open work, the dashboard aggregate query and its consistency limit |
 | `project-flow.md` | One flow per project, removed flow endpoints (don't reintroduce), TemplateFlows |
 | `projects.md` | Command handler base for project mutations |
 | `milestones-components.md` | Aggregate ownership, admin-only changes, milestone state machine, command handler bases |

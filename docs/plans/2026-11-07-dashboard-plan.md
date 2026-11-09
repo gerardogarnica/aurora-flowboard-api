@@ -3257,7 +3257,7 @@ dotnet build test/Aurora.Flowboard.ArchitectureTests/Aurora.Flowboard.Architectu
 
 Las rules están en inglés, como el resto de `.claude/rules/`.
 
-- [ ] **`work-items.md`.** En el frontmatter, añade a `paths:` la línea `  - "src/**/Dashboard/**/*.cs"`. En la sección del board, sustituye el último punto (`- /board is the only project board endpoint...`) por:
+- [x] **`work-items.md`.** En el frontmatter, añade a `paths:` la línea `  - "src/**/Dashboard/**/*.cs"`. En la sección del board, sustituye el último punto (`- /board is the only project board endpoint...`) por:
 
 ```markdown
 - `/board` is the only project board endpoint. A near-identical `GET projects/{id}/work-items` was removed as an unused duplicate — don't reintroduce a per-project work item list under `work-items/`; extend `GetProjectBoardQuery` instead. `GET work-items` (no project in the route) is the cross-project search below, not a per-project list.
@@ -3283,7 +3283,7 @@ Las rules están en inglés, como el resto de `.claude/rules/`.
 - `stage` appears on board columns and search items; the detail (`GET work-items/{code}`) has `enteredCurrentStateOnUtc` but no `stage`.
 ```
 
-- [ ] **Crear `.claude/rules/dashboard.md`:**
+- [x] **Crear `.claude/rules/dashboard.md`:**
 
 ```markdown
 ---
@@ -3321,7 +3321,7 @@ Spec: `docs/specs/2026-11-07-dashboard-design.md` (definitions in section 2).
 - Unit tests run on LINQ-to-Objects (`MockDbSetHelper`): the `GROUP BY` translation, the ternary and `Contains` over `Priority` (a string column) are checked against Postgres by reading the SQL logs.
 ```
 
-- [ ] **`CLAUDE.md`.** En la tabla "Area-specific rules", cambia la fila de `work-items.md` por:
+- [x] **`CLAUDE.md`.** En la tabla "Area-specific rules", cambia la fila de `work-items.md` por:
 
 ```markdown
 | `work-items.md` | Board endpoint, cross-project search, time in state, stage and stalled, detail vs. paginated activity endpoints, change log semantics, `Viewer` permissions |
@@ -3333,8 +3333,8 @@ Spec: `docs/specs/2026-11-07-dashboard-design.md` (definitions in section 2).
 | `dashboard.md` | The two project sets for open work, the dashboard aggregate query and its consistency limit |
 ```
 
-- [ ] **Verificar.** Comprueba que las rutas y los nombres que citan las rules existen: `grep -rn "WhereMyActiveProjects\|FlowStateStageResolver\|GetBacklogStateId\|StalledThresholdDays\|WorkItemSearchFilters" src --include=*.cs | grep -v "/obj/"` debe encontrar cada uno.
-- [ ] Commit: `Document the dashboard rules and the cross-project search` con `.claude/rules/work-items.md`, `.claude/rules/dashboard.md`, `CLAUDE.md` y este plan.
+- [x] **Verificar.** Comprueba que las rutas y los nombres que citan las rules existen: `grep -rn "WhereMyActiveProjects\|FlowStateStageResolver\|GetBacklogStateId\|StalledThresholdDays\|WorkItemSearchFilters" src --include=*.cs | grep -v "/obj/"` debe encontrar cada uno.
+- [x] Commit: `Document the dashboard rules and the cross-project search` con `.claude/rules/work-items.md`, `.claude/rules/dashboard.md`, `CLAUDE.md` y este plan.
 
 ## Verificación final
 
