@@ -232,7 +232,7 @@ dotnet build test/Aurora.Flowboard.Domain.UnitTests/Aurora.Flowboard.Domain.Unit
 
 La regla es un método estático de `FlowState` y no una clase estática aparte: `Errors_Should_BeStaticAndHaveErrorsSuffix` exige que toda clase estática del Domain termine en `Errors`.
 
-- [ ] **Escribir el test que falla.** Crea `test/Aurora.Flowboard.Domain.UnitTests/Projects/FlowStateTests.cs`:
+- [x] **Escribir el test que falla.** Crea `test/Aurora.Flowboard.Domain.UnitTests/Projects/FlowStateTests.cs`:
 
 ```csharp
 namespace Aurora.Flowboard.Domain.UnitTests.Projects;
@@ -306,7 +306,7 @@ public sealed class FlowStateTests
 }
 ```
 
-- [ ] **Verlo fallar.** Para que compile, crea el enum (código final, abajo) y añade a `FlowState` un stub ingenuo, que toma el primero tal como llega. Lee el parámetro para que el analizador no lo marque como no usado:
+- [x] **Verlo fallar.** Para que compile, crea el enum (código final, abajo) y añade a `FlowState` un stub ingenuo, que toma el primero tal como llega. Lee el parámetro para que el analizador no lo marque como no usado:
 
 ```csharp
     public static Guid? GetBacklogStateId(IReadOnlyCollection<(Guid Id, int SortOrder)> activeStates) =>
@@ -320,7 +320,7 @@ dotnet build test/Aurora.Flowboard.Domain.UnitTests/Aurora.Flowboard.Domain.Unit
 
   Fallo esperado: `Should_ReturnNull_When_ThereIsASingleActiveState` (`Expected backlogStateId to be <null>, but found {guid}`) y `Should_ReturnLowestSortOrder_When_StatesAreUnordered`. Los otros tres pasan con el stub.
 
-- [ ] **Implementar.** Crea `src/Aurora.Flowboard.Domain/Projects/FlowStateStage.cs`:
+- [x] **Implementar.** Crea `src/Aurora.Flowboard.Domain/Projects/FlowStateStage.cs`:
 
 ```csharp
 namespace Aurora.Flowboard.Domain.Projects;
@@ -351,9 +351,9 @@ public enum FlowStateStage
     private const int MinActiveStatesForBacklog = 2;
 ```
 
-- [ ] **Verlo pasar.** Repite el comando con `-class` (5 en verde) y ejecuta la suite de Domain completa.
-- [ ] `dotnet build "Aurora Flowboard.slnx"` y `./test/Aurora.Flowboard.ArchitectureTests/bin/Debug/net10.0/Aurora.Flowboard.ArchitectureTests.exe`: hay un tipo nuevo en Domain.
-- [ ] Commit: `Derive the backlog stage from a project's active flow states` con `src/Aurora.Flowboard.Domain/Projects/FlowStateStage.cs`, `src/Aurora.Flowboard.Domain/Projects/FlowState.cs`, `test/Aurora.Flowboard.Domain.UnitTests/Projects/FlowStateTests.cs` y este plan.
+- [x] **Verlo pasar.** Repite el comando con `-class` (5 en verde) y ejecuta la suite de Domain completa.
+- [x] `dotnet build "Aurora Flowboard.slnx"` y `./test/Aurora.Flowboard.ArchitectureTests/bin/Debug/net10.0/Aurora.Flowboard.ArchitectureTests.exe`: hay un tipo nuevo en Domain.
+- [x] Commit: `Derive the backlog stage from a project's active flow states` con `src/Aurora.Flowboard.Domain/Projects/FlowStateStage.cs`, `src/Aurora.Flowboard.Domain/Projects/FlowState.cs`, `test/Aurora.Flowboard.Domain.UnitTests/Projects/FlowStateTests.cs` y este plan.
 
 ### Tarea 3: mapeo de EF y migración `AddWorkItemEnteredCurrentState`
 
