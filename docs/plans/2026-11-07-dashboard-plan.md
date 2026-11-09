@@ -828,7 +828,7 @@ public sealed record BoardColumnResponse(
 - Modificar: `test/Aurora.Flowboard.Application.UnitTests/GlobalUsings.cs`
 - Test: `test/Aurora.Flowboard.Application.UnitTests/WorkItems/GetWorkItemsValidatorTests.cs`
 
-- [ ] **Escribir el test que falla.** En `GlobalUsings.cs` de Application.UnitTests, en orden alfabético:
+- [x] **Escribir el test que falla.** En `GlobalUsings.cs` de Application.UnitTests, en orden alfabético:
 
 ```csharp
 global using Aurora.Flowboard.Application.WorkItems.GetWorkItems;
@@ -1016,7 +1016,7 @@ public sealed class GetWorkItemsValidatorTests
 }
 ```
 
-- [ ] **Verlo fallar.** Crea `GetWorkItemsQuery.cs`, `WorkItemListItemResponse.cs` y `WorkItemSearchFilters.cs` con su código final (abajo), y un validador vacío:
+- [x] **Verlo fallar.** Crea `GetWorkItemsQuery.cs`, `WorkItemListItemResponse.cs` y `WorkItemSearchFilters.cs` con su código final (abajo), y un validador vacío:
 
 ```csharp
 namespace Aurora.Flowboard.Application.WorkItems.GetWorkItems;
@@ -1031,7 +1031,7 @@ dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Applic
 
   Fallo esperado: los 12 `Should_Fail_*` fallan con `Expected result.IsValid to be false, but found True`. Los 3 `Should_Pass_*` pasan.
 
-- [ ] **Implementar.**
+- [x] **Implementar.**
 
   `GetWorkItemsQuery.cs`:
 
@@ -1153,9 +1153,10 @@ internal sealed class GetWorkItemsValidator : AbstractValidator<GetWorkItemsQuer
 }
 ```
 
-- [ ] **Verlo pasar.** Repite los comandos (15 en verde).
-- [ ] `dotnet build "Aurora Flowboard.slnx"` y `./test/Aurora.Flowboard.ArchitectureTests/bin/Debug/net10.0/Aurora.Flowboard.ArchitectureTests.exe`. La query aún no tiene handler; ningún test de arquitectura lo exige.
-- [ ] Commit: `Validate the filters of the cross-project work item search` con los cuatro ficheros del slice, `GlobalUsings.cs`, `GetWorkItemsValidatorTests.cs` y este plan.
+- [x] **Verlo pasar.** Repite los comandos (15 en verde).
+- [x] `dotnet build "Aurora Flowboard.slnx"` y `./test/Aurora.Flowboard.ArchitectureTests/bin/Debug/net10.0/Aurora.Flowboard.ArchitectureTests.exe`. La query aún no tiene handler; ningún test de arquitectura lo exige.
+- [x] Commit: `Validate the filters of the cross-project work item search` con los cuatro ficheros del slice, `GlobalUsings.cs`, `GetWorkItemsValidatorTests.cs` y este plan.
+> Desviación: IDE0200 (warning como error) en `WorkItemSearchFilters.ParsePriorities`; la lambda `name => Enum.Parse<Priority>(name)` pasa a ser el grupo de métodos `Enum.Parse<Priority>`. Mismo comportamiento.
 
 ### Tarea 7: handler de `GET work-items`
 
