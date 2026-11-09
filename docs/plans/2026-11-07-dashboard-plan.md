@@ -1854,7 +1854,7 @@ internal sealed class GetWorkItemsHandler(
 
 Los tramos de antigüedad se calculan en SQL (tarea 9), así que sus límites exactos se prueban en `GetDashboardHandlerTests`, que ejecuta esa misma expresión. Aquí se prueban las reglas que no son filtros de SQL.
 
-- [ ] **Crear el contrato.** Es el código final; los tests lo necesitan para compilar. `DashboardResponse.cs`:
+- [x] **Crear el contrato.** Es el código final; los tests lo necesitan para compilar. `DashboardResponse.cs`:
 
 ```csharp
 namespace Aurora.Flowboard.Application.Dashboard.GetDashboard;
@@ -1989,7 +1989,7 @@ internal sealed record DashboardMilestoneCountRow(Guid MilestoneId, int Count);
 internal sealed record DashboardMemberRow(Guid ProjectId, Guid UserId, string? FirstName, string? LastName);
 ```
 
-- [ ] **Escribir el test que falla.** En `GlobalUsings.cs` de Application.UnitTests, en orden alfabético:
+- [x] **Escribir el test que falla.** En `GlobalUsings.cs` de Application.UnitTests, en orden alfabético:
 
 ```csharp
 global using Aurora.Flowboard.Application.Dashboard.GetDashboard;
@@ -2379,7 +2379,7 @@ public sealed class DashboardCalculatorTests
 }
 ```
 
-- [ ] **Verlo fallar.** Para que compile, crea `DashboardCalculator.cs` con las constantes del código final y un `Build` stub:
+- [x] **Verlo fallar.** Para que compile, crea `DashboardCalculator.cs` con las constantes del código final y un `Build` stub:
 
 ```csharp
     internal static DashboardResponse Build(DashboardSnapshot snapshot) =>
@@ -2398,7 +2398,7 @@ dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Applic
 
   Fallo esperado: los 14 fallan (buckets vacíos, portafolio vacío o contadores en cero).
 
-- [ ] **Implementar.** `DashboardCalculator.cs`:
+- [x] **Implementar.** `DashboardCalculator.cs`:
 
 ```csharp
 namespace Aurora.Flowboard.Application.Dashboard.GetDashboard;
@@ -2571,9 +2571,9 @@ internal static class DashboardCalculator
 }
 ```
 
-- [ ] **Verlo pasar.** Repite los comandos (14 en verde).
-- [ ] `dotnet build "Aurora Flowboard.slnx"` y `./test/Aurora.Flowboard.ArchitectureTests/bin/Debug/net10.0/Aurora.Flowboard.ArchitectureTests.exe` (`Responses_Should_BeSealedRecords` cubre los `Dashboard*Response`).
-- [ ] Commit: `Compute the dashboard from aggregated open work` con los tres ficheros de `Dashboard/GetDashboard/`, `GlobalUsings.cs`, `DashboardQueryData.cs`, `DashboardCalculatorTests.cs` y este plan.
+- [x] **Verlo pasar.** Repite los comandos (14 en verde).
+- [x] `dotnet build "Aurora Flowboard.slnx"` y `./test/Aurora.Flowboard.ArchitectureTests/bin/Debug/net10.0/Aurora.Flowboard.ArchitectureTests.exe` (`Responses_Should_BeSealedRecords` cubre los `Dashboard*Response`).
+- [x] Commit: `Compute the dashboard from aggregated open work` con los tres ficheros de `Dashboard/GetDashboard/`, `GlobalUsings.cs`, `DashboardQueryData.cs`, `DashboardCalculatorTests.cs` y este plan.
 
 ### Tarea 9: `GetDashboardHandler`
 

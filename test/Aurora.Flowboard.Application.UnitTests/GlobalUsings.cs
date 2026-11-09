@@ -5,6 +5,7 @@ global using Aurora.Flowboard.Application.Components.Create;
 global using Aurora.Flowboard.Application.Components.GetByProject;
 global using Aurora.Flowboard.Application.Components.Rename;
 global using Aurora.Flowboard.Application.Components.Retire;
+global using Aurora.Flowboard.Application.Dashboard.GetDashboard;
 global using Aurora.Flowboard.Application.Milestones.ChangeStatus;
 global using Aurora.Flowboard.Application.Milestones.Create;
 global using Aurora.Flowboard.Application.Milestones.GetByProject;
