@@ -79,7 +79,7 @@
 - Modificar: `src/Aurora.Flowboard.Domain/WorkItems/WorkItem.cs`
 - Test: `test/Aurora.Flowboard.Domain.UnitTests/WorkItems/WorkItemTests.cs`
 
-- [ ] **Escribir los tests que fallan.** Al final de la clase anidada `WorkItemTests.Create`, añade:
+- [x] **Escribir los tests que fallan.** Al final de la clase anidada `WorkItemTests.Create`, añade:
 
 ```csharp
         [Fact]
@@ -172,7 +172,7 @@
         }
 ```
 
-- [ ] **Verlo fallar.** No compila hasta que exista la propiedad. Añade solo el stub en `WorkItem`, debajo de `CompletedOnUtc`:
+- [x] **Verlo fallar.** No compila hasta que exista la propiedad. Añade solo el stub en `WorkItem`, debajo de `CompletedOnUtc`:
 
 ```csharp
     public DateTime EnteredCurrentStateOnUtc { get; private set; }
@@ -187,7 +187,7 @@ dotnet build test/Aurora.Flowboard.Domain.UnitTests/Aurora.Flowboard.Domain.Unit
 
   Fallo esperado: los 5 tests fallan con `Expected ... to be <2026-01-01 ...> (or <2026-06-01 ...>), but found <0001-01-01 00:00:00>`.
 
-- [ ] **Implementar.** En `WorkItem.cs`:
+- [x] **Implementar.** En `WorkItem.cs`:
 
   1. Debajo de `MaxCodeLength`:
 
@@ -210,14 +210,16 @@ dotnet build test/Aurora.Flowboard.Domain.UnitTests/Aurora.Flowboard.Domain.Unit
 
   Ningún otro método la escribe.
 
-- [ ] **Verlo pasar.** Repite los dos comandos anteriores (5 tests en verde) y ejecuta la suite de Domain completa sin filtro:
+- [x] **Verlo pasar.** Repite los dos comandos anteriores (5 tests en verde) y ejecuta la suite de Domain completa sin filtro:
 
 ```bash
 ./test/Aurora.Flowboard.Domain.UnitTests/bin/Debug/net10.0/Aurora.Flowboard.Domain.UnitTests.exe
 ```
 
-- [ ] `dotnet build "Aurora Flowboard.slnx"`: el modelo de EF queda con un cambio pendiente hasta la tarea 3, pero eso no rompe la compilación.
-- [ ] Commit: `Track when a work item entered its current state` con `src/Aurora.Flowboard.Domain/WorkItems/WorkItem.cs`, `test/Aurora.Flowboard.Domain.UnitTests/WorkItems/WorkItemTests.cs`, `docs/specs/2026-11-07-dashboard-design.md`, `docs/README.md` y este plan.
+- [x] `dotnet build "Aurora Flowboard.slnx"`: el modelo de EF queda con un cambio pendiente hasta la tarea 3, pero eso no rompe la compilación.
+- [x] Commit: `Track when a work item entered its current state` con `src/Aurora.Flowboard.Domain/WorkItems/WorkItem.cs`, `test/Aurora.Flowboard.Domain.UnitTests/WorkItems/WorkItemTests.cs`, `docs/specs/2026-11-07-dashboard-design.md`, `docs/README.md` y este plan.
+
+  > Desviación (aprobada por el usuario): el spec, `docs/README.md` y el plan se commitearon antes, en `ac5a29e` (commit de documentación propio); este commit lleva solo el código y el plan.
 
 ### Tarea 2: etapa de un estado (`FlowStateStage` y `FlowState.GetBacklogStateId`)
 

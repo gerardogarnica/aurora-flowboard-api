@@ -428,6 +428,29 @@ public sealed class WorkItemTests
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(WorkItemErrors.AssigneeInactive);
         }
+
+        [Fact]
+        public void Should_SetEnteredCurrentStateOnUtc_ToCreatedOnUtc_When_Created()
+        {
+            // Arrange
+            var (project, admin) = WorkItemData.GetActiveProjectWithFlow();
+
+            // Act
+            Result<WorkItem> result = WorkItem.Create(
+                WorkItemData.Title,
+                WorkItemData.Description,
+                WorkItemData.Type,
+                WorkItemData.Priority,
+                project,
+                admin,
+                WorkItemData.EstimatedPoints,
+                WorkItemData.EstimatedCompletionDate,
+                WorkItemData.CreatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            result.Value.EnteredCurrentStateOnUtc.Should().Be(WorkItemData.CreatedOnUtc);
+        }
     }
 
     public sealed class UpdateTitle : BaseTest
@@ -1675,6 +1698,68 @@ public sealed class WorkItemTests
             // Assert
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(ProjectErrors.OperationNotAllowedInCurrentStatus);
+        }
+
+        [Fact]
+        public void Should_SetEnteredCurrentStateOnUtc_When_Moved()
+        {
+            // Arrange
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            FlowState toState = project.FlowStates.Single(s => s.Name == "In Progress");
+
+            // Act
+            Result result = workItem.Move(toState, admin, null, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.EnteredCurrentStateOnUtc.Should().Be(WorkItemData.UpdatedOnUtc);
+        }
+
+        [Fact]
+        public void Should_ResetEnteredCurrentStateOnUtc_When_MovedBackToAPreviousState()
+        {
+            // Arrange
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            FlowState todo = project.FlowStates.Single(s => s.Name == "Todo");
+            FlowState inProgress = project.FlowStates.Single(s => s.Name == "In Progress");
+            DateTime movedBackOnUtc = WorkItemData.UpdatedOnUtc.AddDays(3);
+            workItem.Move(inProgress, admin, null, WorkItemData.UpdatedOnUtc);
+
+            // Act
+            Result result = workItem.Move(todo, admin, null, movedBackOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            workItem.EnteredCurrentStateOnUtc.Should().Be(movedBackOnUtc);
+        }
+
+        [Fact]
+        public void Should_SetEnteredCurrentStateOnUtc_When_MovedToAClosingState()
+        {
+            // Arrange
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            FlowState cancelledState = project.FlowStates.Single(s => s.Name == "Cancelled");
+
+            // Act
+            workItem.Move(cancelledState, admin, null, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            workItem.EnteredCurrentStateOnUtc.Should().Be(WorkItemData.UpdatedOnUtc);
+        }
+
+        [Fact]
+        public void Should_KeepEnteredCurrentStateOnUtc_When_MoveIsRejected()
+        {
+            // Arrange
+            var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
+            FlowState doneState = project.FlowStates.Single(s => s.Name == "Done");
+
+            // Act
+            Result result = workItem.Move(doneState, admin, null, WorkItemData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            workItem.EnteredCurrentStateOnUtc.Should().Be(WorkItemData.CreatedOnUtc);
         }
     }
 

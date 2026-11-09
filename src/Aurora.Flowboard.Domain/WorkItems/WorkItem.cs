@@ -12,6 +12,9 @@ public sealed class WorkItem : BaseEntity
     public const int MaxDescriptionLength = 4000;
     public const int MaxCodeLength = 20;
 
+    // An open, in-flight work item is stalled from this many whole days in its current state.
+    public const int StalledThresholdDays = 7;
+
     private readonly List<Comment> _comments = [];
     private readonly List<TimeEntry> _timeEntries = [];
     private readonly List<StateTransitionHistory> _stateHistory = [];
@@ -35,6 +38,7 @@ public sealed class WorkItem : BaseEntity
     public DateTime CreatedOnUtc { get; private set; }
     public DateTime? UpdatedOnUtc { get; private set; }
     public DateTime? CompletedOnUtc { get; private set; }
+    public DateTime EnteredCurrentStateOnUtc { get; private set; }
 
     public Project Project { get; init; } = null!;
     public FlowState FlowState { get; private set; } = null!;
@@ -81,6 +85,7 @@ public sealed class WorkItem : BaseEntity
         EstimatedPoints = estimatedPoints;
         EstimatedCompletionDate = estimatedCompletionDate;
         CreatedOnUtc = createdOnUtc;
+        EnteredCurrentStateOnUtc = createdOnUtc;
     }
 
     public static Result<WorkItem> Create(
@@ -507,6 +512,7 @@ public sealed class WorkItem : BaseEntity
 
         FlowStateId = toState.Id;
         FlowState = toState;
+        EnteredCurrentStateOnUtc = changedOnUtc;
         UpdatedOnUtc = changedOnUtc;
 
         if (toState.Category is FlowStateCategory.Completed or FlowStateCategory.Cancelled)
