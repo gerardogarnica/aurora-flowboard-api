@@ -475,6 +475,81 @@ public sealed class GetProjectBoardHandlerTests
         _ = _dbContext.DidNotReceive().WorkItems;
     }
 
+    [Fact]
+    public async Task Should_MarkFirstColumnAsBacklog_AndTheRestAsInFlight()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        FlowStateDefinition[] flowStates = FlowStateDefinitionData.GetFlow(
+            ("Backlog", FlowStateCategory.Active),
+            ("In Progress", FlowStateCategory.Active),
+            ("QA", FlowStateCategory.Active),
+            ("Done", FlowStateCategory.Completed),
+            ("Cancelled", FlowStateCategory.Cancelled));
+        Project project = Project.Create("Board Project", "Desc", ProjectCode.Create("BRD").Value, ProjectKind.Product, Color.Create("white").Value, flowStates, admin, WorkItemQueryData.UtcNow).Value;
+        ArrangeBoard(project, admin.Id, project.FlowTransitions);
+
+        // Act
+        Result<IReadOnlyCollection<BoardColumnResponse>> result =
+            await _handler.Handle(new GetProjectBoardQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.Value.Select(c => (c.FlowStateName, c.Stage)).Should().Equal(
+            ("Backlog", FlowStateStage.Backlog),
+            ("In Progress", FlowStateStage.InFlight),
+            ("QA", FlowStateStage.InFlight));
+    }
+
+    [Fact]
+    public async Task Should_MarkSingleColumnAsInFlight_When_ProjectHasOneActiveState()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        Project project = WorkItemQueryData.GetActiveProjectWithFlow(admin);
+        ArrangeBoard(project, admin.Id, project.FlowTransitions);
+
+        // Act
+        Result<IReadOnlyCollection<BoardColumnResponse>> result =
+            await _handler.Handle(new GetProjectBoardQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.Value.Should().ContainSingle().Which.Stage.Should().Be(FlowStateStage.InFlight);
+    }
+
+    [Fact]
+    public async Task Should_MapEnteredCurrentStateOnUtc_FromTheLastMove()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        FlowStateDefinition[] flowStates = FlowStateDefinitionData.GetFlow(
+            ("Backlog", FlowStateCategory.Active),
+            ("In Progress", FlowStateCategory.Active),
+            ("Done", FlowStateCategory.Completed),
+            ("Cancelled", FlowStateCategory.Cancelled));
+        Project project = Project.Create("Board Project", "Desc", ProjectCode.Create("BRD").Value, ProjectKind.Product, Color.Create("white").Value, flowStates, admin, WorkItemQueryData.UtcNow).Value;
+        WorkItem workItem = WorkItem.Create("Item", null, WorkItemType.Story, Priority.Medium, project, admin, null, null, WorkItemQueryData.UtcNow).Value;
+        DateTime movedOnUtc = WorkItemQueryData.UtcNow.AddHours(5);
+        workItem.Move(project.FlowStates.Single(s => s.Name == "In Progress"), admin, null, movedOnUtc);
+
+        _userContext.UserId.Returns(admin.Id);
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.FlowStates, project.FlowStates);
+        _dbContext.Seed(c => c.FlowTransitions, project.FlowTransitions);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.Components);
+        _dbContext.Seed(c => c.Milestones);
+
+        // Act
+        Result<IReadOnlyCollection<BoardColumnResponse>> result =
+            await _handler.Handle(new GetProjectBoardQuery(project.Id), CancellationToken.None);
+
+        // Assert
+        result.Value.Single(c => c.FlowStateName == "In Progress").WorkItems
+            .Should().ContainSingle()
+            .Which.EnteredCurrentStateOnUtc.Should().Be(movedOnUtc);
+    }
+
     private void ArrangeBoard(Project project, Guid userId, IEnumerable<FlowTransition> transitions)
     {
         _userContext.UserId.Returns(userId);

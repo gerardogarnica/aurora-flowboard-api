@@ -40,6 +40,7 @@ internal sealed class GetWorkItemByCodeHandler(
                     w.CreatedOnUtc,
                     w.UpdatedOnUtc,
                     w.CompletedOnUtc,
+                    w.EnteredCurrentStateOnUtc,
                     w.Tags
                         .OrderBy(t => t.Name)
                         .Select(t => new WorkItemTagResponse(t.Id, t.Name))

@@ -27,6 +27,7 @@ public sealed record WorkItemResponse(
     DateTime CreatedOnUtc,
     DateTime? UpdatedOnUtc,
     DateTime? CompletedOnUtc,
+    DateTime EnteredCurrentStateOnUtc,
     IReadOnlyCollection<WorkItemTagResponse> Tags,
     IReadOnlyCollection<WorkItemFlowTransitionResponse> AvailableTransitions);
 

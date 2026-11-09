@@ -662,7 +662,7 @@ internal static class MyProjectsQueryExtensions
 - Modificar: `src/Aurora.Flowboard.Application/WorkItems/GetByCode/WorkItemResponse.cs`, `GetWorkItemByCodeHandler.cs`
 - Test: `test/Aurora.Flowboard.Application.UnitTests/Projects/GetProjectBoardHandlerTests.cs`, `test/Aurora.Flowboard.Application.UnitTests/WorkItems/GetWorkItemByCodeHandlerTests.cs`
 
-- [ ] **Escribir los tests que fallan.** En `GetProjectBoardHandlerTests`, antes del método privado `ArrangeBoard`:
+- [x] **Escribir los tests que fallan.** En `GetProjectBoardHandlerTests`, antes del método privado `ArrangeBoard`:
 
 ```csharp
     [Fact]
@@ -765,7 +765,7 @@ internal static class MyProjectsQueryExtensions
     }
 ```
 
-- [ ] **Verlo fallar.** Para que compile, añade los parámetros a los records (código final, abajo) y pasa valores fijos en los handlers: `FlowStateStage.InFlight` como `Stage` del board y `default` como fecha en los dos handlers.
+- [x] **Verlo fallar.** Para que compile, añade los parámetros a los records (código final, abajo) y pasa valores fijos en los handlers: `FlowStateStage.InFlight` como `Stage` del board y `default` como fecha en los dos handlers.
 
 ```bash
 dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Application.UnitTests.csproj
@@ -775,7 +775,7 @@ dotnet build test/Aurora.Flowboard.Application.UnitTests/Aurora.Flowboard.Applic
 
   Fallo esperado: `Should_MarkFirstColumnAsBacklog_AndTheRestAsInFlight` (la primera columna sale `InFlight`) y los dos `Should_MapEnteredCurrentStateOnUtc_FromTheLastMove` (`found <0001-01-01 00:00:00>`). `Should_MarkSingleColumnAsInFlight_When_ProjectHasOneActiveState` ya pasa con el stub.
 
-- [ ] **Implementar.**
+- [x] **Implementar.**
 
   `BoardColumnResponse.cs`, con `Stage` después de `Color`:
 
@@ -816,8 +816,8 @@ public sealed record BoardColumnResponse(
 
   `GetWorkItemByCodeHandler.cs`: en `new WorkItemResponse(...)`, después de `w.CompletedOnUtc,`, añade `w.EnteredCurrentStateOnUtc,`.
 
-- [ ] **Verlo pasar.** Repite los comandos (todo en verde en las dos clases).
-- [ ] Commit: `Expose stage on board columns and time in state on board and detail` con los cinco ficheros de `src/`, los dos de tests y este plan.
+- [x] **Verlo pasar.** Repite los comandos (todo en verde en las dos clases).
+- [x] Commit: `Expose stage on board columns and time in state on board and detail` con los cinco ficheros de `src/`, los dos de tests y este plan.
 
 ### Tarea 6: query, filtros y validador de `GET work-items`
 
