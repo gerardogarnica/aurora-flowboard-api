@@ -366,7 +366,7 @@ public enum FlowStateStage
 
 Infrastructure no tiene tests unitarios, así que esta tarea se verifica a mano contra Postgres.
 
-- [ ] **Configurar.** En `WorkItemConfiguration.Configure`, después de `builder.Property(x => x.CompletedOnUtc);`:
+- [x] **Configurar.** En `WorkItemConfiguration.Configure`, después de `builder.Property(x => x.CompletedOnUtc);`:
 
 ```csharp
         builder.Property(x => x.EnteredCurrentStateOnUtc)
@@ -381,7 +381,7 @@ Infrastructure no tiene tests unitarios, así que esta tarea se verifica a mano 
         builder.HasIndex(x => new { x.FlowStateId, x.EnteredCurrentStateOnUtc });
 ```
 
-- [ ] **Generar la migración.**
+- [x] **Generar la migración.**
 
 ```bash
 dotnet build src/Aurora.Flowboard.Infrastructure/Aurora.Flowboard.Infrastructure.csproj
@@ -390,7 +390,7 @@ dotnet ef migrations add AddWorkItemEnteredCurrentState --project src/Aurora.Flo
 
   Comprueba que la migración generada **elimina** `ix_work_items_flow_state_id` y crea `ix_work_items_flow_state_id_entered_current_state_on_utc`. Si EF no elimina el índice anterior, para y avisa al usuario: el spec da por hecho que lo hace.
 
-- [ ] **Editar a mano `Up` y `Down`.** EF genera la columna `NOT NULL` con `defaultValue: new DateTime(1, 1, 1, ...)`, lo que mostraría todos los items como estancados. Deja la clase así, sin tocar el `.Designer.cs` ni el snapshot:
+- [x] **Editar a mano `Up` y `Down`.** EF genera la columna `NOT NULL` con `defaultValue: new DateTime(1, 1, 1, ...)`, lo que mostraría todos los items como estancados. Deja la clase así, sin tocar el `.Designer.cs` ni el snapshot:
 
 ```csharp
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -472,7 +472,7 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
 }
 ```
 
-- [ ] **Compilar y comprobar que el modelo cuadra:**
+- [x] **Compilar y comprobar que el modelo cuadra:**
 
 ```bash
 dotnet build src/Aurora.Flowboard.Infrastructure/Aurora.Flowboard.Infrastructure.csproj
@@ -482,7 +482,7 @@ dotnet ef migrations has-pending-model-changes --project src/Aurora.Flowboard.In
 
   Esperado: `No changes have been made to the model since the last migration.`
 
-- [ ] **Revisar el SQL de subida y de bajada:**
+- [x] **Revisar el SQL de subida y de bajada:**
 
 ```bash
 dotnet ef migrations script AddConcurrencyTokens AddWorkItemEnteredCurrentState --project src/Aurora.Flowboard.Infrastructure --startup-project src/Aurora.Flowboard.Api
@@ -521,7 +521,9 @@ dotnet ef database update --project src/Aurora.Flowboard.Infrastructure --startu
 
   Esperado: tras la bajada la columna ya no existe y vuelve `ix_work_items_flow_state_id`; tras la subida, las tres consultas dan lo mismo que antes.
 
-- [ ] Commit: `Persist when work items entered their state, with a backfilled migration` con `WorkItemConfiguration.cs`, los dos ficheros de la migración, `ApplicationDbContextModelSnapshot.cs` y este plan.
+  > Pendiente: la verificación manual contra Postgres la hace el usuario al final (no se puede ejecutar desde esta sesión). La migración generada es `20261109183609_AddWorkItemEnteredCurrentState`; EF eliminó `ix_work_items_flow_state_id` como esperaba el spec, y el SQL de `migrations script` (subida y bajada) coincide con el esperado.
+
+- [x] Commit: `Persist when work items entered their state, with a backfilled migration` con `WorkItemConfiguration.cs`, los dos ficheros de la migración, `ApplicationDbContextModelSnapshot.cs` y este plan.
 
 ### Tarea 4: los dos conjuntos de proyectos y `my-summary`
 

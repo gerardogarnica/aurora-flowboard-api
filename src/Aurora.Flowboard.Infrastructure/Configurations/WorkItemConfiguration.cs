@@ -52,6 +52,9 @@ internal sealed class WorkItemConfiguration : IEntityTypeConfiguration<WorkItem>
 
         builder.Property(x => x.CompletedOnUtc);
 
+        builder.Property(x => x.EnteredCurrentStateOnUtc)
+            .IsRequired();
+
         builder.HasOne<Project>(x => x.Project)
             .WithMany(p => p.WorkItems)
             .HasForeignKey(x => x.ProjectId)
@@ -124,5 +127,9 @@ internal sealed class WorkItemConfiguration : IEntityTypeConfiguration<WorkItem>
         builder.HasIndex(x => x.MilestoneId);
 
         builder.HasIndex(x => x.ComponentId);
+
+        // The dashboard and GET work-items filter by state and compare the time in state. The index
+        // leads with flow_state_id, so it also serves the foreign key and replaces its own index.
+        builder.HasIndex(x => new { x.FlowStateId, x.EnteredCurrentStateOnUtc });
     }
 }
