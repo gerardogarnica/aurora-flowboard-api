@@ -39,7 +39,7 @@ internal static class GetWorkItemsQueryData
         CreateProject(name, code, ProjectKind.Client, FlowStateDefinitionData.GetMinimalFlow(), admin, developers);
 
     public static void ChangeStatus(Project project, ProjectStatus status, User admin) =>
-        EnsureSuccess(project.ChangeStatus(status, admin, Now), $"{project.Name} to {status}");
+        EnsureSuccess(project.ChangeStatus(status, admin, 0, Now), $"{project.Name} to {status}");
 
     // Created in the project's first Active state, timeInState before Now.
     public static WorkItem CreateInBacklog(

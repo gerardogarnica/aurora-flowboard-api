@@ -573,7 +573,7 @@ public sealed class MilestoneTests
             User admin = UserData.GetActiveUser();
             Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Active, admin, kind);
             Milestone milestone = MilestoneData.GetMilestone(project, admin);
-            project.ChangeStatus(projectStatus, admin, MilestoneData.UpdatedOnUtc);
+            project.ChangeStatus(projectStatus, admin, 0, MilestoneData.UpdatedOnUtc);
 
             // Act
             Result result = milestone.Update(
@@ -848,7 +848,7 @@ public sealed class MilestoneTests
             User admin = UserData.GetActiveUser();
             Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Active, admin, kind);
             Milestone milestone = MilestoneData.GetMilestone(project, admin);
-            project.ChangeStatus(projectStatus, admin, MilestoneData.UpdatedOnUtc);
+            project.ChangeStatus(projectStatus, admin, 0, MilestoneData.UpdatedOnUtc);
 
             // Act
             Result result = milestone.ChangeStatus(MilestoneStatus.Active, admin, 0, MilestoneData.UpdatedOnUtc);

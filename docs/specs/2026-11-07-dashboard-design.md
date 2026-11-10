@@ -13,7 +13,7 @@ El frontend necesita construir el Home y My Issues, cuya spec está aprobada en 
 - **No se sabe cuándo entró un item a su estado.** `WorkItem` (`src/Aurora.Flowboard.Domain/WorkItems/WorkItem.cs`) no guarda ese dato. Solo se puede deducir del historial, y `Create` no escribe historial.
 - **No existe una lista de work items entre proyectos.** Solo está el board por proyecto (`GET projects/{projectId:guid}/board`).
 - **No existe el concepto de etapa.** `Project.GetInitialFlowState()` dice dónde nace un item, pero nada distingue backlog de trabajo en vuelo.
-- **Un proyecto puede completarse con items abiertos.** El PRD (§5.1) lo prohíbe, pero `Project.ChangeStatus` (`src/Aurora.Flowboard.Domain/Projects/Project.cs:233`) no lo comprueba. En `Completed`, `IsModifiable` es falso y los items no se pueden mover, y desde ahí solo se puede pasar a `Archived` (`Project.cs:25`). Sin una decisión, esos items saldrían como estancados para siempre.
+- **Un proyecto puede completarse con items abiertos.** El PRD (§5.1) lo prohíbe, pero `Project.ChangeStatus` (`src/Aurora.Flowboard.Domain/Projects/Project.cs:233`) no lo comprueba. En `Completed`, `IsModifiable` es falso y los items no se pueden mover, y desde ahí solo se puede pasar a `Archived` (`Project.cs:25`). Sin una decisión, esos items saldrían como estancados para siempre. (La regla se implementó después como cambio acotado: ver sección 10.)
 
 ## 2. Objetivo y criterios de éxito
 
@@ -53,7 +53,7 @@ Que la API calcule, con una sola definición, los datos del Home y de My Issues.
 - `my-summary`: la lista del Sidebar, `counts.projects`, `counts.members` y `counts.myOpenIssues` pasan a usar mis proyectos activos. La forma de la respuesta no cambia.
 
 **Fuera de alcance:**
-- Regla del PRD §5.1 que impide completar o archivar un proyecto con items abiertos, y limpieza de los datos ya afectados: ticket aparte (ver sección 10).
+- Limpieza de los datos ya afectados por la regla del PRD §5.1 (proyectos `Completed` con items abiertos). La regla en sí se añadió en esta rama como cambio acotado del 2026-11-09 (ver sección 10).
 - Limpiar `CompletedOnUtc` al reabrir un item: no se hará aquí, porque `closedLast7Days` lo evita filtrando por categoría.
 - Caché (Redis u otra): posible mejora futura si el coste del `GROUP BY` lo justifica.
 - Zonas horarias por usuario y umbrales configurables: no se harán en esta feature.
@@ -284,7 +284,8 @@ Forma de cada item:
 
 ## 10. Riesgos y preguntas abiertas
 
-- **La regla del PRD §5.1 sigue sin implementarse.** Se pueden seguir completando proyectos con items abiertos, que dejarán de verse en el dashboard y en My Issues. Hay que abrir un ticket aparte. Requiere `Serializable` en `ChangeProjectStatusHandler`, revisar los handlers que crean o reabren items (`concurrency.md`) y decidir qué hacer con los datos afectados. - **Un proyecto `Completed` no se ve en el Sidebar ni en el portafolio.** Se llega a él desde `GET projects`, que lista todas mis membresías (archivados incluidos) y puede mostrar items abiertos que el dashboard no cuenta.
+- **Proyectos completados antes de la regla del PRD §5.1.** Desde el 2026-11-09 (cambio acotado, ver el plan) `Project.ChangeStatus` no deja pasar de `Active` o `Maintenance` a `Completed` o `Archived` un proyecto con items abiertos (400 `Project.CannotCloseWithOpenWorkItems`). Un proyecto que ya se completó con items abiertos se puede seguir archivando, pero esos items solo se cierran con SQL. No hay limpieza automática de esos datos.
+- **Un proyecto `Completed` no se ve en el Sidebar ni en el portafolio.** Se llega a él desde `GET projects`, que lista todas mis membresías (archivados incluidos) y puede mostrar items abiertos que el dashboard no cuenta.
 - **Board de un proyecto `Completed`.** Sus cards siguen visibles y pueden salir en rojo por antigüedad, aunque no se puedan mover. Se acepta.
 - **Item asignado en un proyecto `Completed`.** Deja de aparecer en My Issues, y solo se llega a él por el board (desde `GET projects`) o por su código.
 - **Traducción a SQL.** La consulta agregada solo se valida contra Postgres, no en los tests unitarios.

@@ -230,7 +230,7 @@ public sealed class Project : BaseEntity
         return Result.Ok();
     }
 
-    public Result ChangeStatus(ProjectStatus newStatus, User changedBy, DateTime updatedOnUtc)
+    public Result ChangeStatus(ProjectStatus newStatus, User changedBy, int openWorkItemCount, DateTime updatedOnUtc)
     {
         if (!IsAdmin(changedBy.Id))
         {
@@ -245,6 +245,14 @@ public sealed class Project : BaseEntity
         if (!IsValidTransition(Status, newStatus))
         {
             return Result.Fail(ProjectErrors.InvalidStatusTransition);
+        }
+
+        // A project leaves Active or Maintenance for Completed or Archived only once every work
+        // item is closed. A Completed project can still be archived: its items can no longer be moved, and
+        // one completed before this rule existed may hold open ones.
+        if (IsModifiable && newStatus is ProjectStatus.Completed or ProjectStatus.Archived && openWorkItemCount > 0)
+        {
+            return Result.Fail(ProjectErrors.CannotCloseWithOpenWorkItems);
         }
 
         ProjectStatus oldStatus = Status;

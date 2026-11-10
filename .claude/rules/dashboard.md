@@ -22,7 +22,7 @@ Spec: `docs/specs/2026-11-07-dashboard-design.md` (definitions in section 2).
 
 Rules:
 
-- Why: these are the projects that accept work items (`Project.IsModifiable`). A `Completed` project's items cannot be moved, and the PRD §5.1 rule that forbids completing a project with open items is not enforced yet. A `Completed` or `Archived` project is reached through `GET projects`, not the Sidebar.
+- Why: these are the projects that accept work items (`Project.IsModifiable`). A `Completed` project's items cannot be moved. The PRD §5.1 rule now stops completing a project with open items (`domain-model.md`), but projects completed before it may still hold some. A `Completed` or `Archived` project is reached through `GET projects`, not the Sidebar.
 - There used to be a second set, `WhereMyProjects` (`Status != Archived`), for the Sidebar and portfolio. It was removed on 2026-11-09 by product decision (spec, decision 1). Don't reintroduce it for a new list.
 - A new list of projects uses this set and `OrderLikeSidebar` (status, then name, `OrdinalIgnoreCase`), so it matches the Sidebar.
 - `MyProjectsQueryExtensionsTests` asserts that `AcceptsOpenWork`, `WhereMyActiveProjects` and `Project.IsModifiable` agree for every `ProjectStatus`.

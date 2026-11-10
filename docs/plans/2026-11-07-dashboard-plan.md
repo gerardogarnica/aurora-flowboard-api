@@ -3356,6 +3356,17 @@ Un usuario que solo tiene proyectos `Completed` recibe el dashboard vacío. Sust
 - Documentación: spec (decisiones 1 y 5, definiciones, alcance, §6, tests y riesgos), `.claude/rules/dashboard.md` y la fila de `CLAUDE.md`.
 - La forma de las respuestas no cambia, pero su contenido sí: hay que avisar a `fb-web-dashboard` de que el Sidebar y el portafolio ya no traen proyectos `Completed`.
 
+### 2026-11-09: regla del PRD §5.1
+
+Autorizado implementarla en esta rama en lugar de un ticket aparte. Un proyecto no puede pasar de `Active` o `Maintenance` a `Completed` o `Archived` mientras tenga items abiertos.
+
+- Dominio: `Project.ChangeStatus(newStatus, changedBy, openWorkItemCount, updatedOnUtc)` y el error `ProjectErrors.CannotCloseWithOpenWorkItems`. Es un 400 (`Validation`), igual que en milestones, y no el 409 con la lista de códigos que pide el PRD §11. Ese cambio afectaría también a milestones y queda aparte.
+- `Completed → Archived` no se comprueba: los items de un proyecto `Completed` no se pueden mover, y los completados antes de la regla pueden tener abiertos.
+- Aplicación: `ChangeProjectStatusHandler` cuenta los items abiertos con `CountOpenAsync`. Sin `Serializable`: una creación concurrente escribe la fila del proyecto (`FOR UPDATE`, `WorkItemCounter`) y `xmin` da 409; ninguna transición sale de un estado terminal.
+- Tests: en `ProjectTests`, los cierres bloqueados, los cambios que no cierran, archivar un `Completed` y ninguna transición desde un estado terminal. En `ChangeProjectStatusHandlerTests`, el error sin guardar, el cierre con items cerrados y los items abiertos de otro proyecto. El resto de llamadas a `ChangeStatus` en los tests pasan `0`.
+- Documentación: `.claude/rules/domain-model.md`, `.claude/rules/dashboard.md` y el spec (contexto, alcance y riesgos).
+- Fuera: limpiar los proyectos `Completed` que ya tienen items abiertos.
+
 ## Verificación final
 
 - [ ] `dotnet-test-runner` limpio: build y los tres ejecutables de tests.
@@ -3365,4 +3376,5 @@ Un usuario que solo tiene proyectos `Completed` recibe el dashboard vacío. Sust
   - Migración contra Postgres: backfill con y sin historial, `Up` y `Down` (tarea 3).
   - Las peticiones del `.http` y el SQL de los logs (tarea 10, puntos 1 a 6).
   - Avisar a la sesión `fb-web-dashboard` de que los endpoints están disponibles. La forma del contrato no cambió respecto a su spec v1.1; el contenido del Sidebar y del portafolio sí (cambio acotado del 2026-11-09).
-- [ ] Al terminar, recuerda al usuario que la regla del PRD §5.1 sigue pendiente y necesita su propio ticket (spec, sección 10).
+- [x] Al terminar, recuerda al usuario que la regla del PRD §5.1 sigue pendiente y necesita su propio ticket (spec, sección 10).
+  > Implementada en esta rama (cambio acotado del 2026-11-09, arriba).

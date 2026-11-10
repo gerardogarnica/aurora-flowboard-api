@@ -297,7 +297,7 @@ public sealed class ComponentTests
             User admin = UserData.GetActiveUser();
             Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Active, admin, kind);
             Component component = ComponentData.GetComponent(project, admin);
-            project.ChangeStatus(projectStatus, admin, ComponentData.UpdatedOnUtc);
+            project.ChangeStatus(projectStatus, admin, 0, ComponentData.UpdatedOnUtc);
 
             // Act
             Result result = component.Rename(ComponentData.RenamedTo, admin, ComponentData.UpdatedOnUtc);
@@ -404,7 +404,7 @@ public sealed class ComponentTests
             User admin = UserData.GetActiveUser();
             Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Active, admin, kind);
             Component component = ComponentData.GetComponent(project, admin);
-            project.ChangeStatus(projectStatus, admin, ComponentData.UpdatedOnUtc);
+            project.ChangeStatus(projectStatus, admin, 0, ComponentData.UpdatedOnUtc);
 
             // Act
             Result result = component.Retire(admin, 0, ComponentData.UpdatedOnUtc);

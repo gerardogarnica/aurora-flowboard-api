@@ -345,7 +345,7 @@ public sealed class WorkItemTests
             // Arrange
             User admin = UserData.GetActiveUser();
             Project blockedProject = ProjectData.GetProject(admin);
-            blockedProject.ChangeStatus(ProjectStatus.Archived, admin, ProjectData.UpdatedOnUtc);
+            blockedProject.ChangeStatus(ProjectStatus.Archived, admin, 0, ProjectData.UpdatedOnUtc);
 
             // Act
             Result<WorkItem> result = WorkItem.Create(
@@ -608,7 +608,7 @@ public sealed class WorkItemTests
         {
             // Arrange
             var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
-            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
+            project.ChangeStatus(ProjectStatus.Archived, admin, 0, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.UpdateTitle("New Title", admin, WorkItemData.UpdatedOnUtc);
@@ -744,7 +744,7 @@ public sealed class WorkItemTests
         {
             // Arrange
             var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
-            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
+            project.ChangeStatus(ProjectStatus.Archived, admin, 0, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.UpdateDescription("New description", admin, WorkItemData.UpdatedOnUtc);
@@ -1690,7 +1690,7 @@ public sealed class WorkItemTests
             // Arrange
             var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             FlowState toState = project.FlowStates.Single(s => s.Name == "In Progress");
-            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
+            project.ChangeStatus(ProjectStatus.Archived, admin, 0, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.Move(toState, admin, null, WorkItemData.UpdatedOnUtc);
@@ -1907,7 +1907,7 @@ public sealed class WorkItemTests
             var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             User assignee = UserData.GetActiveUser();
             project.AddMember(assignee, ProjectRole.Developer, admin, WorkItemData.CreatedOnUtc);
-            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
+            project.ChangeStatus(ProjectStatus.Archived, admin, 0, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.Assign(assignee, admin, WorkItemData.UpdatedOnUtc);
@@ -2064,7 +2064,7 @@ public sealed class WorkItemTests
             WorkItem workItem = WorkItem.Create(
                 WorkItemData.Title, null, WorkItemData.Type, WorkItemData.Priority,
                 project, admin, null, null, WorkItemData.CreatedOnUtc, assignee).Value;
-            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
+            project.ChangeStatus(ProjectStatus.Archived, admin, 0, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.Unassign(admin, WorkItemData.UpdatedOnUtc);
@@ -2184,7 +2184,7 @@ public sealed class WorkItemTests
         {
             // Arrange
             var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
-            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
+            project.ChangeStatus(ProjectStatus.Archived, admin, 0, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.AddComment(admin, "This is a comment", WorkItemData.CreatedOnUtc);
@@ -2300,7 +2300,7 @@ public sealed class WorkItemTests
             var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             workItem.AddComment(admin, "Original content", WorkItemData.CreatedOnUtc);
             Guid commentId = workItem.Comments.Single().Id;
-            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
+            project.ChangeStatus(ProjectStatus.Archived, admin, 0, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.UpdateComment(commentId, admin, "Updated content", WorkItemData.UpdatedOnUtc);
@@ -2400,7 +2400,7 @@ public sealed class WorkItemTests
             var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             workItem.AddComment(admin, "A comment", WorkItemData.CreatedOnUtc);
             Guid commentId = workItem.Comments.Single().Id;
-            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
+            project.ChangeStatus(ProjectStatus.Archived, admin, 0, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.RemoveComment(commentId, admin, WorkItemData.UpdatedOnUtc);
@@ -2522,7 +2522,7 @@ public sealed class WorkItemTests
         {
             // Arrange
             var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
-            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
+            project.ChangeStatus(ProjectStatus.Archived, admin, 0, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.LogTime(admin, 1m, null, WorkItemData.UpdatedOnUtc, WorkItemData.CreatedOnUtc);
@@ -2642,7 +2642,7 @@ public sealed class WorkItemTests
         {
             // Arrange
             var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
-            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
+            project.ChangeStatus(ProjectStatus.Archived, admin, 0, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.AddTag("backend", admin, WorkItemData.UpdatedOnUtc);
@@ -2728,7 +2728,7 @@ public sealed class WorkItemTests
             var (workItem, project, admin) = WorkItemData.GetWorkItemWithContext();
             workItem.AddTag("backend", admin, WorkItemData.UpdatedOnUtc);
             Guid tagId = workItem.Tags.First().Id;
-            project.ChangeStatus(ProjectStatus.Archived, admin, WorkItemData.UpdatedOnUtc);
+            project.ChangeStatus(ProjectStatus.Archived, admin, 0, WorkItemData.UpdatedOnUtc);
 
             // Act
             Result result = workItem.RemoveTag(tagId, admin, WorkItemData.UpdatedOnUtc);
