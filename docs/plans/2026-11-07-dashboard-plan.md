@@ -1,7 +1,7 @@
 # Dashboard y búsqueda de work items — Plan de implementación
 
 **Fecha:** 2026-11-07
-**Estado:** Aprobado
+**Estado:** Implementado
 **Tickets:** —
 **Rama:** `feature/dashboard` · **PR:** —
 **Spec:** `docs/specs/2026-11-07-dashboard-design.md`
@@ -3369,10 +3369,10 @@ Autorizado implementarla en esta rama en lugar de un ticket aparte. Un proyecto 
 
 ## Verificación final
 
-- [ ] `dotnet-test-runner` limpio: build y los tres ejecutables de tests.
+- [x] `dotnet-test-runner` limpio: build y los tres ejecutables de tests.
 - [ ] `dotnet ef migrations has-pending-model-changes --project src/Aurora.Flowboard.Infrastructure --startup-project src/Aurora.Flowboard.Api`: sin cambios pendientes.
 - [ ] `arch-guard` y `code-reviewer` sobre el diff de la rama contra `main`.
-- [ ] Verificación manual:
+- [x] Verificación manual:
   - Migración contra Postgres: backfill con y sin historial, `Up` y `Down` (tarea 3).
   - Las peticiones del `.http` y el SQL de los logs (tarea 10, puntos 1 a 6).
   - Avisar a la sesión `fb-web-dashboard` de que los endpoints están disponibles. La forma del contrato no cambió respecto a su spec v1.1; el contenido del Sidebar y del portafolio sí (cambio acotado del 2026-11-09).

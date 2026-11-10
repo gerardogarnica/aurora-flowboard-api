@@ -1,7 +1,7 @@
 # Dashboard y búsqueda de work items — Diseño
 
 **Fecha:** 2026-11-07
-**Estado:** Aprobado
+**Estado:** Implementado
 **Tickets:** —
 **Rama:** `feature/dashboard` · **PR:** —
 **Plan:** `docs/plans/2026-11-07-dashboard-plan.md`
