@@ -15,10 +15,11 @@ internal sealed class GetDashboardHandler(
         Guid userId = userContext.UserId;
         DateTime now = dateTimeProvider.UtcNow;
 
+        // Every read covers my active projects only (MyProjectsQueryExtensions).
         List<DashboardProjectRow> projects = await dbContext
             .Projects
             .AsNoTracking()
-            .WhereMyProjects(userId)
+            .WhereMyActiveProjects(userId)
             .Select(p => new DashboardProjectRow(p.Id, p.Name, p.Color.Value, p.Kind, p.Status))
             .ToListAsync(cancellationToken);
 
@@ -27,14 +28,10 @@ internal sealed class GetDashboardHandler(
             return DashboardCalculator.Build(DashboardSnapshot.Empty);
         }
 
-        HashSet<Guid> activeProjectIds = [.. projects
-            .Where(p => MyProjectsQueryExtensions.AcceptsOpenWork(p.Status))
-            .Select(p => p.Id)];
-
         List<DashboardStateRow> states = await dbContext
             .Projects
             .AsNoTracking()
-            .WhereMyProjects(userId)
+            .WhereMyActiveProjects(userId)
             .SelectMany(p => p.FlowStates)
             .Where(s => s.Category == FlowStateCategory.Active)
             .Select(s => new DashboardStateRow(s.Id, s.ProjectId, s.Name, s.Color.Value, s.SortOrder))
@@ -42,7 +39,7 @@ internal sealed class GetDashboardHandler(
 
         HashSet<Guid> backlogStateIds = FlowStateStageResolver.GetBacklogStateIds(
             states.Select(s => (s.Id, s.ProjectId, s.SortOrder)));
-        List<Guid> openStateIds = [.. states.Where(s => activeProjectIds.Contains(s.ProjectId)).Select(s => s.Id)];
+        List<Guid> openStateIds = [.. states.Select(s => s.Id)];
         List<Guid> inFlightStateIds = [.. openStateIds.Where(id => !backlogStateIds.Contains(id))];
 
         List<DashboardOpenGroupRow> openGroups = await GetOpenGroupsAsync(openStateIds, userId, now, cancellationToken);
@@ -142,7 +139,7 @@ internal sealed class GetDashboardHandler(
     }
 
     // By category and not by CompletedOnUtc alone: Move also sets it when cancelling, and nothing clears
-    // it when an item is reopened. Completed projects count, because the closing did happen.
+    // it when an item is reopened.
     private Task<int> CountClosedLast7DaysAsync(List<Guid> projectIds, DateTime now, CancellationToken cancellationToken)
     {
         DateTime closedSince = now.AddDays(-DashboardCalculator.ClosedWindowDays);
@@ -179,7 +176,7 @@ internal sealed class GetDashboardHandler(
         dbContext
             .Projects
             .AsNoTracking()
-            .WhereMyProjects(userId)
+            .WhereMyActiveProjects(userId)
             .SelectMany(p => p.Members)
             .Select(m => new DashboardMemberRow(
                 m.ProjectId,

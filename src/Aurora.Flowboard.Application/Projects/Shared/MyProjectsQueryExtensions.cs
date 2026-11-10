@@ -1,13 +1,8 @@
 namespace Aurora.Flowboard.Application.Projects.Shared;
 
-// The two project sets of the Home and My Issues (docs/specs/2026-11-07-dashboard-design.md, section 2).
-// "My projects" feed the Sidebar, the portfolio rows and the member count. "My active projects" feed
-// every open-work number, because the work items of a Completed project can no longer be moved.
+// A Completed or Archived project is reached through GET projects, not through these screens.
 internal static class MyProjectsQueryExtensions
 {
-    public static IQueryable<Project> WhereMyProjects(this IQueryable<Project> projects, Guid userId) =>
-        projects.Where(p => p.Status != ProjectStatus.Archived && p.Members.Any(m => m.UserId == userId));
-
     // The same rule as AcceptsOpenWork, written out because a method call cannot be translated to SQL.
     public static IQueryable<Project> WhereMyActiveProjects(this IQueryable<Project> projects, Guid userId) =>
         projects.Where(p => (p.Status == ProjectStatus.Active || p.Status == ProjectStatus.Maintenance)

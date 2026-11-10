@@ -12,20 +12,20 @@ internal sealed record DashboardSnapshot(
     IReadOnlyCollection<DashboardMemberRow> Members)
 {
     public static DashboardSnapshot Empty { get; } = new(
-        Array.Empty<DashboardProjectRow>(),
-        Array.Empty<DashboardStateRow>(),
-        Array.Empty<DashboardOpenGroupRow>(),
-        Array.Empty<DashboardMilestoneRow>(),
+        [],
+        [],
+        [],
+        [],
         new Dictionary<Guid, int>(),
         0,
         null,
-        Array.Empty<DashboardMemberRow>());
+        []);
 }
 
-// One of my projects (WhereMyProjects).
+// One of my active projects (WhereMyActiveProjects).
 internal sealed record DashboardProjectRow(Guid Id, string Name, string Color, ProjectKind Kind, ProjectStatus Status);
 
-// An Active flow state of one of my projects.
+// An Active flow state of one of my active projects.
 internal sealed record DashboardStateRow(Guid Id, Guid ProjectId, string Name, string Color, int SortOrder);
 
 // Open work items of my active projects that share every key; Count is how many there are.
@@ -44,5 +44,5 @@ internal sealed record DashboardMilestoneRow(Guid Id, Guid ProjectId, string Nam
 // How many Completed work items a milestone has.
 internal sealed record DashboardMilestoneCountRow(Guid MilestoneId, int Count);
 
-// A member of one of my projects; the names are null when the user row is missing.
+// A member of one of my active projects; the names are null when the user row is missing.
 internal sealed record DashboardMemberRow(Guid ProjectId, Guid UserId, string? FirstName, string? LastName);

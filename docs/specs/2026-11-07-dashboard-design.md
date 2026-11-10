@@ -23,15 +23,14 @@ Que la API calcule, con una sola definición, los datos del Home y de My Issues.
 - El portafolio lista los mismos proyectos que el Sidebar y en el mismo orden.
 - La suma de los buckets 7-13 y 14+ es igual a `team.stalled`.
 - Un item en backlog nunca cuenta como estancado.
-- Un item de un proyecto `Completed` no cuenta en ninguna métrica de items abiertos ni aparece en la búsqueda.
+- Un proyecto `Completed` no aparece en el Sidebar ni en el portafolio, y sus items no cuentan en ninguna métrica ni aparecen en la búsqueda.
 - El coste de `/dashboard` no crece con una fila en memoria por cada item abierto.
 
 ### Definiciones
 
 | Concepto | Definición |
 |---|---|
-| **Mis proyectos** | Soy miembro y `Status != Archived`. Orden del Sidebar: estado y luego nombre |
-| **Mis proyectos activos** | Soy miembro y `Status` es `Active` o `Maintenance` |
+| **Mis proyectos activos** | Soy miembro y `Status` es `Active` o `Maintenance`: los que admiten work items. Orden del Sidebar: estado y luego nombre. Es el único conjunto de estas pantallas (decisión 1) |
 | **Abierto** | `FlowState.Category == Active` |
 | **Backlog** | El estado `Active` de menor `SortOrder`. Excepción: si el proyecto tiene un solo estado `Active`, ese estado es en vuelo y el proyecto no tiene backlog |
 | **En vuelo** | Abierto y no backlog |
@@ -51,7 +50,7 @@ Que la API calcule, con una sola definición, los datos del Home y de My Issues.
 - `stage` en las columnas del board y en los items de la búsqueda.
 - `GET work-items`: búsqueda entre proyectos, paginada.
 - `GET dashboard`.
-- `my-summary`: `counts.myOpenIssues` pasa a usar mis proyectos activos. La forma de la respuesta no cambia.
+- `my-summary`: la lista del Sidebar, `counts.projects`, `counts.members` y `counts.myOpenIssues` pasan a usar mis proyectos activos. La forma de la respuesta no cambia.
 
 **Fuera de alcance:**
 - Regla del PRD §5.1 que impide completar o archivar un proyecto con items abiertos, y limpieza de los datos ya afectados: ticket aparte (ver sección 10).
@@ -65,11 +64,11 @@ Que la API calcule, con una sola definición, los datos del Home y de My Issues.
 
 | # | Supuesto o decisión | Motivo |
 |---|---|---|
-| 1 | Hay dos conjuntos: **mis proyectos** para Sidebar, filas del portafolio, `counts.projects` y `counts.members`; **mis proyectos activos** para métricas de items abiertos, búsqueda y milestones. `counts.myOpenIssues` usa los activos. Un proyecto `Completed` conserva su fila con ceros y `activeMilestone = null`. `closedLast7Days` sigue incluyendo los proyectos `Completed` | Los items de esos proyectos no se pueden mover. El dashboard solo muestra trabajo sobre el que se puede actuar, y el cierre sí ocurrió (decisión del usuario, opción C) |
+| 1 | Un solo conjunto, **mis proyectos activos**, para todo: Sidebar, `counts.projects`, `counts.members` y `counts.myOpenIssues` de `my-summary`; filas y miembros del portafolio; métricas de items abiertos, `closedLast7Days`, milestones y búsqueda. Un proyecto `Completed` no aparece en estas pantallas, y un usuario que solo tiene proyectos `Completed` recibe el dashboard vacío | Son los proyectos que admiten work items: los de un proyecto `Completed` no se pueden mover, y las pantallas solo muestran trabajo sobre el que se puede actuar. **Revisada el 2026-11-09** con el Product Manager: sustituye a la opción C, que mantenía un segundo conjunto (`Status != Archived`) para el Sidebar, el portafolio, `counts.members` y `closedLast7Days`, y dejaba la fila de un proyecto `Completed` con ceros |
 | 2 | El `activeMilestone` "más próximo" es el de menor `TargetEndDate`: gana el vencido más antiguo. Si ninguno tiene fecha, el de `CreatedOnUtc` más reciente | Coincide con el orden de la lista de milestones |
 | 3 | Desempates: por `Name` y luego `Id` en milestones y `activeMilestone` con fecha; por `Id` en la búsqueda y en `activeMilestone` sin fecha | Orden determinista y paginación estable |
 | 4 | `members` incluye a todos los miembros del proyecto, también `Viewer` e inactivos, ordenados por nombre completo | Refleja la membresía real |
-| 5 | Un usuario sin proyectos recibe 200 con ceros, listas vacías y los 4 buckets | El frontend decide su estado vacío a partir de la respuesta |
+| 5 | Un usuario sin proyectos activos recibe 200 con ceros, listas vacías y los 4 buckets | El frontend decide su estado vacío a partir de la respuesta |
 | 6 | Los filtros de la búsqueda se combinan con AND. `stage=Backlog&stalled=true` devuelve 200 con una página vacía | Es una combinación válida sin resultados |
 | 7 | `createdBy=me` incluye items de cualquier asignado y sin asignar, pero solo abiertos y de mis proyectos activos | Pestaña Reported by me |
 | 8 | `linkedTotal`, `linkedClosed` y `linkedStalled` cuentan items de cualquier asignado | Miden el milestone, no al usuario |
@@ -120,9 +119,9 @@ Se eligió A porque es la única que garantiza que los números cuadren sin carg
 ### Application
 
 **Compartido: `Projects/Shared/MyProjectsQueryExtensions.cs`**
-- `WhereMyProjects(userId)` y `WhereMyActiveProjects(userId)`.
+- `WhereMyActiveProjects(userId)` y su equivalente en memoria, `AcceptsOpenWork(status)`.
 - El orden del Sidebar, aplicado en memoria: estado y luego nombre con `StringComparer.OrdinalIgnoreCase`.
-- `GetMySummaryHandler` los adopta. `myOpenIssues` usa los activos, y lo demás no cambia.
+- `GetMySummaryHandler` los adopta en sus tres consultas: lista, miembros y `myOpenIssues`.
 
 **Respuestas existentes**
 - `BoardColumnResponse` añade `FlowStateStage Stage`, calculado con `FlowState.GetBacklogStateId` en `GetProjectBoardHandler`.
@@ -145,14 +144,14 @@ Se eligió A porque es la única que garantiza que los números cuadren sin carg
 
 | # | Consulta | Para qué |
 |---|---|---|
-| 1 | Mis proyectos | Filas del portafolio. Sin proyectos, devuelve aquí la respuesta vacía |
+| 1 | Mis proyectos activos | Filas del portafolio. Sin proyectos activos, devuelve aquí la respuesta vacía |
 | 2 | Estados `Active` de esos proyectos | `distribution` y etapas |
-| 3 | `GROUP BY` de abiertos en proyectos activos, por `FlowStateId`, `MilestoneId`, mío, sin asignar, prioridad alta y tramo de antigüedad | KPIs, Aging, `open`, `stalled`, `distribution`, `linkedStalled` |
-| 4 | Milestones `Active` de proyectos activos | `milestones` y `activeMilestone` |
+| 3 | `GROUP BY` de abiertos en esos proyectos, por `FlowStateId`, `MilestoneId`, mío, sin asignar, prioridad alta y tramo de antigüedad | KPIs, Aging, `open`, `stalled`, `distribution`, `linkedStalled` |
+| 4 | Milestones `Active` de esos proyectos | `milestones` y `activeMilestone` |
 | 5 | Items `Completed` por milestone | `linkedClosed`. `linkedTotal` es esto más los abiertos de la consulta 3 |
-| 6 | Conteo de `closedLast7Days` en mis proyectos | `team.closedLast7Days` |
+| 6 | Conteo de `closedLast7Days` en esos proyectos | `team.closedLast7Days` |
 | 7 | Item en vuelo más antiguo, por `EnteredCurrentStateOnUtc` y luego `Id` | `oldestInFlight` |
-| 8 | Miembros, proyectando nombres y no `User` | `members` |
+| 8 | Miembros de esos proyectos, proyectando nombres y no `User` | `members` |
 
 - `DashboardCalculator` (interna) arma la respuesta a partir de estas filas, como función pura. El handler solo orquesta.
 - Los tramos se calculan en SQL con un ternario anidado, porque los árboles de expresión no admiten `switch` (CS8514). Los límites 4 y 14 son constantes de `DashboardCalculator`, y el 7 es `WorkItem.StalledThresholdDays`.
@@ -161,7 +160,7 @@ Se eligió A porque es la única que garantiza que los números cuadren sin carg
   - `team.stalled`, `team.unassigned` y `aging`: mis proyectos activos, de cualquier asignado.
   - `aging`: solo items en vuelo, siempre con los 4 buckets (0-3, 4-6, 7-13 y 14+, con `to = null` en el último).
   - `milestones`: primero con fecha, ascendente; luego sin fecha, por `linkedStalled` descendente; después los desempates del supuesto 3.
-  - `portfolio`: mismo conjunto y orden que el Sidebar. `distribution` solo con estados `Active`, en `SortOrder`, incluidos los de `count = 0`.
+  - `portfolio`: mismo conjunto (mis proyectos activos) y orden que el Sidebar. `distribution` solo con estados `Active`, en `SortOrder`, incluidos los de `count = 0`.
 
 **Límite de consistencia:** los contadores de la consulta 3 siempre cuadran entre sí, pero las consultas 5, 6 y 7 son lecturas separadas. Un movimiento concurrente puede desalinearlas durante una carga, y se corrige en la siguiente.
 
@@ -272,9 +271,10 @@ Forma de cada item:
 - **Application:**
   - `GetWorkItemsHandler`: alcance (excluye proyectos `Completed`, `Archived` y ajenos, además de items cerrados), cada filtro y sus combinaciones, orden por etapa y antigüedad, y paginación a través de un límite de página.
   - `GetWorkItemsValidator`: cada valor inválido.
-  - `DashboardCalculator`: backlog nunca estancado, excepción de estado único, buckets 7-13 y 14+ iguales a `team.stalled`, orden de milestones, elección de `activeMilestone` y proyecto `Completed` con ceros.
-  - `GetDashboardHandler`: límites exactos de los tramos (3d23h, 4d, 6d23h, 7d, 13d23h y 14d), que se prueban aquí porque el tramo se calcula en la expresión de la consulta; `me.open` coincide con `myOpenIssues` de `GetMySummaryHandler` sobre los mismos datos; `closedLast7Days` excluye cancelados y reabiertos con `CompletedOnUtc` reciente, e incluye proyectos `Completed`; un usuario sin proyectos recibe la respuesta vacía.
-  - `GetMySummaryHandler`: no cuenta items de proyectos `Completed`, pero sigue listando el proyecto.
+  - `DashboardCalculator`: backlog nunca estancado, excepción de estado único, buckets 7-13 y 14+ iguales a `team.stalled`, orden de milestones, elección de `activeMilestone` y proyecto `Completed` fuera de todas las cifras y del portafolio.
+  - `GetDashboardHandler`: límites exactos de los tramos (3d23h, 4d, 6d23h, 7d, 13d23h y 14d), que se prueban aquí porque el tramo se calcula en la expresión de la consulta; `me.open` coincide con `myOpenIssues` de `GetMySummaryHandler` sobre los mismos datos; `closedLast7Days` excluye cancelados, reabiertos con `CompletedOnUtc` reciente y proyectos `Completed`; un proyecto `Completed` no tiene fila; un usuario sin proyectos, o solo con proyectos `Completed`, recibe la respuesta vacía.
+  - `GetMySummaryHandler`: un proyecto `Completed` no sale en la lista ni en `counts.projects`, `counts.members` y `myOpenIssues`.
+  - `MyProjectsQueryExtensions`: `AcceptsOpenWork`, `WhereMyActiveProjects` y `Project.IsModifiable` coinciden para cada `ProjectStatus`.
   - `GetProjectBoardHandler` y `GetWorkItemByCodeHandler`: `stage` y `EnteredCurrentStateOnUtc`.
 - **Arquitectura:** sin tests nuevos, pero se ejecutan porque hay tipos nuevos en varias capas.
 - **Verificación manual (contra Postgres):**
@@ -284,9 +284,8 @@ Forma de cada item:
 
 ## 10. Riesgos y preguntas abiertas
 
-- **La regla del PRD §5.1 sigue sin implementarse.** Se pueden seguir completando proyectos con items abiertos, que dejarán de verse en el dashboard y en My Issues. Hay que abrir un ticket aparte. Requiere `Serializable` en `ChangeProjectStatusHandler`, revisar los handlers que crean o reabren items (`concurrency.md`) y decidir qué hacer con los datos afectados. Con esa regla y sin datos antiguos, el segundo conjunto de proyectos dejaría de ser necesario.
-- **Cifras distintas entre pantallas.** `GET projects` puede mostrar items abiertos en un proyecto `Completed` cuya fila del portafolio muestra 0.
+- **La regla del PRD §5.1 sigue sin implementarse.** Se pueden seguir completando proyectos con items abiertos, que dejarán de verse en el dashboard y en My Issues. Hay que abrir un ticket aparte. Requiere `Serializable` en `ChangeProjectStatusHandler`, revisar los handlers que crean o reabren items (`concurrency.md`) y decidir qué hacer con los datos afectados. - **Un proyecto `Completed` no se ve en el Sidebar ni en el portafolio.** Se llega a él desde `GET projects`, que lista todas mis membresías (archivados incluidos) y puede mostrar items abiertos que el dashboard no cuenta.
 - **Board de un proyecto `Completed`.** Sus cards siguen visibles y pueden salir en rojo por antigüedad, aunque no se puedan mover. Se acepta.
-- **Item asignado en un proyecto `Completed`.** Deja de aparecer en My Issues, y solo se llega a él por el board o por su código.
+- **Item asignado en un proyecto `Completed`.** Deja de aparecer en My Issues, y solo se llega a él por el board (desde `GET projects`) o por su código.
 - **Traducción a SQL.** La consulta agregada solo se valida contra Postgres, no en los tests unitarios.
 - **Rendimiento.** Si el coste del `GROUP BY` crece, se evaluará una caché, que debe respetar las reglas de presupuesto de tiempo y protección contra estampidas de `CLAUDE.md`.

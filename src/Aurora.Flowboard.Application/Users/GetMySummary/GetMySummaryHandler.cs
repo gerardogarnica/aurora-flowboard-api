@@ -18,27 +18,23 @@ internal sealed class GetMySummaryHandler(
             return Result.Fail<MySummaryResponse>(UserErrors.NotFound);
         }
 
-        // Three scalar queries: nothing loads members or work items into memory. The list and the member
-        // count cover my projects; the open issues only my active ones (MyProjectsQueryExtensions).
-        IQueryable<Project> myProjects = dbContext
+        // Three scalar queries over my active projects (MyProjectsQueryExtensions): nothing loads members or work items into memory.
+        IQueryable<Project> myActiveProjects = dbContext
             .Projects
             .AsNoTracking()
-            .WhereMyProjects(query.UserId);
+            .WhereMyActiveProjects(query.UserId);
 
-        List<MyProjectSummaryResponse> projects = await myProjects
+        List<MyProjectSummaryResponse> projects = await myActiveProjects
             .Select(p => new MyProjectSummaryResponse(p.Id, p.Name, p.Color.Value, p.Status))
             .ToListAsync(cancellationToken);
 
-        int memberCount = await myProjects
+        int memberCount = await myActiveProjects
             .SelectMany(p => p.Members)
             .Select(m => m.UserId)
             .Distinct()
             .CountAsync(cancellationToken);
 
-        int myOpenIssues = await dbContext
-            .Projects
-            .AsNoTracking()
-            .WhereMyActiveProjects(query.UserId)
+        int myOpenIssues = await myActiveProjects
             .SelectMany(p => p.WorkItems)
             .CountAsync(
                 wi => wi.AssigneeId == query.UserId && wi.FlowState.Category == FlowStateCategory.Active,

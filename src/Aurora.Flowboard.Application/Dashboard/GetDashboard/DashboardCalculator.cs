@@ -26,17 +26,17 @@ internal static class DashboardCalculator
 
     internal static DashboardResponse Build(DashboardSnapshot snapshot)
     {
-        HashSet<Guid> activeProjectIds = [.. snapshot.Projects
-            .Where(p => MyProjectsQueryExtensions.AcceptsOpenWork(p.Status))
-            .Select(p => p.Id)];
+        // The handler already reads only active projects; filtering again keeps a Completed project out
+        // of every number and of the portfolio, whatever rows it is given.
+        List<DashboardProjectRow> activeProjects = [.. snapshot.Projects
+            .Where(p => MyProjectsQueryExtensions.AcceptsOpenWork(p.Status))];
+        HashSet<Guid> activeProjectIds = [.. activeProjects.Select(p => p.Id)];
         HashSet<Guid> activeStateIds = [.. snapshot.States
             .Where(s => activeProjectIds.Contains(s.ProjectId))
             .Select(s => s.Id)];
         HashSet<Guid> backlogStateIds = FlowStateStageResolver.GetBacklogStateIds(
             snapshot.States.Select(s => (s.Id, s.ProjectId, s.SortOrder)));
 
-        // The handler already reads only active projects; filtering again keeps a Completed project
-        // at zero whatever rows it is given.
         List<DashboardOpenGroupRow> open = [.. snapshot.OpenGroups.Where(g => activeStateIds.Contains(g.FlowStateId))];
         List<DashboardOpenGroupRow> inFlight = [.. open.Where(g => !backlogStateIds.Contains(g.FlowStateId))];
         List<DashboardOpenGroupRow> stalled = [.. inFlight.Where(g => g.AgeBand >= StalledBand)];
@@ -58,7 +58,7 @@ internal static class DashboardCalculator
                 [.. Buckets.Select(b => new DashboardAgingBucketResponse(b.From, b.To, Count(inFlight.Where(g => g.AgeBand == b.Band))))],
                 snapshot.OldestInFlight),
             milestones,
-            BuildPortfolio(snapshot, milestoneRows, milestones.ToDictionary(m => m.Id), open, stalled));
+            BuildPortfolio(snapshot, activeProjects, milestoneRows, milestones.ToDictionary(m => m.Id), open, stalled));
     }
 
     private static List<DashboardMilestoneResponse> BuildMilestones(
@@ -95,11 +95,12 @@ internal static class DashboardCalculator
 
     private static List<DashboardProjectResponse> BuildPortfolio(
         DashboardSnapshot snapshot,
+        List<DashboardProjectRow> activeProjects,
         List<DashboardMilestoneRow> milestoneRows,
         Dictionary<Guid, DashboardMilestoneResponse> milestonesById,
         List<DashboardOpenGroupRow> open,
         List<DashboardOpenGroupRow> stalled) =>
-        [.. snapshot.Projects
+        [.. activeProjects
             .OrderLikeSidebar(p => p.Status, p => p.Name)
             .Select(p =>
             {

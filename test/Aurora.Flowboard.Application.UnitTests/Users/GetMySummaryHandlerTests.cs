@@ -206,8 +206,8 @@ public sealed class GetMySummaryHandlerTests
             await _handler.Handle(new GetMySummaryQuery(caller.Id), CancellationToken.None);
 
         // Assert
-        result.Value.Projects.Select(p => p.Name).Should().ContainInOrder(
-            "Alpha Active", "Zeta Active", "Middle Maintenance", "Done Completed");
+        result.Value.Projects.Select(p => p.Name).Should().Equal(
+            "Alpha Active", "Zeta Active", "Middle Maintenance");
     }
 
     [Fact]
@@ -232,23 +232,27 @@ public sealed class GetMySummaryHandlerTests
     }
 
     [Fact]
-    public async Task Should_ExcludeOpenIssues_InCompletedProjects_ButKeepListingThem()
+    public async Task Should_ExcludeCompletedProjects_FromCountsAndList()
     {
         // Arrange
         User caller = GetMySummaryQueryData.GetUser();
-        Project completedProject = GetMySummaryQueryData.CreateProject("Done Project", "DNP", ProjectStatus.Completed, caller);
+        User onlyInCompleted = GetMySummaryQueryData.GetUser("Only", "Completed");
+        Project activeProject = GetMySummaryQueryData.CreateProject("Active Project", "ACT", ProjectStatus.Active, caller);
+        Project completedProject = GetMySummaryQueryData.CreateProject(
+            "Done Project", "DNP", ProjectStatus.Completed, caller, onlyInCompleted);
         GetMySummaryQueryData.AddWorkItem(completedProject, caller.Id, FlowStateCategory.Active);
         _dbContext.Seed(c => c.Users, caller);
-        _dbContext.Seed(c => c.Projects, completedProject);
+        _dbContext.Seed(c => c.Projects, activeProject, completedProject);
 
         // Act
         Result<MySummaryResponse> result =
             await _handler.Handle(new GetMySummaryQuery(caller.Id), CancellationToken.None);
 
         // Assert
-        result.Value.Counts.MyOpenIssues.Should().Be(0);
+        result.Value.Projects.Should().ContainSingle(p => p.ProjectId == activeProject.Id);
         result.Value.Counts.Projects.Should().Be(1);
-        result.Value.Projects.Should().ContainSingle(p => p.ProjectId == completedProject.Id);
+        result.Value.Counts.Members.Should().Be(1);
+        result.Value.Counts.MyOpenIssues.Should().Be(0);
     }
 
     [Fact]

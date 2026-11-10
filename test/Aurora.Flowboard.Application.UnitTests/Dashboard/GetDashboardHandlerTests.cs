@@ -125,32 +125,52 @@ public sealed class GetDashboardHandlerTests
     }
 
     [Fact]
-    public async Task Should_ExcludeACompletedProject_FromOpenWork_ButKeepItsRow()
+    public async Task Should_LeaveOutACompletedProject_Entirely()
     {
         // Arrange
-        Project completed = GetThreeStageProject("Closed", "CLS", _caller);
+        Project active = GetThreeStageProject("Active", "ACT", _caller);
+        Project completed = GetThreeStageProject("Closed", "CLS", _caller, _teammate);
         Milestone milestone = CreateActiveMilestone(completed, _caller, "Release", new DateOnly(2026, 2, 1));
         WorkItem stalled = CreateInState(completed, InProgressState, _caller, Days(20), assignee: _caller, milestone: milestone);
+        WorkItem closed = CreateInState(completed, DoneState, _caller, Days(1));
         ChangeStatus(completed, ProjectStatus.Completed, _caller);
-        Arrange([completed], [stalled]);
+        Arrange([active, completed], [stalled, closed]);
 
         // Act
         Result<DashboardResponse> result = await _handler.Handle(new GetDashboardQuery(), CancellationToken.None);
 
         // Assert
         result.Value.Me.Should().Be(new DashboardMeResponse(0, 0, 0, 0));
-        result.Value.Team.Stalled.Should().Be(0);
+        result.Value.Team.Should().Be(new DashboardTeamResponse(0, 0, 0));
         result.Value.Aging.OldestInFlight.Should().BeNull();
         result.Value.Milestones.Should().BeEmpty();
-        DashboardProjectResponse row = result.Value.Portfolio.Single();
-        row.Status.Should().Be(ProjectStatus.Completed);
-        row.Open.Should().Be(0);
-        row.ActiveMilestone.Should().BeNull();
-        row.Distribution.Should().HaveCount(3).And.OnlyContain(d => d.Count == 0);
+        DashboardProjectResponse row = result.Value.Portfolio.Should().ContainSingle().Subject;
+        row.ProjectId.Should().Be(active.Id);
+        row.Members.Should().ContainSingle(m => m.UserId == _caller.Id);
     }
 
     [Fact]
-    public async Task Should_CountClosedLast7Days_ByCategory_IncludingCompletedProjects()
+    public async Task Should_ReturnTheEmptyDashboard_When_UserOnlyHasCompletedProjects()
+    {
+        // Arrange
+        Project completed = GetThreeStageProject("Closed", "CLS", _caller);
+        WorkItem open = CreateInState(completed, InProgressState, _caller, Days(9), assignee: _caller);
+        WorkItem closed = CreateInState(completed, DoneState, _caller, Days(1));
+        ChangeStatus(completed, ProjectStatus.Completed, _caller);
+        Arrange([completed], [open, closed]);
+
+        // Act
+        Result<DashboardResponse> result = await _handler.Handle(new GetDashboardQuery(), CancellationToken.None);
+
+        // Assert
+        result.Value.Me.Should().Be(new DashboardMeResponse(0, 0, 0, 0));
+        result.Value.Team.Should().Be(new DashboardTeamResponse(0, 0, 0));
+        result.Value.Portfolio.Should().BeEmpty();
+        _ = _dbContext.DidNotReceive().WorkItems;
+    }
+
+    [Fact]
+    public async Task Should_CountClosedLast7Days_ByCategory_OnlyInActiveProjects()
     {
         // Arrange
         Project active = GetThreeStageProject("Active", "ACT", _caller);
@@ -171,7 +191,7 @@ public sealed class GetDashboardHandlerTests
         Result<DashboardResponse> result = await _handler.Handle(new GetDashboardQuery(), CancellationToken.None);
 
         // Assert
-        result.Value.Team.ClosedLast7Days.Should().Be(3);
+        result.Value.Team.ClosedLast7Days.Should().Be(2);
     }
 
     [Fact]

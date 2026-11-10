@@ -122,19 +122,19 @@ public sealed class DashboardCalculatorTests
     }
 
     [Fact]
-    public void Should_KeepACompletedProjectRow_WithZeros()
+    public void Should_LeaveOutACompletedProject_Entirely()
     {
         // Arrange
+        DashboardProjectRow active = ProjectRow("Aurora");
         DashboardProjectRow completed = ProjectRow("Closed", ProjectStatus.Completed);
         DashboardStateRow backlog = StateRow(completed, "Backlog", 1);
         DashboardStateRow inProgress = StateRow(completed, "In Progress", 2);
         DashboardMilestoneRow milestone = MilestoneRow(completed, "Release", new DateOnly(2026, 2, 1));
         DashboardSnapshot snapshot = Snapshot(
-            [completed],
+            [active, completed],
             [backlog, inProgress],
             [GroupRow(inProgress, 3, DashboardCalculator.StalledBand, isMine: true, milestoneId: milestone.Id)],
             [milestone],
-            closedLast7Days: 2,
             members: [MemberRow(completed, "Ana", "Lopez")]);
 
         // Act
@@ -142,16 +142,10 @@ public sealed class DashboardCalculatorTests
 
         // Assert
         response.Me.Should().Be(new DashboardMeResponse(0, 0, 0, 0));
-        response.Team.Should().Be(new DashboardTeamResponse(0, 0, 2));
+        response.Team.Should().Be(new DashboardTeamResponse(0, 0, 0));
         response.Aging.Buckets.Sum(b => b.Count).Should().Be(0);
         response.Milestones.Should().BeEmpty();
-        DashboardProjectResponse row = response.Portfolio.Single();
-        row.Status.Should().Be(ProjectStatus.Completed);
-        row.Open.Should().Be(0);
-        row.Stalled.Should().Be(0);
-        row.Distribution.Should().HaveCount(2).And.OnlyContain(d => d.Count == 0);
-        row.ActiveMilestone.Should().BeNull();
-        row.Members.Should().ContainSingle();
+        response.Portfolio.Should().ContainSingle().Which.ProjectId.Should().Be(active.Id);
     }
 
     [Fact]
@@ -182,8 +176,7 @@ public sealed class DashboardCalculatorTests
             [
                 ProjectRow("zeta"),
                 ProjectRow("Alpha", ProjectStatus.Maintenance),
-                ProjectRow("beta"),
-                ProjectRow("Omega", ProjectStatus.Completed)
+                ProjectRow("beta")
             ],
             []);
 
@@ -191,7 +184,7 @@ public sealed class DashboardCalculatorTests
         DashboardResponse response = DashboardCalculator.Build(snapshot);
 
         // Assert
-        response.Portfolio.Select(p => p.Name).Should().Equal("beta", "zeta", "Alpha", "Omega");
+        response.Portfolio.Select(p => p.Name).Should().Equal("beta", "zeta", "Alpha");
     }
 
     [Fact]

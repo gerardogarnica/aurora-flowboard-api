@@ -3338,6 +3338,24 @@ Spec: `docs/specs/2026-11-07-dashboard-design.md` (definitions in section 2).
 - [x] **Verificar.** Comprueba que las rutas y los nombres que citan las rules existen: `grep -rn "WhereMyActiveProjects\|FlowStateStageResolver\|GetBacklogStateId\|StalledThresholdDays\|WorkItemSearchFilters" src --include=*.cs | grep -v "/obj/"` debe encontrar cada uno.
 - [x] Commit: `Document the dashboard rules and the cross-project search` con `.claude/rules/work-items.md`, `.claude/rules/dashboard.md`, `CLAUDE.md` y este plan.
 
+## Cambios acotados posteriores
+
+Aprobados en el chat. No son tareas del plan: las tareas de arriba quedan como registro de lo ejecutado.
+
+### 2026-11-09: un solo conjunto de proyectos
+
+Decisión revisada con el Product Manager: el Sidebar muestra solo **mis proyectos activos** (`Active` o `Maintenance`), los que admiten work items. Desaparece «mis proyectos» (`WhereMyProjects`, `Status != Archived`), y todo lo que lo usaba pasa a los activos:
+
+- `my-summary`: la lista, `counts.projects` y `counts.members`.
+- `dashboard`: las filas y los miembros del portafolio, y `team.closedLast7Days`.
+
+Un usuario que solo tiene proyectos `Completed` recibe el dashboard vacío. Sustituye a la opción C de la decisión 1 del spec, ya actualizado.
+
+- Código: `MyProjectsQueryExtensions` (sin `WhereMyProjects`), `GetMySummaryHandler`, `GetDashboardHandler`, `DashboardCalculator` (filtra también el portafolio) y los comentarios de `DashboardSnapshot`.
+- Tests: `GetMySummaryHandlerTests`, `DashboardCalculatorTests` y `GetDashboardHandlerTests` (6 tests cambiados o nuevos; fallaron antes de cambiar el código).
+- Documentación: spec (decisiones 1 y 5, definiciones, alcance, §6, tests y riesgos), `.claude/rules/dashboard.md` y la fila de `CLAUDE.md`.
+- La forma de las respuestas no cambia, pero su contenido sí: hay que avisar a `fb-web-dashboard` de que el Sidebar y el portafolio ya no traen proyectos `Completed`.
+
 ## Verificación final
 
 - [ ] `dotnet-test-runner` limpio: build y los tres ejecutables de tests.
@@ -3346,5 +3364,5 @@ Spec: `docs/specs/2026-11-07-dashboard-design.md` (definitions in section 2).
 - [ ] Verificación manual:
   - Migración contra Postgres: backfill con y sin historial, `Up` y `Down` (tarea 3).
   - Las peticiones del `.http` y el SQL de los logs (tarea 10, puntos 1 a 6).
-  - Avisar a la sesión `fb-web-dashboard` de que los endpoints están disponibles. El contrato no cambió respecto a su spec v1.1.
+  - Avisar a la sesión `fb-web-dashboard` de que los endpoints están disponibles. La forma del contrato no cambió respecto a su spec v1.1; el contenido del Sidebar y del portafolio sí (cambio acotado del 2026-11-09).
 - [ ] Al terminar, recuerda al usuario que la regla del PRD §5.1 sigue pendiente y necesita su propio ticket (spec, sección 10).
