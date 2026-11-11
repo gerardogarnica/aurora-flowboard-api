@@ -50,7 +50,7 @@ internal static class ProjectCommandData
     public static Project GetArchivedProject(User admin)
     {
         Project project = GetProject(admin);
-        project.ChangeStatus(ProjectStatus.Archived, admin, UtcNow);
+        project.ChangeStatus(ProjectStatus.Archived, admin, 0, UtcNow);
         return project;
     }
 

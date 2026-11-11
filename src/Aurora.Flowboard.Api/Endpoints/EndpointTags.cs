@@ -4,6 +4,7 @@ internal static class EndpointTags
 {
     internal const string Authentication = "Authentication";
     internal const string Components = "Components";
+    internal const string Dashboard = "Dashboard";
     internal const string Milestones = "Milestones";
     internal const string Projects = "Projects";
     internal const string TemplateFlows = "TemplateFlows";

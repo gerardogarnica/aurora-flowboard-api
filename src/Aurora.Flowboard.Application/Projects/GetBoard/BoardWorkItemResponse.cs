@@ -17,5 +17,6 @@ public sealed record BoardWorkItemResponse(
     int? EstimatedPoints,
     DateOnly? EstimatedCompletionDate,
     DateTime CreatedOnUtc,
+    DateTime EnteredCurrentStateOnUtc,
     int CommentCount,
     int TimeEntryCount);

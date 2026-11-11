@@ -1,3 +1,5 @@
+using Aurora.Flowboard.Application.UnitTests.WorkItems;
+
 namespace Aurora.Flowboard.Application.UnitTests.Projects;
 
 public sealed class ChangeProjectStatusHandlerTests
@@ -26,6 +28,7 @@ public sealed class ChangeProjectStatusHandlerTests
 
         _dbContext.Seed(c => c.Projects, project);
         _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems);
 
         ChangeProjectStatusCommand command = ProjectCommandData.GetChangeStatusCommand(project.Id);
 
@@ -47,6 +50,7 @@ public sealed class ChangeProjectStatusHandlerTests
 
         _dbContext.Seed(c => c.Projects, project);
         _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems);
 
         ChangeProjectStatusCommand command = ProjectCommandData.GetChangeStatusCommand(project.Id);
 
@@ -141,6 +145,7 @@ public sealed class ChangeProjectStatusHandlerTests
 
         _dbContext.Seed(c => c.Projects, project);
         _dbContext.Seed(c => c.Users, nonAdmin);
+        _dbContext.Seed(c => c.WorkItems);
 
         ChangeProjectStatusCommand command = ProjectCommandData.GetChangeStatusCommand(project.Id);
 
@@ -164,6 +169,7 @@ public sealed class ChangeProjectStatusHandlerTests
 
         _dbContext.Seed(c => c.Projects, project);
         _dbContext.Seed(c => c.Users, nonAdmin);
+        _dbContext.Seed(c => c.WorkItems);
 
         ChangeProjectStatusCommand command = ProjectCommandData.GetChangeStatusCommand(project.Id);
 
@@ -185,6 +191,7 @@ public sealed class ChangeProjectStatusHandlerTests
 
         _dbContext.Seed(c => c.Projects, project);
         _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems);
 
         var command = new ChangeProjectStatusCommand(project.Id, ProjectStatus.Active);
 
@@ -207,6 +214,7 @@ public sealed class ChangeProjectStatusHandlerTests
 
         _dbContext.Seed(c => c.Projects, project);
         _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems);
 
         var command = new ChangeProjectStatusCommand(project.Id, ProjectStatus.Active);
 
@@ -215,5 +223,104 @@ public sealed class ChangeProjectStatusHandlerTests
 
         // Assert
         await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Should_ReturnCannotCloseWithOpenWorkItemsError_When_ProjectHasOpenWorkItems()
+    {
+        // Arrange
+        User admin = ProjectCommandData.GetAdmin();
+        Project project = ProjectCommandData.GetProject(admin);
+        WorkItem open = WorkItemCommandData.GetWorkItemInCategory(project, admin, FlowStateCategory.Active);
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
+
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems, open);
+
+        var command = new ChangeProjectStatusCommand(project.Id, ProjectStatus.Archived);
+
+        // Act
+        Result result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeFalse();
+        result.Error.Should().Be(ProjectErrors.CannotCloseWithOpenWorkItems);
+        project.Status.Should().Be(ProjectStatus.Active);
+    }
+
+    [Fact]
+    public async Task Should_NotPersist_When_ProjectHasOpenWorkItems()
+    {
+        // Arrange
+        User admin = ProjectCommandData.GetAdmin();
+        Project project = ProjectCommandData.GetProject(admin);
+        WorkItem open = WorkItemCommandData.GetWorkItemInCategory(project, admin, FlowStateCategory.Active);
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
+
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems, open);
+
+        var command = new ChangeProjectStatusCommand(project.Id, ProjectStatus.Archived);
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await _dbContext.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Should_CloseProject_When_ItsWorkItemsAreClosed()
+    {
+        // Arrange
+        User admin = ProjectCommandData.GetAdmin();
+        Project project = ProjectCommandData.GetProject(admin);
+        WorkItem completed = WorkItemCommandData.GetWorkItemInCategory(project, admin, FlowStateCategory.Completed);
+        WorkItem cancelled = WorkItemCommandData.GetWorkItemInCategory(project, admin, FlowStateCategory.Cancelled);
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
+
+        _dbContext.Seed(c => c.Projects, project);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems, completed, cancelled);
+
+        var command = new ChangeProjectStatusCommand(project.Id, ProjectStatus.Archived);
+
+        // Act
+        Result result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        project.Status.Should().Be(ProjectStatus.Archived);
+        await _dbContext.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Should_CloseProject_When_OpenWorkItemsBelongToAnotherProject()
+    {
+        // Arrange
+        User admin = ProjectCommandData.GetAdmin();
+        Project project = ProjectCommandData.GetProject(admin);
+        Project otherProject = ProjectCommandData.GetExistingProjectWithPrefix(admin, "OTH");
+        WorkItem openInOther = WorkItemCommandData.GetWorkItemInCategory(otherProject, admin, FlowStateCategory.Active);
+        _userContext.UserId.Returns(admin.Id);
+        _dateTimeProvider.UtcNow.Returns(ProjectCommandData.UtcNow);
+
+        _dbContext.Seed(c => c.Projects, project, otherProject);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.WorkItems, openInOther);
+
+        var command = new ChangeProjectStatusCommand(project.Id, ProjectStatus.Archived);
+
+        // Act
+        Result result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue();
+        project.Status.Should().Be(ProjectStatus.Archived);
     }
 }

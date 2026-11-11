@@ -83,13 +83,13 @@ internal static class ProjectData
             case ProjectStatus.Active:
                 break;
             case ProjectStatus.Maintenance:
-                project.ChangeStatus(ProjectStatus.Maintenance, user, UpdatedOnUtc);
+                project.ChangeStatus(ProjectStatus.Maintenance, user, 0, UpdatedOnUtc);
                 break;
             case ProjectStatus.Completed:
-                project.ChangeStatus(ProjectStatus.Completed, user, UpdatedOnUtc);
+                project.ChangeStatus(ProjectStatus.Completed, user, 0, UpdatedOnUtc);
                 break;
             case ProjectStatus.Archived:
-                project.ChangeStatus(ProjectStatus.Archived, user, UpdatedOnUtc);
+                project.ChangeStatus(ProjectStatus.Archived, user, 0, UpdatedOnUtc);
                 break;
         }
 
@@ -119,7 +119,7 @@ internal static class ProjectData
     {
         User admin = UserData.GetActiveUser();
         Project project = GetProjectWithFlowStates(admin);
-        project.ChangeStatus(ProjectStatus.Archived, admin, UpdatedOnUtc);
+        project.ChangeStatus(ProjectStatus.Archived, admin, 0, UpdatedOnUtc);
         project.ClearDomainEvents();
 
         return (project, admin);

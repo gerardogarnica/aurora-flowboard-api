@@ -37,7 +37,7 @@ internal static class GetMySummaryQueryData
 
         if (status != ProjectStatus.Active)
         {
-            project.ChangeStatus(status, admin, UtcNow);
+            project.ChangeStatus(status, admin, 0, UtcNow);
         }
 
         return project;

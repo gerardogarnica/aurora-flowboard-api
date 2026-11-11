@@ -778,6 +778,7 @@ public sealed class ProjectTests
             { ProjectKind.Client, ProjectStatus.Archived, ProjectStatus.Completed },
         };
 
+        // With no open work items, so it also covers closing a project whose items are all closed.
         [Theory]
         [MemberData(nameof(ValidTransitions))]
         public void Should_ChangeStatus_When_TransitionIsValid(ProjectKind kind, ProjectStatus from, ProjectStatus to)
@@ -787,7 +788,7 @@ public sealed class ProjectTests
             Project project = ProjectData.GetProjectWithStatus(from, admin, kind);
 
             // Act
-            Result result = project.ChangeStatus(to, admin, ProjectData.UpdatedOnUtc);
+            Result result = project.ChangeStatus(to, admin, 0, ProjectData.UpdatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeTrue();
@@ -802,7 +803,7 @@ public sealed class ProjectTests
             Project project = ProjectData.GetProject(admin);
 
             // Act
-            project.ChangeStatus(ProjectStatus.Maintenance, admin, ProjectData.UpdatedOnUtc);
+            project.ChangeStatus(ProjectStatus.Maintenance, admin, 0, ProjectData.UpdatedOnUtc);
 
             // Assert
             ProjectStatusChangedDomainEvent domainEvent = AssertDomainEventWasPublished<ProjectStatusChangedDomainEvent>(project);
@@ -820,7 +821,7 @@ public sealed class ProjectTests
             int initialCount = project.ChangeLogs.Count;
 
             // Act
-            project.ChangeStatus(ProjectStatus.Maintenance, admin, ProjectData.UpdatedOnUtc);
+            project.ChangeStatus(ProjectStatus.Maintenance, admin, 0, ProjectData.UpdatedOnUtc);
 
             // Assert
             project.ChangeLogs.Count.Should().Be(initialCount + 1);
@@ -835,7 +836,7 @@ public sealed class ProjectTests
             Project project = ProjectData.GetProject(admin);
 
             // Act
-            project.ChangeStatus(ProjectStatus.Maintenance, admin, ProjectData.UpdatedOnUtc);
+            project.ChangeStatus(ProjectStatus.Maintenance, admin, 0, ProjectData.UpdatedOnUtc);
 
             // Assert
             project.ChangeLogs.Should().ContainSingle(cl =>
@@ -862,7 +863,7 @@ public sealed class ProjectTests
             User nonAdmin = UserData.GetActiveUser();
 
             // Act
-            Result result = project.ChangeStatus(ProjectStatus.Maintenance, nonAdmin, ProjectData.UpdatedOnUtc);
+            Result result = project.ChangeStatus(ProjectStatus.Maintenance, nonAdmin, 0, ProjectData.UpdatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -877,7 +878,7 @@ public sealed class ProjectTests
             Project project = ProjectData.GetProject(admin);
 
             // Act
-            Result result = project.ChangeStatus(ProjectStatus.Active, admin, ProjectData.UpdatedOnUtc);
+            Result result = project.ChangeStatus(ProjectStatus.Active, admin, 0, ProjectData.UpdatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -893,7 +894,7 @@ public sealed class ProjectTests
             Project project = ProjectData.GetProjectWithStatus(from, admin, kind);
 
             // Act
-            Result result = project.ChangeStatus(to, admin, ProjectData.UpdatedOnUtc);
+            Result result = project.ChangeStatus(to, admin, 0, ProjectData.UpdatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
@@ -908,11 +909,89 @@ public sealed class ProjectTests
             Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Archived, admin);
 
             // Act
-            Result result = project.ChangeStatus(ProjectStatus.Active, admin, ProjectData.UpdatedOnUtc);
+            Result result = project.ChangeStatus(ProjectStatus.Active, admin, 0, ProjectData.UpdatedOnUtc);
 
             // Assert
             result.IsSuccessful.Should().BeFalse();
             result.Error.Should().Be(ProjectErrors.InvalidStatusTransition);
+        }
+
+        public static TheoryData<ProjectKind, ProjectStatus, ProjectStatus> ClosingTransitions => new()
+        {
+            { ProjectKind.Product, ProjectStatus.Active, ProjectStatus.Archived },
+            { ProjectKind.Product, ProjectStatus.Maintenance, ProjectStatus.Archived },
+            { ProjectKind.Client, ProjectStatus.Active, ProjectStatus.Completed },
+            { ProjectKind.Client, ProjectStatus.Active, ProjectStatus.Archived },
+        };
+
+        public static TheoryData<ProjectKind, ProjectStatus, ProjectStatus> NonClosingTransitions => new()
+        {
+            { ProjectKind.Product, ProjectStatus.Active, ProjectStatus.Maintenance },
+            { ProjectKind.Product, ProjectStatus.Maintenance, ProjectStatus.Active },
+        };
+
+        [Theory]
+        [MemberData(nameof(ClosingTransitions))]
+        public void Should_Fail_When_ClosingWithOpenWorkItems(ProjectKind kind, ProjectStatus from, ProjectStatus to)
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProjectWithStatus(from, admin, kind);
+
+            // Act
+            Result result = project.ChangeStatus(to, admin, 1, ProjectData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeFalse();
+            result.Error.Should().Be(ProjectErrors.CannotCloseWithOpenWorkItems);
+            project.Status.Should().Be(from);
+        }
+
+        [Theory]
+        [MemberData(nameof(NonClosingTransitions))]
+        public void Should_ChangeStatus_When_TargetDoesNotClose_WhateverTheOpenWorkItems(ProjectKind kind, ProjectStatus from, ProjectStatus to)
+        {
+            // Arrange
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProjectWithStatus(from, admin, kind);
+
+            // Act
+            Result result = project.ChangeStatus(to, admin, 5, ProjectData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            project.Status.Should().Be(to);
+        }
+
+        [Fact]
+        public void Should_ArchiveACompletedProject_When_ItHoldsOpenWorkItems()
+        {
+            // Arrange: a project completed before the rule existed may still hold open items, which
+            // cannot be moved any more, so archiving it stays possible.
+            User admin = UserData.GetActiveUser();
+            Project project = ProjectData.GetProjectWithStatus(ProjectStatus.Completed, admin, ProjectKind.Client);
+
+            // Act
+            Result result = project.ChangeStatus(ProjectStatus.Archived, admin, 3, ProjectData.UpdatedOnUtc);
+
+            // Assert
+            result.IsSuccessful.Should().BeTrue();
+            project.Status.Should().Be(ProjectStatus.Archived);
+        }
+
+        [Fact]
+        public void Should_HaveNoTransitionOutOfATerminalState()
+        {
+            // ChangeProjectStatusHandler relies on this: a closed item cannot be reopened, so no open item
+            // can appear without CreateWorkItem writing the project row.
+            Project project = ProjectData.GetProjectWithFlowStates();
+
+            HashSet<Guid> activeStateIds = [.. project.FlowStates
+                .Where(s => s.Category == FlowStateCategory.Active)
+                .Select(s => s.Id)];
+
+            project.FlowTransitions.Should().NotBeEmpty();
+            project.FlowTransitions.Should().OnlyContain(t => activeStateIds.Contains(t.FromStateId));
         }
     }
 

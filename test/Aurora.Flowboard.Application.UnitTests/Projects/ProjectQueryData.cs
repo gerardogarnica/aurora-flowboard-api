@@ -63,7 +63,7 @@ internal static class ProjectQueryData
     public static Project GetArchivedProjectForGetAll(string name, User admin)
     {
         Project project = Project.Create(name, Description, ProjectCode.Create("QRH").Value, Kind, Color, FlowStateDefinitionData.GetMinimalFlow(), admin, UtcNow).Value;
-        project.ChangeStatus(ProjectStatus.Archived, admin, UtcNow);
+        project.ChangeStatus(ProjectStatus.Archived, admin, 0, UtcNow);
         PopulateMemberUserNavProperties(project, admin);
         return project;
     }
@@ -141,7 +141,7 @@ internal static class ProjectQueryData
         Project project = Project.Create("History Project", Description, ProjectCode.Create("HIS").Value, Kind, Color, FlowStateDefinitionData.GetMinimalFlow(), admin, UtcNow).Value;
         project.AddMember(member, ProjectRole.Developer, admin, UtcNow.AddHours(1));
         project.RemoveMember(member.Id, admin, UtcNow.AddHours(2));
-        project.ChangeStatus(ProjectStatus.Maintenance, admin, UtcNow.AddHours(3));
+        project.ChangeStatus(ProjectStatus.Maintenance, admin, 0, UtcNow.AddHours(3));
         PopulateNavProperties(project, admin);
         return project;
     }

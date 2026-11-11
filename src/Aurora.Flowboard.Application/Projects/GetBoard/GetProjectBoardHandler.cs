@@ -36,6 +36,9 @@ internal sealed class GetProjectBoardHandler(
 
         List<Guid> stateIds = [.. orderedStates.Select(s => s.Id)];
 
+        // The first Active state is the backlog, unless it is the only one (FlowState.GetBacklogStateId).
+        Guid? backlogStateId = FlowState.GetBacklogStateId([.. orderedStates.Select(s => (s.Id, s.SortOrder))]);
+
         Dictionary<Guid, List<WorkItemFlowTransitionResponse>> transitionsByState = await dbContext.GetAvailableTransitionsByStateAsync(
             query.ProjectId,
             stateIds,
@@ -81,6 +84,7 @@ internal sealed class GetProjectBoardHandler(
                 w.EstimatedPoints,
                 w.EstimatedCompletionDate,
                 w.CreatedOnUtc,
+                w.EnteredCurrentStateOnUtc,
                 CommentCount = w.Comments.Count(c => !c.IsDeleted),
                 TimeEntryCount = w.TimeEntries.Count
             })
@@ -93,6 +97,7 @@ internal sealed class GetProjectBoardHandler(
                 s.Category,
                 s.SortOrder,
                 s.Color,
+                s.Id == backlogStateId ? FlowStateStage.Backlog : FlowStateStage.InFlight,
                 [.. workItemRows
                     .Where(w => w.FlowStateId == s.Id)
                     .OrderByDescending(w => w.Priority)
@@ -118,6 +123,7 @@ internal sealed class GetProjectBoardHandler(
                         w.EstimatedPoints,
                         w.EstimatedCompletionDate,
                         w.CreatedOnUtc,
+                        w.EnteredCurrentStateOnUtc,
                         w.CommentCount,
                         w.TimeEntryCount))],
                 transitionsByState.GetValueOrDefault(s.Id, [])))];

@@ -103,7 +103,7 @@ public sealed class GetProjectByIdHandlerTests
         // Arrange
         User admin = ProjectQueryData.GetAdminUser();
         Project project = ProjectQueryData.GetProjectWithNavProperties(admin);
-        project.ChangeStatus(ProjectStatus.Archived, admin, ProjectQueryData.UtcNow);
+        project.ChangeStatus(ProjectStatus.Archived, admin, 0, ProjectQueryData.UtcNow);
         _userContext.UserId.Returns(admin.Id);
         _dbContext.Seed(c => c.Projects, project);
 
