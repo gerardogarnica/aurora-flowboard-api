@@ -1,8 +1,10 @@
-﻿<Project Sdk="Aspire.AppHost.Sdk/13.3.5">
+﻿<Project Sdk="Aspire.AppHost.Sdk/13.6.5">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <UserSecretsId>c369dce6-e1e9-46fa-8102-8a676a3edbd8</UserSecretsId>
+    <!-- Dashboard and DCP come from NuGet; the Aspire CLI bundle is not used -->
+    <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);ASPIRE010</MSBuildWarningsAsMessages>
   </PropertyGroup>
 
   <ItemGroup>
