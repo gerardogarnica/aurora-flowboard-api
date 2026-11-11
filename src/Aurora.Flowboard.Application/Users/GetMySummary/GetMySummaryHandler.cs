@@ -18,31 +18,30 @@ internal sealed class GetMySummaryHandler(
             return Result.Fail<MySummaryResponse>(UserErrors.NotFound);
         }
 
-        // Three scalar queries over the same filter: nothing loads members or work items into memory.
-        IQueryable<Project> myProjects = dbContext
+        // Three scalar queries over my active projects (MyProjectsQueryExtensions): nothing loads members or work items into memory.
+        IQueryable<Project> myActiveProjects = dbContext
             .Projects
             .AsNoTracking()
-            .Where(p => p.Status != ProjectStatus.Archived && p.Members.Any(m => m.UserId == query.UserId));
+            .WhereMyActiveProjects(query.UserId);
 
-        List<MyProjectSummaryResponse> projects = await myProjects
+        List<MyProjectSummaryResponse> projects = await myActiveProjects
             .Select(p => new MyProjectSummaryResponse(p.Id, p.Name, p.Color.Value, p.Status))
             .ToListAsync(cancellationToken);
 
-        int memberCount = await myProjects
+        int memberCount = await myActiveProjects
             .SelectMany(p => p.Members)
             .Select(m => m.UserId)
             .Distinct()
             .CountAsync(cancellationToken);
 
-        int myOpenIssues = await myProjects
+        int myOpenIssues = await myActiveProjects
             .SelectMany(p => p.WorkItems)
             .CountAsync(
                 wi => wi.AssigneeId == query.UserId && wi.FlowState.Category == FlowStateCategory.Active,
                 cancellationToken);
 
         IReadOnlyCollection<MyProjectSummaryResponse> orderedProjects = [.. projects
-            .OrderBy(p => p.Status)
-            .ThenBy(p => p.Name, StringComparer.OrdinalIgnoreCase)];
+            .OrderLikeSidebar(p => p.Status, p => p.Name)];
 
         return new MySummaryResponse(
             new MyProfileResponse(user.Id, user.FullName, user.Initials, user.Email.Value, user.Roles.First().Name),

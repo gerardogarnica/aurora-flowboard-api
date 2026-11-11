@@ -7,11 +7,22 @@ internal sealed class ChangeProjectStatusHandler(
 {
     protected override Guid GetProjectId(ChangeProjectStatusCommand command) => command.Id;
 
-    protected override Task<Result> ApplyAsync(
+    // No Serializable transaction, unlike closing a milestone: an open item can only appear through
+    // CreateWorkItem, which locks and writes this project row (FOR UPDATE, WorkItemCounter), so xmin turns
+    // a concurrent create into a 409. A closed item cannot be reopened: no flow transition leaves a
+    // terminal state (ProjectTests.Should_HaveNoTransitionOutOfATerminalState).
+    protected override async Task<Result> ApplyAsync(
         Project project,
         ChangeProjectStatusCommand command,
         User changedBy,
         DateTime utcNow,
-        CancellationToken cancellationToken) =>
-        Task.FromResult(project.ChangeStatus(command.NewStatus, changedBy, utcNow));
+        CancellationToken cancellationToken)
+    {
+        int openWorkItemCount = await DbContext
+            .WorkItems
+            .Where(w => w.ProjectId == project.Id)
+            .CountOpenAsync(cancellationToken);
+
+        return project.ChangeStatus(command.NewStatus, changedBy, openWorkItemCount, utcNow);
+    }
 }

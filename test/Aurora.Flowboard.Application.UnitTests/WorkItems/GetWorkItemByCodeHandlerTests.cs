@@ -308,4 +308,24 @@ public sealed class GetWorkItemByCodeHandlerTests
         // Assert
         result.Value.AvailableTransitions.Should().BeEmpty();
     }
+
+    [Fact]
+    public async Task Should_MapEnteredCurrentStateOnUtc_FromTheLastMove()
+    {
+        // Arrange
+        User admin = WorkItemQueryData.GetAdminUser();
+        (Project _, WorkItem workItem) = WorkItemQueryData.GetProjectAndWorkItemWithStateHistory(admin);
+        _userContext.UserId.Returns(admin.Id);
+        _dbContext.Seed(c => c.WorkItems, workItem);
+        _dbContext.Seed(c => c.Users, admin);
+        _dbContext.Seed(c => c.FlowTransitions, workItem.Project.FlowTransitions);
+        _dbContext.Seed(c => c.FlowStates, workItem.Project.FlowStates);
+
+        // Act
+        Result<WorkItemResponse> result =
+            await _handler.Handle(new GetWorkItemByCodeQuery(workItem.Code), CancellationToken.None);
+
+        // Assert
+        result.Value.EnteredCurrentStateOnUtc.Should().Be(WorkItemQueryData.UtcNow.AddHours(1));
+    }
 }

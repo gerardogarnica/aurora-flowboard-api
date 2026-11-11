@@ -4,6 +4,8 @@ public sealed class FlowState
 {
     public const int MaxNameLength = 50;
 
+    private const int MinActiveStatesForBacklog = 2;
+
     public Guid Id { get; private set; }
     public Guid ProjectId { get; private set; }
     public string Name { get; private set; }
@@ -43,6 +45,13 @@ public sealed class FlowState
             sortOrder,
             color);
     }
+
+    // The backlog is the project's first Active state. A project with a single Active state has no
+    // backlog: that state is in flight, so its work items can become stalled.
+    public static Guid? GetBacklogStateId(IReadOnlyCollection<(Guid Id, int SortOrder)> activeStates) =>
+        activeStates.Count < MinActiveStatesForBacklog
+            ? null
+            : activeStates.OrderBy(s => s.SortOrder).ThenBy(s => s.Id).First().Id;
 
     internal void DecrementSortOrder() => SortOrder--;
 }

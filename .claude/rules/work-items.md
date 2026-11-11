@@ -4,6 +4,7 @@ paths:
   - "src/**/Projects/GetBoard/**/*.cs"
   - "src/Aurora.Flowboard.Api/Endpoints/Projects/**/*.cs"
   - "test/**/WorkItems/**/*.cs"
+  - "src/**/Dashboard/**/*.cs"
 ---
 
 # Work items
@@ -16,7 +17,23 @@ paths:
 - Only `Active` states get a real `SortOrder` (`Project.AddFlowState` assigns `0` to terminal ones), which is why ordering is safe once they are filtered out.
 - A project with no flow states (or no `Active` ones) returns an empty board, not a 404.
 - Each column carries `availableTransitions`: the transitions out of that state the requester's `ProjectRole` may take, for drag-and-drop on the web board. It **must** match `GET work-items/{code}` `availableTransitions` for an item in that state: destinations of every category (terminal ones included — the front-end intersects with the visible columns), no `Viewer` special-casing (whatever `AllowedRoles` says), ordered by `ToStateName`, `[]` rather than null. Both handlers build it through `GetAvailableTransitionsByStateAsync` (`Projects/Shared/FlowTransitionQueryExtensions.cs`) — change the contract there, never in one handler.
-- `/board` is the only project board endpoint. A near-identical `GET projects/{id}/work-items` was removed as an unused duplicate — don't reintroduce a per-project work item list under `work-items/`; extend `GetProjectBoardQuery` instead.
+- `/board` is the only project board endpoint. A near-identical `GET projects/{id}/work-items` was removed as an unused duplicate — don't reintroduce a per-project work item list under `work-items/`; extend `GetProjectBoardQuery` instead. `GET work-items` (no project in the route) is the cross-project search below, not a per-project list.
+- Each column carries `stage` (`Backlog` / `InFlight`, see below). Only `Active` states have a stage, so every column has one.
+
+## Cross-project search — `GET work-items`
+
+`Application/WorkItems/GetWorkItems/` lists the **open** work items of my **active** projects (`WhereMyActiveProjects`, see `dashboard.md`), paginated, for the Home and My Issues.
+
+- The scope comes from the Active states of those projects (`stateIds.Contains(w.FlowStateId)`): open only, never from a `Completed`, `Archived` or foreign project. There is no opt-in for closed items.
+- Filters arrive as `string?` and combine with AND. `GetWorkItemsValidator` answers 400 for any value outside `WorkItemSearchFilters`, case-sensitive: `assignee=me`, `createdBy=me`, `stage=Backlog|InFlight`, `stalled=true`, `priority=` a comma-separated list of `Priority` names (numbers are rejected), `sort=stageThenTimeInState` (the only order). A valid combination with no results (`stage=Backlog&stalled=true`) is a 200 with an empty page.
+- Order: in flight first, then `EnteredCurrentStateOnUtc` ascending, then `Id`.
+
+## Time in state, stage and stalled
+
+- `WorkItem.EnteredCurrentStateOnUtc` is written by `Create` (its `createdOnUtc`) and `Move` (its `changedOnUtc`) only. No other mutation touches it. For a closed item it is when it entered the terminal state.
+- **Stage is not persisted.** `FlowState.GetBacklogStateId` takes a project's Active states: the one with the lowest `SortOrder` is the backlog, except when there is a single Active state — then that state is in flight and the project has no backlog. `FlowStateStageResolver` (`Projects/Shared/`) does it for several projects at once. Never duplicate the rule in a handler.
+- **Stalled** = in flight and `EnteredCurrentStateOnUtc <= now - WorkItem.StalledThresholdDays` (7). Compare against cutoff dates computed once from `IDateTimeProvider.UtcNow`, never with day arithmetic in SQL: "7 days" means 7 whole 24-hour blocks, not calendar days. A backlog item is never stalled.
+- `stage` appears on board columns and search items; the detail (`GET work-items/{code}`) has `enteredCurrentStateOnUtc` but no `stage`.
 
 ## Detail vs. activity collections
 

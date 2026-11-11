@@ -708,6 +708,10 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                         .HasColumnType("character varying(4000)")
                         .HasColumnName("description");
 
+                    b.Property<DateTime>("EnteredCurrentStateOnUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("entered_current_state_on_utc");
+
                     b.Property<DateOnly?>("EstimatedCompletionDate")
                         .HasColumnType("date")
                         .HasColumnName("estimated_completion_date");
@@ -768,14 +772,14 @@ namespace Aurora.Flowboard.Infrastructure.Database.Migrations
                     b.HasIndex("ComponentId")
                         .HasDatabaseName("ix_work_items_component_id");
 
-                    b.HasIndex("FlowStateId")
-                        .HasDatabaseName("ix_work_items_flow_state_id");
-
                     b.HasIndex("MilestoneId")
                         .HasDatabaseName("ix_work_items_milestone_id");
 
                     b.HasIndex("ProjectId")
                         .HasDatabaseName("ix_work_items_project_id");
+
+                    b.HasIndex("FlowStateId", "EnteredCurrentStateOnUtc")
+                        .HasDatabaseName("ix_work_items_flow_state_id_entered_current_state_on_utc");
 
                     b.ToTable("work_items", "flowboard");
                 });

@@ -6,5 +6,6 @@ public sealed record BoardColumnResponse(
     FlowStateCategory Category,
     int SortOrder,
     string Color,
+    FlowStateStage Stage,
     IReadOnlyCollection<BoardWorkItemResponse> WorkItems,
     IReadOnlyCollection<WorkItemFlowTransitionResponse> AvailableTransitions);
