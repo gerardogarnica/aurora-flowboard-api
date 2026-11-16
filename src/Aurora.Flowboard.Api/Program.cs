@@ -13,7 +13,8 @@ builder
     .AddErrorHandling()
     .AddObservability()
     .AddHealthCheckServices()
-    .AddCorsServices();
+    .AddCorsServices()
+    .AddRateLimitingServices();
 
 builder.Services
     .AddApplicationServices()
@@ -55,6 +56,8 @@ app.UseCors(CorsExtensions.FrontendPolicy);
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
