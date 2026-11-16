@@ -4,6 +4,8 @@ paths:
   - "src/Aurora.Flowboard.Infrastructure/Authentication/**/*.cs"
   - "src/Aurora.Flowboard.Infrastructure/Configurations/UserTokenConfiguration.cs"
   - "src/Aurora.Flowboard.Domain/Users/**/*.cs"
+  - "src/Aurora.Flowboard.Api/Endpoints/Authentication/**/*.cs"
+  - "src/Aurora.Flowboard.Api/Extensions/RateLimitingExtensions.cs"
 ---
 
 # Authentication and user tokens
@@ -30,6 +32,15 @@ Never `.Include(u => u.Tokens)` unfiltered: the history grows with every login a
 ## Cleanup
 
 `UserTokenCleanupJob` (Quartz, section `UserTokenCleanup`) deletes in batches the rows whose `RefreshTokenExpiresOnUtc` is older than `RetentionDays`. Revoked tokens expire on the same schedule, so there is no `RevokedOnUtc` column.
+
+## Rate limiting
+
+- `auth/login`, `auth/refresh-token` and `auth/change-password` call `.RequireRateLimiting(RateLimitingExtensions.AuthPolicy)`: a fixed window per client IP, no queue, rejected with 429 (ProblemDetails via `UseStatusCodePages`). Apply it to any new anonymous or password-checking auth endpoint.
+- Limits come from `RateLimiting:Auth` (`PermitLimit`, `WindowInSeconds`; defaults 10 per 60 s in code), overridable per environment with `RateLimiting__Auth__PermitLimit`. Non-positive values fail at startup.
+- The three endpoints share one quota per IP. Users behind one office or VPN exit IP share it too, so size `PermitLimit` for them. Clients must treat a 429 on `auth/refresh-token` as "retry later", not as an expired session.
+- `UseRateLimiter()` runs after `UseCors` (so the 429 carries CORS headers) and `UseStatusCodePages` (so it gets a body).
+- The partition key is `RemoteIpAddress`. Behind Traefik (Dokploy) set `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true`, or every client shares the proxy's quota. That flag trusts `X-Forwarded-For` from any peer, so the container must not publish ports.
+- The limiter is in-memory per instance. There is no per-account lockout or backoff yet.
 
 ## Status codes
 
