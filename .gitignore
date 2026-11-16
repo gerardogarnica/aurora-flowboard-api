@@ -120,3 +120,4 @@ CodeCoverage/
 TestResult.xml
 nunit-*.xml
 /.containers/db
+.claude/settings.local.json
