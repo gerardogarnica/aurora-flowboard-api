@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.ServiceDiscovery;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -17,6 +16,7 @@ public static class Extensions
 {
     private const string HealthEndpointPath = "/health";
     private const string AlivenessEndpointPath = "/alive";
+    private const string LiveTag = "live";
 
     public static TBuilder AddServiceDefaults<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
     {
@@ -99,28 +99,25 @@ public static class Extensions
     {
         builder.Services.AddHealthChecks()
             // Add a default liveness check to ensure app is responsive
-            .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
+            .AddCheck("self", () => HealthCheckResult.Healthy(), [LiveTag]);
 
         return builder;
     }
 
     public static WebApplication MapDefaultEndpoints(this WebApplication app)
     {
-        // Adding health checks endpoints to applications in non-development environments has security implications.
-        // See https://aka.ms/dotnet/aspire/healthchecks for details before enabling these endpoints in non-development environments.
-        if (app.Environment.IsDevelopment())
-        {
-            // The readiness endpoint (HealthEndpointPath) is mapped by the Api project instead
-            // (HealthCheckExtensions.MapHealthCheckEndpoints), for every environment and with a JSON
-            // response writer. Mapping it here as well gave the same route template two candidates
-            // and threw AmbiguousMatchException on every /health request in Development.
+        // The readiness endpoint (HealthEndpointPath) is mapped by the Api project instead
+        // (HealthCheckExtensions.MapHealthCheckEndpoints), for every environment and with a JSON
+        // response writer. Mapping it here as well gave the same route template two candidates
+        // and threw AmbiguousMatchException on every /health request in Development.
 
-            // Only health checks tagged with the "live" tag must pass for app to be considered alive
-            app.MapHealthChecks(AlivenessEndpointPath, new HealthCheckOptions
-            {
-                Predicate = r => r.Tags.Contains("live")
-            });
-        }
+        // The liveness endpoint is mapped in every environment so the container health check can use it.
+        // It runs only the "live" checks (the process responds), never the database: a database outage
+        // must not make the orchestrator restart a healthy process. It returns only the status text.
+        app.MapHealthChecks(AlivenessEndpointPath, new HealthCheckOptions
+        {
+            Predicate = r => r.Tags.Contains(LiveTag)
+        });
 
         return app;
     }

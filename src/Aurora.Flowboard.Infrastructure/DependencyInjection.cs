@@ -98,6 +98,15 @@ public static class DependencyInjection
         // Entity Framework Core interceptors
         services.TryAddSingleton<InsertOutboxMessagesInterceptor>();
 
+        // Readiness only: /health runs it, /alive (live tag) does not, so a database outage
+        // never makes the container look dead.
+        services.AddHealthChecks()
+            .AddCheck<DatabaseHealthCheck>(
+                DatabaseHealthCheck.Name,
+                HealthStatus.Unhealthy,
+                [DatabaseHealthCheck.ReadyTag],
+                DatabaseHealthCheck.Timeout);
+
         return services;
     }
 
