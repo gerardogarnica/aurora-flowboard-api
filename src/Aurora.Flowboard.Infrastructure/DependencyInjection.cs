@@ -29,7 +29,16 @@ public static class DependencyInjection
 
     private static IServiceCollection AddAuthenticationServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<JwtAuthOptions>(configuration.GetSection(JwtAuthOptions.SectionName));
+        // Without this, a missing or short key surfaces as a 500 on the first login, not at startup.
+        // The message never includes the key.
+        services.AddOptions<JwtAuthOptions>()
+            .BindConfiguration(JwtAuthOptions.SectionName)
+            .Validate(
+                IsValidJwtAuthOptions,
+                $"{JwtAuthOptions.SectionName} requires Issuer, Audience, a Key of at least " +
+                $"{JwtAuthOptions.MinimumKeyLengthInBytes} bytes (UTF-8), LifeTimeInMinutes > 0 and RefreshTokenExpirationDays > 0.")
+            .ValidateOnStart();
+
         JwtAuthOptions jwtAuthOptions = configuration.GetSection(JwtAuthOptions.SectionName).Get<JwtAuthOptions>()!;
 
         services.AddHttpContextAccessor();
@@ -59,6 +68,14 @@ public static class DependencyInjection
 
         return services;
     }
+
+    private static bool IsValidJwtAuthOptions(JwtAuthOptions options) =>
+        !string.IsNullOrWhiteSpace(options.Issuer) &&
+        !string.IsNullOrWhiteSpace(options.Audience) &&
+        !string.IsNullOrWhiteSpace(options.Key) &&
+        Encoding.UTF8.GetByteCount(options.Key) >= JwtAuthOptions.MinimumKeyLengthInBytes &&
+        options.LifeTimeInMinutes > 0 &&
+        options.RefreshTokenExpirationDays > 0;
 
     private static IServiceCollection AddDatabaseServices(
         this IServiceCollection services,
