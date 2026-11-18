@@ -1,6 +1,6 @@
 ﻿using Aurora.Flowboard.Api.Middlewares;
+using Microsoft.OpenApi;
 using Npgsql;
-using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -9,6 +9,10 @@ namespace Aurora.Flowboard.Api;
 
 internal static class DependencyInjection
 {
+    private const string BearerSchemeName = "Bearer";
+    private const string BearerScheme = "bearer";
+    private const string JwtBearerFormat = "JWT";
+
     internal static WebApplicationBuilder AddApiServices(this WebApplicationBuilder builder)
     {
         builder.Services.AddEndpointsApiExplorer();
@@ -16,6 +20,18 @@ internal static class DependencyInjection
         builder.Services.AddSwaggerGen(options =>
         {
             options.SwaggerDoc("v1", new() { Title = "Flowboard API", Version = "v1" });
+
+            options.AddSecurityDefinition(BearerSchemeName, new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = BearerScheme,
+                BearerFormat = JwtBearerFormat,
+                Description = "Access token returned by POST auth/login."
+            });
+            options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+            {
+                [new OpenApiSecuritySchemeReference(BearerSchemeName, document)] = []
+            });
         });
 
         builder.Services.ConfigureHttpJsonOptions(options =>

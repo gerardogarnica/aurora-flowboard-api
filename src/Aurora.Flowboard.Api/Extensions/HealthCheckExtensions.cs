@@ -25,7 +25,8 @@ internal static class HealthCheckExtensions
                 });
                 await context.Response.WriteAsync(result);
             }
-        });
+        })
+        .RequireRateLimiting(RateLimitingExtensions.HealthPolicy);
 
         return app;
     }

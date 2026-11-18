@@ -79,6 +79,7 @@ Detailed conventions live in `.claude/rules/` and load automatically when you re
 | `startup-and-seeding.md` | Migrations on startup, Administrator and template seeding, `Bootstrap` config |
 | `unit-tests.md` | Mock `DbSet` setup, pagination test across page boundaries |
 | `architecture-tests.md` | NetArchTest pitfalls, Mono.Cecil pin |
+| `health-and-observability.md` | `/alive` vs `/health`, readiness checks, Swagger Bearer, OpenTelemetry debt |
 | `build-and-packaging.md` | No spaces in project names, central package management |
 | `documentation.md` | `docs/` layout, spec/plan/ADR naming, header and status lifecycle, Spanish for new documents |
 
