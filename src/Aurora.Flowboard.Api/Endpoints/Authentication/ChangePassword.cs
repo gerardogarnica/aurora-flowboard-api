@@ -1,3 +1,4 @@
+using Aurora.Flowboard.Api.Extensions;
 using Aurora.Flowboard.Application.Authentication.ChangePassword;
 
 namespace Aurora.Flowboard.Api.Endpoints.Authentication;
@@ -20,6 +21,7 @@ public sealed class ChangePassword : IBaseEndpoint
                 return result.Match(Results.NoContent, ApiResponses.Problem);
             })
             .RequireAuthorization()
+            .RequireRateLimiting(RateLimitingExtensions.AuthPolicy)
             .WithName("ChangePassword")
             .WithTags(EndpointTags.Authentication)
             .Produces(StatusCodes.Status204NoContent)
@@ -27,7 +29,8 @@ public sealed class ChangePassword : IBaseEndpoint
                 StatusCodes.Status400BadRequest,
                 StatusCodes.Status401Unauthorized,
                 StatusCodes.Status404NotFound,
-                StatusCodes.Status409Conflict);
+                StatusCodes.Status409Conflict,
+                StatusCodes.Status429TooManyRequests);
     }
 
     internal sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);

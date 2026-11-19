@@ -1,3 +1,4 @@
+using Aurora.Flowboard.Api.Extensions;
 using Aurora.Flowboard.Application.Abstractions.Authentication;
 using Aurora.Flowboard.Application.Authentication.Login;
 
@@ -21,12 +22,14 @@ public sealed class Login : IBaseEndpoint
                 return result.Match(Results.Ok, ApiResponses.Problem);
             })
             .AllowAnonymous()
+            .RequireRateLimiting(RateLimitingExtensions.AuthPolicy)
             .WithName("Login")
             .WithTags(EndpointTags.Authentication)
             .Produces<IdentityToken>(StatusCodes.Status200OK)
             .ProducesStandardProblems(
                 StatusCodes.Status400BadRequest,
-                StatusCodes.Status401Unauthorized);
+                StatusCodes.Status401Unauthorized,
+                StatusCodes.Status429TooManyRequests);
     }
 
     internal sealed record LoginRequest(string Email, string Password);
