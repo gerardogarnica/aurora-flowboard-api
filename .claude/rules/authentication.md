@@ -41,7 +41,7 @@ Never `.Include(u => u.Tokens)` unfiltered: the history grows with every login a
 
 ## Known limitation: access token after revocation
 
-An access token stays valid until it expires (`LifeTimeInMinutes`, 60 by default in `appsettings.json`) after logout, password change, demotion or deactivation. Requests do not check whether its `jti` (`UserToken.AccessTokenId`) was revoked or whether the user is still `IsActive`. Checking both per request, in `OnTokenValidated`, is deferred to after 1.0 (finding M10).
+An access token stays valid until it expires (`LifeTimeInMinutes`, 60 by default in `appsettings.json`) after logout, password change, demotion or deactivation. Requests do not check whether its `jti` (`UserToken.AccessTokenId`) was revoked or whether the user is still `IsActive`. Checking both per request, in `OnTokenValidated`, is deferred to after 1.0 (finding M25).
 
 ## Rate limiting
 
@@ -50,7 +50,7 @@ An access token stays valid until it expires (`LifeTimeInMinutes`, 60 by default
 - The three endpoints share one quota per IP. Users behind one office or VPN exit IP share it too, so size `PermitLimit` for them. Clients must treat a 429 on `auth/refresh-token` as "retry later", not as an expired session.
 - `UseRateLimiter()` runs after `UseCors` (so the 429 carries CORS headers) and `UseStatusCodePages` (so it gets a body).
 - The partition key is `RemoteIpAddress`. Behind Traefik (Dokploy) set `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true`, or every client shares the proxy's quota. That flag trusts `X-Forwarded-For` from any peer, so the container must not publish ports.
-- The limiter is in-memory per instance. There is no per-account lockout or backoff yet.
+- The limiter is in-memory per instance. There is no per-account lockout or backoff yet (finding M28).
 
 ## Status codes
 

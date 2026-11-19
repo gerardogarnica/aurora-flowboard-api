@@ -36,8 +36,7 @@ paths:
 - It declares the `Bearer` HTTP scheme with a global requirement, so the Authorize button sends the access token from `POST auth/login`. Anonymous endpoints also show the lock; the header is only sent once a token is entered.
 - Swashbuckle 10 uses Microsoft.OpenApi v2 (`using Microsoft.OpenApi;`), and `AddSecurityRequirement` takes a `Func<OpenApiDocument, OpenApiSecurityRequirement>` with `OpenApiSecuritySchemeReference`.
 
-## Known debt (after 1.0, finding M22)
+## Known debt (after 1.0)
 
-- OpenTelemetry is configured twice: `ServiceDefaults` `ConfigureOpenTelemetry` and Api `AddObservability`. The Api one adds `AddNpgsql()` tracing and the service resource name. Merge them into `ServiceDefaults` without touching the health endpoint mapping.
-- The Dockerfile exposes 8081 unused.
-- Synchronous updates return 202 (`ApiResponses.Accepted`) instead of 204, and creates return 201 with an empty `Location`.
+- **M26:** OpenTelemetry is configured twice: `ServiceDefaults` `ConfigureOpenTelemetry` and Api `AddObservability`. The Api one adds `AddNpgsql()` tracing and the service resource name. Merge them into `ServiceDefaults` without touching the health endpoint mapping. The Dockerfile also exposes 8081 unused.
+- **M27:** Synchronous updates return 202 (`ApiResponses.Accepted`) instead of 204, and creates return 201 with an empty `Location`.

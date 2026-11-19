@@ -146,7 +146,13 @@ public static class DependencyInjection
 
     private static IServiceCollection AddOutboxPatternImplementation(this IServiceCollection services)
     {
-        services.AddOptions<OutboxOptions>().BindConfiguration("Outbox");
+        // A zero interval or batch size would never drain the outbox, and a zero MaxAttempts would dead-letter every message without trying it.
+        services.AddOptions<OutboxOptions>()
+            .BindConfiguration(OutboxOptions.SectionName)
+            .Validate(
+                o => o.IntervalInSeconds > 0 && o.BatchSize > 0 && o.MaxAttempts > 0,
+                $"{OutboxOptions.SectionName} requires IntervalInSeconds > 0, BatchSize > 0 and MaxAttempts > 0.")
+            .ValidateOnStart();
         services.ConfigureOptions<ConfigureProcessOutboxJob>();
 
         return services;

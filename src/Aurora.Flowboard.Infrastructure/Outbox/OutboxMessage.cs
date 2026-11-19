@@ -9,4 +9,5 @@ public sealed class OutboxMessage
     public bool IsProcessed { get; init; }
     public DateTime? ProcessedOnUtc { get; init; }
     public string? Error { get; init; }
+    public int Attempts { get; init; }
 }

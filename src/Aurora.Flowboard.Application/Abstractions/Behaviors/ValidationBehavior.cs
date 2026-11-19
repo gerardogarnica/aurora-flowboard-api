@@ -13,7 +13,7 @@ internal static class ValidationBehavior
             TCommand command,
             CancellationToken cancellationToken)
         {
-            ValidationFailure[] failures = await ValidateAsync(command, validators);
+            ValidationFailure[] failures = await ValidateAsync(command, validators, cancellationToken);
 
             if (failures.Length == 0)
             {
@@ -31,7 +31,7 @@ internal static class ValidationBehavior
     {
         public async Task<Result> Handle(TCommand command, CancellationToken cancellationToken)
         {
-            ValidationFailure[] failures = await ValidateAsync(command, validators);
+            ValidationFailure[] failures = await ValidateAsync(command, validators, cancellationToken);
 
             if (failures.Length == 0)
             {
@@ -49,7 +49,7 @@ internal static class ValidationBehavior
     {
         public async Task<Result<TResponse>> Handle(TQuery query, CancellationToken cancellationToken)
         {
-            ValidationFailure[] failures = await ValidateAsync(query, validators);
+            ValidationFailure[] failures = await ValidateAsync(query, validators, cancellationToken);
 
             if (failures.Length == 0)
             {
@@ -62,7 +62,8 @@ internal static class ValidationBehavior
 
     private static async Task<ValidationFailure[]> ValidateAsync<TCommand>(
         TCommand command,
-        IEnumerable<IValidator<TCommand>> validators)
+        IEnumerable<IValidator<TCommand>> validators,
+        CancellationToken cancellationToken)
     {
         IValidator<TCommand>[] validatorArray = [.. validators];
 
@@ -76,7 +77,7 @@ internal static class ValidationBehavior
 
         foreach (IValidator<TCommand> validator in validatorArray)
         {
-            ValidationResult result = await validator.ValidateAsync(context);
+            ValidationResult result = await validator.ValidateAsync(context, cancellationToken);
             failures.AddRange(result.Errors);
         }
 
