@@ -18,6 +18,10 @@ Habla con el usuario en español. Sigue `.claude/rules/documentation.md` (estruc
   - el PRD (`docs/product/`);
   - specs relacionadas (`docs/specs/`);
   - el código afectado y las rules de `.claude/rules/` de esas áreas.
+- **Si el encargo es una historia** (`docs/stories/...`): léela, y también su feature si tiene uno.
+  - Su "Como… quiero… para…" responde la pregunta de propósito: no la repitas.
+  - Sus criterios de aceptación son los criterios de éxito del spec.
+  - Su `**Tickets:**` pasa al encabezado del spec.
 - Si el **propósito** no está claro (para quién es, qué problema resuelve, cómo se sabe que está bien), haz primero una sola pregunta sobre eso. No propongas soluciones sin saberlo.
 - Si el encargo mezcla varios subsistemas independientes, dilo y propón dividirlo; haz el spec del primero.
 - **Si te invoca `review-fix`**, el encargo ya está verificado y clasificado como arquitectónico: no repitas su resumen ni la pregunta de propósito, salta el paso 2 y empieza en el paso 3. Usa la rama del encargo en el encabezado y los IDs de la revisión en `**Tickets:**`.
@@ -26,7 +30,7 @@ Habla con el usuario en español. Sigue `.claude/rules/documentation.md` (estruc
 
 Dila en voz alta para que el usuario pueda corregirla:
 
-- **Acotado:** cambia un flujo que ya existe (un handler, una entidad, un endpoint). No lleva spec: presenta un diseño corto en el chat y espera la aprobación. Con ella, esta skill termina y la implementación sigue con las skills del repo (`domain-entity`, `create-feature`, `unit-testing`) y el flujo de `CLAUDE.md`.
+- **Acotado:** cambia un flujo que ya existe (un handler, una entidad, un endpoint). No lleva spec: presenta un diseño corto en el chat y espera la aprobación. Si viene de una historia, el diseño corto dice cómo se cumple cada criterio de aceptación, y al aprobarse pones `**Spec:** No aplica (acotado)` en la historia. Con la aprobación, esta skill termina y la implementación sigue con las skills del repo (`domain-entity`, `create-feature`, `unit-testing`) y el flujo de `CLAUDE.md`.
 - **Arquitectónico:** feature nueva, varios agregados, un patrón nuevo o una migración compleja. Sigue con el paso 3.
 - Si dudas, elige arquitectónico.
 
@@ -80,6 +84,9 @@ Presenta en el chat un borrador corto (objetivo, alcance, diseño a grandes rasg
   - los supuestos finales van a la sección 4 y los enfoques a la sección 5;
   - las secciones que no apliquen se quedan con una línea de motivo.
 - Añade la fila del spec en `docs/README.md` (tabla "Specs y planes"), con la columna "Plan" en `—`: la rellena `write-plan`.
+- Si viene de una historia:
+  - enlázala en la sección 1 y copia sus criterios de aceptación a la sección 2;
+  - pon la ruta del spec en el `**Spec:**` de la historia y en la columna "Spec" de su fila en `docs/README.md`.
 
 ## 8. Autorrevisión
 
@@ -91,7 +98,8 @@ Revisa el fichero y corrige sin preguntar:
 4. **Alcance:** lo excluido indica dónde se cubrirá; el spec cabe en un solo plan (si no, propone dividirlo).
 5. **Ambigüedad:** ningún requisito admite dos lecturas; si alguno sí, elige una y escríbela.
 6. **Convenciones:** el diseño no contradice `domain-entity` ni `create-feature` (nombres, visibilidad, errores como `Result`, mapping, comando frente a consulta).
-7. **ADR:** si alguna decisión trasciende esta feature (un patrón transversal, una librería nueva, una convención que afecta a otros agregados), propón al usuario registrarla como ADR en `docs/architecture/adr/` con `docs/templates/adr.md`, enlazado desde el spec.
+7. **Trazabilidad:** si viene de una historia, cada criterio de aceptación tiene respuesta en el diseño (secciones 6 y 7) y al menos un test en la sección 9. Si algún criterio no se cumple, dilo: o cambia el diseño o cambia la historia, con el visto bueno del usuario.
+8. **ADR:** si alguna decisión trasciende esta feature (un patrón transversal, una librería nueva, una convención que afecta a otros agregados), propón al usuario registrarla como ADR en `docs/architecture/adr/` con `docs/templates/adr.md`, enlazado desde el spec.
 
 ## 9. Revisión del usuario
 
