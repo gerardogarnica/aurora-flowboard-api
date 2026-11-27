@@ -7,13 +7,17 @@ Las convenciones completas (nombres, encabezado, estados, idioma) están en `.cl
 | Carpeta | Contenido |
 |---|---|
 | `product/` | Requisitos de producto |
+| `backlog/` | Features del backlog: `YYYY-MM-DD-<tema>-feature.md` |
+| `stories/` | Historias de usuario: `YYYY-MM-DD-<tema>-story.md` |
 | `architecture/` | Referencias de arquitectura y ADRs (`adr/NNNN-<tema>.md`) |
 | `specs/` | Specs de diseño: `YYYY-MM-DD-<tema>-design.md` |
 | `plans/` | Planes de implementación: `YYYY-MM-DD-<tema>-plan.md` |
 | `reviews/` | Revisiones, análisis de gaps y planes de remediación |
-| `templates/` | Plantillas de spec, plan y ADR |
+| `templates/` | Plantillas de feature, historia, spec, plan y ADR |
 
 Los documentos nuevos se escriben en español; código, rutas e identificadores van en inglés.
+
+La cadena es `feature → historia → spec → plan`. Cada eslabón es opcional según el tamaño: un bug o un cambio acotado no necesita feature, y una historia acotada no necesita spec.
 
 ## Índice
 
@@ -24,6 +28,16 @@ Los documentos nuevos se escriben en español; código, rutas e identificadores 
 - [.NET Clean Architecture — plantilla de arranque](architecture/clean-architecture-template.md)
 - ADRs:
   - [0001 — Concurrencia optimista con `xmin`, SSI y traducción en el pipeline](architecture/adr/0001-optimistic-concurrency.md)
+
+### Features
+
+| Fecha | Tema | Estado | Milestone | Feature | Historias |
+|---|---|---|---|---|---|
+
+### Historias
+
+| Fecha | Tema | Estado | Ticket | Historia | Spec |
+|---|---|---|---|---|---|
 
 ### Specs y planes
 

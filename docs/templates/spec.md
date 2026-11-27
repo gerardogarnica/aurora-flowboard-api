@@ -8,11 +8,11 @@
 
 ## 1. Contexto y problema
 
-Qué pasa hoy, con referencias al código (`Ruta/Fichero.cs:línea`) y por qué es un problema.
+Qué pasa hoy, con referencias al código (`Ruta/Fichero.cs:línea`) y por qué es un problema. Si viene de una historia, enlázala (`docs/stories/...`).
 
 ## 2. Objetivo y criterios de éxito
 
-- Qué tiene que ser cierto cuando esté terminado, de forma verificable.
+- Qué tiene que ser cierto cuando esté terminado, de forma verificable. Si viene de una historia, sus criterios de aceptación van aquí.
 
 ## 3. Alcance
 
